@@ -2,10 +2,19 @@
 
 ## Input
     # comments
-    cityA cityB distance
+    coordinate_1_1 coordinate_1_2 ... coordinate_1_d
+    coordinate_2_1 ...
     ...
     
 ## Output
+
+# Spin glass
+
+## Input
+    # comments
+    spin_i spin_j ... coupling
+    ...
+
 
 # SAT
 
