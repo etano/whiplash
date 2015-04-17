@@ -1,22 +1,21 @@
-#ifndef SIMFW_ODB_MONGO_OBJECTDB_HPP
-#define SIMFW_ODB_MONGO_OBJECTDB_HPP
+#ifndef SIMFW_DEPLOYMENT_H693_HPP
+#define SIMFW_DEPLOYMENT_H693_HPP
 
-#include "odb/mongo/triggers.hpp"
+namespace simfw { namespace deployment {
 
-namespace simfw { namespace odb { namespace mongo {
+    h693::h693(odb::iobjectdb& db)
+        : db(db),
+        instances( db.provide_collection("instances") ),
+        hamiltonians( db.provide_collection("hamiltonians") )
+    {
+    }
 
-    using bsoncxx::builder::basic::document;
-    using bsoncxx::builder::basic::kvp;
-    using bsoncxx::builder::basic::sub_document;
-    using bsoncxx::builder::basic::sub_array;
+    void h693::insert_instance(int hid, std::string solver, const std::vector<std::string>& params){
+            using bsoncxx::builder::basic::document;
+            using bsoncxx::builder::basic::kvp;
+            using bsoncxx::builder::basic::sub_document;
+            using bsoncxx::builder::basic::sub_array;
 
-    class objectdb : public iobjectdb {
-    public:
-       ~objectdb() override {
-        }
-
-        template<typename Collection>
-        static void insert_instance(Collection& collection, int hid, std::string solver, const std::vector<std::string>& params){
             auto entry = document{};
             entry.append(
                  kvp("hid", hid),
@@ -29,15 +28,18 @@ namespace simfw { namespace odb { namespace mongo {
                      subdoc.append(kvp("cost", std::numeric_limits<double>::quiet_NaN()));
                  })
             );
-        
-            collection.insert_one(entry);
-        }
+            dynamic_cast<simfw::odb::mongo::collection&>(instances).insert(entry);
+    }
 
-        template<typename DB>
-        static void insert_hamil(DB& db, std::ifstream& in){
+    void h693::insert_hamil(std::ifstream& in){
+            using bsoncxx::builder::basic::document;
+            using bsoncxx::builder::basic::kvp;
+            using bsoncxx::builder::basic::sub_document;
+            using bsoncxx::builder::basic::sub_array;
+
             auto entry = document{};
             entry.append(
-                 kvp("_id", triggers::get_next_sequence(db, "hid")),
+                 kvp("_id", db.get_next_id("hamiltonians")),
                  kvp("config", [&in](sub_array subarr){
                     std::size_t N(0);
                     std::map<std::string,int> index;
@@ -76,14 +78,24 @@ namespace simfw { namespace odb { namespace mongo {
                     }
                  })
             );
-            
-            std::cout << bsoncxx::to_json(entry) << std::endl;
-            db["hamiltonians"].insert_one(entry);
-        }
-    private:
-    };
 
-} } }
+            std::cout << bsoncxx::to_json(entry) << std::endl;
+            dynamic_cast<simfw::odb::mongo::collection&>(hamiltonians).insert(entry);
+    }
+
+    void h693::list_instances(){
+        instances.list_objects();
+    }
+
+    void h693::list_hamil(int id){
+        hamiltonians.find_object(id);
+    }
+
+    rte::iexecutable& h693::load(std::string app){
+        static rte::cluster::executable inst(app);
+        return inst;
+    }
+
+} }
 
 #endif
-

@@ -5,8 +5,8 @@ namespace simfw { namespace rte { namespace cluster {
 
     class executable : public iexecutable {
     public:
-        executable(const char* path){
-            handle = dlopen(path, RTLD_NOW);
+        executable(std::string path){
+            handle = dlopen(path.c_str(), RTLD_NOW);
             if(!handle) throw std::runtime_error("Error: cannot open shared object!");
             dlerror(); // reset errors
             fptr = dlsym(handle, "main");

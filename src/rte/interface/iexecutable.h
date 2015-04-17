@@ -1,5 +1,5 @@
-#ifndef SIMFW_RTE_IEXECUTABLE_HPP
-#define SIMFW_RTE_IEXECUTABLE_HPP
+#ifndef SIMFW_RTE_IEXECUTABLE_H
+#define SIMFW_RTE_IEXECUTABLE_H
 
 namespace simfw { namespace rte {
 
