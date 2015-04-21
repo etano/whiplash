@@ -27,6 +27,7 @@
 #include "deployment/h693.h"
 
 #include "odb/mongo/prop_reader.hpp"
+#include "odb/mongo/prop_writer.hpp"
 #include "deployment/h693.hpp"
 
 #endif

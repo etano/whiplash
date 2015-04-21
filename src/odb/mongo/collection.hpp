@@ -32,7 +32,7 @@ namespace simfw { namespace odb { namespace mongo {
         /* todo */
     }
 
-    void collection::insert(bsoncxx::builder::basic::document& o){
+    void collection::insert(bsoncxx::builder::basic::document&& o){
         coll.insert_one(o);
     }
 

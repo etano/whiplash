@@ -51,7 +51,7 @@ namespace simfw { namespace odb { namespace mongo {
 
     class prop_reader {
     public:
-        static void make_hamil(const object& obj){
+        static void read_hamil(const object& obj){
             typedef std::pair<std::vector<int>, double> edge_type;
             typedef std::vector<int> node_type;
 
