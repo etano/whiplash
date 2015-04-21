@@ -4,6 +4,10 @@
 namespace simfw { namespace odb { namespace mongo {
 
     class object : public iobject {
+        using object_view = bsoncxx::v0::document::view;
+    public:
+        object(object_view&& view) : view(view) {}
+        object_view view;
     };
 
 } } }

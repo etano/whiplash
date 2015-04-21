@@ -11,6 +11,7 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/json.hpp>
 
+#include "odb/mongo/object.h"
 #include "odb/mongo/collection.h"
 #include "odb/mongo/objectdb.h"
 #include "odb/mongo/collection.hpp"

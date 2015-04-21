@@ -17,14 +17,16 @@
 #include "rte/cluster.hpp"
 #include "odb/mongo.hpp"
 
-#include "entities/abstract.hpp"
-#include "entities/abstract_dynamic.hpp"
-#include "entities/sat.hpp"
-#include "entities/tsp.hpp"
+#include "entities/generic/abstract.hpp"
+#include "entities/generic/abstract_dynamic.hpp"
+#include "entities/sat/sat.hpp"
+#include "entities/tsp/tsp.hpp"
 
-#include "entities/detail/hamil.hpp"
+#include "entities/generic/detail/hamil.hpp"
 
 #include "deployment/h693.h"
+
+#include "odb/mongo/prop_reader.hpp"
 #include "deployment/h693.hpp"
 
 #endif

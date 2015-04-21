@@ -83,12 +83,17 @@ namespace simfw { namespace deployment {
             dynamic_cast<simfw::odb::mongo::collection&>(hamiltonians).insert(entry);
     }
 
+    void h693::fetch_hamil(int id){
+        const auto& res = hamiltonians.find_object(id);
+        odb::mongo::prop_reader::make_hamil(static_cast<const simfw::odb::mongo::object&>(res));
+    }
+
     void h693::list_instances(){
         instances.list_objects();
     }
 
     void h693::list_hamil(int id){
-        hamiltonians.find_object(id);
+        hamiltonians.print_object(id);
     }
 
     rte::iexecutable& h693::load(std::string app){

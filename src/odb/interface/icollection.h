@@ -7,7 +7,8 @@ namespace simfw { namespace odb {
     public:
         virtual ~icollection(){}
         virtual void list_objects() = 0;
-        virtual void find_object(int id) = 0;
+        virtual const iobject& find_object(int id) = 0;
+        virtual void print_object(int id) = 0;
         virtual void insert(iobject& o) = 0;
     };
 
