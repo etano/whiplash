@@ -24,7 +24,7 @@ namespace simfw { namespace deployment {
 
     void basic::fetch_hamil(int id){
         const auto& res = hamiltonians.find_object(id);
-        odb::mongo::prop_reader::read_hamil(static_cast<const simfw::odb::mongo::object&>(res));
+        entities::generic::hamil(static_cast<const simfw::odb::mongo::object&>(res));
     }
 
     void basic::list_instances(){

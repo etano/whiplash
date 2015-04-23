@@ -9,79 +9,66 @@ namespace simfw { namespace odb { namespace mongo {
         using element = bsoncxx::v0::array::element;
 
         template<typename T>
-        const T get(object_view doc, std::string field){
+        T get(object_view doc, std::string field){
             printf("Error: unknown type\n");
         }
 
         template<>
-        const double get<double>(object_view doc, std::string field){
+        double get<double>(object_view doc, std::string field){
             return (double)doc[field].get_double();
         }
 
         template<>
-        const int get<int>(object_view doc, std::string field){
+        int get<int>(object_view doc, std::string field){
             return (int)doc[field].get_int32();
         }
 
         template<>
-        const array_view get<array_view>(object_view doc, std::string field){
+        array_view get<array_view>(object_view doc, std::string field){
             return (array_view)doc[field].get_array();
         }
 
         template<typename T>
-        const T get(const element& e){
+        T get(element e){
             printf("Error: unknown type\n");
         }
 
         template<>
-        const int get<int>(const element& e){
+        int get<int>(element e){
             return (int)e.get_int32();
         }
 
         template<>
-        const double get<double>(const element& e){
+        double get<double>(element e){
             return (double)e.get_double();
         }
 
         template<>
-        const array_view get(const element& e){
+        array_view get(element e){
             return (array_view)e.get_array();
         }
     }
 
     class prop_reader {
     public:
-        static void read_hamil(const object& obj){
-            typedef std::pair<std::vector<int>, double> edge_type;
-            typedef std::vector<int> node_type;
+        typedef detail::element prop_type;
+        typedef detail::array_view array_type;
+        typedef int int_type;
 
-            std::vector<edge_type> edges_;
-            std::vector<node_type> nodes_;
-            int N_ = 0;
+        static array_type Array(const object& obj, std::string name){
+            return detail::get<array_type>(obj.view, name);
+        }
 
-            for(auto&& edge : detail::get<detail::array_view>(obj.view, "config")){
-                printf("[\n");
-                std::vector<int> inds;
-                printf("[\n");
+        static array_type Array(prop_type e){
+            return detail::get<array_type>(e);
+        }
 
-                auto& sub_array = detail::get<detail::array_view>(edge);
-                for( const auto a : detail::get<detail::array_view>(sub_array[0]) ){
-                    int a_ = detail::get<int>(a);
-                    N_ = std::max(N_, a_);
-                    inds.push_back(a_);
-                    printf("%d\n", inds.back());
-                }
-                printf("],\n");
-                double val = detail::get<double>(sub_array[1]);
-                std::cout << val << "\n";
-                edges_.push_back(std::make_pair(inds, val));
-                printf("]\n");
-            }
+        static int_type Int(prop_type e){
+            return detail::get<int_type>(e);
+        }
 
-            nodes_.resize(N_+1);
-            for(int j = 0; j < edges_.size(); ++j)
-                for(const auto a : edges_[j].first)
-                    nodes_[a].push_back(j);
+        static double Double(prop_type e){
+            return detail::get<double>(e);
         }
     };
 

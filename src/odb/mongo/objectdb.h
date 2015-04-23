@@ -14,6 +14,7 @@ namespace simfw { namespace odb { namespace mongo {
         mongocxx::client conn;
         mongocxx::database db;
 
+       ~objectdb() override;
         objectdb(std::string url);
         icollection& provide_collection(std::string name) override;
         int get_next_id(std::string collection) override;

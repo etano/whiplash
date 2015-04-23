@@ -9,6 +9,10 @@ namespace simfw { namespace odb { namespace mongo {
     {
     }
 
+    objectdb::~objectdb(){
+        for(auto c : collections) delete c;
+    }
+
     icollection& objectdb::provide_collection(std::string name){
         collections.push_back(new collection(db[name]));
         return *collections.back();

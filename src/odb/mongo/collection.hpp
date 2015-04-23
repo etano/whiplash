@@ -3,13 +3,13 @@
 
 namespace simfw { namespace odb { namespace mongo {
 
-    collection::collection(impl&& coll) : coll(std::move(coll))
+    collection::collection(impl coll) : coll(std::move(coll))
     {
     }
 
     void collection::list_objects(){
         auto cursor = coll.find({});
-        for(auto&& doc : cursor)
+        for(auto doc : cursor)
            std::cout << bsoncxx::to_json(doc) << std::endl;
     }
 
@@ -17,7 +17,7 @@ namespace simfw { namespace odb { namespace mongo {
         bsoncxx::builder::stream::document filter{};
         filter << "_id" << id;
         auto cursor = coll.find(filter);
-        for(auto&& doc : cursor)
+        for(auto doc : cursor)
             std::cout << bsoncxx::to_json(doc) << std::endl;
     }
 
@@ -32,7 +32,7 @@ namespace simfw { namespace odb { namespace mongo {
         /* todo */
     }
 
-    void collection::insert(bsoncxx::builder::basic::document&& o){
+    void collection::insert(bsoncxx::builder::basic::document o){
         coll.insert_one(o);
     }
 
