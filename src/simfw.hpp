@@ -21,13 +21,14 @@
 #include "entities/generic/abstract_dynamic.hpp"
 #include "entities/sat/sat.hpp"
 #include "entities/tsp/tsp.hpp"
+#include "entities/ising/ising.hpp"
 
 #include "entities/generic/detail/hamil.hpp"
 
-#include "deployment/h693.h"
+#include "deployment/basic.h"
 
 #include "odb/mongo/prop_reader.hpp"
 #include "odb/mongo/prop_writer.hpp"
-#include "deployment/h693.hpp"
+#include "deployment/basic.hpp"
 
 #endif
