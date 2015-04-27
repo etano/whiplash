@@ -10,11 +10,8 @@ namespace simfw { namespace entities { namespace generic {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
-        hamil(const simfw::odb::mongo::object& obj) : N_(0) {
-
-            std::vector<edge_type> edges_; // fix me (memory errors)
-            std::vector<node_type> nodes_;
-
+        hamil(const odb::iobject& o) : N_(0) {
+            const auto& obj = static_cast<const odb::mongo::object&>(o);
             for(auto e : prop_reader::Array(obj, "config")){
                 std::vector<int> inds;
                 auto sub_array = prop_reader::Array(e);

@@ -5,8 +5,10 @@ namespace simfw { namespace odb { namespace mongo {
 
     class object : public iobject {
         using object_view = bsoncxx::v0::document::view;
+        using object_value = bsoncxx::v0::document::value;
     public:
-        object(object_view view) : view(view) {}
+        object(object_value v) : value(v), view(value.view()) {}
+        object_value value;
         object_view view;
     };
 

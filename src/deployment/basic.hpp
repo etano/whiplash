@@ -11,20 +11,19 @@ namespace simfw { namespace deployment {
     }
 
     void basic::insert_instance(int hid, std::string solver, const std::vector<std::string>& params){
-        static_cast<simfw::odb::mongo::collection&>(instances).insert(
+        static_cast<odb::mongo::collection&>(instances).insert(
             odb::mongo::prop_writer::write_instance(db.get_next_id("instances"), hid, solver, params)
         );
     }
 
     void basic::insert_hamil(std::ifstream& in){
-        static_cast<simfw::odb::mongo::collection&>(hamiltonians).insert(
+        static_cast<odb::mongo::collection&>(hamiltonians).insert(
             odb::mongo::prop_writer::write_hamil(db.get_next_id("hamiltonians"), in)
         );
     }
 
     void basic::fetch_hamil(int id){
-        const auto& res = hamiltonians.find_object(id);
-        entities::generic::hamil(static_cast<const simfw::odb::mongo::object&>(res));
+        entities::generic::hamil H( hamiltonians.find_object(id) );
     }
 
     void basic::list_instances(){
