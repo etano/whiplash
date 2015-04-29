@@ -12,7 +12,6 @@ namespace simfw { namespace odb { namespace mongo {
         virtual object& find_object(int id) override;
         virtual void print_object(int id) override;
         virtual void insert(iobject& o) override;
-                void insert(bsoncxx::builder::basic::document o);
     private:
         impl coll;
     };

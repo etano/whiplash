@@ -28,11 +28,7 @@ namespace simfw { namespace odb { namespace mongo {
     }
 
     void collection::insert(iobject& o){
-        /* todo */
-    }
-
-    void collection::insert(bsoncxx::builder::basic::document o){
-        coll.insert_one(o);
+        coll.insert_one(static_cast<odb::mongo::object&>(o).w.builder);
     }
 
 } } }

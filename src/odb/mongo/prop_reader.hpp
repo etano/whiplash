@@ -56,7 +56,7 @@ namespace simfw { namespace odb { namespace mongo {
         typedef int int_type;
 
         static array_type Array(const object& obj, std::string name){
-            return detail::get<array_type>(obj.view, name);
+            return detail::get<array_type>(obj.r.view, name);
         }
 
         static array_type Array(prop_type e){

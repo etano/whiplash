@@ -3,13 +3,31 @@
 
 namespace simfw { namespace odb { namespace mongo {
 
-    class object : public iobject {
-        using object_view = bsoncxx::v0::document::view;
-        using object_value = bsoncxx::v0::document::value;
+    class readable {
+        using view_type = bsoncxx::v0::document::view;
     public:
-        object(object_value v) : value(v), view(value.view()) {}
-        object_value value;
-        object_view view;
+        using value_type = bsoncxx::v0::document::value;
+        readable(value_type v) : value(v), view(value.view()) {}
+        value_type value;
+        view_type view;
+    };
+
+    class writable {
+        using builder_type = bsoncxx::builder::basic::document;
+    public:
+        writable() = default;
+        builder_type builder;
+    };
+
+    class object : public iobject {
+    public:
+        union {
+            readable r;
+            writable w;
+        };
+        object(typename readable::value_type value) : r(value) {}
+        object() : w() {}
+       ~object(){}
     };
 
 } } }
