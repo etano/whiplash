@@ -54,6 +54,7 @@ namespace simfw { namespace entities { namespace generic {
                 double val = prop_reader::Double(sub_array[1]);
                 edges_.push_back(std::make_pair(inds, val));
             }
+            N_++; // important
             init_nodes();
         }
 
@@ -63,7 +64,7 @@ namespace simfw { namespace entities { namespace generic {
         }
 
         void init_nodes(){
-            nodes_.resize(N_+1);
+            nodes_.resize(N_);
             for(int j = 0; j < edges_.size(); ++j)
                 for(const auto a : edges_[j].first)
                     nodes_[a].push_back(j);
@@ -98,8 +99,8 @@ namespace simfw { namespace entities { namespace generic {
                 std::cout << "] " << i.second << "}  ";
             }
             std::cout << std::endl;
-            std::cout << "num nodes: " << H.num_nodes() << "\n";
-            std::cout << "num edges: " << H.num_edges() << "\n";
+            std::cout << "num nodes: " << num_nodes() << "\n";
+            std::cout << "num edges: " << num_edges() << "\n";
         }
         int num_nodes(){
             return N_;
