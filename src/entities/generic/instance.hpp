@@ -19,6 +19,7 @@ namespace simfw { namespace entities { namespace generic {
         }
 
         void serialize_state(odb::iobject& state){
+            // todo // save the actual state
             prop_writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> state;
             prop_writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> state;
         }

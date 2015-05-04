@@ -91,6 +91,14 @@ namespace simfw { namespace entities { namespace generic {
             }
             return -2.0*E;
         }
+        void print(){
+            for(auto i : edges_){
+                std::cout << "{[ ";
+                for(int a : i.first) std::cout << a << " ";
+                std::cout << "] " << i.second << "}  ";
+            }
+            std::cout << std::endl;
+        }
     private:
         std::vector<edge_type> edges_;
         std::vector<node_type> nodes_;

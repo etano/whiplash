@@ -18,8 +18,8 @@ namespace simfw { namespace odb { namespace mongo {
         }
         static prop_type<std::function<void(sub_document)> > prop(std::string name, const odb::iobject& obj){
             return bsoncxx::builder::basic::kvp(name, [&obj](sub_document o){
-                o.append(kvp("config", [](sub_array subarr){ subarr.append(std::numeric_limits<double>::quiet_NaN()); })); // TODO: insert real stuff
-                o.append(kvp("cost", std::numeric_limits<double>::quiet_NaN()));
+                bsoncxx::document::view view = static_cast<const odb::mongo::object&>(obj).w.builder.view();
+                o._core->concatenate(view); // workaround (no means to call concatenate otherwise)
             });
         }
         template<typename T>
@@ -28,7 +28,7 @@ namespace simfw { namespace odb { namespace mongo {
                 for(auto i : vec) v.append(i);
             });
         }
-        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector< std::pair<std::vector<int>, double > > vec){ // TODO
+        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector< std::pair<std::vector<int>, double > > vec){ // TODO: refactor me
             return bsoncxx::builder::basic::kvp(name, [&vec](sub_array v){
                 for(auto i : vec) v.append([&i](sub_array pair){
                     pair.append([&i](sub_array e){

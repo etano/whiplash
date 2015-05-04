@@ -5,7 +5,7 @@ int main(int, char**){
     objectdb db("cwave.ethz.ch:27017");
     simfw::deployment::basic sf(db);
 
-    std::ifstream in("config.txt");
+    std::ifstream in("apps/hamil");
     sf.insert_hamil(in);
     in.close();
 
