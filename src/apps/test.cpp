@@ -18,39 +18,31 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
     return os;
 }
 
-int main(int argc, char* argv[])
-{
-  const std::string input_file(argv[1]);
-  const std::string output_file(argv[2]);
-  const unsigned Nr(std::stoi(argv[3]));
-  
-  std::ifstream in(input_file);
-  simfw::entities::generic::hamil H(in);
-  in.close();
+int main(int argc, char* argv[]){
+    const std::string input_file(argv[1]);
+    const std::string output_file(argv[2]);
+    const unsigned Nr(std::stoi(argv[3]));
 
-  std::cout << "num nodes: " << H.num_nodes() << "\n"
-            << "num edges: " << H.num_edges() << "\n";
+    std::ifstream in(input_file);
+    simfw::entities::generic::hamil H(in);
+    in.close();
 
-  double Emin(std::numeric_limits<double>::max());
-  std::vector<bool> config_min;
-  for(unsigned i = 0; i < Nr; ++i){
+    double Emin(std::numeric_limits<double>::max());
+    std::vector<bool> config_min;
+    for(unsigned i = 0; i < Nr; ++i){
+        std::vector<bool> config(H.num_nodes());
+        for(unsigned j = 0; j < H.num_nodes(); ++j)
+            config[j] = (drand48() < 0.5);
+        const double E(H.total_energy(config));
+        if(E < Emin){
+            Emin = E;
+            config_min = config;
+        }
+    }
 
-      std::vector<bool> config(H.num_nodes());
-      for(unsigned j = 0; j < H.num_nodes(); ++j)
-          config[j] = (drand48() < 0.5);
-      
-      const double E(H.total_energy(config));
-      
-      if(E < Emin){
-          Emin = E;
-          config_min = config;
-      }
-  }
+    std::ofstream out(output_file);
+    out << config_min << ' ' << Emin << "\n";
+    out.close();
 
-  std::ofstream out(output_file);
-  assert(out.is_open());
-  out << config_min << ' ' << Emin << "\n";
-  out.close();
-
-  return 0;
+    return 0;
 }

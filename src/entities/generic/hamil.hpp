@@ -98,6 +98,8 @@ namespace simfw { namespace entities { namespace generic {
                 std::cout << "] " << i.second << "}  ";
             }
             std::cout << std::endl;
+            std::cout << "num nodes: " << H.num_nodes() << "\n";
+            std::cout << "num edges: " << H.num_edges() << "\n";
         }
         int num_nodes(){
             return N_;
