@@ -26,7 +26,7 @@ namespace simfw { namespace deployment {
     }
 
     void basic::fetch_hamil(int id){
-        entities::generic::hamil H( hamiltonians.find_object(id) );
+        entities::generic::hamil H( *hamiltonians.find_object(id) );
         H.print();
     }
 
