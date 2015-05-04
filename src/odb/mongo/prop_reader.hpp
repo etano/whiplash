@@ -24,9 +24,15 @@ namespace simfw { namespace odb { namespace mongo {
         }
 
         template<>
+        std::string get<std::string>(object_view doc, std::string field){
+            return (std::string)doc[field].get_utf8().value;
+        }
+
+        template<>
         array_view get<array_view>(object_view doc, std::string field){
             return (array_view)doc[field].get_array();
         }
+
 
         template<typename T>
         T get(element e){
@@ -44,6 +50,11 @@ namespace simfw { namespace odb { namespace mongo {
         }
 
         template<>
+        std::string get<std::string>(element e){
+            return (std::string)e.get_utf8().value;
+        }
+
+        template<>
         array_view get(element e){
             return (array_view)e.get_array();
         }
@@ -58,17 +69,29 @@ namespace simfw { namespace odb { namespace mongo {
         static array_type Array(const object& obj, std::string name){
             return detail::get<array_type>(obj.r.view, name);
         }
-
         static array_type Array(prop_type e){
             return detail::get<array_type>(e);
         }
 
+        static int_type Int(const object& obj, std::string name){
+            return detail::get<int_type>(obj.r.view, name);
+        }
         static int_type Int(prop_type e){
             return detail::get<int_type>(e);
         }
 
+        static double Double(const object& obj, std::string name){
+            return detail::get<double>(obj.r.view, name);
+        }
         static double Double(prop_type e){
             return detail::get<double>(e);
+        }
+
+        static std::string String(const object& obj, std::string name){
+            return detail::get<std::string>(obj.r.view, name);
+        }
+        static std::string String(prop_type e){
+            return detail::get<std::string>(e);
         }
     };
 

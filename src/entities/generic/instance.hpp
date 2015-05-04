@@ -9,6 +9,18 @@ namespace simfw { namespace entities { namespace generic {
     class instance {
     public:
         instance(const odb::iobject& o){
+            const auto& obj = static_cast<const odb::mongo::object&>(o);
+            h_      = prop_reader::Int(obj, "hid");
+            solver_ = prop_reader::String(obj, "solver");
+            for(auto e : prop_reader::Array(obj, "params"))
+                params_.push_back(prop_reader::String(e));
+        }
+
+        void info(){
+            std::cout << "H: " << h_ << "\n";
+            std::cout << "Solver: " << solver_ << "\n";
+            std::cout << "Params: "; for(auto e : params_) std::cout << e << " ";
+            std::cout << "\n";
         }
 
         instance(int hid, std::string solver, const std::vector<std::string>& params) 

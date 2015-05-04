@@ -29,6 +29,10 @@ namespace simfw { namespace deployment {
         return entities::generic::hamil( *hamiltonians.find_object(id) );
     }
 
+    entities::generic::instance basic::fetch_instance(int id){
+        return entities::generic::instance( *instances.find_object(id) );
+    }
+
     void basic::list_instances(){
         instances.list_objects();
     }
