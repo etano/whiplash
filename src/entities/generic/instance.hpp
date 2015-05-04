@@ -23,6 +23,11 @@ namespace simfw { namespace entities { namespace generic {
             std::cout << "\n";
         }
 
+        template<int N>
+        std::string param(){
+            return params_[N];
+        }
+
         instance(int hid, std::string solver, const std::vector<std::string>& params) 
             : h_(hid),
             solver_(solver),

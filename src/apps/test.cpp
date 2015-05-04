@@ -19,16 +19,16 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
 }
 
 int main(int argc, char* argv[]){
-    const std::string output_file(argv[2]);
-    const unsigned Nr(std::stoi(argv[3]));
 
     simfw::entities::generic::hamil* H = (simfw::entities::generic::hamil*)argv[1];
+    simfw::entities::generic::instance* I = (simfw::entities::generic::instance*)argv[2];
 
+    int Nr = std::stoi( I->param<0>() );
     double Emin(std::numeric_limits<double>::max());
     std::vector<bool> config_min;
-    for(unsigned i = 0; i < Nr; ++i){
+    for(int i = 0; i < Nr; ++i){
         std::vector<bool> config(H->num_nodes());
-        for(unsigned j = 0; j < H->num_nodes(); ++j)
+        for(int j = 0; j < H->num_nodes(); ++j)
             config[j] = (drand48() < 0.5);
         const double E(H->total_energy(config));
         if(E < Emin){
@@ -37,9 +37,6 @@ int main(int argc, char* argv[]){
         }
     }
 
-    std::ofstream out(output_file);
-    out << config_min << ' ' << Emin << "\n";
-    out.close();
-
+    std::cout << config_min << ' ' << Emin << "\n";
     return 0;
 }
