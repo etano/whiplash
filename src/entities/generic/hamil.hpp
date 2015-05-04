@@ -99,6 +99,12 @@ namespace simfw { namespace entities { namespace generic {
             }
             std::cout << std::endl;
         }
+        int num_nodes(){
+            return N_;
+        }
+        int num_edges(){
+            return edges_.size();
+        }
     private:
         std::vector<edge_type> edges_;
         std::vector<node_type> nodes_;
