@@ -7,6 +7,24 @@ namespace simfw { namespace odb { namespace mongo {
     public:
         template<class T> using prop_type = std::tuple<std::string, T>;
 
+        template<typename T>
+        static T decompose(const T& t){
+            return t;
+        }
+        template<typename T1, typename T2>
+        static std::function<void(sub_array)> decompose(const std::pair<T1, T2>& t){
+            return [&t](sub_array pair){
+                pair.append(decompose(t.first));
+                pair.append(decompose(t.second));
+            };
+        }
+        template<typename T>
+        static std::function<void(sub_array)> decompose(const std::vector<T>& t){
+            return [&t](sub_array array){
+                for(auto i : t) array.append(decompose(i));
+            };
+        }
+
         static prop_type<int> prop(std::string name, int num){
             return bsoncxx::builder::basic::kvp(name, num);
         }
@@ -16,26 +34,14 @@ namespace simfw { namespace odb { namespace mongo {
         static prop_type<std::string> prop(std::string name, std::string str){
             return bsoncxx::builder::basic::kvp(name, str);
         }
+        template<typename T>
+        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector<T> vec){
+            return bsoncxx::builder::basic::kvp(name, decompose(vec));
+        }
         static prop_type<std::function<void(sub_document)> > prop(std::string name, const odb::iobject& obj){
             return bsoncxx::builder::basic::kvp(name, [&obj](sub_document o){
                 bsoncxx::document::view view = static_cast<const odb::mongo::object&>(obj).w.builder.view();
                 o._core->concatenate(view); // workaround (no means to call concatenate otherwise)
-            });
-        }
-        template<typename T>
-        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector<T> vec){
-            return bsoncxx::builder::basic::kvp(name, [&vec](sub_array v){
-                for(auto i : vec) v.append(i);
-            });
-        }
-        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector< std::pair<std::vector<int>, double > > vec){ // TODO: refactor me
-            return bsoncxx::builder::basic::kvp(name, [&vec](sub_array v){
-                for(auto i : vec) v.append([&i](sub_array pair){
-                    pair.append([&i](sub_array e){
-                        for(int a : i.first) e.append(a);
-                    });
-                    pair.append(i.second);
-                });
             });
         }
     };

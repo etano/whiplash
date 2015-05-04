@@ -24,7 +24,7 @@ namespace simfw { namespace odb { namespace mongo {
     object& collection::find_object(int id){
         bsoncxx::builder::stream::document filter;
         filter << "_id" << id;
-        return *(new object( *coll.find_one(filter) )); // fixme
+        return *(new object( *coll.find_one(filter) )); // TODO // fixme
     }
 
     void collection::insert(iobject& o){
