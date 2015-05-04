@@ -21,10 +21,10 @@ namespace simfw { namespace odb { namespace mongo {
             std::cout << bsoncxx::to_json(doc) << std::endl;
     }
 
-    object& collection::find_object(int id){
+    std::unique_ptr<iobject> collection::find_object(int id){
         bsoncxx::builder::stream::document filter;
         filter << "_id" << id;
-        return *(new object( *coll.find_one(filter) )); // TODO // fixme
+        return std::unique_ptr<iobject>(new object( *coll.find_one(filter) ));
     }
 
     void collection::insert(iobject& o){

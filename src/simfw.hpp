@@ -9,6 +9,7 @@
 #include <limits>
 #include <dlfcn.h>
 #include <stdexcept>
+#include <memory>
 // }}}
 
 #include "rte/interface.hpp"

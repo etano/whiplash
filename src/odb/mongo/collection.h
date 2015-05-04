@@ -9,7 +9,7 @@ namespace simfw { namespace odb { namespace mongo {
         collection(impl coll);
         virtual ~collection(){}
         virtual void list_objects() override;
-        virtual object& find_object(int id) override;
+        virtual std::unique_ptr<iobject> find_object(int id) override;
         virtual void print_object(int id) override;
         virtual void insert(iobject& o) override;
     private:

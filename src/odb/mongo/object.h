@@ -27,7 +27,7 @@ namespace simfw { namespace odb { namespace mongo {
         };
         object(typename readable::value_type value) : r(value) {}
         object() : w() {}
-       ~object(){}
+        virtual ~object() override {}
     };
 
 } } }
