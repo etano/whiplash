@@ -25,9 +25,8 @@ namespace simfw { namespace deployment {
         static_cast<odb::mongo::collection&>(hamiltonians).insert( serialized ); 
     }
 
-    void basic::fetch_hamil(int id){
-        entities::generic::hamil H( *hamiltonians.find_object(id) );
-        H.print();
+    entities::generic::hamil basic::fetch_hamil(int id){
+        return entities::generic::hamil( *hamiltonians.find_object(id) );
     }
 
     void basic::list_instances(){

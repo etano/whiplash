@@ -11,7 +11,7 @@ namespace simfw { namespace deployment {
         void list_instances();
         void list_hamil(int id);
 
-        void fetch_hamil(int id);
+        entities::generic::hamil fetch_hamil(int id);
 
         rte::iexecutable& load(std::string app);
     private:
