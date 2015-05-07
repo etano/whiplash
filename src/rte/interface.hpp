@@ -1,5 +1,5 @@
-#ifndef SIMFW_RTE_INTERFACE_HPP
-#define SIMFW_RTE_INTERFACE_HPP
+#ifndef WDB_RTE_INTERFACE_HPP
+#define WDB_RTE_INTERFACE_HPP
 
 #include "rte/interface/iexecutable.h"
 

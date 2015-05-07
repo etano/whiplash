@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_PROP_WRITER_HPP
-#define SIMFW_ODB_MONGO_PROP_WRITER_HPP
+#ifndef WDB_ODB_MONGO_PROP_WRITER_HPP
+#define WDB_ODB_MONGO_PROP_WRITER_HPP
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     class prop_writer {
     public:
@@ -48,7 +48,7 @@ namespace simfw { namespace odb { namespace mongo {
 
 } } }
 
-namespace simfw {
+namespace wdb {
     template<typename U>
     inline void operator>>(std::tuple<std::string, U> p, odb::iobject& ss){
         static_cast<odb::mongo::object&>(ss).w.builder.append( std::move(p) );

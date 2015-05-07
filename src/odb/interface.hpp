@@ -1,5 +1,5 @@
-#ifndef SIMFW_ODB_INTERFACE_HPP
-#define SIMFW_ODB_INTERFACE_HPP
+#ifndef WDB_ODB_INTERFACE_HPP
+#define WDB_ODB_INTERFACE_HPP
 
 #include "odb/interface/iobject.h"
 #include "odb/interface/icollection.h"

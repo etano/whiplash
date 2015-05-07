@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_COLLECTION_HPP
-#define SIMFW_ODB_MONGO_COLLECTION_HPP
+#ifndef WDB_ODB_MONGO_COLLECTION_HPP
+#define WDB_ODB_MONGO_COLLECTION_HPP
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     collection::collection(impl coll) : coll(std::move(coll))
     {

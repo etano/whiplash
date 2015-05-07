@@ -1,11 +1,11 @@
-#ifndef SIMFW_ODB_MONGO_OBJECTDB_HPP
-#define SIMFW_ODB_MONGO_OBJECTDB_HPP
+#ifndef WDB_ODB_MONGO_OBJECTDB_HPP
+#define WDB_ODB_MONGO_OBJECTDB_HPP
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     objectdb::objectdb(std::string url) :
         conn { mongocxx::uri("mongodb://"+url) },
-        db( conn["simfw"] )
+        db( conn["wdb"] )
     {
     }
 

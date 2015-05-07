@@ -1,10 +1,10 @@
-#ifndef SIMFW_ENTITIES_GENERIC_HAMIL_HPP
-#define SIMFW_ENTITIES_GENERIC_HAMIL_HPP
+#ifndef WDB_ENTITIES_GENERIC_HAMIL_HPP
+#define WDB_ENTITIES_GENERIC_HAMIL_HPP
 
-namespace simfw { namespace entities { namespace generic {
+namespace wdb { namespace entities { namespace generic {
 
-    using simfw::odb::mongo::prop_reader;
-    using simfw::odb::mongo::prop_writer;
+    using wdb::odb::mongo::prop_reader;
+    using wdb::odb::mongo::prop_writer;
 
     class hamil {
         typedef std::pair<std::vector<int>, double> edge_type;

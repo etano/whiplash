@@ -1,5 +1,5 @@
-#ifndef SIMFW_ODB_MONGO_HPP
-#define SIMFW_ODB_MONGO_HPP
+#ifndef WDB_ODB_MONGO_HPP
+#define WDB_ODB_MONGO_HPP
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/options/find.hpp>

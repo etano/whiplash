@@ -1,7 +1,7 @@
-#ifndef SIMFW_DEPLOYMENT_BASIC_HPP
-#define SIMFW_DEPLOYMENT_BASIC_HPP
+#ifndef WDB_DEPLOYMENT_BASIC_HPP
+#define WDB_DEPLOYMENT_BASIC_HPP
 
-namespace simfw { namespace deployment {
+namespace wdb { namespace deployment {
 
     basic::basic(odb::iobjectdb& db)
         : db(db),

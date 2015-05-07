@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_ICOLLECTION_H
-#define SIMFW_ODB_ICOLLECTION_H
+#ifndef WDB_ODB_ICOLLECTION_H
+#define WDB_ODB_ICOLLECTION_H
 
-namespace simfw { namespace odb {
+namespace wdb { namespace odb {
 
     class icollection {
     public:

@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_IOBJECT_H
-#define SIMFW_ODB_IOBJECT_H
+#ifndef WDB_ODB_IOBJECT_H
+#define WDB_ODB_IOBJECT_H
 
-namespace simfw { namespace odb {
+namespace wdb { namespace odb {
 
     class iobject {
     public:

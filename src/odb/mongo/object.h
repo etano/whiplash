@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_OBJECT_H
-#define SIMFW_ODB_MONGO_OBJECT_H
+#ifndef WDB_ODB_MONGO_OBJECT_H
+#define WDB_ODB_MONGO_OBJECT_H
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     class readable {
         using view_type = bsoncxx::v0::document::view;

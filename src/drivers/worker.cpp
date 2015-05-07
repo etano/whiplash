@@ -1,9 +1,9 @@
-#include "simfw.hpp"
-using simfw::odb::mongo::objectdb;
+#include "wdb.hpp"
+using wdb::odb::mongo::objectdb;
 
 int main(int argc, char** argv){
     objectdb db("cwave.ethz.ch:27017");
-    simfw::deployment::basic sf(db);
+    wdb::deployment::basic sf(db);
 
     void** params = (void**)malloc(sizeof(void*)*std::max(10,argc));
     for(int i = 0; i < argc; i++) params[i] = argv[i];

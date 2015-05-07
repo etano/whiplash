@@ -1,7 +1,7 @@
-#ifndef SIMFW_ENTITIES_ISING_HPP
-#define SIMFW_ENTITIES_ISING_HPP
+#ifndef WDB_ENTITIES_ISING_HPP
+#define WDB_ENTITIES_ISING_HPP
 
-namespace simfw { namespace entities {
+namespace wdb { namespace entities {
 
     class ising : public abstract_dynamic_problem {
     public:

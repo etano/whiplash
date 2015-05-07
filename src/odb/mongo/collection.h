@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_COLLECTION_H
-#define SIMFW_ODB_MONGO_COLLECTION_H
+#ifndef WDB_ODB_MONGO_COLLECTION_H
+#define WDB_ODB_MONGO_COLLECTION_H
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     class collection : public icollection {
     public:

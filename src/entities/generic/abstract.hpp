@@ -1,7 +1,7 @@
-#ifndef SIMFW_ENTITIES_GENERIC_ABSTRACT_HPP
-#define SIMFW_ENTITIES_GENERIC_ABSTRACT_HPP
+#ifndef WDB_ENTITIES_GENERIC_ABSTRACT_HPP
+#define WDB_ENTITIES_GENERIC_ABSTRACT_HPP
 
-namespace simfw { namespace entities {
+namespace wdb { namespace entities {
 
     class abstract_problem {
     public:

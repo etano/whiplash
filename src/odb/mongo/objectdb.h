@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_OBJECTDB_H
-#define SIMFW_ODB_MONGO_OBJECTDB_H
+#ifndef WDB_ODB_MONGO_OBJECTDB_H
+#define WDB_ODB_MONGO_OBJECTDB_H
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     using bsoncxx::builder::basic::document;
     using bsoncxx::builder::basic::kvp;

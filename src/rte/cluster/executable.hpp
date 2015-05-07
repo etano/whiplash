@@ -1,7 +1,7 @@
-#ifndef SIMFW_RTE_CLUSTER_EXECUTABLE_HPP
-#define SIMFW_RTE_CLUSTER_EXECUTABLE_HPP
+#ifndef WDB_RTE_CLUSTER_EXECUTABLE_HPP
+#define WDB_RTE_CLUSTER_EXECUTABLE_HPP
 
-namespace simfw { namespace rte { namespace cluster {
+namespace wdb { namespace rte { namespace cluster {
 
     class executable : public iexecutable {
     public:

@@ -1,7 +1,7 @@
-#ifndef SIMFW_DEPLOYMENT_BASIC_H
-#define SIMFW_DEPLOYMENT_BASIC_H
+#ifndef WDB_DEPLOYMENT_BASIC_H
+#define WDB_DEPLOYMENT_BASIC_H
 
-namespace simfw { namespace deployment {
+namespace wdb { namespace deployment {
 
     class basic {
     public:

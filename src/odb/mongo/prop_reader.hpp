@@ -1,7 +1,7 @@
-#ifndef SIMFW_ODB_MONGO_PROP_READER_HPP
-#define SIMFW_ODB_MONGO_PROP_READER_HPP
+#ifndef WDB_ODB_MONGO_PROP_READER_HPP
+#define WDB_ODB_MONGO_PROP_READER_HPP
 
-namespace simfw { namespace odb { namespace mongo {
+namespace wdb { namespace odb { namespace mongo {
 
     namespace detail {
         using object_view = bsoncxx::v0::document::view;

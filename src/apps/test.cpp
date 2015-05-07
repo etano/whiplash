@@ -9,7 +9,7 @@
 #include <iterator>
 #include <algorithm>
 
-#include "simfw.hpp"
+#include "wdb.hpp"
 #include "entities/generic/hamil.hpp"
 
 template <class T>
@@ -20,8 +20,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
 
 int main(int argc, char* argv[]){
 
-    simfw::entities::generic::hamil* H = (simfw::entities::generic::hamil*)argv[1];
-    simfw::entities::generic::instance* I = (simfw::entities::generic::instance*)argv[2];
+    wdb::entities::generic::hamil* H = (wdb::entities::generic::hamil*)argv[1];
+    wdb::entities::generic::instance* I = (wdb::entities::generic::instance*)argv[2];
 
     int Nr = std::stoi( I->param<0>() );
     double Emin(std::numeric_limits<double>::max());

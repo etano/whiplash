@@ -1,7 +1,7 @@
-#ifndef SIMFW_RTE_IEXECUTABLE_H
-#define SIMFW_RTE_IEXECUTABLE_H
+#ifndef WDB_RTE_IEXECUTABLE_H
+#define WDB_RTE_IEXECUTABLE_H
 
-namespace simfw { namespace rte {
+namespace wdb { namespace rte {
 
     class iexecutable {
     public:

@@ -1,5 +1,5 @@
-#ifndef SIMFW_HPP
-#define SIMFW_HPP
+#ifndef WDB_HPP
+#define WDB_HPP
 // {{{ system includes
 #include <stdio.h>
 #include <stdlib.h>

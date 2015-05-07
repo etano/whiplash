@@ -1,7 +1,7 @@
-#ifndef SIMFW_ENTITIES_SAT_HPP
-#define SIMFW_ENTITIES_SAT_HPP
+#ifndef WDB_ENTITIES_SAT_HPP
+#define WDB_ENTITIES_SAT_HPP
 
-namespace simfw { namespace entities {
+namespace wdb { namespace entities {
 
     class sat : public abstract_dynamic_problem {
     public:
