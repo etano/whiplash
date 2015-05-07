@@ -6,7 +6,7 @@ int main(int, char**){
     wdb::deployment::basic sf(db);
 
     std::ifstream in("apps/hamil");
-    sf.insert_hamil(in);
+    sf.insert_model(in);
     in.close();
 
     return 0;

@@ -6,7 +6,7 @@ int main(int, char**){
     wdb::deployment::basic sf(db);
 
     sf.list_properties();
-    sf.list_hamil(18);
+    sf.list_model(18);
 
     return 0;
 }

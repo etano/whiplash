@@ -6,7 +6,7 @@ namespace wdb { namespace deployment {
     basic::basic(odb::iobjectdb& db)
         : db(db),
         properties( db.provide_collection("properties") ),
-        hamiltonians( db.provide_collection("models") )
+        models( db.provide_collection("models") )
     {
     }
 
@@ -22,15 +22,15 @@ namespace wdb { namespace deployment {
         static_cast<odb::mongo::collection&>(properties).insert( serialized );
     }
 
-    void basic::insert_hamil(std::ifstream& in){
+    void basic::insert_model(std::ifstream& in){
         odb::mongo::object serialized;
-        entities::generic::hamil H( in );
+        entities::generic::model H( in );
         H.serialize(db.get_next_id("models"), serialized);
-        static_cast<odb::mongo::collection&>(hamiltonians).insert( serialized ); 
+        static_cast<odb::mongo::collection&>(models).insert( serialized ); 
     }
 
-    entities::generic::hamil basic::fetch_hamil(int id){
-        return entities::generic::hamil( *hamiltonians.find_object(id) );
+    entities::generic::model basic::fetch_model(int id){
+        return entities::generic::model( *models.find_object(id) );
     }
 
     entities::generic::property basic::fetch_property(int id){
@@ -41,8 +41,8 @@ namespace wdb { namespace deployment {
         properties.list_objects();
     }
 
-    void basic::list_hamil(int id){
-        hamiltonians.print_object(id);
+    void basic::list_model(int id){
+        models.print_object(id);
     }
 
     rte::iexecutable& basic::load(std::string app){

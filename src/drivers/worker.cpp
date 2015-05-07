@@ -8,7 +8,7 @@ int main(int argc, char** argv){
     void** params = (void**)malloc(sizeof(void*)*std::max(10,argc));
     for(int i = 0; i < argc; i++) params[i] = argv[i];
 
-    auto H(sf.fetch_hamil(18));    params[1] = &H;
+    auto H(sf.fetch_model(18));    params[1] = &H;
     auto I(sf.fetch_property(17)); params[2] = &I;
 
     auto& test = sf.load("test.app");

@@ -1,16 +1,16 @@
-#ifndef WDB_ENTITIES_GENERIC_HAMIL_HPP
-#define WDB_ENTITIES_GENERIC_HAMIL_HPP
+#ifndef WDB_ENTITIES_GENERIC_MODEL_HPP
+#define WDB_ENTITIES_GENERIC_MODEL_HPP
 
 namespace wdb { namespace entities { namespace generic {
 
     using wdb::odb::mongo::prop_reader;
     using wdb::odb::mongo::prop_writer;
 
-    class hamil {
+    class model {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
-        hamil(std::ifstream& in) : N_(0) {
+        model(std::ifstream& in) : N_(0) {
             std::map<std::string,int> index;
             while(in){
                 std::string input_str;
@@ -40,7 +40,7 @@ namespace wdb { namespace entities { namespace generic {
             init_nodes();
         }
 
-        hamil(const odb::iobject& o) : N_(0) {
+        model(const odb::iobject& o) : N_(0) {
             const auto& obj = static_cast<const odb::mongo::object&>(o);
             for(auto e : prop_reader::Array(obj, "config")){
                 std::vector<int> inds;
