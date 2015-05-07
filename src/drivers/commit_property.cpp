@@ -9,7 +9,7 @@ int main(int, char**){
     params.push_back("7");
     params.push_back("13");
 
-    sf.insert_instance(18, "ising_s0", params);
+    sf.assume_property(18, "ising_s0", params);
 
     return 0;
 }

@@ -5,21 +5,21 @@ namespace wdb { namespace deployment {
 
     basic::basic(odb::iobjectdb& db)
         : db(db),
-        instances( db.provide_collection("properties") ),
+        properties( db.provide_collection("properties") ),
         hamiltonians( db.provide_collection("models") )
     {
     }
 
-    void basic::update_instance(){
+    void basic::resolve_property(){
         // TODO
     }
 
-    void basic::insert_instance(int hid, std::string solver, const std::vector<std::string>& params){
+    void basic::assume_property(int hid, std::string solver, const std::vector<std::string>& params){
         odb::mongo::object serialized, serialized_state;
         entities::generic::property pb( hid, solver, params );
         pb.serialize_state(serialized_state);
         pb.serialize(db.get_next_id("properties"), serialized, serialized_state);
-        static_cast<odb::mongo::collection&>(instances).insert( serialized );
+        static_cast<odb::mongo::collection&>(properties).insert( serialized );
     }
 
     void basic::insert_hamil(std::ifstream& in){
@@ -33,12 +33,12 @@ namespace wdb { namespace deployment {
         return entities::generic::hamil( *hamiltonians.find_object(id) );
     }
 
-    entities::generic::property basic::fetch_instance(int id){
-        return entities::generic::property( *instances.find_object(id) );
+    entities::generic::property basic::fetch_property(int id){
+        return entities::generic::property( *properties.find_object(id) );
     }
 
-    void basic::list_instances(){
-        instances.list_objects();
+    void basic::list_properties(){
+        properties.list_objects();
     }
 
     void basic::list_hamil(int id){

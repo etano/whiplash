@@ -9,7 +9,7 @@ int main(int argc, char** argv){
     for(int i = 0; i < argc; i++) params[i] = argv[i];
 
     auto H(sf.fetch_hamil(18));    params[1] = &H;
-    auto I(sf.fetch_instance(17)); params[2] = &I;
+    auto I(sf.fetch_property(17)); params[2] = &I;
 
     auto& test = sf.load("test.app");
     test(argc, (char**)params);

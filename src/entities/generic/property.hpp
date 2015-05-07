@@ -1,5 +1,5 @@
-#ifndef WDB_ENTITIES_GENERIC_INSTANCE_HPP
-#define WDB_ENTITIES_GENERIC_INSTANCE_HPP
+#ifndef WDB_ENTITIES_GENERIC_PROPERTY_HPP
+#define WDB_ENTITIES_GENERIC_PROPERTY_HPP
 
 namespace wdb { namespace entities { namespace generic {
 
