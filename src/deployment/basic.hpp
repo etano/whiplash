@@ -10,6 +10,10 @@ namespace simfw { namespace deployment {
     {
     }
 
+    void basic::update_instance(){
+        // TODO
+    }
+
     void basic::insert_instance(int hid, std::string solver, const std::vector<std::string>& params){
         odb::mongo::object serialized, serialized_state;
         entities::generic::instance pb( hid, solver, params );

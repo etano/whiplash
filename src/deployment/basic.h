@@ -6,6 +6,7 @@ namespace simfw { namespace deployment {
     class basic {
     public:
         basic(odb::iobjectdb& db);
+        void update_instance();
         void insert_instance(int hid, std::string solver, const std::vector<std::string>& params);
         void insert_hamil(std::ifstream& in);
         void list_instances();
