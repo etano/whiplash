@@ -19,7 +19,7 @@
 #include "odb/mongo.hpp"
 
 #include "entities/generic/hamil.hpp"
-#include "entities/generic/instance.hpp"
+#include "entities/generic/property.hpp"
 #include "entities/generic/abstract.hpp"
 #include "entities/generic/abstract_dynamic.hpp"
 

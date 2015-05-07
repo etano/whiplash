@@ -16,7 +16,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_instance(int hid, std::string solver, const std::vector<std::string>& params){
         odb::mongo::object serialized, serialized_state;
-        entities::generic::instance pb( hid, solver, params );
+        entities::generic::property pb( hid, solver, params );
         pb.serialize_state(serialized_state);
         pb.serialize(db.get_next_id("properties"), serialized, serialized_state);
         static_cast<odb::mongo::collection&>(instances).insert( serialized );
@@ -33,8 +33,8 @@ namespace wdb { namespace deployment {
         return entities::generic::hamil( *hamiltonians.find_object(id) );
     }
 
-    entities::generic::instance basic::fetch_instance(int id){
-        return entities::generic::instance( *instances.find_object(id) );
+    entities::generic::property basic::fetch_instance(int id){
+        return entities::generic::property( *instances.find_object(id) );
     }
 
     void basic::list_instances(){

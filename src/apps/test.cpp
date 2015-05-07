@@ -21,7 +21,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
 int main(int argc, char* argv[]){
 
     wdb::entities::generic::hamil* H = (wdb::entities::generic::hamil*)argv[1];
-    wdb::entities::generic::instance* I = (wdb::entities::generic::instance*)argv[2];
+    wdb::entities::generic::property* I = (wdb::entities::generic::property*)argv[2];
 
     int Nr = std::stoi( I->param<0>() );
     double Emin(std::numeric_limits<double>::max());

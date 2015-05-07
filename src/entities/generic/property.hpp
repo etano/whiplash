@@ -6,9 +6,9 @@ namespace wdb { namespace entities { namespace generic {
     using wdb::odb::mongo::prop_reader;
     using wdb::odb::mongo::prop_writer;
 
-    class instance {
+    class property {
     public:
-        instance(const odb::iobject& o){
+        property(const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);
             h_      = prop_reader::Int(obj, "hid");
             solver_ = prop_reader::String(obj, "solver");
@@ -28,7 +28,7 @@ namespace wdb { namespace entities { namespace generic {
             return params_[N];
         }
 
-        instance(int hid, std::string solver, const std::vector<std::string>& params) 
+        property(int hid, std::string solver, const std::vector<std::string>& params) 
             : h_(hid),
             solver_(solver),
             params_(params)

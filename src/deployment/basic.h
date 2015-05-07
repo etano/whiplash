@@ -13,7 +13,7 @@ namespace wdb { namespace deployment {
         void list_hamil(int id);
 
         entities::generic::hamil fetch_hamil(int id);
-        entities::generic::instance fetch_instance(int id);
+        entities::generic::property fetch_instance(int id);
 
         rte::iexecutable& load(std::string app);
     private:
