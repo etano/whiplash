@@ -4,8 +4,7 @@ ORIGDIR=`pwd`
 echo "Building to ${ORIGDIR}"
 
 if [ -d .git ]; then
-    git submodule init
-    git submodule update
+    git submodule update --init --recursive
 
     cd depends/mongo-c-driver
     ./autogen.sh --prefix=${ORIGDIR}
