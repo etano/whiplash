@@ -1,6 +1,7 @@
 #! /bin/bash
 
 BUILDPATH=`pwd`
+NTHREADS=0
 
 for i in "$@"
 do
