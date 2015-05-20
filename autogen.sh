@@ -1,23 +1,42 @@
-#! /bin/sh
+#! /bin/bash
 
-ORIGDIR=`pwd`
-echo "Building to ${ORIGDIR}"
+BUILDPATH=`pwd`
+
+for i in "$@"
+do
+case $i in
+    -p=*|--prefix=*)
+    BUILDPATH="${i#*=}"
+    shift
+    ;;
+    -j=*|--nthreads=*)
+    NTHREADS="${i#*=}"
+    shift
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+done
+
+echo "Building to ${BUILDPATH}"
 
 if [ -d .git ]; then
     git submodule update --init --recursive
 
     cd depends/mongo-c-driver
-    ./autogen.sh --prefix=${ORIGDIR}
-    make && make install
+    ./autogen.sh --prefix=${BUILDPATH}
+    make -j${NTHREADS} && make install
     cd ../../
 
     cd depends/mongo-cxx-driver/build
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ORIGDIR} ..
-    make && make install
+    export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${BUILDPATH}/lib/pkgconfig
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${BUILDPATH} ..
+    make -j${NTHREADS} && make install
     cd ../../../
 
     cd src
-    make && make install
+    make -j${NTHREADS}
     cd ../
 fi
 
