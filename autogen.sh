@@ -26,6 +26,9 @@ if [ -d .git ]; then
     git submodule update --init --recursive
 
     cd depends/mongo-c-driver
+    if [ ! -f src/libbson/README ]; then
+        ln -s src/libbson/README.md src/libbson/README
+    fi
     ./autogen.sh --prefix=${BUILDPATH}
     make -j${NTHREADS} && make install
     cd ../../
