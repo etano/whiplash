@@ -1,11 +1,12 @@
 SHELL := /bin/bash
-CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. `pkg-config --cflags --libs ../lib/pkgconfig/*.pc`
+CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. `PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(prefix)/lib/pkgconfig pkg-config --cflags --libs $(prefix)/lib/pkgconfig/*.pc`
 
 .DEFAULT: all
 .PHONY: all clean
 
 APPS = test.app
 DRIVERS = commit_property.driver commit_model.driver fetch_model.driver fetch_property.driver query.driver worker.driver
+prefix = ..
 
 all: $(DRIVERS) $(APPS)
 
@@ -21,3 +22,9 @@ all: $(DRIVERS) $(APPS)
 clean:
 	-rm -f apps/*.app
 	-rm -f drivers/*.driver
+
+install:
+	install -m 0755 apps/*.app $(prefix)/bin
+	install -m 0755 drivers/*.driver $(prefix)/bin
+
+.phony: install
