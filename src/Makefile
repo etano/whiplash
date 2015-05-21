@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. `PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(prefix)/lib/pkgconfig pkg-config --cflags --libs $(prefix)/lib/pkgconfig/*.pc`
+CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. `PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(prefix)/lib/pkgconfig pkg-config --cflags --libs $(prefix)/lib/pkgconfig/*.pc` -ldl
 
 .DEFAULT: all
 .PHONY: all clean
