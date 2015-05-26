@@ -1,8 +1,8 @@
 SHELL := /bin/bash
-CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. `PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:$(prefix)/lib/pkgconfig pkg-config --cflags --libs $(prefix)/lib/pkgconfig/*.pc` -ldl
+CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --libs libmongocxx`
 
 .DEFAULT: all
-.PHONY: all clean
+.PHONY: all clean install
 
 APPS = test.app
 DRIVERS = commit_property.driver commit_model.driver fetch_model.driver fetch_property.driver query.driver worker.driver
@@ -26,5 +26,3 @@ clean:
 install:
 	install -m 0755 apps/*.app $(prefix)/bin
 	install -m 0755 drivers/*.driver $(prefix)/bin
-
-.phony: install

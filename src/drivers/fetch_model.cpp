@@ -5,7 +5,7 @@ int main(int, char**){
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    sf.fetch_model(18);
+    sf.fetch_model(2);
     return 0;
 }
 
