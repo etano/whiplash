@@ -22,13 +22,29 @@ namespace wdb { namespace odb { namespace mongo {
     }
 
     std::unique_ptr<iobject> collection::find_object(int id){
+        return find_object_by_kvp("_id",std::to_string(id));
+    }
+
+    std::unique_ptr<iobject> collection::find_object_by_kvp(std::string key, std::string val){
         bsoncxx::builder::stream::document filter;
-        filter << "_id" << id;
+        filter << key << val;
         return std::unique_ptr<iobject>(new object( *coll.find_one(filter) ));
     }
 
     void collection::insert(iobject& o){
         coll.insert_one(static_cast<odb::mongo::object&>(o).w.builder);
+    }
+
+    void collection::remove(iobject& o){
+        coll.delete_one(static_cast<odb::mongo::object&>(o).w.builder);
+    }
+
+    void collection::drop(){
+        coll.drop();
+    }
+
+    std::string collection::name(){
+        return std::string{coll.name()};
     }
 
 } } }

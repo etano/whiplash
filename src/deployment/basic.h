@@ -8,6 +8,8 @@ namespace wdb { namespace deployment {
         basic(odb::iobjectdb& db);
         void resolve_property();
         void assume_property(int hid, std::string solver, const std::vector<std::string>& params);
+        void drop_collections();
+        void init_counters();
         void insert_model(std::ifstream& in);
         void list_properties();
         void list_model(int id);
@@ -19,6 +21,7 @@ namespace wdb { namespace deployment {
     private:
         odb::icollection& properties;
         odb::icollection& models;
+        odb::icollection& counters;
         odb::iobjectdb& db;
     };
 
