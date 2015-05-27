@@ -17,6 +17,10 @@ namespace wdb { namespace odb { namespace mongo {
     {
         try {
             db[name].drop();
+            for(auto c : collections){
+                if (c->name() == name)
+                    delete c;
+            }
         } catch (mongocxx::v0::exception::operation e) {
             std::cerr << name << " doesn't exist in database!" << std::endl;
         }
