@@ -10,7 +10,7 @@ namespace wdb { namespace deployment {
         void assume_property(int model_id, int executable_id, const std::vector<std::string>& params);
         void drop_collections();
         void init_counters();
-        void insert_model(std::ifstream&, const std::vector<std::pair<std::string,std::string> >&);
+        void insert_model(const bsoncxx::builder::stream::document&);
         void list_properties();
         void list_model(int id);
 

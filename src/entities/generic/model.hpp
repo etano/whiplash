@@ -58,16 +58,11 @@ namespace wdb { namespace entities { namespace generic {
             init_nodes();
         }
 
-        // void serialize(int id, odb::iobject& ham){
-        //     prop_writer::prop("_id", id) >> ham;
-        //     prop_writer::prop("config", edges_) >> ham;
-        // }
-
-      void serialize(const int id, const int time_stamp, const std::vector<std::pair<std::string,std::string> >& descriptor, odb::iobject& ham){
+       void serialize(const int id, const int time_stamp, const bsoncxx::builder::stream::document& doc, odb::iobject& ham){
             prop_writer::prop("_id", id) >> ham;
             prop_writer::prop("time", time_stamp) >> ham;
-            for(const auto& desc : descriptor)
-              prop_writer::prop(desc.first, desc.second) >> ham;
+            for(const auto& a : doc.view())
+              prop_writer::prop(std::string(a.key()), std::string(bsoncxx::to_json(a.get_value()))) >> ham;
             prop_writer::prop("config", edges_) >> ham;
         }      
 

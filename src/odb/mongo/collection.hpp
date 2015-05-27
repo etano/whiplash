@@ -43,10 +43,6 @@ namespace wdb { namespace odb { namespace mongo {
         coll.drop();
     }
 
-    std::string collection::name(){
-        return std::string{coll.name()};
-    }
-
 } } }
 
 #endif

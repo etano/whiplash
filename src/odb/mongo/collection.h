@@ -15,7 +15,6 @@ namespace wdb { namespace odb { namespace mongo {
         virtual void insert(iobject& o) override;
         virtual void remove(iobject& o) override;
         virtual void drop() override;
-        virtual std::string name() override;
     private:
         impl coll;
     };

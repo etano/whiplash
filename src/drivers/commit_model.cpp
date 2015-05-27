@@ -1,5 +1,4 @@
 #include "wdb.hpp"
-#include "options.hpp"
 
 using wdb::odb::mongo::objectdb;
 
@@ -8,17 +7,22 @@ int main(int argc, char* argv[])
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    const amap_type args(parse_args(argc, argv));
-    const std::string file(*get_sarg(args, "file"));
-    const std::vector<std::pair<std::string,std::string> > descriptor{
-      std::make_pair("class",*get_sarg(args, "class"))
-        , std::make_pair("description",*get_sarg(args, "description"))
-        , std::make_pair("owner",*get_sarg(args, "owner"))
-        };
+    bsoncxx::builder::stream::document doc;
 
-    std::ifstream in(file);
-    sf.insert_model(in,descriptor);
-    in.close();
+    bool have_key = false;
+    std::string key;
+    for (std::size_t i = 1; i < std::size_t(argc); ++i) {
+      if (argv[i][0] == '-') {
+        if(!have_key)
+          have_key = true;
+        key = argv[i] + 1;
+      } else if (have_key) {
+        doc << key << std::string(argv[i]);
+        have_key = false;
+      }
+    }
+
+    sf.insert_model(doc);
 
     return 0;
 }

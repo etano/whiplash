@@ -49,11 +49,14 @@ namespace wdb { namespace deployment {
       static_cast<odb::mongo::collection&>(properties).insert( serialized );
     }
 
-    void basic::insert_model(std::ifstream& in,const std::vector<std::pair<std::string,std::string> >& descriptor)
+    void basic::insert_model(const bsoncxx::builder::stream::document& doc)
     {
       odb::mongo::object serialized;
+      const std::string file_name(bsoncxx::to_json(doc.view()["file"].get_value()));
+      std::ifstream in(file_name);
       entities::generic::model H(in);
-      H.serialize(db.get_next_id("models"),std::time(nullptr),descriptor,serialized);
+      in.close();
+      H.serialize(db.get_next_id("models"),std::time(nullptr),doc,serialized);
       static_cast<odb::mongo::collection&>(models).insert(serialized);
     }
 

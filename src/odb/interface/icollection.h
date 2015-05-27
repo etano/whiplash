@@ -13,7 +13,6 @@ namespace wdb { namespace odb {
         virtual void insert(iobject& o) = 0;
         virtual void remove(iobject& o) = 0;
         virtual void drop() = 0;
-        virtual std::string name() = 0;
     };
 
 } }
