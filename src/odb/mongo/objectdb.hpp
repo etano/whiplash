@@ -16,11 +16,7 @@ namespace wdb { namespace odb { namespace mongo {
     icollection& objectdb::drop_collection(std::string name)
     {
         try {
-            db[name].drop();
-            for(auto c : collections){
-                if (c->name() == name)
-                    delete c;
-            }
+            db[name].drop(); // FIXME: Should also pop collection from vector of collections
         } catch (mongocxx::v0::exception::operation e) {
             std::cerr << name << " doesn't exist in database!" << std::endl;
         }

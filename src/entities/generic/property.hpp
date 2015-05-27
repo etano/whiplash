@@ -10,15 +10,15 @@ namespace wdb { namespace entities { namespace generic {
     public:
         property(const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);
-            h_      = prop_reader::Int(obj, "hid");
-            solver_ = prop_reader::String(obj, "solver");
+            model_      = prop_reader::Int(obj, "model_id");
+            executable_ = prop_reader::Int(obj, "executable_id");
             for(auto e : prop_reader::Array(obj, "params"))
                 params_.push_back(prop_reader::String(e));
         }
 
         void info(){
-            std::cout << "H: " << h_ << "\n";
-            std::cout << "Solver: " << solver_ << "\n";
+            std::cout << "Model: " << model_ << "\n";
+            std::cout << "Executable: " << executable_ << "\n";
             std::cout << "Params: "; for(auto e : params_) std::cout << e << " ";
             std::cout << "\n";
         }
@@ -28,9 +28,9 @@ namespace wdb { namespace entities { namespace generic {
             return params_[N];
         }
 
-        property(int hid, std::string solver, const std::vector<std::string>& params) 
-            : h_(hid),
-            solver_(solver),
+        property(int model_id, int executable_id, const std::vector<std::string>& params) 
+            : model_(model_id),
+            executable_(executable_id),
             params_(params)
         {
         }
@@ -43,14 +43,14 @@ namespace wdb { namespace entities { namespace generic {
 
         void serialize(int id, odb::iobject& inst, const odb::iobject& state){
             prop_writer::prop("_id", id) >> inst;
-            prop_writer::prop("hid", h_) >> inst;
-            prop_writer::prop("solver", solver_) >> inst;
+            prop_writer::prop("model_id", model_) >> inst;
+            prop_writer::prop("executable_id", executable_) >> inst;
             prop_writer::prop("params", params_) >> inst;
             prop_writer::prop("state", state) >> inst;
         }
     private:
-        int h_;
-        std::string solver_;
+        int model_;
+        int executable_;
         std::vector<std::string> params_;
     };
 

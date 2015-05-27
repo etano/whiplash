@@ -41,9 +41,9 @@ namespace wdb { namespace deployment {
         static_cast<odb::mongo::collection&>(counters).insert( executables_counter );
     }
 
-    void basic::assume_property(int hid, std::string solver, const std::vector<std::string>& params){
+    void basic::assume_property(int model_id, int executable_id, const std::vector<std::string>& params){
       odb::mongo::object serialized, serialized_state;
-      entities::generic::property pb( hid, solver, params );
+      entities::generic::property pb( model_id, executable_id, params );
       pb.serialize_state(serialized_state);
       pb.serialize(db.get_next_id("properties"), serialized, serialized_state);
       static_cast<odb::mongo::collection&>(properties).insert( serialized );

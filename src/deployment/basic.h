@@ -7,7 +7,7 @@ namespace wdb { namespace deployment {
     public:
         basic(odb::iobjectdb& db);
         void resolve_property();
-        void assume_property(int hid, std::string solver, const std::vector<std::string>& params);
+        void assume_property(int model_id, int executable_id, const std::vector<std::string>& params);
         void drop_collections();
         void init_counters();
         void insert_model(std::ifstream&, const std::vector<std::pair<std::string,std::string> >&);
