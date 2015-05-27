@@ -15,12 +15,8 @@ int main(int argc, char* argv[])
         , std::make_pair("description",*get_sarg(args, "description"))
         , std::make_pair("owner",*get_sarg(args, "owner"))
         };
-    
-    std::cout << "file: " << file << std::endl;
-    for(const auto& desc : descriptor)
-      std::cout << desc.first << " --> " << desc.second << std::endl;
 
-    std::ifstream in(file); //apps/hamil
+    std::ifstream in(file);
     sf.insert_model(in,descriptor);
     in.close();
 
