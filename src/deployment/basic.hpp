@@ -60,6 +60,11 @@ namespace wdb { namespace deployment {
       static_cast<odb::mongo::collection&>(models).insert(serialized);
     }
 
+    void basic::insert_executable(const bsoncxx::builder::stream::document& doc)
+    {
+      //TODO
+    }
+    
     entities::generic::model basic::fetch_model(int id){
       return entities::generic::model( *models.find_object(id) );
     }

@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    sf.insert_model(parse_args(argc,argv));
+    sf.insert_executable(parse_args(argc,argv));
 
     return 0;
 }

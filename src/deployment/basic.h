@@ -11,6 +11,7 @@ namespace wdb { namespace deployment {
         void drop_collections();
         void init_counters();
         void insert_model(const bsoncxx::builder::stream::document&);
+        void insert_executable(const bsoncxx::builder::stream::document&);        
         void list_properties();
         void list_model(int id);
 

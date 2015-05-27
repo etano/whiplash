@@ -5,7 +5,7 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 .PHONY: all clean install
 
 APPS = test.app
-DRIVERS = commit_property.driver commit_model.driver fetch_model.driver fetch_property.driver init_db.driver query.driver worker.driver
+DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver fetch_property.driver init_db.driver query.driver worker.driver
 prefix = ..
 
 all: $(DRIVERS) $(APPS)
