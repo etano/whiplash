@@ -26,9 +26,9 @@ namespace wdb { namespace entities { namespace generic {
               }
         }
 
-        virtual void print(){}
+        virtual void print(){std::cout << "print not defined" << std::endl;}
 
-        virtual std::string get_class(){
+        std::string get_class(){
           return class_;
         }
 
