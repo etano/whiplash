@@ -29,7 +29,7 @@ namespace wdb { namespace odb { namespace mongo {
         return *collections.back();
     }
 
-    int objectdb::get_next_id(std::string cname){
+      int objectdb::get_next_id(std::string cname){
         using bsoncxx::builder::stream::document;
         using bsoncxx::builder::stream::open_document;
         using bsoncxx::builder::stream::close_document;
@@ -38,14 +38,15 @@ namespace wdb { namespace odb { namespace mongo {
    
         filter << "_id" << cname;
         auto doc = db["counters"].find_one(filter);
-        int res = std::stoi(bsoncxx::to_json(doc->view()["seq"].get_value())) + 1;
-   
+
+        const int res(detail::get<int>(*doc,"seq") + 1);
+    
         update << "$set" << open_document << "seq" << res << close_document;
         db["counters"].update_one(filter, update);
    
         return res;
-    }
+      }
 
-} } }
+    } } }
 
 #endif

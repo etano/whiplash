@@ -56,8 +56,8 @@ namespace wdb { namespace deployment {
 
     void basic::insert_model(const bsoncxx::builder::stream::document& doc)
     {
-      const std::string file_name(bsoncxx::to_json(doc.view()["file"].get_value()));
-      const std::string model_class(bsoncxx::to_json(doc.view()["class"].get_value()));
+      const std::string file_name(doc.view()["file"].get_utf8().value);
+      const std::string model_class(doc.view()["class"].get_utf8().value);
       std::ifstream in(file_name);
       std::unique_ptr<entities::generic::model> H;
       if (model_class == "ising")

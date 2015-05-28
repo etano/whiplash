@@ -15,9 +15,9 @@
 #include "odb/mongo/object.h"
 #include "odb/mongo/collection.h"
 #include "odb/mongo/objectdb.h"
-#include "odb/mongo/collection.hpp"
-#include "odb/mongo/objectdb.hpp"
 #include "odb/mongo/prop_reader.hpp"
 #include "odb/mongo/prop_writer.hpp"
+#include "odb/mongo/collection.hpp"
+#include "odb/mongo/objectdb.hpp"
 
 #endif
