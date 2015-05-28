@@ -1,22 +1,18 @@
 #ifndef WDB_ENTITIES_ISING_HPP
 #define WDB_ENTITIES_ISING_HPP
 
-namespace wdb { namespace entities {
+namespace wdb { namespace entities { namespace ising {
 
-    class ising : public abstract_dynamic_problem {
-    public:
-        virtual ~ising(){}
-    };
+    class reader : public wdb::entities::dynamic_generic::reader {};
 
-    using wdb::odb::mongo::prop_reader;
-    using wdb::odb::mongo::prop_writer;
+    class writer : public wdb::entities::dynamic_generic::writer {};
 
-    class ising_model : public generic::model {
+    class model : public wdb::entities::dynamic_generic::model {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
-        ising_model(std::ifstream& in)
-            : generic::model(in), N_(0)
+        model(std::ifstream& in)
+            : wdb::entities::dynamic_generic::model(in), N_(0)
         {
             std::map<std::string,int> index;
             while(in){
@@ -47,20 +43,20 @@ namespace wdb { namespace entities {
             init_nodes();
         }
 
-        ising_model(const odb::iobject& o)
-            : generic::model(o), N_(0)
+        model(const odb::iobject& o)
+            : wdb::entities::dynamic_generic::model(o), N_(0)
         {
             const auto& obj = static_cast<const odb::mongo::object&>(o);
-            for(auto e : prop_reader::Array(obj, "config")){
+            for(auto e : reader::Array(obj, "config")){
                 std::vector<int> inds;
-                auto sub_array = prop_reader::Array(e);
-                for(const auto a : prop_reader::Array(sub_array[0])){
-                    int a_ = prop_reader::Int(a);
+                auto sub_array = reader::Array(e);
+                for(const auto a : reader::Array(sub_array[0])){
+                    int a_ = reader::Int(a);
                     N_ = std::max(N_, a_);
                     inds.push_back(a_);
                 }
 
-                double val = prop_reader::Double(sub_array[1]);
+                double val = reader::Double(sub_array[1]);
                 edges_.push_back(std::make_pair(inds, val));
             }
             N_++; // important
@@ -68,8 +64,8 @@ namespace wdb { namespace entities {
         }
 
         void serialize(const int id, const int time_stamp, const bsoncxx::builder::stream::document& doc, odb::iobject& ham){
-             prop_writer::prop("config", edges_) >> ham;
-             generic::model::serialize(id,time_stamp,doc,ham);
+             writer::prop("config", edges_) >> ham;
+             wdb::entities::dynamic_generic::model::serialize(id,time_stamp,doc,ham);
         }
 
         void init_nodes(){
@@ -128,26 +124,24 @@ namespace wdb { namespace entities {
         int N_;
     };
 
-    class ising_property : public generic::property {
+    class property : public wdb::entities::dynamic_generic::property {
     public:
-        ising_property(const odb::iobject& o)
-            : generic::property(o)
+        property(const odb::iobject& o)
+            : wdb::entities::dynamic_generic::property(o)
         {}
 
-        ising_property(int model_id, int executable_id, const std::vector<std::string>& params)
-            : generic::property(model_id, executable_id, params)
+        property(int model_id, int executable_id, const std::vector<std::string>& params)
+            : wdb::entities::dynamic_generic::property(model_id, executable_id, params)
         {}
 
         virtual void serialize_state(odb::iobject& state){
             // todo // save the actual state
-            prop_writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> state;
-            prop_writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> state;
+            writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> state;
+            writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> state;
         }
     };
 
-
-
-} }
+} } }
 
 #endif
 

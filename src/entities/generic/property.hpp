@@ -3,17 +3,14 @@
 
 namespace wdb { namespace entities { namespace generic {
 
-    using wdb::odb::mongo::prop_reader;
-    using wdb::odb::mongo::prop_writer;
-
     class property {
     public:
         property(const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);
-            model_      = prop_reader::Int(obj, "model_id");
-            executable_ = prop_reader::Int(obj, "executable_id");
-            for(auto e : prop_reader::Array(obj, "params"))
-                params_.push_back(prop_reader::String(e));
+            model_      = reader::Int(obj, "model_id");
+            executable_ = reader::Int(obj, "executable_id");
+            for(auto e : reader::Array(obj, "params"))
+                params_.push_back(reader::String(e));
         }
 
         void info(){
@@ -35,13 +32,13 @@ namespace wdb { namespace entities { namespace generic {
         virtual void serialize_state(odb::iobject& state) {}
 
         void serialize(int id, odb::iobject& inst, const odb::iobject& state){
-            prop_writer::prop("_id", id) >> inst;
-            prop_writer::prop("model_id", model_) >> inst;
-            prop_writer::prop("executable_id", executable_) >> inst;
-            prop_writer::prop("params", params_) >> inst;
-            prop_writer::prop("state", state) >> inst;
+            writer::prop("_id", id) >> inst;
+            writer::prop("model_id", model_) >> inst;
+            writer::prop("executable_id", executable_) >> inst;
+            writer::prop("params", params_) >> inst;
+            writer::prop("state", state) >> inst;
         }
-    private:
+    protected:
         int model_;
         int executable_;
         std::vector<std::string> params_;

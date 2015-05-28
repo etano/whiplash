@@ -45,7 +45,7 @@ namespace wdb { namespace deployment {
       std::string model_class = fetch_model(model_id).get_class();
       std::unique_ptr<entities::generic::property> pb;
       if (model_class == "ising")
-          pb = std::unique_ptr<entities::ising_property>(new entities::ising_property(model_id, executable_id, params));
+          pb = std::unique_ptr<entities::ising::property>(new entities::ising::property(model_id, executable_id, params));
       else
           pb = std::unique_ptr<entities::generic::property>(new entities::generic::property(model_id, executable_id, params));
       odb::mongo::object serialized, serialized_state;
@@ -61,7 +61,7 @@ namespace wdb { namespace deployment {
       std::ifstream in(file_name);
       std::unique_ptr<entities::generic::model> H;
       if (model_class == "ising")
-          H = std::unique_ptr<entities::ising_model>(new entities::ising_model(in));
+          H = std::unique_ptr<entities::ising::model>(new entities::ising::model(in));
       else
           H = std::unique_ptr<entities::generic::model>(new entities::generic::model(in));
       in.close();

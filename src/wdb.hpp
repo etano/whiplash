@@ -18,10 +18,15 @@
 #include "rte/cluster.hpp"
 #include "odb/mongo.hpp"
 
+#include "entities/generic/writer.hpp"
+#include "entities/generic/reader.hpp"
 #include "entities/generic/model.hpp"
 #include "entities/generic/property.hpp"
-#include "entities/generic/abstract.hpp"
-#include "entities/generic/abstract_dynamic.hpp"
+
+#include "entities/dynamic_generic/writer.hpp"
+#include "entities/dynamic_generic/reader.hpp"
+#include "entities/dynamic_generic/model.hpp"
+#include "entities/dynamic_generic/property.hpp"
 
 #include "entities/sat/sat.hpp"
 #include "entities/tsp/tsp.hpp"
