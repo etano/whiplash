@@ -41,22 +41,32 @@ namespace wdb { namespace deployment {
         static_cast<odb::mongo::collection&>(counters).insert( executables_counter );
     }
 
-    void basic::assume_property(int model_id, int executable_id, const std::vector<std::string>& params){
+    void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
+      std::string model_class = fetch_model(model_id).get_class();
+      std::unique_ptr<entities::generic::property> pb;
+      if (model_class == "ising")
+          pb = std::unique_ptr<entities::ising_property>(new entities::ising_property(model_id, executable_id, params));
+      else
+          pb = std::unique_ptr<entities::generic::property>(new entities::generic::property(model_id, executable_id, params));
       odb::mongo::object serialized, serialized_state;
-      entities::generic::property pb( model_id, executable_id, params );
-      pb.serialize_state(serialized_state);
-      pb.serialize(db.get_next_id("properties"), serialized, serialized_state);
+      pb->serialize_state(serialized_state);
+      pb->serialize(db.get_next_id("properties"), serialized, serialized_state);
       static_cast<odb::mongo::collection&>(properties).insert( serialized );
     }
 
     void basic::insert_model(const bsoncxx::builder::stream::document& doc)
     {
-      odb::mongo::object serialized;
       const std::string file_name(bsoncxx::to_json(doc.view()["file"].get_value()));
+      const std::string model_class(bsoncxx::to_json(doc.view()["class"].get_value()));
       std::ifstream in(file_name);
-      entities::generic::model H(in);
+      std::unique_ptr<entities::generic::model> H;
+      if (model_class == "ising")
+          H = std::unique_ptr<entities::ising_model>(new entities::ising_model(in));
+      else
+          H = std::unique_ptr<entities::generic::model>(new entities::generic::model(in));
       in.close();
-      H.serialize(db.get_next_id("models"),std::time(nullptr),doc,serialized);
+      odb::mongo::object serialized;
+      H->serialize(db.get_next_id("models"),std::time(nullptr),doc,serialized);
       static_cast<odb::mongo::collection&>(models).insert(serialized);
     }
 
@@ -64,7 +74,7 @@ namespace wdb { namespace deployment {
     {
       //TODO
     }
-    
+
     entities::generic::model basic::fetch_model(int id){
       return entities::generic::model( *models.find_object(id) );
     }

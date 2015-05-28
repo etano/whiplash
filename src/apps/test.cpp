@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "wdb.hpp"
-#include "entities/generic/model.hpp"
+#include "entities/ising/ising.hpp"
 
 template <class T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
@@ -20,8 +20,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
 
 int main(int argc, char* argv[]){
 
-    wdb::entities::generic::model* H = (wdb::entities::generic::model*)argv[1];
-    wdb::entities::generic::property* I = (wdb::entities::generic::property*)argv[2];
+    wdb::entities::ising_model* H = (wdb::entities::ising_model*)argv[1];
+    wdb::entities::ising_property* I = (wdb::entities::ising_property*)argv[2];
 
     int Nr = std::stoi( I->param<0>() );
     double Emin(std::numeric_limits<double>::max());

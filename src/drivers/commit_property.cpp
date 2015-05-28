@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
             std::vector<std::string> params;
             for(int i = 2; i < input.size(); ++i)
                 params.push_back(input[i]);
-            sf.assume_property(model_id, executable_id, params);
+            sf.insert_property(model_id, executable_id, params);
         }
     }
 

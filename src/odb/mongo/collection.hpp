@@ -22,12 +22,8 @@ namespace wdb { namespace odb { namespace mongo {
     }
 
     std::unique_ptr<iobject> collection::find_object(int id){
-        return find_object_by_kvp("_id",std::to_string(id));
-    }
-
-    std::unique_ptr<iobject> collection::find_object_by_kvp(std::string key, std::string val){
         bsoncxx::builder::stream::document filter;
-        filter << key << val;
+        filter << "_id" << id;
         return std::unique_ptr<iobject>(new object( *coll.find_one(filter) ));
     }
 

@@ -28,18 +28,11 @@ namespace wdb { namespace entities { namespace generic {
             return params_[N];
         }
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params) 
-            : model_(model_id),
-            executable_(executable_id),
-            params_(params)
-        {
-        }
+        property(int model_id, int executable_id, const std::vector<std::string>& params)
+            : model_(model_id), executable_(executable_id), params_(params)
+        {}
 
-        void serialize_state(odb::iobject& state){
-            // todo // save the actual state
-            prop_writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> state;
-            prop_writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> state;
-        }
+        virtual void serialize_state(odb::iobject& state) {}
 
         void serialize(int id, odb::iobject& inst, const odb::iobject& state){
             prop_writer::prop("_id", id) >> inst;
