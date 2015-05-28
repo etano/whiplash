@@ -20,8 +20,7 @@ namespace wdb { namespace entities { namespace generic {
             prop_writer::prop("time", time_stamp) >> o;
             for(const auto& a : doc.view())
               if(std::string(a.key()) != "id" && std::string(a.key()) != "time" && std::string(a.key()) != "file"){
-                std::string value(bsoncxx::to_json(a.get_value()));
-                value.erase(remove( value.begin(), value.end(), '\"' ),value.end());
+                std::string value(a.get_utf8().value);
                 prop_writer::prop(std::string(a.key()), value) >> o;
               }
         }
