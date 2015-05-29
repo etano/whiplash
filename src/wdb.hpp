@@ -1,6 +1,5 @@
 #ifndef WDB_HPP
 #define WDB_HPP
-
 // {{{ system includes
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +10,7 @@
 #include <dlfcn.h>
 #include <stdexcept>
 #include <memory>
+#include <ctime>
 // }}}
 
 #include "rte/interface.hpp"
