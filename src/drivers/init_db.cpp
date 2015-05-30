@@ -6,7 +6,7 @@ int main(int argc, char* argv[]){
     wdb::deployment::basic sf(db);
 
     sf.purge_collections();
-    sf.init_counters();
+    sf.reset_counters();
 
     return 0;
 }

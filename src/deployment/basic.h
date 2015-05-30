@@ -7,7 +7,7 @@ namespace wdb { namespace deployment {
     public:
         basic(odb::iobjectdb& db);
         void purge_collections();
-        void init_counters();
+        void reset_counters();
         void insert_executable(const bsoncxx::builder::stream::document&);
         void insert_model(const bsoncxx::builder::stream::document&);
         void insert_property(int model_id, int executable_id, const std::vector<std::string>& params);

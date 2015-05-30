@@ -17,22 +17,20 @@ namespace wdb { namespace deployment {
         models.purge();
     }
 
-    void basic::init_counters(){
+    void basic::reset_counters(){
         using odb::mongo::prop_writer;
-        odb::mongo::object properties_counter;
+        odb::mongo::object properties_counter, models_counter, executables_counter;
+        counters.purge();
+
         prop_writer::prop("_id", "properties") >> properties_counter;
-        static_cast<odb::mongo::collection&>(counters).remove( properties_counter );
         prop_writer::prop("seq", -1) >> properties_counter;
-        static_cast<odb::mongo::collection&>(counters).insert( properties_counter );
-        odb::mongo::object models_counter;
         prop_writer::prop("_id", "models") >> models_counter;
-        static_cast<odb::mongo::collection&>(counters).remove( models_counter );
         prop_writer::prop("seq", -1) >> models_counter;
-        static_cast<odb::mongo::collection&>(counters).insert( models_counter );
-        odb::mongo::object executables_counter;
         prop_writer::prop("_id", "executables") >> executables_counter;
-        static_cast<odb::mongo::collection&>(counters).remove( executables_counter );
         prop_writer::prop("seq", -1) >> executables_counter;
+
+        static_cast<odb::mongo::collection&>(counters).insert( properties_counter );
+        static_cast<odb::mongo::collection&>(counters).insert( models_counter );
         static_cast<odb::mongo::collection&>(counters).insert( executables_counter );
     }
 
