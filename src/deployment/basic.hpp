@@ -35,7 +35,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
-        std::string model_class = fetch_model(model_id).get_class();
+        std::string model_class = fetch_model(model_id).get_class(); // please, optimize me
         std::unique_ptr<entities::generic::property> pb;
         if(model_class == "ising")
             pb = std::unique_ptr<entities::ising::property>(new entities::ising::property(model_id, executable_id, params));
