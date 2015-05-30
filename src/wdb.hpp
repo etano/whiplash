@@ -21,11 +21,10 @@
 
 #include "entities/generic.hpp"
 #include "entities/dynamic_generic.hpp"
-
-#include "entities/sat/sat.hpp"
-#include "entities/tsp/tsp.hpp"
 #include "entities/ising.hpp"
-#include "entities/qubo/qubo.hpp"
+#include "entities/qubo.hpp"
+#include "entities/sat.hpp"
+#include "entities/tsp.hpp"
 
 #include "deployment/basic.h"
 #include "deployment/basic.hpp"
