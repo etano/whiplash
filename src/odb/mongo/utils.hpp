@@ -1,7 +1,8 @@
-#ifndef WDB_UTILS_ARG_PARSER_HPP
-#define WDB_UTILS_ARG_PARSER_HPP
+#ifndef WDB_ODB_MONGO_UTILS_HPP
+#define WDB_ODB_MONGO_UTILS_HPP
 
-namespace wdb { namespace utils {
+namespace wdb { namespace odb { namespace mongo {
+
     bsoncxx::builder::stream::document parse_args(int argc, char *argv[]){
         bsoncxx::builder::stream::document doc;
         bool have_key = false;
@@ -17,6 +18,7 @@ namespace wdb { namespace utils {
         }
         return doc;
     }
-} }
+
+} } }
 
 #endif
