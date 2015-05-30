@@ -11,13 +11,10 @@ namespace wdb { namespace deployment {
     {
     }
 
-    void basic::resolve_property(){
-        // TODO
-    }
-
-    void basic::drop_collections(){
-        db.drop_collection("properties");
-        db.drop_collection("models");
+    void basic::purge_collections(){
+        properties.purge();
+        counters.purge();
+        models.purge();
     }
 
     void basic::init_counters(){

@@ -4,6 +4,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/options/find.hpp>
 #include <mongocxx/exception/query.hpp>
+#include <mongocxx/exception/write.hpp>
 #include <mongocxx/instance.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>

@@ -35,8 +35,12 @@ namespace wdb { namespace odb { namespace mongo {
         coll.delete_one(static_cast<odb::mongo::object&>(o).w.builder);
     }
 
-    void collection::drop(){
-        coll.drop();
+    void collection::purge(){
+        try {
+            coll.delete_many({});
+        } catch (mongocxx::v0::exception::write e) {
+            std::cerr << "Couldn't delete the collection's contents!" << std::endl;
+        }
     }
 
 } } }

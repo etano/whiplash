@@ -16,7 +16,6 @@ namespace wdb { namespace odb { namespace mongo {
 
        ~objectdb() override;
         objectdb(std::string url);
-        icollection& drop_collection(std::string name) override;
         icollection& provide_collection(std::string name) override;
         int get_next_id(std::string collection) override;
     private:

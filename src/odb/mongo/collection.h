@@ -13,7 +13,7 @@ namespace wdb { namespace odb { namespace mongo {
         virtual void print_object(int id) override;
         virtual void insert(iobject& o) override;
         virtual void remove(iobject& o) override;
-        virtual void drop() override;
+        virtual void purge() override;
     private:
         impl coll;
     };

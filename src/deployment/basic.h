@@ -6,8 +6,7 @@ namespace wdb { namespace deployment {
     class basic {
     public:
         basic(odb::iobjectdb& db);
-        void resolve_property();
-        void drop_collections();
+        void purge_collections();
         void init_counters();
         void insert_executable(const bsoncxx::builder::stream::document&);
         void insert_model(const bsoncxx::builder::stream::document&);

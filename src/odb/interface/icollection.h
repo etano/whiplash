@@ -11,7 +11,7 @@ namespace wdb { namespace odb {
         virtual void print_object(int id) = 0;
         virtual void insert(iobject& o) = 0;
         virtual void remove(iobject& o) = 0;
-        virtual void drop() = 0;
+        virtual void purge() = 0;
     };
 
 } }

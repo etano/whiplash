@@ -60,8 +60,8 @@ namespace wdb { namespace entities { namespace ising {
         }
 
         void serialize(const int id, const int time_stamp, const bsoncxx::builder::stream::document& doc, odb::iobject& ham){
-             writer::prop("config", edges_) >> ham;
-             wdb::entities::dynamic_generic::model::serialize(id,time_stamp,doc,ham);
+            wdb::entities::dynamic_generic::model::serialize(id, time_stamp, doc, ham);
+            writer::prop("config", edges_) >> ham;
         }
 
         void init_nodes(){
