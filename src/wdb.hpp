@@ -19,19 +19,12 @@
 #include "rte/cluster.hpp"
 #include "odb/mongo.hpp"
 
-#include "entities/generic/writer.hpp"
-#include "entities/generic/reader.hpp"
-#include "entities/generic/model.hpp"
-#include "entities/generic/property.hpp"
-
-#include "entities/dynamic_generic/writer.hpp"
-#include "entities/dynamic_generic/reader.hpp"
-#include "entities/dynamic_generic/model.hpp"
-#include "entities/dynamic_generic/property.hpp"
+#include "entities/generic.hpp"
+#include "entities/dynamic_generic.hpp"
 
 #include "entities/sat/sat.hpp"
 #include "entities/tsp/tsp.hpp"
-#include "entities/ising/ising.hpp"
+#include "entities/ising.hpp"
 #include "entities/qubo/qubo.hpp"
 
 #include "deployment/basic.h"

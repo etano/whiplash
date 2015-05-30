@@ -22,10 +22,12 @@ namespace wdb { namespace entities { namespace generic {
               }
         }
 
-        virtual void print(){std::cout << "print not defined" << std::endl;}
+        virtual void print(){
+            std::cout << "print not defined" << std::endl;
+        }
 
         std::string get_class(){
-          return class_;
+            return class_;
         }
 
     protected:
