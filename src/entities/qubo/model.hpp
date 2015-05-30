@@ -17,4 +17,3 @@ namespace wdb { namespace entities { namespace qubo {
 } } }
 
 #endif
-

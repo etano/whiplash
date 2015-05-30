@@ -7,4 +7,3 @@
 #include "entities/qubo/property.hpp"
 
 #endif
-

@@ -28,8 +28,5 @@ int main(int argc, char* argv[]){
             sf.insert_property(model_id, executable_id, params);
         }
     }
-
-
     return 0;
 }
-

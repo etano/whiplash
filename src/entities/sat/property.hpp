@@ -18,4 +18,3 @@ namespace wdb { namespace entities { namespace sat {
 } } }
 
 #endif
-

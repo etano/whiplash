@@ -7,4 +7,3 @@
 #include "entities/tsp/property.hpp"
 
 #endif
-

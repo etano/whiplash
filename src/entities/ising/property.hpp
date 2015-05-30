@@ -23,5 +23,3 @@ namespace wdb { namespace entities { namespace ising {
 } } }
 
 #endif
-
-

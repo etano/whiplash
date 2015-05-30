@@ -33,4 +33,3 @@ namespace wdb { namespace odb { namespace mongo {
 } } }
 
 #endif
-
