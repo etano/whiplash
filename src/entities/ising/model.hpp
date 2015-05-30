@@ -10,6 +10,7 @@ namespace wdb { namespace entities { namespace ising {
         model(std::ifstream& in)
             : wdb::entities::dynamic_generic::model(in), N_(0)
         {
+            this->class_ = std::string("ising");
             std::map<std::string,int> index;
             while(in){
                 std::string input_str;
@@ -59,9 +60,9 @@ namespace wdb { namespace entities { namespace ising {
             init_nodes();
         }
 
-        void serialize(const int id, const int time_stamp, const bsoncxx::builder::stream::document& doc, odb::iobject& ham){
-            wdb::entities::dynamic_generic::model::serialize(id, time_stamp, doc, ham);
-            writer::prop("config", edges_) >> ham;
+        void serialize(odb::iobject& record) override {
+            wdb::entities::dynamic_generic::model::serialize(record);
+            writer::prop("config", edges_) >> record;
         }
 
         void init_nodes(){

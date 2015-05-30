@@ -18,6 +18,11 @@ namespace wdb { namespace odb { namespace mongo {
         return *collections.back();
     }
 
+    void objectdb::sign(iobject& record, std::string cname){
+        prop_writer::prop("_id", get_next_id(cname)) >> record;
+        prop_writer::prop("time", (int)std::time(nullptr)) >> record;
+    }
+
     int objectdb::get_next_id(std::string cname){
         using bsoncxx::builder::stream::document;
         using bsoncxx::builder::stream::open_document;

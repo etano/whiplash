@@ -37,7 +37,7 @@ namespace wdb { namespace deployment {
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
         std::string model_class = fetch_model(model_id).get_class();
         std::unique_ptr<entities::generic::property> pb;
-        if (model_class == "ising")
+        if(model_class == "ising")
             pb = std::unique_ptr<entities::ising::property>(new entities::ising::property(model_id, executable_id, params));
         else
             pb = std::unique_ptr<entities::generic::property>(new entities::generic::property(model_id, executable_id, params));
@@ -47,22 +47,21 @@ namespace wdb { namespace deployment {
         static_cast<odb::mongo::collection&>(properties).insert( serialized );
     }
 
-    void basic::insert_model(const bsoncxx::builder::stream::document& doc){
-        const std::string file_name(doc.view()["file"].get_utf8().value);
-        const std::string model_class(doc.view()["class"].get_utf8().value);
+    void basic::insert_model(std::string file_name, std::string model_class){
         std::ifstream in(file_name);
         std::unique_ptr<entities::generic::model> H;
-        if (model_class == "ising")
+        if(model_class == "ising")
             H = std::unique_ptr<entities::ising::model>(new entities::ising::model(in));
         else
             H = std::unique_ptr<entities::generic::model>(new entities::generic::model(in));
         in.close();
-        odb::mongo::object serialized;
-        H->serialize(db.get_next_id("models"),std::time(nullptr),doc,serialized);
-        static_cast<odb::mongo::collection&>(models).insert(serialized);
+        odb::mongo::object record;
+        H->serialize(record);
+        db.sign(record, "models");
+        static_cast<odb::mongo::collection&>(models).insert(record);
     }
 
-    void basic::insert_executable(const bsoncxx::builder::stream::document& doc){
+    void basic::insert_executable(...){
         // TODO
     }
 

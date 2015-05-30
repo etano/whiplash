@@ -9,17 +9,11 @@ namespace wdb { namespace entities { namespace generic {
 
         model(const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);
-            class_ =  reader::String(obj, "class");
+            class_ = reader::String(obj, "class");
         }
 
-        void serialize(const int id, const int time_stamp, const bsoncxx::builder::stream::document& doc, odb::iobject& o){
-            writer::prop("_id", id) >> o;
-            writer::prop("time", time_stamp) >> o;
-            for(const auto& a : doc.view())
-              if(std::string(a.key()) != "id" && std::string(a.key()) != "time" && std::string(a.key()) != "file"){
-                std::string value(a.get_utf8().value);
-                writer::prop(std::string(a.key()), value) >> o;
-              }
+        virtual void serialize(odb::iobject& record){
+            writer::prop("class", class_) >> record;
         }
 
         virtual void print(){

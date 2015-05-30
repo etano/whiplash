@@ -18,6 +18,7 @@ namespace wdb { namespace odb { namespace mongo {
         objectdb(std::string url);
         icollection& provide_collection(std::string name) override;
         int get_next_id(std::string collection) override;
+        void sign(iobject& record, std::string cname) override;
     private:
         std::vector<icollection*> collections;
     };
