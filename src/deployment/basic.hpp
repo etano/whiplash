@@ -41,10 +41,11 @@ namespace wdb { namespace deployment {
             pb = std::unique_ptr<entities::ising::property>(new entities::ising::property(model_id, executable_id, params));
         else
             pb = std::unique_ptr<entities::generic::property>(new entities::generic::property(model_id, executable_id, params));
-        odb::mongo::object serialized, serialized_state;
+        odb::mongo::object record, serialized_state;
         pb->serialize_state(serialized_state);
-        pb->serialize(db.get_next_id("properties"), serialized, serialized_state);
-        static_cast<odb::mongo::collection&>(properties).insert( serialized );
+        pb->serialize(record, serialized_state);
+        db.sign(record, "properties");
+        static_cast<odb::mongo::collection&>(properties).insert(record);
     }
 
     void basic::insert_model(std::string file_name, std::string model_class){

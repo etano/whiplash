@@ -31,8 +31,7 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual void serialize_state(odb::iobject& state) {}
 
-        void serialize(int id, odb::iobject& inst, const odb::iobject& state){
-            writer::prop("_id", id) >> inst;
+        void serialize(odb::iobject& inst, const odb::iobject& state){
             writer::prop("model_id", model_) >> inst;
             writer::prop("executable_id", executable_) >> inst;
             writer::prop("params", params_) >> inst;
