@@ -4,10 +4,11 @@
 namespace wdb { namespace odb { namespace mongo {
 
     class readable {
-        using view_type = bsoncxx::v0::document::view;
     public:
+        using view_type = bsoncxx::v0::document::view;
         using value_type = bsoncxx::v0::document::value;
         readable(value_type v) : value(v), view(value.view()) {}
+        readable(view_type v) : view(v), value(v) {}
         value_type value;
         view_type view;
     };
@@ -26,6 +27,7 @@ namespace wdb { namespace odb { namespace mongo {
             writable w;
         };
         object(typename readable::value_type value) : r(value) {}
+        object(typename readable::view_type view) : r(view) {}
         object() : w() {}
         virtual ~object() override {}
     };

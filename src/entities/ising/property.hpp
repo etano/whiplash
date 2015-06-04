@@ -9,8 +9,8 @@ namespace wdb { namespace entities { namespace ising {
             : wdb::entities::dynamic_generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params)
-            : wdb::entities::dynamic_generic::property(model_id, executable_id, params)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, std::string resolution_state)
+            : wdb::entities::dynamic_generic::property(model_id, executable_id, params, resolution_state)
         {}
 
         virtual void serialize_state(odb::iobject& state){

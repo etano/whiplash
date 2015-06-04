@@ -15,7 +15,12 @@ namespace wdb { namespace deployment {
         void list_model(int id);
 
         entities::generic::model fetch_model(int id);
+        entities::generic::model fetch_model(odb::iobject& o);
         entities::generic::property fetch_property(int id);
+        entities::generic::property fetch_property(odb::iobject& o);
+        std::vector<entities::generic::model> fetch_models(odb::iobject& o);
+        std::vector<entities::generic::property> fetch_properties(odb::iobject& o);
+        std::vector<entities::generic::property> fetch_unresolved_properties();
 
         rte::iexecutable& load(std::string app);
     private:

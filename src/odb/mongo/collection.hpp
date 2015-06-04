@@ -27,6 +27,18 @@ namespace wdb { namespace odb { namespace mongo {
         return std::unique_ptr<iobject>(new object( *coll.find_one(filter) ));
     }
 
+    std::unique_ptr<iobject> collection::find_object(iobject& o){
+        return std::unique_ptr<iobject>(new object( *coll.find_one(static_cast<odb::mongo::object&>(o).w.builder) ));
+    }
+
+    std::vector<std::unique_ptr<iobject>>& collection::find_objects(iobject& o){
+        auto cursor = coll.find(static_cast<odb::mongo::object&>(o).w.builder);
+        std::vector<std::unique_ptr<iobject>> docs;
+        for(auto doc : cursor)
+            docs.push_back(std::unique_ptr<iobject>(new object(doc)));
+        return docs;
+    }
+
     void collection::insert(iobject& o){
         coll.insert_one(static_cast<odb::mongo::object&>(o).w.builder);
     }

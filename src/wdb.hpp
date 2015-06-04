@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <memory>
 #include <ctime>
+#include <vector>
 // }}}
 
 #include "rte/interface.hpp"

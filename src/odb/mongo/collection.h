@@ -10,6 +10,8 @@ namespace wdb { namespace odb { namespace mongo {
         virtual ~collection(){}
         virtual void list_objects() override;
         virtual std::unique_ptr<iobject> find_object(int id) override;
+        virtual std::unique_ptr<iobject> find_object(iobject& o) override;
+        virtual std::vector<std::unique_ptr<iobject>>& find_objects(iobject& o) override;
         virtual void print_object(int id) override;
         virtual void insert(iobject& o) override;
         virtual void remove(iobject& o) override;
