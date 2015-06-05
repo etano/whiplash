@@ -8,7 +8,7 @@ namespace wdb { namespace odb { namespace mongo {
         using view_type = bsoncxx::v0::document::view;
         using value_type = bsoncxx::v0::document::value;
         readable(value_type v) : value(v), view(value.view()) {}
-        readable(view_type v) : view(v), value(v) {}
+        readable(view_type v) : value(v), view(v) {}
         value_type value;
         view_type view;
     };

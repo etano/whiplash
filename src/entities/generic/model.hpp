@@ -10,10 +10,12 @@ namespace wdb { namespace entities { namespace generic {
         model(const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);
             class_ = reader::String(obj, "class");
+            class_id_ = reader::Int(obj, "class_id");
         }
 
         virtual void serialize(odb::iobject& record){
             writer::prop("class", class_) >> record;
+            writer::prop("class_id", class_id_) >> record;
         }
 
         virtual void print(){
@@ -26,6 +28,7 @@ namespace wdb { namespace entities { namespace generic {
 
     protected:
         std::string class_;
+        int class_id_;
     };
 
 } } }

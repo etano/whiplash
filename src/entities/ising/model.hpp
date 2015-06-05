@@ -10,7 +10,8 @@ namespace wdb { namespace entities { namespace ising {
         model(std::ifstream& in)
             : wdb::entities::dynamic_generic::model(in), N_(0)
         {
-            this->class_ = std::string("ising");
+            this->class_ = CLASSNAME;
+            this->class_id_ = CLASSID;
             std::map<std::string,int> index;
             while(in){
                 std::string input_str;

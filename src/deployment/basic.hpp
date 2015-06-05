@@ -92,23 +92,16 @@ namespace wdb { namespace deployment {
 
     std::vector<entities::generic::property> basic::fetch_properties(odb::iobject& o){
         std::vector<entities::generic::property> ps;
-        std::cout << "hello" << std::endl;
-        int i = 0;
-        for(auto &obj : properties.find_objects(o)) {
-            std::cout << i << std::endl;
+        for(auto &obj : properties.find_objects(o))
             ps.emplace_back(entities::generic::property(*obj));
-            std::cout << i << std::endl;
-            i++;
-        }
         return ps;
     }
 
     std::vector<entities::generic::property> basic::fetch_unresolved_properties(){
-        odb::mongo::object o;
         std::string key = "resolution_state";
         std::string val = "not_started";
+        odb::mongo::object o;
         o.w.builder.append(std::make_tuple(key,val));
-        std::cout << "hi" << std::endl;
         return fetch_properties(o);
     }
 

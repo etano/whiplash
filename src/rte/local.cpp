@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
         // Check for unresolved properties
         objectdb db("cwave.ethz.ch:27017");
         wdb::deployment::basic sf(db);
-        std::vector<wdb::entities::generic::property> unresolved_properties(sf.fetch_unresolved_properties());
+        std::vector<wdb::entities::generic::property> ps(sf.fetch_unresolved_properties());
     }
 
     // Close log
