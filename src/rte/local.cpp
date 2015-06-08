@@ -41,10 +41,11 @@ int main(int argc, char* argv[]){
     // Payload
     while(true) {
         sleep(1);
-        // Check for unresolved properties
+        // Check for unresolved properties and resolve them
         objectdb db("cwave.ethz.ch:27017");
         wdb::deployment::basic sf(db);
         std::vector<wdb::entities::generic::property> ps(sf.fetch_unresolved_properties());
+        for (auto &p : ps) p.resolve();
     }
 
     // Close log

@@ -31,6 +31,8 @@ namespace wdb { namespace entities { namespace generic {
             : model_(model_id), executable_(executable_id), params_(params), resolution_state_(resolution_state)
         {}
 
+        virtual void resolve() {};
+
         virtual void serialize_state(odb::iobject& state) {}
 
         void serialize(odb::iobject& inst, const odb::iobject& state){

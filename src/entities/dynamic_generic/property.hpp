@@ -10,6 +10,11 @@ namespace wdb { namespace entities { namespace dynamic_generic {
             : wdb::entities::generic::property(model_id, executable_id, params, resolution_state)
         {}
 
+        virtual void resolve(){
+            std::cout << "resolving property" << std::endl;
+            info();
+        }
+
         virtual void serialize_state(odb::iobject& state) {}
     };
 
