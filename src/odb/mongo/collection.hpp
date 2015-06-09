@@ -49,6 +49,14 @@ namespace wdb { namespace odb { namespace mongo {
         coll.delete_one(static_cast<odb::mongo::object&>(o).w.builder);
     }
 
+    void collection::update(iobject& o_old, iobject& o_new){
+        coll.update_one(static_cast<odb::mongo::object&>(o_old).w.builder,static_cast<odb::mongo::object&>(o_new).w.builder);
+    }
+
+    void collection::replace(iobject& o_old, iobject& o_new){
+        coll.replace_one(static_cast<odb::mongo::object&>(o_old).w.builder,static_cast<odb::mongo::object&>(o_new).w.builder);
+    }
+
     void collection::purge(){
         try {
             coll.delete_many({});

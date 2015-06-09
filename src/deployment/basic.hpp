@@ -35,27 +35,19 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
-        std::string model_class = fetch_model(model_id).get_class(); // please, optimize me
-        std::unique_ptr<entities::generic::property> pb;
+        std::string model_class = fetch_model(model_id)->get_class(); // please, optimize me
         std::string resolution_state = "not_started";
-        if(model_class == "ising")
-            pb = std::unique_ptr<entities::ising::property>(new entities::ising::property(model_id, executable_id, params, resolution_state));
-        else
-            pb = std::unique_ptr<entities::generic::property>(new entities::generic::property(model_id, executable_id, params, resolution_state));
+        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,resolution_state));
         odb::mongo::object record, serialized_state;
-        pb->serialize_state(serialized_state);
-        pb->serialize(record, serialized_state);
+        p->serialize_state(serialized_state);
+        p->serialize(record, serialized_state);
         db.sign(record, "properties");
         static_cast<odb::mongo::collection&>(properties).insert(record);
     }
 
     void basic::insert_model(std::string file_name, std::string model_class){
         std::ifstream in(file_name);
-        std::unique_ptr<entities::generic::model> m;
-        if(model_class == "ising")
-            m = std::unique_ptr<entities::ising::model>(new entities::ising::model(in));
-        else
-            m = std::unique_ptr<entities::generic::model>(new entities::generic::model(in));
+        std::unique_ptr<entities::generic::model> m(entities::model_registry(model_class,in));
         in.close();
         odb::mongo::object record;
         m->serialize(record);
@@ -67,42 +59,58 @@ namespace wdb { namespace deployment {
         // TODO
     }
 
-    entities::generic::model basic::fetch_model(int id){
-        return entities::generic::model( *models.find_object(id) );
+    std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
+        return fetch_model(*models.find_object(id));
     }
 
-    entities::generic::property basic::fetch_property(int id){
-        return entities::generic::property( *properties.find_object(id) );
+    std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
+        return fetch_property(*properties.find_object(id));
     }
 
-    entities::generic::model basic::fetch_model(odb::iobject& o){
-        return entities::generic::model( *models.find_object(o) );
+    std::unique_ptr<entities::generic::model> basic::fetch_model(odb::iobject& o){
+        std::string model_class = entities::generic::reader::String(o, "class");
+        return entities::model_registry(model_class,o);
     }
 
-    entities::generic::property basic::fetch_property(odb::iobject& o){
-        return entities::generic::property( *properties.find_object(o) );
+    std::unique_ptr<entities::generic::property> basic::fetch_property(odb::iobject& o){
+        int model_id = entities::generic::reader::Int(o, "model_id");
+        std::string model_class = fetch_model(model_id)->get_class();
+        return entities::property_registry(model_class,o);
     }
 
-    std::vector<entities::generic::model> basic::fetch_models(odb::iobject& o){
-        std::vector<entities::generic::model> ms;
+    std::vector<std::unique_ptr<entities::generic::model>> basic::fetch_models(odb::iobject& o){
+        std::vector<std::unique_ptr<entities::generic::model>> ms;
         for(auto &obj : models.find_objects(o))
-            ms.emplace_back(entities::generic::model(*obj));
+            ms.emplace_back(fetch_model(*obj));
         return ms;
     }
 
-    std::vector<entities::generic::property> basic::fetch_properties(odb::iobject& o){
-        std::vector<entities::generic::property> ps;
+    std::vector<std::unique_ptr<entities::generic::property>> basic::fetch_properties(odb::iobject& o){
+        std::vector<std::unique_ptr<entities::generic::property>> ps;
         for(auto &obj : properties.find_objects(o))
-            ps.emplace_back(entities::generic::property(*obj));
+            ps.emplace_back(fetch_property(*obj));
         return ps;
     }
 
-    std::vector<entities::generic::property> basic::fetch_unresolved_properties(){
+    void basic::resolve_properties(){
         std::string key = "resolution_state";
         std::string val = "not_started";
         odb::mongo::object o;
         o.w.builder.append(std::make_tuple(key,val));
-        return fetch_properties(o);
+        for(auto &obj : properties.find_objects(o)){
+            std::unique_ptr<entities::generic::property> p(fetch_property(*obj));
+            p->resolve();
+
+            odb::mongo::object filter;
+            int prop_id = entities::generic::reader::Int(*obj, "_id");
+
+
+            o.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
+            odb::mongo::object record, serialized_state;
+            p->serialize_state(serialized_state);
+            p->serialize(record, serialized_state);
+            static_cast<odb::mongo::collection&>(properties).replace(filter,record);
+        }
     }
 
     void basic::list_properties(){

@@ -6,11 +6,10 @@ namespace wdb { namespace entities { namespace generic {
     class property {
     public:
         property(const odb::iobject& o){
-            const auto& obj = static_cast<const odb::mongo::object&>(o);
-            model_      = reader::Int(obj, "model_id");
-            executable_ = reader::Int(obj, "executable_id");
-            resolution_state_ = reader::String(obj, "resolution_state");
-            for(auto e : reader::Array(obj, "params"))
+            model_      = reader::Int(o, "model_id");
+            executable_ = reader::Int(o, "executable_id");
+            resolution_state_ = reader::String(o, "resolution_state");
+            for(auto e : reader::Array(o, "params"))
                 params_.push_back(reader::String(e));
         }
 
@@ -42,6 +41,11 @@ namespace wdb { namespace entities { namespace generic {
             writer::prop("params", params_) >> inst;
             writer::prop("state", state) >> inst;
         }
+
+        int get_model() { return model_; }
+        int get_executable() { return executable_; }
+        std::string get_resolution_state() { return resolution_state_; }
+        std::vector<std::string> get_params() { return params_; }
     protected:
         int model_;
         int executable_;

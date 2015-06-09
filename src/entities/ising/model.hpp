@@ -44,8 +44,7 @@ namespace wdb { namespace entities { namespace ising {
         model(const odb::iobject& o)
             : wdb::entities::dynamic_generic::model(o), N_(0)
         {
-            const auto& obj = static_cast<const odb::mongo::object&>(o);
-            for(auto e : reader::Array(obj, "config")){
+            for(auto e : reader::Array(o, "config")){
                 std::vector<int> inds;
                 auto sub_array = reader::Array(e);
                 for(const auto a : reader::Array(sub_array[0])){

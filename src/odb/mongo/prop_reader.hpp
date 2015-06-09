@@ -66,29 +66,33 @@ namespace wdb { namespace odb { namespace mongo {
         typedef detail::array_view array_type;
         typedef int int_type;
 
-        static array_type Array(const object& obj, std::string name){
-            return detail::get<array_type>(obj.r.view, name);
+        static array_type Array(const iobject& obj, std::string name){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return detail::get<array_type>(m_obj.r.view, name);
         }
         static array_type Array(prop_type e){
             return detail::get<array_type>(e);
         }
 
-        static int_type Int(const object& obj, std::string name){
-            return detail::get<int_type>(obj.r.view, name);
+        static int_type Int(const iobject& obj, std::string name){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return detail::get<int_type>(m_obj.r.view, name);
         }
         static int_type Int(prop_type e){
             return detail::get<int_type>(e);
         }
 
-        static double Double(const object& obj, std::string name){
-            return detail::get<double>(obj.r.view, name);
+        static double Double(const iobject& obj, std::string name){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return detail::get<double>(m_obj.r.view, name);
         }
         static double Double(prop_type e){
             return detail::get<double>(e);
         }
 
-        static std::string String(const object& obj, std::string name){
-            return detail::get<std::string>(obj.r.view, name);
+        static std::string String(const iobject& obj, std::string name){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return detail::get<std::string>(m_obj.r.view, name);
         }
         static std::string String(prop_type e){
             return detail::get<std::string>(e);

@@ -11,8 +11,9 @@ namespace wdb { namespace entities { namespace dynamic_generic {
         {}
 
         virtual void resolve(){
-            std::cout << "resolving property" << std::endl;
-            info();
+            // TODO: Actually run the executable
+
+            resolution_state_ = "complete";
         }
 
         virtual void serialize_state(odb::iobject& state) {}
