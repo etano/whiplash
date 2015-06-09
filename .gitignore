@@ -8,9 +8,10 @@ src/drivers/commit_model.driver
 src/drivers/commit_property.driver
 src/drivers/fetch_model.driver
 src/drivers/fetch_property.driver
-src/drivers/fetch_unresolved_properties.driver
+src/drivers/resolve_properties.driver
 src/drivers/query.driver
 src/drivers/worker.driver
 src/drivers/init_db.driver
 src/rte/local.daemon
 *.swp
+*.swo
