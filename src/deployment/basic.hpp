@@ -105,7 +105,7 @@ namespace wdb { namespace deployment {
             int prop_id = entities::generic::reader::Int(*obj, "_id");
 
 
-            o.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
+            filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
             odb::mongo::object record, serialized_state;
             p->serialize_state(serialized_state);
             p->serialize(record, serialized_state);
