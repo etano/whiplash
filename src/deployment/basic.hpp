@@ -7,6 +7,7 @@ namespace wdb { namespace deployment {
       : db(db),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
+        executables( db.provide_collection("executables") ),
         counters( db.provide_collection("counters") )
     {
     }
@@ -55,8 +56,12 @@ namespace wdb { namespace deployment {
         static_cast<odb::mongo::collection&>(models).insert(record);
     }
 
-    void basic::insert_executable(...){
-        // TODO
+    void basic::insert_executable(std::string file_name, std::string model_class){
+        odb::mongo::object record;
+        record.w.builder.append(std::make_tuple(std::string("file_name"),file_name));
+        record.w.builder.append(std::make_tuple(std::string("class"),model_class));
+        db.sign(record, "executables");
+        static_cast<odb::mongo::collection&>(executables).insert(record); // FIXME: This is currently broken
     }
 
     std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
@@ -103,8 +108,6 @@ namespace wdb { namespace deployment {
 
             odb::mongo::object filter;
             int prop_id = entities::generic::reader::Int(*obj, "_id");
-
-
             filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
             odb::mongo::object record, serialized_state;
             p->serialize_state(serialized_state);
