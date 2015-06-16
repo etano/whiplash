@@ -13,7 +13,7 @@ namespace wdb { namespace entities { namespace tsp {
             : wdb::entities::dynamic_generic::property(model_id, executable_id, params, resolution_state)
         {}
 
-     };
+    };
 
 } } }
 
