@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace sat {
             : wdb::entities::dynamic_generic::model(in)
         {
             this->class_ = "sat";
-            this->class_id_ = 4; // TODO: Move this to a registry
+            this->class_id_ = 4; // TODO: Move this to the factory
         }
 
         model(const odb::iobject& o)

@@ -37,7 +37,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
         std::string model_class = fetch_model(model_id)->get_class(); // please, optimize me
-        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
+        std::unique_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -47,7 +47,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_model(std::string file_name, std::string model_class){
         std::ifstream in(file_name);
-        std::unique_ptr<entities::generic::model> m(entities::model_registry(model_class,in));
+        std::unique_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
         in.close();
         odb::mongo::object record;
         m->serialize(record);
@@ -63,19 +63,14 @@ namespace wdb { namespace deployment {
         executables.insert(record); // FIXME: This is currently broken
     }
 
-    std::unique_ptr<entities::generic::model> basic::assign_model_type(odb::iobject& o){
-        std::string model_class = entities::generic::reader::String(o, "class");
-        return entities::model_registry(model_class,o);
-    }
-
-    std::unique_ptr<entities::generic::property> basic::assign_property_type(odb::iobject& o){
+    std::unique_ptr<entities::generic::property> basic::assign_property_type(odb::iobject& o){ // I have to be on a factory T_T
         int model_id = entities::generic::reader::Int(o, "model_id");
-        std::string model_class = fetch_model(model_id)->get_class();
-        return entities::property_registry(model_class,o);
+        std::string model_class = fetch_model(model_id)->get_class(); // that's broken (prop should have model_class_id to avoid this)
+        return entities::factory::make_property(model_class,o);
     }
 
     std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
-        return assign_model_type(*models.find(id));
+        return entities::factory::make_model(*models.find(id));
     }
 
     std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
@@ -85,7 +80,7 @@ namespace wdb { namespace deployment {
     std::vector<std::unique_ptr<entities::generic::model>> basic::fetch_models(odb::iobject& o){
         std::vector<std::unique_ptr<entities::generic::model>> ms;
         for(auto &obj : models.find_like(o))
-            ms.emplace_back(assign_model_type(*obj));
+            ms.emplace_back(entities::factory::make_model(*obj));
         return ms;
     }
 

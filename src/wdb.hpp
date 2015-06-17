@@ -26,7 +26,7 @@
 #include "entities/qubo.hpp"
 #include "entities/sat.hpp"
 #include "entities/tsp.hpp"
-#include "entities/registry.hpp"
+#include "entities/factory.hpp"
 
 #include "deployment/basic.h"
 #include "deployment/basic.hpp"

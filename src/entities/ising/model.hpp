@@ -11,7 +11,7 @@ namespace wdb { namespace entities { namespace ising {
             : wdb::entities::dynamic_generic::model(in), N_(0)
         {
             this->class_ = "ising";
-            this->class_id_ = 1; // TODO: Move this to a registry
+            this->class_id_ = 1; // TODO: Move this to the factory
             std::map<std::string,int> index;
             while(in){
                 std::string input_str;

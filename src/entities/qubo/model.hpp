@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace qubo {
             : wdb::entities::dynamic_generic::model(in)
         {
             this->class_ = "qubo";
-            this->class_id_ = 3; // TODO: Move this to a registry
+            this->class_id_ = 3; // TODO: Move this to the factory
         }
 
         model(const odb::iobject& o)

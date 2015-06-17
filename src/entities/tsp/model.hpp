@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace tsp {
             : wdb::entities::dynamic_generic::model(in)
         {
             this->class_ = "tsp";
-            this->class_id_ = 2; // TODO: Move this to a registry
+            this->class_id_ = 2; // TODO: Move this to the factory
         }
 
         model(const odb::iobject& o)
