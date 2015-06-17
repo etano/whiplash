@@ -30,20 +30,19 @@ namespace wdb { namespace deployment {
         prop_writer::prop("_id", "executables") >> executables_counter;
         prop_writer::prop("seq", -1) >> executables_counter;
 
-        static_cast<odb::mongo::collection&>(counters).insert( properties_counter );
-        static_cast<odb::mongo::collection&>(counters).insert( models_counter );
-        static_cast<odb::mongo::collection&>(counters).insert( executables_counter );
+        counters.insert( properties_counter );
+        counters.insert( models_counter );
+        counters.insert( executables_counter );
     }
 
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
         std::string model_class = fetch_model(model_id)->get_class(); // please, optimize me
-        std::string resolution_state = "not_started";
-        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,resolution_state));
-        odb::mongo::object record, serialized_state;
-        p->serialize_state(serialized_state);
-        p->serialize(record, serialized_state);
+        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,entities::resolution_state::NOTSTARTED));
+        odb::mongo::object record, serialized_configuration;
+        p->serialize_configuration(serialized_configuration);
+        p->serialize(record, serialized_configuration);
         db.sign(record, "properties");
-        static_cast<odb::mongo::collection&>(properties).insert(record);
+        properties.insert(record);
     }
 
     void basic::insert_model(std::string file_name, std::string model_class){
@@ -53,7 +52,7 @@ namespace wdb { namespace deployment {
         odb::mongo::object record;
         m->serialize(record);
         db.sign(record, "models");
-        static_cast<odb::mongo::collection&>(models).insert(record);
+        models.insert(record);
     }
 
     void basic::insert_executable(std::string file_name, std::string model_class){
@@ -61,57 +60,55 @@ namespace wdb { namespace deployment {
         record.w.builder.append(std::make_tuple(std::string("file_name"),file_name));
         record.w.builder.append(std::make_tuple(std::string("class"),model_class));
         db.sign(record, "executables");
-        static_cast<odb::mongo::collection&>(executables).insert(record); // FIXME: This is currently broken
+        executables.insert(record); // FIXME: This is currently broken
     }
 
-    std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
-        return fetch_model(*models.find_object(id));
-    }
-
-    std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
-        return fetch_property(*properties.find_object(id));
-    }
-
-    std::unique_ptr<entities::generic::model> basic::fetch_model(odb::iobject& o){
+    std::unique_ptr<entities::generic::model> basic::assign_model_type(odb::iobject& o){
         std::string model_class = entities::generic::reader::String(o, "class");
         return entities::model_registry(model_class,o);
     }
 
-    std::unique_ptr<entities::generic::property> basic::fetch_property(odb::iobject& o){
+    std::unique_ptr<entities::generic::property> basic::assign_property_type(odb::iobject& o){
         int model_id = entities::generic::reader::Int(o, "model_id");
         std::string model_class = fetch_model(model_id)->get_class();
         return entities::property_registry(model_class,o);
     }
 
+    std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
+        return assign_model_type(*models.find_object(id));
+    }
+
+    std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
+        return assign_property_type(*properties.find_object(id));
+    }
+
     std::vector<std::unique_ptr<entities::generic::model>> basic::fetch_models(odb::iobject& o){
         std::vector<std::unique_ptr<entities::generic::model>> ms;
         for(auto &obj : models.find_objects(o))
-            ms.emplace_back(fetch_model(*obj));
+            ms.emplace_back(assign_model_type(*obj));
         return ms;
     }
 
     std::vector<std::unique_ptr<entities::generic::property>> basic::fetch_properties(odb::iobject& o){
         std::vector<std::unique_ptr<entities::generic::property>> ps;
         for(auto &obj : properties.find_objects(o))
-            ps.emplace_back(fetch_property(*obj));
+            ps.emplace_back(assign_property_type(*obj));
         return ps;
     }
 
     void basic::resolve_properties(){
-        std::string key = "resolution_state";
-        std::string val = "not_started";
         odb::mongo::object o;
-        o.w.builder.append(std::make_tuple(key,val));
+        o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::NOTSTARTED)));
         for(auto &obj : properties.find_objects(o)){
-            std::unique_ptr<entities::generic::property> p(fetch_property(*obj));
+            std::unique_ptr<entities::generic::property> p(assign_property_type(*obj));
             p->resolve();
 
             odb::mongo::object filter;
             int prop_id = entities::generic::reader::Int(*obj, "_id");
             filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
-            odb::mongo::object record, serialized_state;
-            p->serialize_state(serialized_state);
-            p->serialize(record, serialized_state);
+            odb::mongo::object record, serialized_configuration;
+            p->serialize_configuration(serialized_configuration);
+            p->serialize(record, serialized_configuration);
             static_cast<odb::mongo::collection&>(properties).replace(filter,record);
         }
     }

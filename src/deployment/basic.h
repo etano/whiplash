@@ -15,10 +15,10 @@ namespace wdb { namespace deployment {
         void list_model(int id);
         void resolve_properties();
 
+        std::unique_ptr<entities::generic::model> assign_model_type(odb::iobject& o);
+        std::unique_ptr<entities::generic::property> assign_property_type(odb::iobject& o);
         std::unique_ptr<entities::generic::model> fetch_model(int id);
-        std::unique_ptr<entities::generic::model> fetch_model(odb::iobject& o);
         std::unique_ptr<entities::generic::property> fetch_property(int id);
-        std::unique_ptr<entities::generic::property> fetch_property(odb::iobject& o);
         std::vector<std::unique_ptr<entities::generic::model>> fetch_models(odb::iobject& o);
         std::vector<std::unique_ptr<entities::generic::property>> fetch_properties(odb::iobject& o);
 

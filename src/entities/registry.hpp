@@ -4,7 +4,7 @@
 namespace wdb { namespace entities {
 
 template<typename... Params>
-std::unique_ptr<generic::model> model_registry(std::string class_name, Params&... parameters) {
+std::unique_ptr<generic::model> model_registry(std::string class_name, Params&&... parameters) {
     if (class_name == "ising")
         return std::unique_ptr<ising::model>(new ising::model(parameters...));
     else if (class_name =="tsp")
@@ -16,7 +16,7 @@ std::unique_ptr<generic::model> model_registry(std::string class_name, Params&..
 }
 
 template<typename... Params>
-std::unique_ptr<generic::property> property_registry(std::string class_name, Params&... parameters) {
+std::unique_ptr<generic::property> property_registry(std::string class_name, Params&&... parameters) {
     if (class_name == "ising")
         return std::unique_ptr<ising::property>(new ising::property(parameters...));
     else if (class_name =="tsp")

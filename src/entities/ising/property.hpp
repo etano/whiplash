@@ -9,14 +9,14 @@ namespace wdb { namespace entities { namespace ising {
             : wdb::entities::dynamic_generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, std::string resolution_state)
-            : wdb::entities::dynamic_generic::property(model_id, executable_id, params, resolution_state)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::NOTSTARTED)
+            : wdb::entities::dynamic_generic::property(model_id, executable_id, params, state)
         {}
 
-        virtual void serialize_state(odb::iobject& state){
-            // todo // save the actual state
-            writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> state;
-            writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> state;
+        virtual void serialize_configuration(odb::iobject& configuration){
+            // todo // save the actual configuration
+            writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> configuration;
+            writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> configuration;
         }
     };
 
