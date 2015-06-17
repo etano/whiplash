@@ -75,23 +75,23 @@ namespace wdb { namespace deployment {
     }
 
     std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
-        return assign_model_type(*models.find_object(id));
+        return assign_model_type(*models.find(id));
     }
 
     std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
-        return assign_property_type(*properties.find_object(id));
+        return assign_property_type(*properties.find(id));
     }
 
     std::vector<std::unique_ptr<entities::generic::model>> basic::fetch_models(odb::iobject& o){
         std::vector<std::unique_ptr<entities::generic::model>> ms;
-        for(auto &obj : models.find_objects(o))
+        for(auto &obj : models.find_like(o))
             ms.emplace_back(assign_model_type(*obj));
         return ms;
     }
 
     std::vector<std::unique_ptr<entities::generic::property>> basic::fetch_properties(odb::iobject& o){
         std::vector<std::unique_ptr<entities::generic::property>> ps;
-        for(auto &obj : properties.find_objects(o))
+        for(auto &obj : properties.find_like(o))
             ps.emplace_back(assign_property_type(*obj));
         return ps;
     }
@@ -99,7 +99,7 @@ namespace wdb { namespace deployment {
     void basic::resolve_properties(){
         odb::mongo::object o;
         o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::UNDEFINED)));
-        for(auto &obj : properties.find_objects(o)){
+        for(auto &obj : properties.find_like(o)){
             std::unique_ptr<entities::generic::property> p(assign_property_type(*obj));
             p->resolve();
 
