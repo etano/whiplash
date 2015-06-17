@@ -12,6 +12,6 @@ src/drivers/resolve_properties.driver
 src/drivers/query.driver
 src/drivers/worker.driver
 src/drivers/init_db.driver
-src/rte/local.daemon
+src/drivers/daemon.driver
 *.swp
 *.swo
