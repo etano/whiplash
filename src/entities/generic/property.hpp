@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities {
 
-    enum class resolution_state { NOTSTARTED, RUNNING, COMPLETE };
+    enum class resolution_state { UNDEFINED, WAITFORIT, DEFINED };
 
 } }
 
@@ -32,7 +32,7 @@ namespace wdb { namespace entities { namespace generic {
             return params_[N];
         }
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::NOTSTARTED)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
             : model_(model_id), executable_(executable_id), params_(params), state_(state)
         {}
 

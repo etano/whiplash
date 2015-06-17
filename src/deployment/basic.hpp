@@ -37,7 +37,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_property(int model_id, int executable_id, const std::vector<std::string>& params){
         std::string model_class = fetch_model(model_id)->get_class(); // please, optimize me
-        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,entities::resolution_state::NOTSTARTED));
+        std::unique_ptr<entities::generic::property> p(entities::property_registry(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -98,7 +98,7 @@ namespace wdb { namespace deployment {
 
     void basic::resolve_properties(){
         odb::mongo::object o;
-        o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::NOTSTARTED)));
+        o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::UNDEFINED)));
         for(auto &obj : properties.find_objects(o)){
             std::unique_ptr<entities::generic::property> p(assign_property_type(*obj));
             p->resolve();
@@ -109,7 +109,7 @@ namespace wdb { namespace deployment {
             odb::mongo::object record, serialized_configuration;
             p->serialize_configuration(serialized_configuration);
             p->serialize(record, serialized_configuration);
-            static_cast<odb::mongo::collection&>(properties).replace(filter,record);
+            properties.replace(filter,record);
         }
     }
 

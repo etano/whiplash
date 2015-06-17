@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace ising {
             : wdb::entities::dynamic_generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::NOTSTARTED)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
             : wdb::entities::dynamic_generic::property(model_id, executable_id, params, state)
         {}
 
