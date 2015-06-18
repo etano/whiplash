@@ -5,8 +5,8 @@ namespace wdb { namespace entities { namespace dynamic_generic {
 
     class model : public wdb::entities::generic::model {
     public:
-        model(std::ifstream& in) : wdb::entities::generic::model(in) {}
-        model(const odb::iobject& o) : wdb::entities::generic::model(o) {}
+        model(std::string model_class, std::ifstream& in) : wdb::entities::generic::model(model_class,in) {}
+        model(std::string model_class, const odb::iobject& o) : wdb::entities::generic::model(model_class,o) {}
         virtual void print(){std::cout << "print not defined" << std::endl;}
     };
 

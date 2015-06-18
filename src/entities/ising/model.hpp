@@ -7,11 +7,9 @@ namespace wdb { namespace entities { namespace ising {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
-        model(std::ifstream& in)
-            : wdb::entities::dynamic_generic::model(in), N_(0)
+        model(std::string model_class, std::ifstream& in)
+            : wdb::entities::dynamic_generic::model(model_class,in), N_(0)
         {
-            this->class_ = "ising";
-            this->class_id_ = 1; // TODO: Move this to the factory
             std::map<std::string,int> index;
             while(in){
                 std::string input_str;
@@ -41,8 +39,8 @@ namespace wdb { namespace entities { namespace ising {
             init_nodes();
         }
 
-        model(const odb::iobject& o)
-            : wdb::entities::dynamic_generic::model(o), N_(0)
+        model(std::string model_class, const odb::iobject& o)
+            : wdb::entities::dynamic_generic::model(model_class,o), N_(0)
         {
             for(auto e : reader::Array(o, "config")){
                 std::vector<int> inds;

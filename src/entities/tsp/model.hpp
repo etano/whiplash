@@ -5,15 +5,12 @@ namespace wdb { namespace entities { namespace tsp {
 
     class model : public wdb::entities::dynamic_generic::model {
     public:
-        model(std::ifstream& in)
-            : wdb::entities::dynamic_generic::model(in)
-        {
-            this->class_ = "tsp";
-            this->class_id_ = 2; // TODO: Move this to the factory
-        }
+        model(std::string model_class, std::ifstream& in)
+            : wdb::entities::dynamic_generic::model(model_class,in)
+        {}
 
-        model(const odb::iobject& o)
-            : wdb::entities::dynamic_generic::model(o)
+        model(std::string model_class, const odb::iobject& o)
+            : wdb::entities::dynamic_generic::model(model_class,o)
         {}
     };
 

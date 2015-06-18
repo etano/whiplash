@@ -10,7 +10,7 @@ namespace wdb { namespace deployment {
         void reset_counters();
         void insert_executable(std::string file_name, std::string model_class);
         void insert_model(std::string file_name, std::string model_class);
-        void insert_property(int model_id, int executable_id, const std::vector<std::string>& params);
+        void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params);
         void list_properties();
         void list_model(int id);
         void resolve_properties();

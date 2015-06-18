@@ -20,12 +20,13 @@ int main(int argc, char* argv[]){
                 input.push_back(s);
             }
 
-            int model_id = std::stoi(input[0]);
-            int executable_id = std::stoi(input[1]);
+            std::string model_class = input[0];
+            int model_id = std::stoi(input[1]);
+            int executable_id = std::stoi(input[2]);
             std::vector<std::string> params;
             for(int i = 2; i < input.size(); ++i)
                 params.push_back(input[i]);
-            sf.insert_property(model_id, executable_id, params);
+            sf.insert_property(model_class, model_id, executable_id, params);
         }
     }
     return 0;
