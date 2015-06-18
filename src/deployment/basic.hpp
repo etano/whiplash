@@ -56,9 +56,10 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_executable(std::string file_name, std::string model_class){
+        using odb::mongo::prop_writer;
         odb::mongo::object record;
-        record.w.builder.append(std::make_tuple(std::string("file_name"),file_name));
-        record.w.builder.append(std::make_tuple(std::string("class"),model_class));
+        prop_writer::prop("file_name", file_name) >> record;
+        prop_writer::prop("class", model_class) >> record;
         db.sign(record, "executables");
         executables.insert(record); // FIXME: This is currently broken
     }
@@ -86,15 +87,16 @@ namespace wdb { namespace deployment {
     }
 
     void basic::resolve_properties(){
+        using odb::mongo::prop_writer;
         odb::mongo::object o;
-        o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::UNDEFINED)));
+        prop_writer::prop("resolution_state", int(entities::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
             std::unique_ptr<entities::generic::property> p(entities::factory::make_property(*obj));
             p->resolve();
 
             odb::mongo::object filter;
             int prop_id = entities::generic::reader::Int(*obj, "_id");
-            filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
+            prop_writer::prop("_id", prop_id) >> filter;
             odb::mongo::object record, serialized_configuration;
             p->serialize_configuration(serialized_configuration);
             p->serialize(record, serialized_configuration);
