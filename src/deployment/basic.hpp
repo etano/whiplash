@@ -14,8 +14,9 @@ namespace wdb { namespace deployment {
 
     void basic::purge_collections(){
         properties.purge();
-        counters.purge();
         models.purge();
+        executables.purge();
+        counters.purge();
     }
 
     void basic::reset_counters(){
