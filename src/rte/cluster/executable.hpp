@@ -9,11 +9,10 @@ namespace wdb { namespace rte { namespace cluster {
             open(path);
         }
         executable(const odb::iobject& o){
-            const auto& obj = static_cast<const odb::mongo::object&>(o);
-            std::string path = entities::generic::reader::String(obj, "file_name");
+            std::string path = entities::generic::reader::String(o, "file_name");
             open(path);
         }
-        ~executable() override {
+       ~executable() override {
             dlclose(handle);
         }
         void operator()(int argc, char** argv) override {
@@ -24,7 +23,7 @@ namespace wdb { namespace rte { namespace cluster {
             typedef int (*fptr_t)();
             ((fptr_t)fptr)();
         }
-        void open(std::string path) {
+        void open(std::string path){
             handle = dlopen(path.c_str(), RTLD_NOW);
             if(!handle) throw std::runtime_error("Error: cannot open shared object!");
             dlerror(); // reset errors

@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities {
 
-    enum class resolution_state { UNDEFINED, WAITFORIT, DEFINED };
+    enum class resolution_state { UNDEFINED, PROCESSING, DEFINED };
 
 } }
 

@@ -12,7 +12,7 @@ namespace wdb { namespace entities { namespace dynamic_generic {
 
         virtual void resolve(rte::iexecutable &x, const model &m) {
             // Begin resolution
-            state_ = resolution_state::WAITFORIT;
+            state_ = resolution_state::PROCESSING;
 
             // Actually run the executable
             // TODO Compose argc and params and run
