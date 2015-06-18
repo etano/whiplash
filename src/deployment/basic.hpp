@@ -60,7 +60,7 @@ namespace wdb { namespace deployment {
         prop_writer::prop("file_name", file_name) >> record;
         prop_writer::prop("class", model_class) >> record;
         db.sign(record, "executables");
-        executables.insert(record); // FIXME: This is currently broken
+        executables.insert(record); // buggy
     }
 
     std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
@@ -104,11 +104,11 @@ namespace wdb { namespace deployment {
         using odb::mongo::prop_writer;
         std::unique_ptr<entities::generic::property> p(fetch_property(id));
         p->resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()));
-        odb::mongo::object filter;
-        prop_writer::prop("_id", id) >> filter;
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
+        odb::mongo::object filter;
+        prop_writer::prop("_id", id) >> filter;
         properties.replace(filter,record);
     }
 

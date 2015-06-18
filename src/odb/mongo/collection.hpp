@@ -31,8 +31,7 @@ namespace wdb { namespace odb { namespace mongo {
         auto cursor = coll.find(static_cast<odb::mongo::object&>(o).w.builder);
         std::vector<std::unique_ptr<iobject>> docs;
         for(auto doc : cursor){
-            odb::mongo::object* obj = new object(doc); // TODO: This is a workaround to keep the value data alive for the return of the vector
-            docs.emplace_back(std::unique_ptr<iobject>(new object(obj->r.value)));
+            docs.emplace_back(std::unique_ptr<iobject>(new object(doc)));
         }
         return docs;
     }
