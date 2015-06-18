@@ -5,7 +5,9 @@ namespace wdb { namespace entities { namespace generic {
 
     class model {
     public:
-        model(std::string model_class, std::ifstream& in) {}
+        model(std::string model_class, std::ifstream& in){
+            class_ = model_class;
+        }
 
         model(std::string model_class, const odb::iobject& o){
             const auto& obj = static_cast<const odb::mongo::object&>(o);

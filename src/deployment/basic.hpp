@@ -9,8 +9,7 @@ namespace wdb { namespace deployment {
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
         counters( db.provide_collection("counters") )
-    {
-    }
+    {}
 
     void basic::purge_collections(){
         properties.purge();
@@ -67,6 +66,11 @@ namespace wdb { namespace deployment {
         return entities::factory::make_model(*models.find(id));
     }
 
+    rte::iexecutable& basic::fetch_executable(int id){
+        static rte::cluster::executable x(*executables.find(id));
+        return x;
+    }
+
     std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
         return entities::factory::make_property(*properties.find(id));
     }
@@ -89,17 +93,22 @@ namespace wdb { namespace deployment {
         odb::mongo::object o;
         o.w.builder.append(std::make_tuple(std::string("resolution_state"),int(entities::resolution_state::UNDEFINED)));
         for(auto &obj : properties.find_like(o)){
-            std::unique_ptr<entities::generic::property> p(entities::factory::make_property(*obj));
-            p->resolve();
-
-            odb::mongo::object filter;
             int prop_id = entities::generic::reader::Int(*obj, "_id");
-            filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
-            odb::mongo::object record, serialized_configuration;
-            p->serialize_configuration(serialized_configuration);
-            p->serialize(record, serialized_configuration);
-            properties.replace(filter,record);
+            resolve_property(prop_id);
         }
+    }
+
+    void basic::resolve_property(int prop_id){
+        std::unique_ptr<entities::generic::property> p(fetch_property(prop_id));
+        p->resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()));
+
+        odb::mongo::object record, serialized_configuration;
+        p->serialize_configuration(serialized_configuration);
+        p->serialize(record, serialized_configuration);
+
+        odb::mongo::object filter;
+        filter.w.builder.append(std::make_tuple(std::string("_id"),prop_id));
+        properties.replace(filter,record);
     }
 
     void basic::list_properties(){

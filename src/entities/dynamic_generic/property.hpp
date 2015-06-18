@@ -10,11 +10,15 @@ namespace wdb { namespace entities { namespace dynamic_generic {
             : wdb::entities::generic::property(model_class, model_id, executable_id, params, state)
         {}
 
-        virtual void resolve(){
+        virtual void resolve(rte::iexecutable &x, const model &m) {
+            // Begin resolution
             state_ = resolution_state::WAITFORIT;
 
-            // TODO: Actually run the executable
+            // Actually run the executable
+            // TODO Compose argc and params and run
+            // x(argc, (char**)params);
 
+            // Finished
             state_ = resolution_state::DEFINED;
         }
 

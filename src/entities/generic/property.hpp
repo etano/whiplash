@@ -38,7 +38,7 @@ namespace wdb { namespace entities { namespace generic {
             : class_(model_class), model_(model_id), executable_(executable_id), params_(params), state_(state)
         {}
 
-        virtual void resolve() {};
+        virtual void resolve(rte::iexecutable &x, const model &m) {};
 
         virtual void serialize_configuration(odb::iobject& configuration) {}
 

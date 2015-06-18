@@ -14,10 +14,8 @@
 #include <vector>
 // }}}
 
-#include "rte/interface.hpp"
 #include "odb/interface.hpp"
-
-#include "rte/cluster.hpp"
+#include "rte/interface.hpp"
 #include "odb/mongo.hpp"
 
 #include "entities/generic.hpp"
@@ -27,6 +25,8 @@
 #include "entities/sat.hpp"
 #include "entities/tsp.hpp"
 #include "entities/factory.hpp"
+
+#include "rte/cluster.hpp"
 
 #include "deployment/basic.h"
 #include "deployment/basic.hpp"
