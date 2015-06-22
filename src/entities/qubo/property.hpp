@@ -13,6 +13,7 @@ namespace wdb { namespace entities { namespace qubo {
             : wdb::entities::dynamic_generic::property(model_class, model_id, executable_id, params, state)
         {}
 
+        virtual ~property() override {};
     };
 
 } } }

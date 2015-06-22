@@ -36,7 +36,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params){
-        std::unique_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
+        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -46,7 +46,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_model(std::string file_name, std::string model_class){
         std::ifstream in(file_name);
-        std::unique_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
+        std::shared_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
         in.close();
         odb::mongo::object record;
         m->serialize(record);
@@ -63,7 +63,7 @@ namespace wdb { namespace deployment {
         executables.insert(record); // buggy
     }
 
-    std::unique_ptr<entities::generic::model> basic::fetch_model(int id){
+    std::shared_ptr<entities::generic::model> basic::fetch_model(int id){
         return entities::factory::make_model(*models.find(id));
     }
 
@@ -72,19 +72,19 @@ namespace wdb { namespace deployment {
         return x;
     }
 
-    std::unique_ptr<entities::generic::property> basic::fetch_property(int id){
+    std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
         return entities::factory::make_property(*properties.find(id));
     }
 
-    std::vector<std::unique_ptr<entities::generic::model>> basic::fetch_models_like(odb::iobject& o){
-        std::vector<std::unique_ptr<entities::generic::model>> ms;
+    std::vector<std::shared_ptr<entities::generic::model>> basic::fetch_models_like(odb::iobject& o){
+        std::vector<std::shared_ptr<entities::generic::model>> ms;
         for(auto &obj : models.find_like(o))
             ms.emplace_back(entities::factory::make_model(*obj));
         return ms;
     }
 
-    std::vector<std::unique_ptr<entities::generic::property>> basic::fetch_properties_like(odb::iobject& o){
-        std::vector<std::unique_ptr<entities::generic::property>> ps;
+    std::vector<std::shared_ptr<entities::generic::property>> basic::fetch_properties_like(odb::iobject& o){
+        std::vector<std::shared_ptr<entities::generic::property>> ps;
         for(auto &obj : properties.find_like(o))
             ps.emplace_back(entities::factory::make_property(*obj));
         return ps;
@@ -102,7 +102,7 @@ namespace wdb { namespace deployment {
 
     void basic::resolve_property(int id){
         using odb::mongo::prop_writer;
-        std::unique_ptr<entities::generic::property> p(fetch_property(id));
+        std::shared_ptr<entities::generic::property> p(fetch_property(id));
         p->resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()));
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);

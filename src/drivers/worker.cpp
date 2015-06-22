@@ -13,6 +13,7 @@ int main(int argc, char* argv[]){
 
     auto& test = sf.load("apps/test.app");
     test(argc, (char**)params);
+    free(params);
 
     return 0;
 }

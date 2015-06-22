@@ -58,6 +58,8 @@ namespace wdb { namespace entities { namespace ising {
             init_nodes();
         }
 
+        virtual ~model() override {};
+
         void serialize(odb::iobject& record) override {
             wdb::entities::dynamic_generic::model::serialize(record);
             writer::prop("config", edges_) >> record;

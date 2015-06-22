@@ -29,7 +29,7 @@ namespace wdb { namespace odb { namespace mongo {
         object(typename readable::value_type value) : r(value) {}
         object(typename readable::view_type view) : r(view) {}
         object() : w() {}
-        virtual ~object() override {}
+        virtual ~object() override {} //r.value.release(); }
     };
 
 } } }

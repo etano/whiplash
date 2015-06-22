@@ -21,17 +21,17 @@ namespace wdb { namespace odb { namespace mongo {
             std::cout << bsoncxx::to_json(doc) << std::endl;
     }
 
-    std::unique_ptr<iobject> collection::find(int id){
+    std::shared_ptr<iobject> collection::find(int id){
         bsoncxx::builder::stream::document filter;
         filter << "_id" << id;
-        return std::unique_ptr<iobject>(new object( *coll.find_one(filter) ));
+        return std::shared_ptr<iobject>(new object( *coll.find_one(filter) ));
     }
 
-    std::vector<std::unique_ptr<iobject>> collection::find_like(iobject& o){
+    std::vector<std::shared_ptr<iobject>> collection::find_like(iobject& o){
         auto cursor = coll.find(static_cast<odb::mongo::object&>(o).w.builder);
-        std::vector<std::unique_ptr<iobject>> docs;
+        std::vector<std::shared_ptr<iobject>> docs;
         for(auto doc : cursor){
-            docs.emplace_back(std::unique_ptr<iobject>(new object(doc)));
+            docs.emplace_back(std::shared_ptr<iobject>(new object(doc)));
         }
         return docs;
     }

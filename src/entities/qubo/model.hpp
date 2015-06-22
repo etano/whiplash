@@ -12,6 +12,8 @@ namespace wdb { namespace entities { namespace qubo {
         model(std::string model_class, const odb::iobject& o)
             : wdb::entities::dynamic_generic::model(model_class,o)
         {}
+
+        virtual ~model() override {};
     };
 
 } } }

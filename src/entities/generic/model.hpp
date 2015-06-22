@@ -15,6 +15,8 @@ namespace wdb { namespace entities { namespace generic {
             class_id_ = reader::Int(obj, "class_id");
         }
 
+        virtual ~model() {};
+
         virtual void serialize(odb::iobject& record){
             writer::prop("class", class_) >> record;
             writer::prop("class_id", class_id_) >> record;
