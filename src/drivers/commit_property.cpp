@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
             int model_id = std::stoi(input[1]);
             int executable_id = std::stoi(input[2]);
             std::vector<std::string> params;
-            for(int i = 2; i < input.size(); ++i)
+            for(int i = 3; i < input.size(); ++i)
                 params.push_back(input[i]);
             sf.insert_property(model_class, model_id, executable_id, params);
         }

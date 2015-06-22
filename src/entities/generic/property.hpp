@@ -20,6 +20,11 @@ namespace wdb { namespace entities { namespace generic {
                 params_.push_back(reader::String(e));
         }
 
+        void print_params(){
+            for (auto p : params_)
+                std::cout << p << std::endl;
+        }
+
         void info(){
             std::cout << "Class: " << class_ << "\n";
             std::cout << "Model: " << model_ << "\n";

@@ -4,6 +4,8 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 .DEFAULT: all
 .PHONY: all clean install
 
+# TODO: Make it so everything doens't have to recompile everytime
+
 APPS = test.app
 DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver fetch_property.driver init_db.driver query.driver resolve_properties.driver worker.driver daemon.driver
 prefix = ..

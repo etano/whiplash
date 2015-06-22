@@ -37,5 +37,7 @@ int main(int argc, char* argv[]){
     }
 
     std::cout << config_min << ' ' << Emin << "\n";
+    I.set_configuration(config_min, Emin);
+
     return 0;
 }

@@ -24,6 +24,11 @@ namespace wdb { namespace odb { namespace mongo {
                 for(auto i : t) array.append(decompose(i));
             };
         }
+        static std::function<void(sub_array)> decompose(const std::vector<bool>& t){
+            return [&t](sub_array array){
+                for(auto i : t) array.append(int(i));
+            };
+        }
 
         static prop_type<int> prop(std::string name, int num){
             return bsoncxx::builder::basic::kvp(name, num);
