@@ -11,6 +11,7 @@ namespace wdb { namespace odb { namespace mongo {
         readable(view_type v) : value(v), view(value.view()) {}
         value_type value;
         view_type view;
+       ~readable() { value.release(); }
     };
 
     class writable {
@@ -18,18 +19,20 @@ namespace wdb { namespace odb { namespace mongo {
     public:
         writable() = default;
         builder_type builder;
+       ~writable() {}
     };
 
     class object : public iobject {
     public:
+        bool rw;
         union {
             readable r;
             writable w;
         };
-        object(typename readable::value_type value) : r(value) {}
-        object(typename readable::view_type view) : r(view) {}
-        object() : w() {}
-        virtual ~object() override {} //r.value.release(); }
+        object(typename readable::value_type value) : rw(1), r(value) {}
+        object(typename readable::view_type view) : rw(1), r(view) {}
+        object() : rw(0), w() {}
+        virtual ~object() override { rw ? r.~readable() : w.~writable(); } // TODO: Find better way to do this
     };
 
 } } }
