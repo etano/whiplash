@@ -13,6 +13,8 @@ namespace wdb { namespace entities { namespace ising {
             : wdb::entities::dynamic_generic::property(model_class, model_id, executable_id, params, state)
         {}
 
+        virtual ~property() override {};
+
         virtual void serialize_configuration(odb::iobject& configuration){
             if (state_ == resolution_state::UNDEFINED){
                 writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> configuration;

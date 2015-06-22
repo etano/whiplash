@@ -9,6 +9,7 @@ namespace wdb { namespace entities { namespace dynamic_generic {
         property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
             : wdb::entities::generic::property(model_class, model_id, executable_id, params, state)
         {}
+        virtual ~property() override {};
 
         virtual void resolve(rte::iexecutable &x, const model &m) {
             // Begin resolution
