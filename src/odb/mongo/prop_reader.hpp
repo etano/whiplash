@@ -71,13 +71,19 @@ namespace wdb { namespace odb { namespace mongo {
         typedef detail::array_view array_type;
         typedef int int_type;
 
-        static array_type Array(const iobject& obj, const std::string& name0, const std::string& name1){
-            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return std::move(detail::get<array_type>(detail::get<object_view>(m_obj.r.view, name0), name1));
+
+        template<typename T>
+        static array_type Array(const object_view& v, const T& name){
+            return detail::get<array_type>(v, name);
         }
-        static array_type Array(const iobject& obj, std::string name){
+        template<typename T, typename... Args>
+        static array_type Array(const object_view& v, const T& name, const Args&... args){
+            return Array( detail::get<object_view>(v, name), args... );
+        }
+        template<typename... Args>
+        static array_type Array(const iobject& obj, const Args&... args){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return detail::get<array_type>(m_obj.r.view, name);
+            return Array(m_obj.r.view, args...);
         }
         static array_type Array(prop_type e){
             return detail::get<array_type>(e);
