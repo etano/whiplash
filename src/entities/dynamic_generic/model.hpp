@@ -11,9 +11,9 @@ namespace wdb { namespace entities { namespace dynamic_generic {
 
         virtual ~model() override {};
 
-        virtual void print() { std::cout << "print not defined" << std::endl; }
-
         virtual void serialize_configuration(odb::iobject& configuration) override {}
+
+        virtual void print() override { std::cout << "print not defined" << std::endl; }
     };
 
 } } }
