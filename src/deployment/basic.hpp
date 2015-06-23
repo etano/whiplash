@@ -48,8 +48,9 @@ namespace wdb { namespace deployment {
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
         in.close();
-        odb::mongo::object record;
-        m->serialize(record);
+        odb::mongo::object record, serialized_configuration;
+        m->serialize_configuration(serialized_configuration);
+        m->serialize(record, serialized_configuration);
         db.sign(record, "models");
         models.insert(record);
     }

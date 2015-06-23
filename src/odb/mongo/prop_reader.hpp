@@ -33,6 +33,10 @@ namespace wdb { namespace odb { namespace mongo {
             return (array_view)doc[field].get_array();
         }
 
+        template<>
+        object_view get<object_view>(object_view doc, std::string field){
+            return (object_view)doc[field].get_document();
+        }
 
         template<typename T>
         T get(element e){
@@ -62,10 +66,16 @@ namespace wdb { namespace odb { namespace mongo {
 
     class prop_reader {
     public:
+        typedef detail::object_view object_view;
         typedef detail::element prop_type;
         typedef detail::array_view array_type;
         typedef int int_type;
 
+        static array_type Array(const iobject& obj, const std::string& name0, const std::string& name1){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            odb::mongo::object child(std::move(detail::get<object_view>(m_obj.r.view, name0)));
+            return detail::get<array_type>(child.r.view, name1);
+        }
         static array_type Array(const iobject& obj, std::string name){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
             return detail::get<array_type>(m_obj.r.view, name);
