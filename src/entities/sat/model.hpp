@@ -3,14 +3,14 @@
 
 namespace wdb { namespace entities { namespace sat {
 
-    class model : public wdb::entities::dynamic_generic::model {
+    class model : public wdb::entities::generic::model {
     public:
         model(std::string model_class, std::ifstream& in)
-            : wdb::entities::dynamic_generic::model(model_class,in)
+            : wdb::entities::generic::model(model_class,in)
         {}
 
         model(std::string model_class, const odb::iobject& o)
-            : wdb::entities::dynamic_generic::model(model_class,o)
+            : wdb::entities::generic::model(model_class,o)
         {}
 
         virtual ~model() override {};

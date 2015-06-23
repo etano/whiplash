@@ -9,7 +9,7 @@ namespace wdb { namespace rte { namespace cluster {
             open(path);
         }
         executable(const odb::iobject& o){
-            std::string path = entities::generic::reader::String(o, "file_name");
+            std::string path = entities::reader::String(o, "file_name");
             open(path);
         }
         virtual ~executable() override {

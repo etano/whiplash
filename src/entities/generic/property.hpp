@@ -1,12 +1,6 @@
 #ifndef WDB_ENTITIES_GENERIC_PROPERTY_HPP
 #define WDB_ENTITIES_GENERIC_PROPERTY_HPP
 
-namespace wdb { namespace entities {
-
-    enum class resolution_state { UNDEFINED, PROCESSING, DEFINED };
-
-} }
-
 namespace wdb { namespace entities { namespace generic {
 
     class property {
@@ -63,6 +57,7 @@ namespace wdb { namespace entities { namespace generic {
         int get_executable() { return executable_; }
         resolution_state get_resolution_state() { return state_; }
         std::vector<std::string> get_params() { return params_; }
+        void set_state(resolution_state state) { state_ = state; }
     protected:
         int model_;
         int executable_;

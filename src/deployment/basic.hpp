@@ -96,7 +96,7 @@ namespace wdb { namespace deployment {
         odb::mongo::object o;
         prop_writer::prop("resolution_state", int(entities::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
-            int prop_id = entities::generic::reader::Int(*obj, "_id");
+            int prop_id = entities::reader::Int(*obj, "_id");
             resolve_property(prop_id);
         }
     }
@@ -104,7 +104,7 @@ namespace wdb { namespace deployment {
     void basic::resolve_property(int id){
         using odb::mongo::prop_writer;
         std::shared_ptr<entities::generic::property> p(fetch_property(id));
-        p->resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()));
+        entities::generic::controller::resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);

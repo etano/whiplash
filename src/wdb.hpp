@@ -19,7 +19,6 @@
 #include "odb/mongo.hpp"
 
 #include "entities/generic.hpp"
-#include "entities/dynamic_generic.hpp"
 #include "entities/ising.hpp"
 #include "entities/qubo.hpp"
 #include "entities/sat.hpp"
