@@ -95,7 +95,7 @@ namespace wdb { namespace entities { namespace ising {
             return -2.0*E;
         }
 
-        void print(){
+        virtual void print() override {
             for(auto i : edges_){
                 std::cout << "{[ ";
                 for(int a : i.first) std::cout << a << " ";

@@ -12,14 +12,14 @@ namespace wdb { namespace rte { namespace cluster {
             std::string path = entities::generic::reader::String(o, "file_name");
             open(path);
         }
-       ~executable() override {
+        virtual ~executable() override {
             dlclose(handle);
         }
-        void operator()(int argc, char** argv) override {
+        virtual void operator()(int argc, char** argv) override {
             typedef int (*fptr_t)(int,char**);
             ((fptr_t)fptr)(argc, argv);
         }
-        void operator()() override {
+        virtual void operator()() override {
             typedef int (*fptr_t)();
             ((fptr_t)fptr)();
         }
