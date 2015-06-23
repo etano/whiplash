@@ -14,11 +14,11 @@ namespace wdb { namespace odb { namespace mongo {
         mongocxx::client conn;
         mongocxx::database db;
 
-       ~objectdb() override;
+        virtual ~objectdb() override;
         objectdb(std::string url);
-        icollection& provide_collection(std::string name) override;
-        int get_next_id(std::string collection) override;
-        void sign(iobject& record, std::string cname) override;
+        virtual icollection& provide_collection(std::string name) override;
+        virtual int get_next_id(std::string collection) override;
+        virtual void sign(iobject& record, std::string cname) override;
     private:
         std::vector<icollection*> collections;
     };

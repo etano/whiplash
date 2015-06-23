@@ -15,7 +15,7 @@ namespace wdb { namespace entities { namespace ising {
 
         virtual ~property() override {};
 
-        virtual void serialize_configuration(odb::iobject& configuration){
+        virtual void serialize_configuration(odb::iobject& configuration) override {
             if (state_ == resolution_state::UNDEFINED){
                 writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> configuration;
                 writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> configuration;

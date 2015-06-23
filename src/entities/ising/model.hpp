@@ -60,7 +60,7 @@ namespace wdb { namespace entities { namespace ising {
 
         virtual ~model() override {};
 
-        void serialize(odb::iobject& record) override {
+        virtual void serialize(odb::iobject& record) override {
             wdb::entities::dynamic_generic::model::serialize(record);
             writer::prop("config", edges_) >> record;
         }
@@ -96,7 +96,7 @@ namespace wdb { namespace entities { namespace ising {
             return -2.0*E;
         }
 
-        void print(){
+        virtual void print() override {
             for(auto i : edges_){
                 std::cout << "{[ ";
                 for(int a : i.first) std::cout << a << " ";

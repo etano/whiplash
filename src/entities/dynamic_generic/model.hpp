@@ -8,7 +8,7 @@ namespace wdb { namespace entities { namespace dynamic_generic {
         model(std::string model_class, std::ifstream& in) : wdb::entities::generic::model(model_class,in) {}
         model(std::string model_class, const odb::iobject& o) : wdb::entities::generic::model(model_class,o) {}
         virtual ~model() override {};
-        virtual void print(){std::cout << "print not defined" << std::endl;}
+        virtual void print() override { std::cout << "print not defined" << std::endl; }
     };
 
 } } }
