@@ -49,13 +49,13 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual void serialize_configuration(odb::iobject& configuration) {}
 
-        void serialize(odb::iobject& inst, const odb::iobject& configuration){
-            writer::prop("class", class_) >> inst;
-            writer::prop("model_id", model_) >> inst;
-            writer::prop("executable_id", executable_) >> inst;
-            writer::prop("resolution_state", int(state_)) >> inst;
-            writer::prop("params", params_) >> inst;
-            writer::prop("configuration", configuration) >> inst;
+        void serialize(odb::iobject& record, const odb::iobject& configuration){
+            writer::prop("class", class_) >> record;
+            writer::prop("model_id", model_) >> record;
+            writer::prop("executable_id", executable_) >> record;
+            writer::prop("resolution_state", int(state_)) >> record;
+            writer::prop("params", params_) >> record;
+            writer::prop("configuration", configuration) >> record;
         }
 
         std::string get_class() { return class_; }
