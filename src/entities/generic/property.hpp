@@ -45,7 +45,7 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual ~property() {};
 
-        virtual void resolve(rte::iexecutable &x, const model &m) {};
+        virtual void resolve(rte::iexecutable &x, entities::generic::model &m) {}
 
         virtual void serialize_configuration(odb::iobject& configuration) {}
 
