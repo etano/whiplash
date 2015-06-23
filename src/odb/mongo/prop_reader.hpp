@@ -73,8 +73,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         static array_type Array(const iobject& obj, const std::string& name0, const std::string& name1){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            odb::mongo::object child(std::move(detail::get<object_view>(m_obj.r.view, name0)));
-            return detail::get<array_type>(child.r.view, name1);
+            return std::move(detail::get<array_type>(detail::get<object_view>(m_obj.r.view, name0), name1));
         }
         static array_type Array(const iobject& obj, std::string name){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
