@@ -11,7 +11,8 @@ int main(int argc, char* argv[]){
     auto H(sf.fetch_model(0));    params[1] = &(*H);
     auto I(sf.fetch_property(0)); params[2] = &(*I);
 
-    auto& test = sf.load("apps/test.app");
+    wdb::rte::cluster::executable test("apps/test.app");
+
     test(argc, (char**)params);
     free(params);
 

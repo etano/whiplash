@@ -68,9 +68,8 @@ namespace wdb { namespace deployment {
         return entities::factory::make_model(*models.find(id));
     }
 
-    rte::iexecutable& basic::fetch_executable(int id){
-        static rte::cluster::executable x(*executables.find(id));
-        return x;
+    std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
+        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(entities::reader::String(*executables.find(id), "file_name")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
@@ -104,7 +103,7 @@ namespace wdb { namespace deployment {
     void basic::resolve_property(int id){
         using odb::mongo::prop_writer;
         std::shared_ptr<entities::generic::property> p(fetch_property(id));
-        entities::generic::controller::resolve(fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
+        entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -119,11 +118,6 @@ namespace wdb { namespace deployment {
 
     void basic::list_model(int id){
         models.print_object(id);
-    }
-
-    rte::iexecutable& basic::load(std::string app){
-        static rte::cluster::executable inst(app);
-        return inst;
     }
 
 } }
