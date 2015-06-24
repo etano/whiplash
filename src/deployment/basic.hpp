@@ -36,7 +36,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params){
-        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::resolution_state::UNDEFINED));
+        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::generic::property::resolution_state::UNDEFINED));
         odb::mongo::object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -94,7 +94,7 @@ namespace wdb { namespace deployment {
     void basic::resolve_properties(){
         using odb::mongo::prop_writer;
         odb::mongo::object o;
-        prop_writer::prop("resolution_state", int(entities::resolution_state::UNDEFINED)) >> o;
+        prop_writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
             int prop_id = entities::reader::Int(*obj, "_id");
             resolve_property(prop_id);

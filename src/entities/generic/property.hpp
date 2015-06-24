@@ -5,6 +5,8 @@ namespace wdb { namespace entities { namespace generic {
 
     class property {
     public:
+        enum class resolution_state { UNDEFINED, PROCESSING, DEFINED };
+
         property(std::string model_class, const odb::iobject& o){
             class_ = model_class;
             model_ = reader::Int(o, "model_id");

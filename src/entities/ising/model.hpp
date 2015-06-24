@@ -42,7 +42,7 @@ namespace wdb { namespace entities { namespace ising {
         model(std::string model_class, const odb::iobject& o)
             : wdb::entities::generic::model(model_class,o), N_(0)
         {
-            for(auto e : std::move(reader::Array(o, "configuration", "edges"))){
+            for(auto e : reader::Array(o, "configuration", "edges")){
                 std::vector<int> inds;
                 auto sub_array = reader::Array(e);
                 for(const auto a : reader::Array(sub_array[0])){

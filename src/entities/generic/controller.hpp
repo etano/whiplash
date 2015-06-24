@@ -10,10 +10,9 @@ namespace wdb { namespace entities { namespace generic {
         virtual ~controller() {};
 
         static void resolve(rte::iexecutable &x, entities::generic::model &m, entities::generic::property &p){
-            // Begin resolution
-            p.set_state(resolution_state::PROCESSING);
+            p.set_state(property::resolution_state::PROCESSING);
 
-            // Actually run the executable
+            // {{{ Actually run the executable
             std::vector<std::string> params(p.get_params());
             int argc = 3 + params.size();
             void** argv = (void**)malloc(sizeof(void*)*argc);
@@ -22,9 +21,9 @@ namespace wdb { namespace entities { namespace generic {
             for(int i=0; i<params.size(); i++) argv[i+3] = &params[i];
             x(argc, (char**)argv);
             free(argv);
+            // }}}
 
-            // Finished
-            p.set_state(resolution_state::DEFINED);
+            p.set_state(property::resolution_state::DEFINED);
         }
     };
 
