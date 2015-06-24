@@ -7,10 +7,11 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 # TODO: Make it so everything doens't have to recompile everytime
 
 APPS = test.app
-DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver fetch_property.driver init_db.driver query.driver resolve_properties.driver worker.driver daemon.driver
+DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver init_db.driver query.driver resolve_properties.driver worker.driver daemon.driver
+TESTS = fetch_property.test
 prefix = ..
 
-all: $(DRIVERS) $(APPS)
+all: $(APPS) $(DRIVERS) $(TESTS)
 
 %: %.cpp
 	$(CXX) -o $(basename $<) $< $(CXXFLAGS)
@@ -21,9 +22,13 @@ all: $(DRIVERS) $(APPS)
 %.driver : drivers/%.cpp
 	$(CXX) -o $(basename $<).driver $< $(CXXFLAGS)
 
+%.test : tests/%.cpp
+	$(CXX) -o $(basename $<).test $< $(CXXFLAGS)
+
 clean:
 	-rm -f apps/*.app
 	-rm -f drivers/*.driver
+	-rm -f tests/*.test
 
 install:
 	install -m 0755 apps/*.app $(prefix)/bin

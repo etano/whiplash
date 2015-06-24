@@ -58,6 +58,7 @@ namespace wdb { namespace entities { namespace generic {
         int get_model() { return model_; }
         int get_executable() { return executable_; }
         resolution_state get_resolution_state() { return state_; }
+        bool is_defined(){ return state_ == resolution_state::DEFINED; }
         std::vector<std::string> get_params() { return params_; }
         void set_state(resolution_state state) { state_ = state; }
     protected:

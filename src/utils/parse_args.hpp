@@ -1,5 +1,5 @@
-#ifndef WDB_UTILS_HPP
-#define WDB_UTILS_HPP
+#ifndef WDB_UTILS_PARSE_ARGS_HPP
+#define WDB_UTILS_PARSE_ARGS_HPP
 
 namespace wdb {
 
