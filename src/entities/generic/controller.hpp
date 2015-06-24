@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities { namespace generic {
 
-    class controller {
+    class controller : public wdb::rte::icontroller {
     public:
         controller(){}
 
