@@ -62,6 +62,14 @@ namespace wdb { namespace odb { namespace mongo {
         array_view get(element e){
             return (array_view)e.get_array();
         }
+
+        std::string to_json(object_view doc){
+            return bsoncxx::to_json(doc);
+        }
+
+        object_view from_json(std::string json_str){
+            return (object_view)bsoncxx::from_json(json_str).value();
+        }
     }
 
     class prop_reader {
@@ -111,6 +119,15 @@ namespace wdb { namespace odb { namespace mongo {
         }
         static std::string String(prop_type e){
             return detail::get<std::string>(e);
+        }
+
+        static std::string to_json(const iobject& obj){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return detail::to_json(m_obj.r.view);
+        }
+
+        static object_view from_json(const std::string json_str){
+            return detail::from_json(json_str);
         }
     };
 

@@ -16,11 +16,12 @@ namespace wdb { namespace deployment {
         void resolve_properties();
         void resolve_property(int id);
 
-        std::shared_ptr<entities::generic::model> fetch_model(int id);
         std::shared_ptr<rte::iexecutable> fetch_executable(int id);
+        std::shared_ptr<entities::generic::model> fetch_model(int id);
         std::shared_ptr<entities::generic::property> fetch_property(int id);
         std::vector<std::shared_ptr<entities::generic::model>> fetch_models_like(odb::iobject& o);
         std::vector<std::shared_ptr<entities::generic::property>> fetch_properties_like(odb::iobject& o);
+        std::vector<std::string> query(std::string json_filter);
     private:
         odb::icollection& properties;
         odb::icollection& models;

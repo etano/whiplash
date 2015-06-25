@@ -120,6 +120,20 @@ namespace wdb { namespace deployment {
         models.print_object(id);
     }
 
+    std::vector<std::string> basic::query(std::string json_filter){
+        using odb::mongo::prop_reader;
+        odb::mongo::object o(prop_reader::from_json(json_filter));
+        //for(auto &obj : properties.find_like(o)){
+        //    int prop_id = entities::reader::Int(*obj, "_id");
+        //    resolve_property(prop_id);
+        //}
+        std::vector<std::string> result;
+        for(auto &obj : properties.find_like(o)){
+            result.push_back(prop_reader::to_json(*obj));
+        }
+        return result;
+    }
+
 } }
 
 #endif
