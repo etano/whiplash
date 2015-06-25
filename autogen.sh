@@ -3,7 +3,7 @@
 # Get parameters
 ORIGPATH=`pwd`
 BUILDPATH=${ORIGPATH}
-NTHREADS=8
+NTHREADS=""
 for i in "$@"
 do
 case $i in
