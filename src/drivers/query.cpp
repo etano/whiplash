@@ -5,10 +5,11 @@ int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    std::string json_str = "{'class' : 'ising'}";
-    std::vector<std::string> result = sf.query(json_str);
+    wdb::deployment::object o;
+    wdb::deployment::prop_writer::prop("class", std::string("ising")) >> o;
+    std::vector<std::shared_ptr<wdb::odb::iobject>> result(sf.query(o));
     for(const auto& r : result)
-        std::cout << r << std::endl;
+        std::cout << *r << std::endl;
 
     return 0;
 }

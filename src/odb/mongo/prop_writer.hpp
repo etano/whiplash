@@ -53,11 +53,9 @@ namespace wdb { namespace odb { namespace mongo {
 
 } } }
 
-namespace wdb {
-    template<typename U>
-    inline void operator>>(std::tuple<std::string, U> p, odb::iobject& ss){
-        static_cast<odb::mongo::object&>(ss).w.builder.append( std::move(p) );
-    }
+template<typename U>
+inline void operator>>(std::tuple<std::string, U> p, wdb::odb::iobject& ss){
+    static_cast<wdb::odb::mongo::object&>(ss).w.builder.append( std::move(p) );
 }
 
 #endif

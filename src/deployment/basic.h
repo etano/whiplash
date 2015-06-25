@@ -21,7 +21,7 @@ namespace wdb { namespace deployment {
         std::shared_ptr<entities::generic::property> fetch_property(int id);
         std::vector<std::shared_ptr<entities::generic::model>> fetch_models_like(odb::iobject& o);
         std::vector<std::shared_ptr<entities::generic::property>> fetch_properties_like(odb::iobject& o);
-        std::vector<std::string> query(const std::string& json_str);
+        std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
     private:
         odb::icollection& properties;
         odb::icollection& models;

@@ -119,19 +119,12 @@ namespace wdb { namespace deployment {
         models.print_object(id);
     }
 
-    std::vector<std::string> basic::query(const std::string& json_str){
-        // FIXME: Need to figure out how to turn json string into mongo object (from_json)
-        object o;
-        prop_writer::prop("class", std::string("ising")) >> o;
+    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
             int prop_id = entities::reader::Int(*obj, "_id");
             resolve_property(prop_id);
         }
-        std::vector<std::string> result;
-        for(auto &obj : properties.find_like(o)){
-            result.push_back(prop_reader::to_json(*obj));
-        }
-        return result;
+        return properties.find_like(o);
     }
 
 } }

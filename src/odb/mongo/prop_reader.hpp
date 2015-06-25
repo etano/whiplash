@@ -127,4 +127,8 @@ namespace wdb { namespace odb { namespace mongo {
 
 } } }
 
+std::ostream &operator<<(std::ostream &os, wdb::odb::iobject& ss){
+    return os << wdb::odb::mongo::prop_reader::to_json(ss);
+}
+
 #endif
