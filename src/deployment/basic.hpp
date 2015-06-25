@@ -2,6 +2,9 @@
 #define WDB_DEPLOYMENT_BASIC_HPP
 
 namespace wdb { namespace deployment {
+    using odb::mongo::prop_writer;
+    using odb::mongo::prop_reader;
+    using odb::mongo::object;
 
     basic::basic(odb::iobjectdb& db)
       : db(db),
@@ -19,8 +22,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::reset_counters(){
-        using odb::mongo::prop_writer;
-        odb::mongo::object properties_counter, models_counter, executables_counter;
+        object properties_counter, models_counter, executables_counter;
         counters.purge();
 
         prop_writer::prop("_id", "properties") >> properties_counter;
@@ -37,7 +39,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params){
         std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::generic::property::resolution_state::UNDEFINED));
-        odb::mongo::object record, serialized_configuration;
+        object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
         db.sign(record, "properties");
@@ -48,7 +50,7 @@ namespace wdb { namespace deployment {
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
         in.close();
-        odb::mongo::object record, serialized_configuration;
+        object record, serialized_configuration;
         m->serialize_configuration(serialized_configuration);
         m->serialize(record, serialized_configuration);
         db.sign(record, "models");
@@ -56,8 +58,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_executable(std::string file_name, std::string model_class){
-        using odb::mongo::prop_writer;
-        odb::mongo::object record;
+        object record;
         prop_writer::prop("file_name", file_name) >> record;
         prop_writer::prop("class", model_class) >> record;
         db.sign(record, "executables");
@@ -91,8 +92,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::resolve_properties(){
-        using odb::mongo::prop_writer;
-        odb::mongo::object o;
+        object o;
         prop_writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
             int prop_id = entities::reader::Int(*obj, "_id");
@@ -101,13 +101,12 @@ namespace wdb { namespace deployment {
     }
 
     void basic::resolve_property(int id){
-        using odb::mongo::prop_writer;
         std::shared_ptr<entities::generic::property> p(fetch_property(id));
         entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
-        odb::mongo::object record, serialized_configuration;
+        object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
-        odb::mongo::object filter;
+        object filter;
         prop_writer::prop("_id", id) >> filter;
         properties.replace(filter,record);
     }
@@ -120,13 +119,14 @@ namespace wdb { namespace deployment {
         models.print_object(id);
     }
 
-    std::vector<std::string> basic::query(std::string json_filter){
-        using odb::mongo::prop_reader;
-        odb::mongo::object o(prop_reader::from_json(json_filter));
-        //for(auto &obj : properties.find_like(o)){
-        //    int prop_id = entities::reader::Int(*obj, "_id");
-        //    resolve_property(prop_id);
-        //}
+    std::vector<std::string> basic::query(const std::string& json_str){
+        // FIXME: Need to figure out how to turn json string into mongo object (from_json)
+        object o;
+        prop_writer::prop("class", std::string("ising")) >> o;
+        for(auto &obj : properties.find_like(o)){
+            int prop_id = entities::reader::Int(*obj, "_id");
+            resolve_property(prop_id);
+        }
         std::vector<std::string> result;
         for(auto &obj : properties.find_like(o)){
             result.push_back(prop_reader::to_json(*obj));
