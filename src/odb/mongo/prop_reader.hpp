@@ -94,25 +94,52 @@ namespace wdb { namespace odb { namespace mongo {
             return detail::get<array_type>(e);
         }
 
-        static int_type Int(const iobject& obj, std::string name){
+        template<typename T>
+        static int_type Int(const object_view& v, const T& name){
+            return detail::get<int_type>(v, name);
+        }
+        template<typename T, typename... Args>
+        static int_type Int(const object_view& v, const T& name, const Args&... args){
+            return Int( detail::get<object_view>(v, name), args... );
+        }
+        template<typename... Args>
+        static int_type Int(const iobject& obj, const Args&... args){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return detail::get<int_type>(m_obj.r.view, name);
+            return Int(m_obj.r.view, args...);
         }
         static int_type Int(prop_type e){
             return detail::get<int_type>(e);
         }
 
-        static double Double(const iobject& obj, std::string name){
+        template<typename T>
+        static double Double(const object_view& v, const T& name){
+            return detail::get<double>(v, name);
+        }
+        template<typename T, typename... Args>
+        static double Double(const object_view& v, const T& name, const Args&... args){
+            return Double( detail::get<object_view>(v, name), args... );
+        }
+        template<typename... Args>
+        static double Double(const iobject& obj, const Args&... args){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return detail::get<double>(m_obj.r.view, name);
+            return Double(m_obj.r.view, args...);
         }
         static double Double(prop_type e){
             return detail::get<double>(e);
         }
 
-        static std::string String(const iobject& obj, std::string name){
+        template<typename T>
+        static std::string String(const object_view& v, const T& name){
+            return detail::get<std::string>(v, name);
+        }
+        template<typename T, typename... Args>
+        static std::string String(const object_view& v, const T& name, const Args&... args){
+            return String( detail::get<object_view>(v, name), args... );
+        }
+        template<typename... Args>
+        static std::string String(const iobject& obj, const Args&... args){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return detail::get<std::string>(m_obj.r.view, name);
+            return String(m_obj.r.view, args...);
         }
         static std::string String(prop_type e){
             return detail::get<std::string>(e);
