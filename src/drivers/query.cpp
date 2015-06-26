@@ -1,10 +1,10 @@
 #include "wdb.hpp"
-
-using namespace wdb::deployment;
+using wdb::odb::mongo::objectdb;
+using wdb::deployment::basic;
 
 int main(int argc, char* argv[]){
     // Init database and framework
-    wdb::odb::mongo::objectdb db("cwave.ethz.ch:27017");
+    objectdb db("cwave.ethz.ch:27017");
     basic deployment(db);
 
     // Create query object
