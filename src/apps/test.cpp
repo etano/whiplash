@@ -11,12 +11,6 @@
 
 #include "wdb.hpp"
 
-template <class T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& x){
-    std::copy(x.begin(),x.end(),std::ostream_iterator<T>(os," "));
-    return os;
-}
-
 int main(int argc, char* argv[]){
 
     wdb::entities::ising::model& H = *(wdb::entities::ising::model*)argv[1];
