@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual ~controller() {};
 
-        static void resolve(rte::iexecutable &x, entities::generic::model &m, entities::generic::property &p){
+        static void resolve(rte::iexecutable &x, model &m, property &p){
             p.set_state(property::resolution_state::PROCESSING);
 
             std::vector<std::string> params(p.get_params());

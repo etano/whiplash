@@ -19,8 +19,8 @@ namespace wdb { namespace entities { namespace factory {
         throw std::runtime_error("Unknown model class");
     }
 
-    std::shared_ptr<entities::generic::model> make_model(odb::iobject& o){
-        std::string model_class = entities::reader::String(o, "class");
+    std::shared_ptr<generic::model> make_model(odb::iobject& o){
+        std::string model_class = reader::String(o, "class");
         return make_model(model_class, o);
     }
 
@@ -37,9 +37,9 @@ namespace wdb { namespace entities { namespace factory {
         throw std::runtime_error("Unknown model class");
     }
 
-    std::shared_ptr<entities::generic::property> make_property(odb::iobject& o){
-        std::string model_class = entities::reader::String(o, "class");
-        return entities::factory::make_property(model_class,o);
+    std::shared_ptr<generic::property> make_property(odb::iobject& o){
+        std::string model_class = reader::String(o, "class");
+        return make_property(model_class,o);
     }
 
 } } }

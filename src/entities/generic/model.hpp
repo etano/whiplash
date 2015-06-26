@@ -10,9 +10,8 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         model(std::string model_class, const odb::iobject& o){
-            const auto& obj = static_cast<const odb::mongo::object&>(o);
-            class_ = entities::reader::String(obj, "class");
-            class_id_ = entities::reader::Int(obj, "class_id");
+            class_ = reader::String(o, "class");
+            class_id_ = reader::Int(o, "class_id");
         }
 
         virtual ~model() {};

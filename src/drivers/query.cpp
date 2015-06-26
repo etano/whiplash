@@ -1,15 +1,19 @@
 #include "wdb.hpp"
-using wdb::odb::mongo::objectdb;
+
+using namespace wdb::deployment;
 
 int main(int argc, char* argv[]){
-    objectdb db("cwave.ethz.ch:27017");
-    wdb::deployment::basic sf(db);
+    // Init database and framework
+    wdb::odb::mongo::objectdb db("cwave.ethz.ch:27017");
+    basic deployment(db);
 
-    wdb::deployment::object o;
-    wdb::deployment::prop_writer::prop("class", std::string("ising")) >> o;
-    std::vector<std::shared_ptr<wdb::odb::iobject>> result(sf.query(o));
-    for(const auto& r : result)
-        std::cout << *r << std::endl;
+    // Create query object
+    basic::object filter;
+    basic::writer::prop("class", std::string("ising")) >> filter;
+
+    // Query and print results
+    for(const auto& result : deployment.query(filter))
+        std::cout << basic::reader::Double(*result,"configuration","cost") << std::endl;
 
     return 0;
 }

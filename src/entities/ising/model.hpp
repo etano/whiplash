@@ -3,12 +3,12 @@
 
 namespace wdb { namespace entities { namespace ising {
 
-    class model : public wdb::entities::generic::model {
+    class model : public generic::model {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
         model(std::string model_class, std::ifstream& in)
-            : wdb::entities::generic::model(model_class,in), N_(0)
+            : generic::model(model_class,in), N_(0)
         {
             std::map<std::string,int> index;
             while(in){
@@ -40,7 +40,7 @@ namespace wdb { namespace entities { namespace ising {
         }
 
         model(std::string model_class, const odb::iobject& o)
-            : wdb::entities::generic::model(model_class,o), N_(0)
+            : generic::model(model_class,o), N_(0)
         {
             for(auto e : reader::Array(o, "configuration", "edges")){
                 std::vector<int> inds;

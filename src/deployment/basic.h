@@ -22,6 +22,10 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<entities::generic::model>> fetch_models_like(odb::iobject& o);
         std::vector<std::shared_ptr<entities::generic::property>> fetch_properties_like(odb::iobject& o);
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
+
+        class reader : public wdb::odb::mongo::prop_reader {};
+        class writer : public wdb::odb::mongo::prop_writer {};
+        class object : public wdb::odb::mongo::object {};
     private:
         odb::icollection& properties;
         odb::icollection& models;

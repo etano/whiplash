@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities { namespace qubo {
 
-    class controller : public wdb::entities::generic::controller {
+    class controller : public generic::controller {
     public:
         virtual ~controller() override {};
     };

@@ -3,6 +3,7 @@
 
 namespace wdb { namespace entities {
 
+    // TODO: Model, property, and controller should really be templated on the reader and writer type
     class reader : public wdb::odb::mongo::prop_reader {};
     class writer : public wdb::odb::mongo::prop_writer {};
 

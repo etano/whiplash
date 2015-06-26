@@ -3,14 +3,14 @@
 
 namespace wdb { namespace entities { namespace qubo {
 
-    class model : public wdb::entities::generic::model {
+    class model : public generic::model {
     public:
         model(std::string model_class, std::ifstream& in)
-            : wdb::entities::generic::model(model_class,in)
+            : generic::model(model_class,in)
         {}
 
         model(std::string model_class, const odb::iobject& o)
-            : wdb::entities::generic::model(model_class,o)
+            : generic::model(model_class,o)
         {}
 
         virtual ~model() override {};

@@ -2,9 +2,6 @@
 #define WDB_DEPLOYMENT_BASIC_HPP
 
 namespace wdb { namespace deployment {
-    using odb::mongo::prop_writer;
-    using odb::mongo::prop_reader;
-    using odb::mongo::object;
 
     basic::basic(odb::iobjectdb& db)
       : db(db),
@@ -25,12 +22,12 @@ namespace wdb { namespace deployment {
         object properties_counter, models_counter, executables_counter;
         counters.purge();
 
-        prop_writer::prop("_id", "properties") >> properties_counter;
-        prop_writer::prop("seq", -1) >> properties_counter;
-        prop_writer::prop("_id", "models") >> models_counter;
-        prop_writer::prop("seq", -1) >> models_counter;
-        prop_writer::prop("_id", "executables") >> executables_counter;
-        prop_writer::prop("seq", -1) >> executables_counter;
+        writer::prop("_id", "properties") >> properties_counter;
+        writer::prop("seq", -1) >> properties_counter;
+        writer::prop("_id", "models") >> models_counter;
+        writer::prop("seq", -1) >> models_counter;
+        writer::prop("_id", "executables") >> executables_counter;
+        writer::prop("seq", -1) >> executables_counter;
 
         counters.insert( properties_counter );
         counters.insert( models_counter );
@@ -59,8 +56,8 @@ namespace wdb { namespace deployment {
 
     void basic::insert_executable(std::string file_name, std::string model_class){
         object record;
-        prop_writer::prop("file_name", file_name) >> record;
-        prop_writer::prop("class", model_class) >> record;
+        writer::prop("file_name", file_name) >> record;
+        writer::prop("class", model_class) >> record;
         db.sign(record, "executables");
         executables.insert(record); // buggy
     }
@@ -70,7 +67,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(entities::reader::String(*executables.find(id), "file_name")) );
+        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(reader::String(*executables.find(id), "file_name")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
@@ -93,9 +90,9 @@ namespace wdb { namespace deployment {
 
     void basic::resolve_properties(){
         object o;
-        prop_writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
+        writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
-            int prop_id = entities::reader::Int(*obj, "_id");
+            int prop_id = reader::Int(*obj, "_id");
             resolve_property(prop_id);
         }
     }
@@ -107,7 +104,7 @@ namespace wdb { namespace deployment {
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
         object filter;
-        prop_writer::prop("_id", id) >> filter;
+        writer::prop("_id", id) >> filter;
         properties.replace(filter,record);
     }
 
@@ -121,7 +118,7 @@ namespace wdb { namespace deployment {
 
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
-            int prop_id = entities::reader::Int(*obj, "_id");
+            int prop_id = reader::Int(*obj, "_id");
             resolve_property(prop_id);
         }
         return properties.find_like(o);
