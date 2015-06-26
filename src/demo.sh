@@ -8,5 +8,5 @@ echo 'Committing executable...'
 $1 ./drivers/commit_executable.driver -file apps/test.app -class ising
 echo 'Committing property...'
 $1 ./drivers/commit_property.driver apps/tasks
-echo 'Resolving properties...'
-$1 ./drivers/resolve_properties.driver
+echo 'Querying property...'
+$1 ./drivers/query.driver
