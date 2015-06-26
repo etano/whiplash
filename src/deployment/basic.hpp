@@ -67,7 +67,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(reader::String(*executables.find(id), "file_name")) );
+        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(reader::read<std::string>(*executables.find(id), "file_name")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
@@ -92,7 +92,7 @@ namespace wdb { namespace deployment {
         object o;
         writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
         for(auto &obj : properties.find_like(o)){
-            int prop_id = reader::Int(*obj, "_id");
+            int prop_id = reader::read<int>(*obj, "_id");
             resolve_property(prop_id);
         }
     }
@@ -116,10 +116,20 @@ namespace wdb { namespace deployment {
         models.print_object(id);
     }
 
-    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
+    template<typename T>
+    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, std::string target){
         for(auto &obj : properties.find_like(o)){
-            int prop_id = reader::Int(*obj, "_id");
-            resolve_property(prop_id);
+            int id = reader::read<int>(*obj, "_id");
+            std::shared_ptr<entities::generic::property> p(fetch_property(id));
+            if (std::isnan(reader::read<T>(*obj,"configuration",target))){
+                entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
+                object record, serialized_configuration;
+                p->serialize_configuration(serialized_configuration);
+                p->serialize(record, serialized_configuration);
+                object filter;
+                writer::prop("_id", id) >> filter;
+                properties.replace(filter,record);
+            }
         }
         return properties.find_like(o);
     }

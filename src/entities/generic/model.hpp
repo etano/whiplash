@@ -10,8 +10,8 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         model(std::string model_class, const odb::iobject& o){
-            class_ = reader::String(o, "class");
-            class_id_ = reader::Int(o, "class_id");
+            class_ = reader::read<std::string>(o, "class");
+            class_id_ = reader::read<int>(o, "class_id");
         }
 
         virtual ~model() {};

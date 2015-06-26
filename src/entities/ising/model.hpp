@@ -42,16 +42,16 @@ namespace wdb { namespace entities { namespace ising {
         model(std::string model_class, const odb::iobject& o)
             : generic::model(model_class,o), N_(0)
         {
-            for(auto e : reader::Array(o, "configuration", "edges")){
+            for(auto e : reader::read<reader::array_type>(o, "configuration", "edges")){
                 std::vector<int> inds;
-                auto sub_array = reader::Array(e);
-                for(const auto a : reader::Array(sub_array[0])){
-                    int a_ = reader::Int(a);
+                auto sub_array = reader::read<reader::array_type>(e);
+                for(const auto a : reader::read<reader::array_type>(sub_array[0])){
+                    int a_ = reader::read<int>(a);
                     N_ = std::max(N_, a_);
                     inds.push_back(a_);
                 }
 
-                double val = reader::Double(sub_array[1]);
+                double val = reader::read<double>(sub_array[1]);
                 edges_.push_back(std::make_pair(inds, val));
             }
             N_++; // important

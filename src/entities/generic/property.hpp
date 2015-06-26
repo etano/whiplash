@@ -9,11 +9,11 @@ namespace wdb { namespace entities { namespace generic {
 
         property(std::string model_class, const odb::iobject& o){
             class_ = model_class;
-            model_ = reader::Int(o, "model_id");
-            executable_ = reader::Int(o, "executable_id");
-            state_ = static_cast<resolution_state>(reader::Int(o, "resolution_state"));
-            for(auto e : reader::Array(o, "params"))
-                params_.push_back(reader::String(e));
+            model_ = reader::read<int>(o, "model_id");
+            executable_ = reader::read<int>(o, "executable_id");
+            state_ = static_cast<resolution_state>(reader::read<int>(o, "resolution_state"));
+            for(auto e : reader::read<reader::array_type>(o, "params"))
+                params_.push_back(reader::read<std::string>(e));
         }
 
         void print_params(){

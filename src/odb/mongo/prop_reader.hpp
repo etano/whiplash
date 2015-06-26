@@ -76,73 +76,22 @@ namespace wdb { namespace odb { namespace mongo {
         typedef detail::array_view array_type;
         typedef int int_type;
 
-
-        template<typename T>
-        static array_type Array(const object_view& v, const T& name){
-            return detail::get<array_type>(v, name);
+        template<typename T, typename U>
+        static T read(const object_view& v, const U& name){
+            return detail::get<T>(v, name);
+        }
+        template<typename T, typename U, typename... Args>
+        static T read(const object_view& v, const U& name, const Args&... args){
+            return read<T>( detail::get<object_view>(v, name), args... );
         }
         template<typename T, typename... Args>
-        static array_type Array(const object_view& v, const T& name, const Args&... args){
-            return Array( detail::get<object_view>(v, name), args... );
-        }
-        template<typename... Args>
-        static array_type Array(const iobject& obj, const Args&... args){
+        static T read(const iobject& obj, const Args&... args){
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return Array(m_obj.r.view, args...);
+            return read<T>(m_obj.r.view, args...);
         }
-        static array_type Array(prop_type e){
-            return detail::get<array_type>(e);
-        }
-
         template<typename T>
-        static int_type Int(const object_view& v, const T& name){
-            return detail::get<int_type>(v, name);
-        }
-        template<typename T, typename... Args>
-        static int_type Int(const object_view& v, const T& name, const Args&... args){
-            return Int( detail::get<object_view>(v, name), args... );
-        }
-        template<typename... Args>
-        static int_type Int(const iobject& obj, const Args&... args){
-            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return Int(m_obj.r.view, args...);
-        }
-        static int_type Int(prop_type e){
-            return detail::get<int_type>(e);
-        }
-
-        template<typename T>
-        static double Double(const object_view& v, const T& name){
-            return detail::get<double>(v, name);
-        }
-        template<typename T, typename... Args>
-        static double Double(const object_view& v, const T& name, const Args&... args){
-            return Double( detail::get<object_view>(v, name), args... );
-        }
-        template<typename... Args>
-        static double Double(const iobject& obj, const Args&... args){
-            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return Double(m_obj.r.view, args...);
-        }
-        static double Double(prop_type e){
-            return detail::get<double>(e);
-        }
-
-        template<typename T>
-        static std::string String(const object_view& v, const T& name){
-            return detail::get<std::string>(v, name);
-        }
-        template<typename T, typename... Args>
-        static std::string String(const object_view& v, const T& name, const Args&... args){
-            return String( detail::get<object_view>(v, name), args... );
-        }
-        template<typename... Args>
-        static std::string String(const iobject& obj, const Args&... args){
-            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return String(m_obj.r.view, args...);
-        }
-        static std::string String(prop_type e){
-            return detail::get<std::string>(e);
+        static T read(prop_type e){
+            return detail::get<T>(e);
         }
 
         static std::string to_json(const iobject& obj){

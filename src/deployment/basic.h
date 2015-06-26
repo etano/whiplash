@@ -21,7 +21,8 @@ namespace wdb { namespace deployment {
         std::shared_ptr<entities::generic::property> fetch_property(int id);
         std::vector<std::shared_ptr<entities::generic::model>> fetch_models_like(odb::iobject& o);
         std::vector<std::shared_ptr<entities::generic::property>> fetch_properties_like(odb::iobject& o);
-        std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
+        template<typename T>
+        std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o, std::string target); // TODO: This should be variadic templated like in prop_reader
 
         class reader : public wdb::odb::mongo::prop_reader {};
         class writer : public wdb::odb::mongo::prop_writer {};

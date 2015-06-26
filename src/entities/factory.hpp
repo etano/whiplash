@@ -20,7 +20,7 @@ namespace wdb { namespace entities { namespace factory {
     }
 
     std::shared_ptr<generic::model> make_model(odb::iobject& o){
-        std::string model_class = reader::String(o, "class");
+        std::string model_class = reader::read<std::string>(o, "class");
         return make_model(model_class, o);
     }
 
@@ -38,7 +38,7 @@ namespace wdb { namespace entities { namespace factory {
     }
 
     std::shared_ptr<generic::property> make_property(odb::iobject& o){
-        std::string model_class = reader::String(o, "class");
+        std::string model_class = reader::read<std::string>(o, "class");
         return make_property(model_class,o);
     }
 
