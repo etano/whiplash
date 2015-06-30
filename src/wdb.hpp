@@ -12,6 +12,7 @@
 #include <memory>
 #include <ctime>
 #include <vector>
+#include <unordered_map>
 // }}}
 
 #include "odb/interface.hpp"
