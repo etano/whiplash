@@ -7,6 +7,15 @@ namespace wdb { namespace entities {
     using reader = wdb::odb::mongo::prop_reader;
     using writer = wdb::odb::mongo::prop_writer;
 
+    enum class type {
+        unknown, 
+        ising,
+        tsp,
+        qubo,
+        sat,
+        LENGTH // 5
+    };
+
 } }
 
 #include "entities/generic/model.hpp"

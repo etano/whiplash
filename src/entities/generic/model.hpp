@@ -1,15 +1,23 @@
 #ifndef WDB_ENTITIES_GENERIC_MODEL_HPP
 #define WDB_ENTITIES_GENERIC_MODEL_HPP
 
+namespace wdb { namespace entities { 
+
+    template<type Problem>
+    struct info {};
+
+} }
+    
 namespace wdb { namespace entities { namespace generic {
 
     class model {
     public:
-        model(std::string model_class, std::ifstream& in){
-            class_ = model_class;
+        template<class I>
+        model(I info, std::ifstream& in){
+            class_ = I::name;
         }
 
-        model(std::string model_class, const odb::iobject& o){
+        model(const odb::iobject& o){
             class_ = reader::String(o, "class");
             class_id_ = reader::Int(o, "class_id");
         }
