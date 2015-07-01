@@ -7,8 +7,8 @@ namespace wdb { namespace entities { namespace ising {
         typedef std::pair<std::vector<int>, double> edge_type;
         typedef std::vector<int> node_type;
     public:
-        model(std::string model_class, std::ifstream& in)
-            : generic::model(model_class,in), N_(0)
+        model(std::ifstream& in)
+            : generic::model(typename entities::info<type::ising>(), in), N_(0)
         {
             std::map<std::string,int> index;
             while(in){
@@ -39,8 +39,8 @@ namespace wdb { namespace entities { namespace ising {
             init_nodes();
         }
 
-        model(std::string model_class, const odb::iobject& o)
-            : generic::model(model_class,o), N_(0)
+        model(const odb::iobject& o)
+            : generic::model(o), N_(0)
         {
             for(auto e : reader::read<reader::array_type>(o, "configuration", "edges")){
                 std::vector<int> inds;

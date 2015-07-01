@@ -5,12 +5,12 @@ namespace wdb { namespace entities { namespace sat {
 
     class property : public generic::property {
     public:
-        property(std::string model_class, const odb::iobject& o)
-            : generic::property(model_class, o)
+        property(const odb::iobject& o)
+            : generic::property(o)
         {}
 
-        property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
-            : generic::property(model_class, model_id, executable_id, params, state)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
+            : generic::property(typename entities::info<type::sat>(), model_id, executable_id, params, state)
         {}
 
         virtual ~property() override {};

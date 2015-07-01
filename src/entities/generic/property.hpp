@@ -7,8 +7,8 @@ namespace wdb { namespace entities { namespace generic {
     public:
         enum class resolution_state { UNDEFINED, PROCESSING, DEFINED };
 
-        property(std::string model_class, const odb::iobject& o){
-            class_ = model_class;
+        property(const odb::iobject& o){
+            class_ = reader::read<std::string>(o, "class");
             model_ = reader::read<int>(o, "model_id");
             executable_ = reader::read<int>(o, "executable_id");
             state_ = static_cast<resolution_state>(reader::read<int>(o, "resolution_state"));
@@ -35,8 +35,9 @@ namespace wdb { namespace entities { namespace generic {
             return params_[N];
         }
 
-        property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
-            : class_(model_class), model_(model_id), executable_(executable_id), params_(params), state_(state)
+        template<class I>
+        property(I info, int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
+            : class_(I::name), model_(model_id), executable_(executable_id), params_(params), state_(state)
         {}
 
         virtual ~property() {};

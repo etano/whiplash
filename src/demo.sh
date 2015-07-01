@@ -10,3 +10,5 @@ echo 'Committing property...'
 $1 ./drivers/commit_property.driver apps/tasks
 echo 'Querying property...'
 $1 ./drivers/query.driver
+echo 'Querying property again...'
+$1 ./drivers/query.driver

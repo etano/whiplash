@@ -24,9 +24,9 @@ namespace wdb { namespace deployment {
         template<typename T>
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o, std::string target); // TODO: This should be variadic templated like in prop_reader
 
-        class reader : public wdb::odb::mongo::prop_reader {};
-        class writer : public wdb::odb::mongo::prop_writer {};
-        class object : public wdb::odb::mongo::object {};
+        using reader = wdb::odb::mongo::prop_reader;
+        using writer = wdb::odb::mongo::prop_writer;
+        using object = wdb::odb::mongo::object;
     private:
         odb::icollection& properties;
         odb::icollection& models;
