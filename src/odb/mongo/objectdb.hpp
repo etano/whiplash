@@ -20,7 +20,7 @@ namespace wdb { namespace odb { namespace mongo {
 
     void objectdb::sign(iobject& record, std::string cname){
         prop_writer::prop("_id", get_next_id(cname)) >> record;
-        prop_writer::prop("time", (int)std::time(nullptr)) >> record;
+        prop_writer::prop("timestamp", (int)std::time(nullptr)) >> record;
     }
 
     int objectdb::get_next_id(std::string cname){
