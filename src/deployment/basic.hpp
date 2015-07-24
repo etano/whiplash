@@ -96,12 +96,12 @@ namespace wdb { namespace deployment {
         models.print_object(id);
     }
 
-    template<typename T>
-    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, std::string target){
+    template<typename... Args>
+    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, const std::tuple<Args...>& target){
         for(auto &obj : properties.find_like(o)){
             int id = reader::read<int>(*obj, "_id");
             std::shared_ptr<entities::generic::property> p(fetch_property(id));
-            if (std::isnan(reader::read<T>(*obj,"configuration",target))){
+            if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
                 entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
                 object record, serialized_configuration;
                 p->serialize_configuration(serialized_configuration);
