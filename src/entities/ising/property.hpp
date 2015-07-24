@@ -9,17 +9,17 @@ namespace wdb { namespace entities { namespace ising {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
-            : generic::property(typename entities::info<type::ising>(), model_id, executable_id, params, state)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, status s = status::UNDEFINED)
+            : generic::property(typename entities::info<type::ising>(), model_id, executable_id, params, s)
         {}
 
         virtual ~property() override {};
 
         virtual void serialize_configuration(odb::iobject& configuration) override {
-            if (state_ == resolution_state::UNDEFINED){
+            if (status_ == status::UNDEFINED){
                 writer::prop("config", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> configuration;
                 writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> configuration;
-            } else if (state_ == resolution_state::DEFINED){
+            } else if (status_ == status::DEFINED){
                 writer::prop("config", cfg_) >> configuration;
                 writer::prop("cost", cost_) >> configuration;
             } else {

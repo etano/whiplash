@@ -9,8 +9,8 @@ namespace wdb { namespace entities { namespace tsp {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, resolution_state state = resolution_state::UNDEFINED)
-            : generic::property(typename entities::info<type::tsp>(), model_id, executable_id, params, state)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, status s = status::UNDEFINED)
+            : generic::property(typename entities::info<type::tsp>(), model_id, executable_id, params, s)
         {}
 
         virtual ~property() override {};
