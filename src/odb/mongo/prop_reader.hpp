@@ -1,6 +1,8 @@
 #ifndef WDB_ODB_MONGO_PROP_READER_HPP
 #define WDB_ODB_MONGO_PROP_READER_HPP
 
+#include "utils/index_tuple.h"
+
 namespace wdb { namespace odb { namespace mongo {
 
     namespace detail {
@@ -76,19 +78,27 @@ namespace wdb { namespace odb { namespace mongo {
         typedef detail::array_view array_type;
         typedef int int_type;
 
-        template<typename T, typename U>
-        static T read(const object_view& v, const U& name){
-            return detail::get<T>(v, name);
+        template<typename T, typename... Args, unsigned I>
+        static T read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I>){
+            return detail::get<T>(v, std::get<I>(args));
         }
-        template<typename T, typename U, typename... Args>
-        static T read(const object_view& v, const U& name, const Args&... args){
-            return read<T>( detail::get<object_view>(v, name), args... );
+
+        template<typename T, typename... Args, unsigned I, unsigned... Is>
+        static T read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I, Is...>){
+            return read<T>( detail::get<object_view>(v, std::get<I>(args)), args, redi::index_tuple<Is...>() );
         }
+
+        template<typename T, typename... Args>
+        static T read(const iobject& obj, const std::tuple<Args...>& args){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            return read<T>(m_obj.r.view, args, redi::to_index_tuple<Args...>());
+        }
+
         template<typename T, typename... Args>
         static T read(const iobject& obj, const Args&... args){
-            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
-            return read<T>(m_obj.r.view, args...);
+            return read<T>(obj, std::tie(args...));
         }
+
         template<typename T>
         static T read(prop_type e){
             return detail::get<T>(e);
@@ -98,7 +108,6 @@ namespace wdb { namespace odb { namespace mongo {
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
             return detail::to_json(m_obj.r.view);
         }
-
     };
 
 } } }

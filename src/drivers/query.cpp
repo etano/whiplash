@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
 
     // Query and print results
     for(const auto& result : deployment.query<double>(filter,"cost"))
-        std::cout << basic::reader::read<double>(*result,"configuration","cost") << std::endl;
+        std::cout << basic::reader::read<double>(*result, std::tie("configuration","cost") ) << std::endl;
 
     return 0;
 }
