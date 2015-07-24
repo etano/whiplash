@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
         // Check for unresolved properties and resolve them
         objectdb db("cwave.ethz.ch:27017");
         wdb::deployment::basic sf(db);
-        sf.resolve_properties();
+        //sf.resolve_properties(); // TODO replace with query
     }
 
     // Close log

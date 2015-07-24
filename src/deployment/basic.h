@@ -13,8 +13,6 @@ namespace wdb { namespace deployment {
         void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params);
         void list_properties();
         void list_model(int id);
-        void resolve_properties();
-        void resolve_property(int id);
 
         std::shared_ptr<rte::iexecutable> fetch_executable(int id);
         std::shared_ptr<entities::generic::model> fetch_model(int id);

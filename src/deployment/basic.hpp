@@ -88,26 +88,6 @@ namespace wdb { namespace deployment {
         return ps;
     }
 
-    void basic::resolve_properties(){
-        object o;
-        writer::prop("resolution_state", int(entities::generic::property::resolution_state::UNDEFINED)) >> o;
-        for(auto &obj : properties.find_like(o)){
-            int prop_id = reader::read<int>(*obj, "_id");
-            resolve_property(prop_id);
-        }
-    }
-
-    void basic::resolve_property(int id){
-        std::shared_ptr<entities::generic::property> p(fetch_property(id));
-        entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
-        object record, serialized_configuration;
-        p->serialize_configuration(serialized_configuration);
-        p->serialize(record, serialized_configuration);
-        object filter;
-        writer::prop("_id", id) >> filter;
-        properties.replace(filter,record);
-    }
-
     void basic::list_properties(){
         properties.list_objects();
     }
