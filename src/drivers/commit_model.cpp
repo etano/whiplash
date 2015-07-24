@@ -9,7 +9,7 @@ int main(int argc, char* argv[]){
 
     auto params = wdb::parse_args(argc,argv);
 
-    sf.insert_model(params["file"],params["class"]);
+    sf.insert_model(params["file"], params["class"], params["owner"]);
 
     return 0;
 }

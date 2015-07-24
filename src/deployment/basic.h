@@ -8,9 +8,9 @@ namespace wdb { namespace deployment {
         basic(odb::iobjectdb& db);
         void purge_collections();
         void reset_counters();
-        void insert_executable(std::string file_name, std::string model_class);
-        void insert_model(std::string file_name, std::string model_class);
-        void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params);
+        void insert_executable(std::string file_name, std::string model_class, std::string owner);
+        void insert_model(std::string file_name, std::string model_class, std::string owner);
+        void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner);
         void list_properties();
         void list_model(int id);
 

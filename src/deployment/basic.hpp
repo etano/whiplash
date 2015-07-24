@@ -34,31 +34,31 @@ namespace wdb { namespace deployment {
         counters.insert( executables_counter );
     }
 
-    void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params){
+    void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
         std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::generic::property::status::UNDEFINED));
         object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
-        db.sign(record, "properties");
+        db.sign(record, "properties", owner);
         properties.insert(record);
     }
 
-    void basic::insert_model(std::string file_name, std::string model_class){
+    void basic::insert_model(std::string file_name, std::string model_class, std::string owner){
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
         in.close();
         object record, serialized_configuration;
         m->serialize_configuration(serialized_configuration);
         m->serialize(record, serialized_configuration);
-        db.sign(record, "models");
+        db.sign(record, "models", owner);
         models.insert(record);
     }
 
-    void basic::insert_executable(std::string file_name, std::string model_class){
+    void basic::insert_executable(std::string file_name, std::string model_class, std::string owner){
         object record;
         writer::prop("file_name", file_name) >> record;
         writer::prop("class", model_class) >> record;
-        db.sign(record, "executables");
+        db.sign(record, "executables", owner);
         executables.insert(record); // buggy
     }
 
@@ -100,12 +100,17 @@ namespace wdb { namespace deployment {
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, const std::tuple<Args...>& target){
         for(auto &obj : properties.find_like(o)){
             int id = reader::read<int>(*obj, "_id");
+            std::string owner = reader::read<std::string>(*obj, "owner");
+            int timestamp = reader::read<int>(*obj, "timestamp");
+
             std::shared_ptr<entities::generic::property> p(fetch_property(id));
             if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
                 entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
                 object record, serialized_configuration;
                 p->serialize_configuration(serialized_configuration);
                 p->serialize(record, serialized_configuration);
+                db.sign(record, owner, timestamp);
+
                 object filter;
                 writer::prop("_id", id) >> filter;
                 properties.replace(filter,record);

@@ -8,7 +8,7 @@ int main(int argc, char* argv[]){
     wdb::deployment::basic sf(db);
 
     auto params = wdb::parse_args(argc,argv);
-    sf.insert_executable(params["file"],params["class"]);
+    sf.insert_executable(params["file"], params["class"], params["owner"]);
 
     return 0;
 }

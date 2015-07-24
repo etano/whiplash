@@ -25,7 +25,7 @@ namespace wdb { namespace entities { namespace generic {
             std::cout << "Class: " << class_ << "\n";
             std::cout << "Model: " << model_ << "\n";
             std::cout << "Executable: " << executable_ << "\n";
-            std::cout << "Resolution status: " << int(status_) << "\n";
+            std::cout << "Status: " << int(status_) << "\n";
             std::cout << "Params: "; for(auto e : params_) std::cout << e << " ";
             std::cout << "\n";
         }

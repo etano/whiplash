@@ -18,9 +18,15 @@ namespace wdb { namespace odb { namespace mongo {
         return *collections.back();
     }
 
-    void objectdb::sign(iobject& record, std::string cname){
+    void objectdb::sign(iobject& record, std::string cname, std::string owner){
         prop_writer::prop("_id", get_next_id(cname)) >> record;
         prop_writer::prop("timestamp", (int)std::time(nullptr)) >> record;
+        prop_writer::prop("owner", owner) >> record;
+    }
+
+    void objectdb::sign(iobject& record, std::string owner, int timestamp){
+        prop_writer::prop("timestamp", timestamp) >> record;
+        prop_writer::prop("owner", owner) >> record;
     }
 
     int objectdb::get_next_id(std::string cname){
