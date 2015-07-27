@@ -35,9 +35,9 @@ namespace wdb { namespace deployment {
         models.insert(record, signature(db, "models", owner));
     }
 
-    void basic::insert_executable(std::string file_name, std::string model_class, std::string owner){
+    void basic::insert_executable(std::string location, std::string model_class, std::string owner){
         object record;
-        writer::prop("file_name", file_name) >> record;
+        writer::prop("location", location) >> record;
         writer::prop("class", model_class) >> record;
         executables.insert(record, signature(db, "executables", owner)); // buggy
     }
@@ -47,7 +47,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(reader::read<std::string>(*executables.find(id), "file_name")) );
+        return std::shared_ptr<rte::cluster::executable>( new rte::cluster::executable(reader::read<std::string>(*executables.find(id), "location")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
