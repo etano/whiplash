@@ -25,13 +25,16 @@ namespace wdb { namespace deployment {
         properties.insert(record, signature(db, "properties", owner));
     }
 
-    void basic::insert_model(std::string file_name, std::string model_class, std::string owner){
+    void basic::insert_model(std::string file_name, std::string problem_class, std::string owner, int parent_id, std::string lattice, std::string distribution){
         std::ifstream in(file_name);
-        std::shared_ptr<entities::generic::model> m(entities::factory::make_model(model_class,in));
+        std::shared_ptr<entities::generic::model> m(entities::factory::make_model(problem_class, in, parent_id));
         in.close();
         object record, serialized_configuration;
         m->serialize_configuration(serialized_configuration);
         m->serialize(record, serialized_configuration);
+
+        writer::prop("lattice", lattice) >> record; // optional lattice info
+        writer::prop("distribution", distribution) >> record; // optional distribution info
         models.insert(record, signature(db, "models", owner));
     }
 

@@ -5,8 +5,8 @@ namespace wdb { namespace entities { namespace sat {
 
     class model : public generic::model {
     public:
-        model(std::ifstream& in)
-            : generic::model(typename entities::info<type::sat>(), in)
+        model(std::ifstream& in, int parent = -1)
+            : generic::model(typename entities::info<type::sat>(), in, parent)
         {}
 
         model(const odb::iobject& o)

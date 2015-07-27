@@ -17,7 +17,13 @@ namespace wdb { namespace deployment {
                                std::string build_info,    // specification of how executable was built
                                std::string owner);        // who created the model instance
 
-        void insert_model(std::string file_name, std::string model_class, std::string owner);
+        void insert_model(std::string file_name,          // contains definition of the model
+                          std::string problem_class,      // name of problem class (ex: "JobShop")
+                          std::string owner,              // who created the model instance
+                          int parent_id = -1,             // if model derived from another model in the database, the id of this parent model (default : "none")
+                          std::string lattice = "",       // the lattice structure of the underlying graph (if it exists)
+                          std::string distribution = ""); // distribution of the couplings
+
         void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner);
         void list_properties();
         void list_model(int id);
