@@ -24,7 +24,12 @@ namespace wdb { namespace deployment {
                           std::string lattice = "",       // the lattice structure of the underlying graph (if it exists)
                           std::string distribution = ""); // distribution of the couplings
 
-        void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner);
+        void insert_property(std::string problem_class,   // name of problem class
+                             int model_id,                // id of the associated model
+                             int executable_id,           // id of the associated executable
+                             const std::vector<std::string>& params,
+                             std::string owner);          // who created the property
+
         void list_properties();
         void list_model(int id);
 

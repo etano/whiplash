@@ -25,6 +25,7 @@ namespace wdb { namespace entities { namespace ising {
             } else {
                 throw std::runtime_error("Error: Property neither UNDEFINED nor DEFINED!\n");
             }
+            generic::property::serialize_configuration(configuration);
         }
 
         void set_configuration(const std::vector<bool>& cfg, double cost){

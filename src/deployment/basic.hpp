@@ -17,8 +17,8 @@ namespace wdb { namespace deployment {
         db.reset_metadata();
     }
 
-    void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
-        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(model_class,model_id,executable_id,params,entities::generic::property::status::UNDEFINED));
+    void basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
+        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(problem_class, model_id, executable_id, params));
         object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);

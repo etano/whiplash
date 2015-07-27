@@ -22,6 +22,7 @@ namespace wdb { namespace entities { namespace generic {
             free(argv);
 
             p.set_status(property::status::DEFINED);
+            p.set_walltime(0);
         }
     };
 
