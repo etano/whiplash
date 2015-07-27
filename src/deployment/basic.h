@@ -7,7 +7,16 @@ namespace wdb { namespace deployment {
     public:
         basic(odb::iobjectdb& db);
         void purge();
-        void insert_executable(std::string location, std::string model_class, std::string owner);
+
+        void insert_executable(std::string location,      // where the executable is stored (this may depend on the machine!)
+                               std::string problem_class, // the problem class name on which the executable executes
+                               std::string description,   // a description of what the executable does/is capable of
+                               std::string algorithm,     // the algorithm that is being executed
+                               std::string configuration, // miscellaneous traits of the executable, e.g. annealing schedule
+                               std::string version,       // version of the executable
+                               std::string build_info,    // specification of how executable was built
+                               std::string owner);        // who created the model instance
+
         void insert_model(std::string file_name, std::string model_class, std::string owner);
         void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner);
         void list_properties();

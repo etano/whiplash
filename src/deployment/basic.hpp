@@ -35,10 +35,17 @@ namespace wdb { namespace deployment {
         models.insert(record, signature(db, "models", owner));
     }
 
-    void basic::insert_executable(std::string location, std::string model_class, std::string owner){
+    void basic::insert_executable(std::string location, std::string problem_class, std::string description, std::string algorithm,
+                                  std::string configuration, std::string version, std::string build_info, std::string owner)
+    {
         object record;
         writer::prop("location", location) >> record;
-        writer::prop("class", model_class) >> record;
+        writer::prop("class", problem_class) >> record;
+        writer::prop("description", description) >> record;
+        writer::prop("algorithm", algorithm) >> record;
+        writer::prop("configuration", configuration) >> record; // todo: should be custom sub-document
+        writer::prop("version", version) >> record;
+        writer::prop("build_info", build_info) >> record;
         executables.insert(record, signature(db, "executables", owner)); // buggy
     }
 
