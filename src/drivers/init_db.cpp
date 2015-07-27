@@ -5,8 +5,6 @@ int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    sf.purge_collections();
-    sf.reset_counters();
-
+    sf.purge();
     return 0;
 }

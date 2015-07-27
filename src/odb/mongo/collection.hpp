@@ -36,7 +36,8 @@ namespace wdb { namespace odb { namespace mongo {
         return docs;
     }
 
-    void collection::insert(iobject& o){
+    void collection::insert(iobject& o, const isignature& s){
+        s.sign(o);
         coll.insert_one(static_cast<odb::mongo::object&>(o).w.builder);
     }
 
@@ -48,7 +49,8 @@ namespace wdb { namespace odb { namespace mongo {
         coll.update_one(static_cast<odb::mongo::object&>(o_old).w.builder,static_cast<odb::mongo::object&>(o_new).w.builder);
     }
 
-    void collection::replace(iobject& o_old, iobject& o_new){
+    void collection::replace(iobject& o_old, iobject& o_new, const isignature& s){
+        s.sign(o_new);
         coll.replace_one(static_cast<odb::mongo::object&>(o_old).w.builder,static_cast<odb::mongo::object&>(o_new).w.builder);
     }
 

@@ -7,31 +7,14 @@ namespace wdb { namespace deployment {
       : db(db),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
-        executables( db.provide_collection("executables") ),
-        counters( db.provide_collection("counters") )
+        executables( db.provide_collection("executables") )
     {}
 
-    void basic::purge_collections(){
+    void basic::purge(){
         properties.purge();
         models.purge();
         executables.purge();
-        counters.purge();
-    }
-
-    void basic::reset_counters(){
-        object properties_counter, models_counter, executables_counter;
-        counters.purge();
-
-        writer::prop("_id", "properties") >> properties_counter;
-        writer::prop("seq", -1) >> properties_counter;
-        writer::prop("_id", "models") >> models_counter;
-        writer::prop("seq", -1) >> models_counter;
-        writer::prop("_id", "executables") >> executables_counter;
-        writer::prop("seq", -1) >> executables_counter;
-
-        counters.insert( properties_counter );
-        counters.insert( models_counter );
-        counters.insert( executables_counter );
+        db.reset_metadata();
     }
 
     void basic::insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
@@ -39,8 +22,7 @@ namespace wdb { namespace deployment {
         object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
-        db.sign(record, "properties", owner);
-        properties.insert(record);
+        properties.insert(record, signature(db, "properties", owner));
     }
 
     void basic::insert_model(std::string file_name, std::string model_class, std::string owner){
@@ -50,16 +32,14 @@ namespace wdb { namespace deployment {
         object record, serialized_configuration;
         m->serialize_configuration(serialized_configuration);
         m->serialize(record, serialized_configuration);
-        db.sign(record, "models", owner);
-        models.insert(record);
+        models.insert(record, signature(db, "models", owner));
     }
 
     void basic::insert_executable(std::string file_name, std::string model_class, std::string owner){
         object record;
         writer::prop("file_name", file_name) >> record;
         writer::prop("class", model_class) >> record;
-        db.sign(record, "executables", owner);
-        executables.insert(record); // buggy
+        executables.insert(record, signature(db, "executables", owner)); // buggy
     }
 
     std::shared_ptr<entities::generic::model> basic::fetch_model(int id){
@@ -99,21 +79,17 @@ namespace wdb { namespace deployment {
     template<typename... Args>
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, const std::tuple<Args...>& target){
         for(auto &obj : properties.find_like(o)){
-            int id = reader::read<int>(*obj, "_id");
-            std::string owner = reader::read<std::string>(*obj, "owner");
-            int timestamp = reader::read<int>(*obj, "timestamp");
-
-            std::shared_ptr<entities::generic::property> p(fetch_property(id));
+            signature signature_(*obj);
+        
+            std::shared_ptr<entities::generic::property> p(fetch_property(signature_.get_id()));
             if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
                 entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
                 object record, serialized_configuration;
                 p->serialize_configuration(serialized_configuration);
                 p->serialize(record, serialized_configuration);
-                db.sign(record, owner, timestamp);
 
-                object filter;
-                writer::prop("_id", id) >> filter;
-                properties.replace(filter,record);
+                object filter; writer::prop("_id", signature_.get_id()) >> filter;
+                properties.replace(filter, record, signature_);
             }
         }
         return properties.find_like(o);

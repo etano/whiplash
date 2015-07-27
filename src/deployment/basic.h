@@ -6,8 +6,7 @@ namespace wdb { namespace deployment {
     class basic {
     public:
         basic(odb::iobjectdb& db);
-        void purge_collections();
-        void reset_counters();
+        void purge();
         void insert_executable(std::string file_name, std::string model_class, std::string owner);
         void insert_model(std::string file_name, std::string model_class, std::string owner);
         void insert_property(std::string model_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner);
@@ -25,12 +24,12 @@ namespace wdb { namespace deployment {
 
         using reader = wdb::odb::mongo::prop_reader;
         using writer = wdb::odb::mongo::prop_writer;
+        using signature = wdb::odb::mongo::signature;
         using object = wdb::odb::mongo::object;
     private:
         odb::icollection& properties;
         odb::icollection& models;
         odb::icollection& executables;
-        odb::icollection& counters;
         odb::iobjectdb& db;
     };
 

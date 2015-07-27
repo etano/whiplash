@@ -18,8 +18,7 @@ namespace wdb { namespace odb { namespace mongo {
         objectdb(std::string url);
         virtual icollection& provide_collection(std::string name) override;
         virtual int get_next_id(std::string collection) override;
-        virtual void sign(iobject& record, std::string cname, std::string owner) override;
-        virtual void sign(iobject& record, std::string owner, int timestamp) override;
+        virtual void reset_metadata() override;
     private:
         std::vector<icollection*> collections;
     };

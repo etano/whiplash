@@ -18,17 +18,6 @@ namespace wdb { namespace odb { namespace mongo {
         return *collections.back();
     }
 
-    void objectdb::sign(iobject& record, std::string cname, std::string owner){
-        prop_writer::prop("_id", get_next_id(cname)) >> record;
-        prop_writer::prop("timestamp", (int)std::time(nullptr)) >> record;
-        prop_writer::prop("owner", owner) >> record;
-    }
-
-    void objectdb::sign(iobject& record, std::string owner, int timestamp){
-        prop_writer::prop("timestamp", timestamp) >> record;
-        prop_writer::prop("owner", owner) >> record;
-    }
-
     int objectdb::get_next_id(std::string cname){
         using bsoncxx::builder::stream::document;
         using bsoncxx::builder::stream::open_document;
@@ -44,6 +33,23 @@ namespace wdb { namespace odb { namespace mongo {
         db["counters"].update_one(filter, update);
 
         return res;
+    }
+
+    void objectdb::reset_metadata(){
+        auto&& counters = db["counters"];
+        object properties_counter, models_counter, executables_counter;
+        counters.delete_many({});
+        
+        prop_writer::prop("_id", "properties") >> properties_counter;
+        prop_writer::prop("seq", -1) >> properties_counter;
+        prop_writer::prop("_id", "models") >> models_counter;
+        prop_writer::prop("seq", -1) >> models_counter;
+        prop_writer::prop("_id", "executables") >> executables_counter; 
+        prop_writer::prop("seq", -1) >> executables_counter;
+
+        counters.insert_one( properties_counter.w.builder );
+        counters.insert_one( models_counter.w.builder );
+        counters.insert_one( executables_counter.w.builder );
     }
 
 } } }
