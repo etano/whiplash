@@ -71,10 +71,10 @@ namespace wdb { namespace entities { namespace ising {
                     nodes_[a].push_back(j);
         }
 
-        double total_energy(const std::vector<bool>& variables) const {
+        double total_energy(const std::vector<int>& variables) const {
             double E(0.0);
             for(const auto& edge : edges_){
-                bool tmp(0);
+                int tmp(0);
                 for(const auto b : edge.first)
                     tmp ^= variables[b];
                 E += (2*tmp-1) * edge.second * (2*int(edge.first.size()%2) - 1);
@@ -82,11 +82,11 @@ namespace wdb { namespace entities { namespace ising {
             return E;
         }
 
-        double delta_energy(const std::vector<bool>& variables, const unsigned ind) const {
+        double delta_energy(const std::vector<int>& variables, const unsigned ind) const {
             double E(0.0);
             for(const auto a : nodes_[ind]){
                 const auto& edge(edges_[a]);
-                bool tmp(0);
+                int tmp(0);
                 for(const auto b : edge.first)
                     tmp ^= variables[b];
 
