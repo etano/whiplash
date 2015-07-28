@@ -8,7 +8,7 @@ namespace wdb { namespace deployment {
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
-        rng(wdb::entities::generic::controller::get_time()) //FIXME: fixed seed
+        rng( wdb::timer::now() )
     {}
 
     void basic::purge(){

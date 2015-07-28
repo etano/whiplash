@@ -18,6 +18,8 @@
 #include <unordered_map>
 // }}}
 
+#include "utils/timer.hpp"
+
 #include "odb/interface.hpp"
 #include "rte/interface.hpp"
 #include "odb/mongo.hpp"

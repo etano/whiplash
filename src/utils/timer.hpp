@@ -22,6 +22,10 @@ namespace wdb {
         double get_time() const {
             return val;
         }
+        static double now(){
+            struct timeval tv;
+            return (gettimeofday(&tv, NULL) != 0) ? 0.0 : (tv.tv_sec + 1e-6 * tv.tv_usec);
+        }
     private:
         double val;
         std::chrono::time_point<std::chrono::system_clock> t0;
