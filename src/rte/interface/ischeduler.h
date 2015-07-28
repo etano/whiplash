@@ -7,6 +7,11 @@ namespace wdb { namespace rte {
     public:
         virtual ~ischeduler(){}
         virtual void subscribe(icontroller& dc) = 0;
+
+        virtual void expand(size_t res) = 0;
+        virtual void shrink(size_t res) = 0;
+
+        virtual void schedule(/* what? */) = 0;
     };
 
 } }

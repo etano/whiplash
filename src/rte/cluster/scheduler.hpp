@@ -7,6 +7,11 @@ namespace wdb { namespace rte { namespace cluster {
     public:
         virtual ~scheduler() override {}
         virtual void subscribe(icontroller& dc) override { std::cout << "registering the domain controller\n"; }
+
+        virtual void expand(size_t res) override {}
+        virtual void shrink(size_t res) override {}
+
+        virtual void schedule(/* what? */) override {}
     };
 
 } } }
