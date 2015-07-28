@@ -9,8 +9,8 @@ namespace wdb { namespace entities { namespace ising {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::vector<std::string>& params, status s = status::UNDEFINED)
-            : generic::property(typename entities::info<type::ising>(), model_id, executable_id, params, s)
+        property(int model_id, int executable_id, const std::vector<std::string>& params, int seed, status s = status::UNDEFINED)
+            : generic::property(typename entities::info<type::ising>(), model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};
@@ -28,12 +28,12 @@ namespace wdb { namespace entities { namespace ising {
             generic::property::serialize_configuration(configuration);
         }
 
-        void set_configuration(const std::vector<bool>& cfg, double cost){
+        void set_configuration(const std::vector<int>& cfg, double cost){
             cfg_ = cfg;
             cost_ = cost;
         }
     private:
-        std::vector<bool> cfg_;
+        std::vector<int> cfg_;
         double cost_;
     };
 

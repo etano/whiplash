@@ -18,9 +18,9 @@ int main(int argc, char* argv[]){
 
     int Nr = std::stoi( I.param<0>() );
     double Emin(std::numeric_limits<double>::max());
-    std::vector<bool> config_min;
+    std::vector<int> config_min;
     for(int i = 0; i < Nr; ++i){
-        std::vector<bool> config(H.num_nodes());
+        std::vector<int> config(H.num_nodes());
         for(int j = 0; j < H.num_nodes(); ++j)
             config[j] = (drand48() < 0.5);
         const double E(H.total_energy(config));

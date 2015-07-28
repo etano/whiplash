@@ -33,6 +33,8 @@ namespace wdb { namespace deployment {
         void list_properties();
         void list_model(int id);
 
+        int random_seed();
+
         std::shared_ptr<rte::iexecutable> fetch_executable(int id);
         std::shared_ptr<entities::generic::model> fetch_model(int id);
         std::shared_ptr<entities::generic::property> fetch_property(int id);
@@ -51,6 +53,9 @@ namespace wdb { namespace deployment {
         odb::icollection& models;
         odb::icollection& executables;
         odb::iobjectdb& db;
+
+        std::mt19937 rng;
+        std::uniform_int_distribution<uint32_t> uint_dist;
     };
 
 } }
