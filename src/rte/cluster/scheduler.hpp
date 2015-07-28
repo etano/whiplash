@@ -1,11 +1,11 @@
-#ifndef WDB_RTE_CLUSTER_RUNTIME_HPP
-#define WDB_RTE_CLUSTER_RUNTIME_HPP
+#ifndef WDB_RTE_CLUSTER_SCHEDULER_HPP
+#define WDB_RTE_CLUSTER_SCHEDULER_HPP
 
 namespace wdb { namespace rte { namespace cluster {
 
-    class runtime : public iruntime {
+    class scheduler : public ischeduler {
     public:
-        virtual ~runtime() override {}
+        virtual ~scheduler() override {}
         virtual void subscribe(icontroller& dc) override { std::cout << "registering the domain controller\n"; }
     };
 

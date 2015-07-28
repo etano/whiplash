@@ -3,6 +3,7 @@
 
 #include "rte/interface/iexecutable.h"
 #include "rte/interface/icontroller.h"
-#include "rte/interface/iruntime.h"
+#include "rte/interface/icacheable.h"
+#include "rte/interface/ischeduler.h"
 
 #endif

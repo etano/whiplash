@@ -1,11 +1,11 @@
-#ifndef WDB_RTE_IRUNTIME_H
-#define WDB_RTE_IRUNTIME_H
+#ifndef WDB_RTE_ISCHEDULER_H
+#define WDB_RTE_ISCHEDULER_H
 
 namespace wdb { namespace rte {
 
-    class iruntime {
+    class ischeduler {
     public:
-        virtual ~iruntime(){}
+        virtual ~ischeduler(){}
         virtual void subscribe(icontroller& dc) = 0;
     };
 

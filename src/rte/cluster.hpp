@@ -3,6 +3,6 @@
 
 #include "rte/cluster/executable.hpp"
 #include "rte/cluster/controller.hpp"
-#include "rte/cluster/runtime.hpp"
+#include "rte/cluster/scheduler.hpp"
 
 #endif

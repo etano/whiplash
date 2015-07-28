@@ -3,10 +3,9 @@
 
 namespace wdb { namespace entities { namespace generic {
 
-    class controller : public wdb::rte::icontroller {
+    class controller : public wdb::rte::icontroller, public wdb::rte::icacheable {
     public:
         controller(){}
-
         virtual ~controller() {};
 
         static void resolve(rte::iexecutable &x, model &m, property &p){
