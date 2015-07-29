@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unordered_map>
+#include <tuple>
 // }}}
 
 #include "utils/timer.hpp"

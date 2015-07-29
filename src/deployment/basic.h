@@ -48,6 +48,7 @@ namespace wdb { namespace deployment {
         using writer = wdb::odb::mongo::prop_writer;
         using signature = wdb::odb::mongo::signature;
         using object = wdb::odb::mongo::object;
+        using e = wdb::entities::etype;
     private:
         odb::icollection& properties;
         odb::icollection& models;

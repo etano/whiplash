@@ -8,13 +8,13 @@ namespace wdb { namespace entities {
         class controller;
     }
     template<>
-    struct info<type::ising> {
+    struct info<ptype::ising> {
         typedef ising::model associated_model_type;
         typedef ising::property associated_property_type;
         typedef ising::controller associated_controller_type;
         static constexpr char name[]= "ising";
     };
-    constexpr char info<type::ising>::name[];
+    constexpr char info<ptype::ising>::name[];
 } }
 
 #include "entities/ising/model.hpp"

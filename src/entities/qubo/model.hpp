@@ -6,7 +6,7 @@ namespace wdb { namespace entities { namespace qubo {
     class model : public generic::model {
     public:
         model(std::ifstream& in, int parent)
-            : generic::model(typename entities::info<type::qubo>(), in, parent)
+            : generic::model(typename entities::info<ptype::qubo>(), in, parent)
         {}
 
         model(const odb::iobject& o)

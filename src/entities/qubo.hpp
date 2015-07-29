@@ -8,13 +8,13 @@ namespace wdb { namespace entities {
         class controller;
     }
     template<>
-    struct info<type::qubo> {
+    struct info<ptype::qubo> {
         typedef qubo::model associated_model_type;
         typedef qubo::property associated_property_type;
         typedef qubo::controller associated_controller_type;
         static constexpr char name[]= "qubo";
     };
-    constexpr char info<type::qubo>::name[];
+    constexpr char info<ptype::qubo>::name[];
 } }
 
 #include "entities/qubo/model.hpp"

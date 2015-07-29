@@ -7,7 +7,11 @@ namespace wdb { namespace entities {
     using reader = wdb::odb::mongo::prop_reader;
     using writer = wdb::odb::mongo::prop_writer;
 
-    enum class type {
+    enum class etype { model,
+                       property,
+                       controller };
+
+    enum class ptype {
         unknown, 
         ising,
         tsp,

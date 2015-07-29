@@ -8,13 +8,13 @@ namespace wdb { namespace entities {
         class controller;
     }
     template<>
-    struct info<type::sat> {
+    struct info<ptype::sat> {
         typedef sat::model associated_model_type;
         typedef sat::property associated_property_type;
         typedef sat::controller associated_controller_type;
         static constexpr char name[]= "sat";
     };
-    constexpr char info<type::sat>::name[];
+    constexpr char info<ptype::sat>::name[];
 } }
 
 #include "entities/sat/model.hpp"

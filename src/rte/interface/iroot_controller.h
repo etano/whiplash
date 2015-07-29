@@ -6,7 +6,7 @@ namespace wdb { namespace rte {
     class iroot_controller {
     public:
         virtual ~iroot_controller(){}
-        virtual void subscribe(icontroller_delegate& dc) = 0;
+        //virtual void subscribe(icontroller_delegate& dc) = 0;
     };
 
 } }

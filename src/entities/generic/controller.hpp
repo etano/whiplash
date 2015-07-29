@@ -3,12 +3,12 @@
 
 namespace wdb { namespace entities { namespace generic {
 
-    class controller : public wdb::rte::icontroller_delegate, public wdb::rte::icacheable {
+    class controller : public wdb::rte::icontroller_delegate<model,property>, public wdb::rte::icacheable {
     public:
         controller(){}
         virtual ~controller() {};
 
-        static void resolve(rte::iexecutable &x, model &m, property &p){
+        virtual void resolve(rte::iexecutable &x, model &m, property &p) override {
             p.set_status(property::status::PROCESSING);
 
             std::vector<std::string> params(p.get_params());

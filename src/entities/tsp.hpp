@@ -8,13 +8,13 @@ namespace wdb { namespace entities {
         class controller;
     }
     template<>
-    struct info<type::tsp> {
+    struct info<ptype::tsp> {
         typedef tsp::model associated_model_type;
         typedef tsp::property associated_property_type;
         typedef tsp::controller associated_controller_type;
         static constexpr char name[]= "tsp";
     };
-    constexpr char info<type::tsp>::name[];
+    constexpr char info<ptype::tsp>::name[];
 } }
 
 #include "entities/tsp/model.hpp"

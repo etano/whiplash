@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities { 
 
-    template<type Problem>
+    template<ptype Problem>
     struct info {};
 
 } }

@@ -10,7 +10,7 @@ namespace wdb { namespace entities { namespace qubo {
         {}
 
         property(int model_id, int executable_id, const std::vector<std::string>& params, int seed, status s = status::UNDEFINED)
-            : generic::property(typename entities::info<type::qubo>(), model_id, executable_id, params, seed, s)
+            : generic::property(typename entities::info<ptype::qubo>(), model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};

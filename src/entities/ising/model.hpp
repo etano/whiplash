@@ -8,7 +8,7 @@ namespace wdb { namespace entities { namespace ising {
         typedef std::vector<int> node_type;
     public:
         model(std::ifstream& in, int parent = -1)
-            : generic::model(typename entities::info<type::ising>(), in, parent), N_(0)
+            : generic::model(typename entities::info<ptype::ising>(), in, parent), N_(0)
         {
             std::map<std::string,int> index;
             while(in){

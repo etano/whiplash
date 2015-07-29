@@ -19,7 +19,7 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
-        std::shared_ptr<entities::generic::property> p(entities::factory::make_property(problem_class, model_id, executable_id, params, random_seed()));
+        std::shared_ptr<entities::generic::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
         object record, serialized_configuration;
         p->serialize_configuration(serialized_configuration);
         p->serialize(record, serialized_configuration);
@@ -28,7 +28,7 @@ namespace wdb { namespace deployment {
 
     void basic::insert_model(std::string file_name, std::string problem_class, std::string owner, int parent_id, std::string lattice, std::string distribution){
         std::ifstream in(file_name);
-        std::shared_ptr<entities::generic::model> m(entities::factory::make_model(problem_class, in, parent_id));
+        std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id));
         in.close();
         object record, serialized_configuration;
         m->serialize_configuration(serialized_configuration);
@@ -54,7 +54,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<entities::generic::model> basic::fetch_model(int id){
-        return entities::factory::make_model(*models.find(id));
+        return entities::factory::make_entity<e::model>(*models.find(id));
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
@@ -62,20 +62,20 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){
-        return entities::factory::make_property(*properties.find(id));
+        return entities::factory::make_entity<e::property>(*properties.find(id));
     }
 
     std::vector<std::shared_ptr<entities::generic::model>> basic::fetch_models_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::generic::model>> ms;
         for(auto &obj : models.find_like(o))
-            ms.emplace_back(entities::factory::make_model(*obj));
+            ms.emplace_back(entities::factory::make_entity<e::model>(*obj));
         return ms;
     }
 
     std::vector<std::shared_ptr<entities::generic::property>> basic::fetch_properties_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::generic::property>> ps;
         for(auto &obj : properties.find_like(o))
-            ps.emplace_back(entities::factory::make_property(*obj));
+            ps.emplace_back(entities::factory::make_entity<e::property>(*obj));
         return ps;
     }
 
@@ -98,7 +98,10 @@ namespace wdb { namespace deployment {
         
             std::shared_ptr<entities::generic::property> p(fetch_property(signature_.get_id()));
             if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
-                entities::generic::controller::resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
+
+                entities::generic::controller ctrl;
+                ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
+
                 object record, serialized_configuration;
                 p->serialize_configuration(serialized_configuration);
                 p->serialize(record, serialized_configuration);
