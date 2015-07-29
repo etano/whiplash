@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities { namespace generic {
 
-    class controller : public wdb::rte::icontroller, public wdb::rte::icacheable {
+    class controller : public wdb::rte::icontroller_delegate, public wdb::rte::icacheable {
     public:
         controller(){}
         virtual ~controller() {};
