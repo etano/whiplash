@@ -12,7 +12,7 @@ namespace wdb { namespace deployment {
                                std::string problem_class, // the problem class name on which the executable executes
                                std::string description,   // a description of what the executable does/is capable of
                                std::string algorithm,     // the algorithm that is being executed
-                               std::string configuration, // miscellaneous traits of the executable, e.g. annealing schedule
+                               std::string cfg,           // miscellaneous traits of the executable, e.g. annealing schedule
                                std::string version,       // version of the executable
                                std::string build_info,    // specification of how executable was built
                                std::string owner);        // who created the model instance
@@ -27,7 +27,7 @@ namespace wdb { namespace deployment {
         void insert_property(std::string problem_class,   // name of problem class
                              int model_id,                // id of the associated model
                              int executable_id,           // id of the associated executable
-                             const std::vector<std::string>& params,
+                             const std::unordered_map<std::string,std::string>& params,  // extra parameters object
                              std::string owner);          // who created the property
 
         void list_properties();

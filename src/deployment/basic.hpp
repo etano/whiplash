@@ -18,11 +18,11 @@ namespace wdb { namespace deployment {
         db.reset_metadata();
     }
 
-    void basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::vector<std::string>& params, std::string owner){
+    void basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params, std::string owner){
         std::shared_ptr<entities::generic::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
-        object record, serialized_configuration;
-        p->serialize_configuration(serialized_configuration);
-        p->serialize(record, serialized_configuration);
+        object record, serialized_cfg;
+        p->serialize_cfg(serialized_cfg);
+        p->serialize(record, serialized_cfg);
         properties.insert(record, signature(db, "properties", owner));
     }
 
@@ -30,9 +30,9 @@ namespace wdb { namespace deployment {
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id));
         in.close();
-        object record, serialized_configuration;
-        m->serialize_configuration(serialized_configuration);
-        m->serialize(record, serialized_configuration);
+        object record, serialized_cfg;
+        m->serialize_cfg(serialized_cfg);
+        m->serialize(record, serialized_cfg);
 
         writer::prop("lattice", lattice) >> record; // optional lattice info
         writer::prop("distribution", distribution) >> record; // optional distribution info
@@ -40,14 +40,14 @@ namespace wdb { namespace deployment {
     }
 
     void basic::insert_executable(std::string location, std::string problem_class, std::string description, std::string algorithm,
-                                  std::string configuration, std::string version, std::string build_info, std::string owner)
+                                  std::string cfg, std::string version, std::string build_info, std::string owner)
     {
         object record;
         writer::prop("location", location) >> record;
         writer::prop("class", problem_class) >> record;
         writer::prop("description", description) >> record;
         writer::prop("algorithm", algorithm) >> record;
-        writer::prop("configuration", configuration) >> record; // todo: should be custom sub-document
+        writer::prop("cfg", cfg) >> record; // todo: should be custom sub-document
         writer::prop("version", version) >> record;
         writer::prop("build_info", build_info) >> record;
         executables.insert(record, signature(db, "executables", owner)); // buggy
@@ -102,9 +102,9 @@ namespace wdb { namespace deployment {
                 entities::generic::controller ctrl;
                 ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
 
-                object record, serialized_configuration;
-                p->serialize_configuration(serialized_configuration);
-                p->serialize(record, serialized_configuration);
+                object record, serialized_cfg;
+                p->serialize_cfg(serialized_cfg);
+                p->serialize(record, serialized_cfg);
 
                 object filter; writer::prop("_id", signature_.get_id()) >> filter;
                 properties.replace(filter, record, signature_);

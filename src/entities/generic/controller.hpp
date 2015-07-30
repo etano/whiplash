@@ -11,12 +11,10 @@ namespace wdb { namespace entities { namespace generic {
         virtual void resolve(rte::iexecutable &x, model &m, property &p) override {
             p.set_status(property::status::PROCESSING);
 
-            std::vector<std::string> params(p.get_params());
-            int argc = 3 + params.size();
+            int argc = 3;
             void** argv = (void**)malloc(sizeof(void*)*argc);
             argv[1] = &m;
             argv[2] = &p;
-            for(int i = 0; i < params.size(); i++) argv[i+3] = &params[i];
 
             wdb::timer wt("walltime"); wt.begin();
             x(argc, (char**)argv);

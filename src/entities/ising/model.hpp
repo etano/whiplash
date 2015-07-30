@@ -42,7 +42,7 @@ namespace wdb { namespace entities { namespace ising {
         model(const odb::iobject& o)
             : generic::model(o), N_(0)
         {
-            for(auto e : reader::read<reader::array_type>(o, "configuration", "edges")){
+            for(auto e : reader::read<reader::array_type>(o, "cfg", "edges")){
                 std::vector<int> inds;
                 auto sub_array = reader::read<reader::array_type>(e);
                 for(const auto a : reader::read<reader::array_type>(sub_array[0])){
@@ -60,8 +60,8 @@ namespace wdb { namespace entities { namespace ising {
 
         virtual ~model() override {};
 
-        virtual void serialize_configuration(odb::iobject& configuration) override {
-            writer::prop("edges", edges_) >> configuration;
+        virtual void serialize_cfg(odb::iobject& cfg) override {
+            writer::prop("edges", edges_) >> cfg;
         }
 
         void init_nodes(){

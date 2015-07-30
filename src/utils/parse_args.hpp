@@ -3,8 +3,8 @@
 
 namespace wdb {
 
-  std::map<std::string,std::string> parse_args(int argc, char *argv[]){
-        std::map<std::string,std::string> params;
+  std::unordered_map<std::string,std::string> parse_args(int argc, char *argv[]){
+        std::unordered_map<std::string,std::string> params;
         bool have_key = false;
         std::string key;
         for(int i = 1; i < argc; ++i){

@@ -12,7 +12,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<typename T>
         T get(object_view doc, std::string field){
-            printf("Error: unknown type\n");
+            printf("Error: unknown type for %s \n",field.c_str());
         }
 
         template<>
@@ -38,6 +38,11 @@ namespace wdb { namespace odb { namespace mongo {
         template<>
         object_view get<object_view>(object_view doc, std::string field){
             return (object_view)doc[field].get_document();
+        }
+
+        template<>
+        iobject get<iobject>(object_view doc, std::string field){
+            return (object)get<object_view>(doc, field);
         }
 
         template<typename T>
@@ -108,6 +113,11 @@ namespace wdb { namespace odb { namespace mongo {
             const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
             return detail::to_json(m_obj.r.view);
         }
+
+        static std::string to_json(const object_view& obj_v){
+            return detail::to_json(obj_v);
+        }
+
     };
 
 } } }

@@ -26,13 +26,13 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual ~model() {};
 
-        virtual void serialize_configuration(odb::iobject& configuration) {}
+        virtual void serialize_cfg(odb::iobject& cfg) {}
 
-        virtual void serialize(odb::iobject& record, odb::iobject& configuration){
+        virtual void serialize(odb::iobject& record, odb::iobject& cfg){
             writer::prop("class", class_) >> record;
             writer::prop("class_id", class_id_) >> record;
             writer::prop("parent", parent_) >> record;
-            writer::prop("configuration", configuration) >> record;
+            writer::prop("cfg", cfg) >> record;
         }
 
         virtual void print(){
