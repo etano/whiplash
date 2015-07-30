@@ -41,8 +41,14 @@ namespace wdb { namespace odb { namespace mongo {
         }
 
         template<>
-        iobject get<iobject>(object_view doc, std::string field){
-            return (object)get<object_view>(doc, field);
+        std::unordered_map<std::string,std::string> get<std::unordered_map<std::string,std::string>>(object_view doc, std::string field){
+            std::unordered_map<std::string,std::string> umap;
+            auto o = get<object_view>(doc,field);
+            for(auto &p : o) {
+                std::string key(p.key());
+                umap[key] = get<std::string>(o, key);
+            }
+            return umap;
         }
 
         template<typename T>

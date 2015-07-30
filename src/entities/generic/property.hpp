@@ -3,6 +3,27 @@
 
 namespace wdb { namespace entities { namespace generic {
 
+    template <class T>
+    T str_to_val(std::string& val) { return val; }
+    template <>
+    std::string str_to_val(std::string& val) { return val; }
+    template <>
+    double str_to_val(std::string& val) { return stod(val); }
+    template <>
+    float str_to_val(std::string& val) { return stof(val); }
+    template <>
+    int str_to_val(std::string& val) { return stoi(val); }
+    template <>
+    unsigned int str_to_val(std::string& val) { return stoi(val); }
+    template <>
+    bool str_to_val(std::string& val) { return stoi(val); }
+
+    template <class T>
+    std::string val_to_str(T& val) { return std::to_string(val); }
+    template <>
+    std::string val_to_str(std::string& val) { return val; }
+
+
     class property {
     public:
         enum class status { UNDEFINED, PROCESSING, DEFINED };
@@ -14,12 +35,7 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(reader::read<int>(o, "status"));
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            for(auto &p : reader::read<reader::object_view>(o, std::tie("cfg", "params"))) {
-                std::string key(p.key());
-                params_[key] = reader::read<std::string>(o, std::tie("cfg", "params", key));
-            }
-            //for(auto e : reader::read<reader::array_type>(o, std::make_tuple("cfg", "params")))
-            //    params_.push_back(reader::read<std::string>(e));
+            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
@@ -38,22 +54,15 @@ namespace wdb { namespace entities { namespace generic {
             std::cout << "\n";
         }
 
-        std::string param(std::string key){
-            if (params_.find(key) != params_.end())
-                return params_[key];
-            else {
-                std::cerr << "ERROR: key " << key << " does not exist in params!" << std::endl;
-                return "";
-            }
+        template<class T>
+        T get_param(std::string key){
+            return str_to_val<T>(params_.at(key)); // FIXME: Breaks if not there, use optional arguments
         }
 
-        std::string param(std::string key, std::string s){
-            if (params_.find(key) != params_.end())
-                return params_[key];
-            else {
-                params_[key] = s;
-                return s;
-            }
+        template<class T>
+        T set_param(std::string key, T value){
+            params_[key] = val_to_str(value);
+            return value;
         }
 
         template<class I>
