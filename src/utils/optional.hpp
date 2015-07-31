@@ -4,25 +4,22 @@
 namespace wdb {
 
     template<typename T>
-    struct helper {
-        template<typename... Args>
-        helper(Args... args) : value(args...) {}
-        helper(){}
-        T value;
-    };
-
-    template<typename T>
-    class optional : public helper<T> {
+    class optional {
     public:
         template<typename... Args>
-        optional(Args... args) : helper<T>(args...), valid(true) {}
+        optional(Args... args) : value(args...), valid(true) {}
         optional() : valid(false) {}
-        operator T (){
+        operator T () const {
             return *(T*)this;
         }
         operator bool (){
             return valid;
         }
+        const optional& operator || (const optional& b) const {
+            if(valid) return *this;
+            return b;
+        }
+        T value;
         bool valid;
     };
 
