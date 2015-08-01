@@ -114,6 +114,8 @@ namespace wdb { namespace entities { namespace ising {
             return edges_.size();
         }
 
+        const std::vector<edge_type>& get_edges() const { return edges_; }
+
     private:
         std::vector<edge_type> edges_;
         std::vector<node_type> nodes_;
