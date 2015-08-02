@@ -56,7 +56,7 @@ namespace wdb { namespace entities { namespace generic {
 
         template<class T>
         optional<T> get_param(std::string key){
-            return str_to_val<T>(params_[key]); // FIXME: Breaks if not there, use optional arguments
+            return str_to_val<T>(params_[key]);
         }
 
         template<class T>
