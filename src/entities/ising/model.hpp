@@ -106,11 +106,11 @@ namespace wdb { namespace entities { namespace ising {
             std::cout << "num edges: " << num_edges() << "\n";
         }
 
-        int num_nodes(){
+        const int num_nodes() const{
             return N_;
         }
 
-        int num_edges(){
+        const int num_edges() const{
             return edges_.size();
         }
 
