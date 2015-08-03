@@ -26,6 +26,11 @@ namespace wdb { namespace odb { namespace mongo {
         }
 
         template<>
+        int64_t get<int64_t>(object_view doc, std::string field){
+            return (int64_t)doc[field].get_int64();
+        }
+
+        template<>
         std::string get<std::string>(object_view doc, std::string field){
             return (std::string)doc[field].get_utf8().value;
         }
@@ -63,7 +68,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<>
         int64_t get<int64_t>(element e){
-
+            return (int64_t)e.get_int64();
         }
 
         template<>

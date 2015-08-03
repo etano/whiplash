@@ -77,10 +77,7 @@ namespace wdb { namespace entities { namespace generic {
         virtual void serialize_cfg(odb::iobject& cfg) {};
 
         void serialize(odb::iobject& record, odb::iobject& cfg){
-            odb::mongo::object params_object;
-            for(auto &p : params_) // to fix
-                writer::prop(p.first, p.second) >> params_object;
-            writer::prop("params", params_object) >> cfg;
+            writer::prop("params", params_) >> cfg;
             writer::prop("class", class_) >> record;
             writer::prop("model_id", model_) >> record;
             writer::prop("executable_id", executable_) >> record;

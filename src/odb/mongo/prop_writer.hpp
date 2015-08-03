@@ -19,6 +19,12 @@ namespace wdb { namespace odb { namespace mongo {
             };
         }
         template<typename T>
+        static std::function<void(sub_document)> decompose(const std::unordered_map<std::string,T>& t){
+            return [&t](sub_document doc){
+                for(auto i : t) doc.append(prop(i.first,i.second));
+            };
+        }
+        template<typename T>
         static std::function<void(sub_array)> decompose(const std::vector<T>& t){
             return [&t](sub_array array){
                 for(auto i : t) array.append(decompose(i));
@@ -48,6 +54,9 @@ namespace wdb { namespace odb { namespace mongo {
                 bsoncxx::document::view view = static_cast<const odb::mongo::object&>(obj).w.builder.view();
                 o._core->concatenate(view); // workaround (no means to call concatenate otherwise)
             });
+        }
+        static prop_type<std::function<void(sub_document)>> prop(std::string name, std::unordered_map<std::string,std::string>& umap){
+            return bsoncxx::builder::basic::kvp(name, decompose(umap));
         }
     };
 
