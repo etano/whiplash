@@ -12,7 +12,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<typename T>
         T get(object_view doc, std::string field){
-            printf("Error: unknown type for %s \n",field.c_str());
+            printf("Error: unknown type for %s \n", field.c_str());
         }
 
         template<>
@@ -59,6 +59,11 @@ namespace wdb { namespace odb { namespace mongo {
         template<>
         int get<int>(element e){
             return (int)e.get_int32();
+        }
+
+        template<>
+        int64_t get<int64_t>(element e){
+
         }
 
         template<>

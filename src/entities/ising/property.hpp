@@ -4,7 +4,7 @@
 namespace wdb { namespace entities { namespace ising {
 
     class property : public generic::property {
-        typedef int_fast32_t spin_type;
+        typedef int64_t spin_type;
     public:
         property(const odb::iobject& o)
             : generic::property(o)
@@ -28,8 +28,8 @@ namespace wdb { namespace entities { namespace ising {
             }
         }
 
-        template<typename spin_type>
-        void set_cfg(const std::vector<spin_type>& cfg, double cost){
+        template<typename OtherSpinType>
+        void set_cfg(const std::vector<OtherSpinType>& cfg, double cost){
             cfg_.clear();
             for (auto &spin : cfg)
                 cfg_.push_back(spin);

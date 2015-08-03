@@ -1,7 +1,11 @@
 #ifndef WDB_ENTITIES_GENERIC_PROPERTY_HPP
 #define WDB_ENTITIES_GENERIC_PROPERTY_HPP
 
-namespace wdb { namespace entities { namespace generic {
+namespace std {
+    std::string to_string(std::string& val){ return val; }
+}
+
+namespace wdb { namespace utils {
 
     template <class T>
     T str_to_val(std::string& val) { return val; }
@@ -18,11 +22,9 @@ namespace wdb { namespace entities { namespace generic {
     template <>
     bool str_to_val(std::string& val) { return stoi(val); }
 
-    template <class T>
-    std::string val_to_str(T& val) { return std::to_string(val); }
-    template <>
-    std::string val_to_str(std::string& val) { return val; }
+} }
 
+namespace wdb { namespace entities { namespace generic {
 
     class property {
     public:
@@ -35,7 +37,7 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(reader::read<int>(o, "status"));
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, "params");
+            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
@@ -56,12 +58,12 @@ namespace wdb { namespace entities { namespace generic {
 
         template<class T>
         optional<T> get_param(std::string key){
-            return str_to_val<T>(params_[key]);
+            return utils::str_to_val<T>(params_[key]);
         }
 
         template<class T>
         optional<T> set_param(std::string key, T value){
-            params_[key] = val_to_str(value);
+            params_[key] = std::to_string(value);
             return value;
         }
 
@@ -74,11 +76,11 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual void serialize_cfg(odb::iobject& cfg) {};
 
-        void serialize(odb::iobject& record, const odb::iobject& cfg){
+        void serialize(odb::iobject& record, odb::iobject& cfg){
             odb::mongo::object params_object;
-            for(auto &p : params_)
+            for(auto &p : params_) // to fix
                 writer::prop(p.first, p.second) >> params_object;
-            writer::prop("params", params_object) >> record;
+            writer::prop("params", params_object) >> cfg;
             writer::prop("class", class_) >> record;
             writer::prop("model_id", model_) >> record;
             writer::prop("executable_id", executable_) >> record;

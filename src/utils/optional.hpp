@@ -12,6 +12,9 @@ namespace wdb {
         operator T () const {
             return *(T*)this;
         }
+        explicit operator bool (){
+            return valid;
+        }
         const optional& operator || (const optional& b) const {
             if(valid) return *this;
             return b;

@@ -4,13 +4,14 @@
 namespace wdb { namespace entities { namespace ising {
 
     class model : public generic::model {
-        typedef std::pair<std::vector<int_fast32_t>, double> edge_type;
-        typedef std::vector<int_fast32_t> node_type;
+        typedef int64_t spin_type;
+        typedef std::pair<std::vector<spin_type>, double> edge_type;
+        typedef std::vector<spin_type> node_type;
     public:
         model(std::ifstream& in, int parent = -1)
             : generic::model(typename entities::info<ptype::ising>(), in, parent), N_(0)
         {
-            std::map<std::string,int_fast32_t> index;
+            std::map<std::string,spin_type> index;
             while(in){
                 std::string input_str;
                 if(!std::getline(in,input_str)) break;
@@ -26,13 +27,13 @@ namespace wdb { namespace entities { namespace ising {
 
                     double val(std::stod(input[input.size()-1]));
 
-                    std::vector<int_fast32_t> inds;
+                    std::vector<spin_type> inds;
                     for(int i = 0; i < input.size()-1; ++i){
                         const std::string site(input[i]);
                         if(index.find(site) == index.end()) index[site] = N_++;
                         inds.push_back(index[site]);
                     }
-                    std::sort(inds.begin(), inds.end(), std::less<int_fast32_t>());
+                    std::sort(inds.begin(), inds.end(), std::less<spin_type>());
                     edges_.push_back(std::make_pair(inds, val));
                 }
             }
@@ -43,10 +44,10 @@ namespace wdb { namespace entities { namespace ising {
             : generic::model(o), N_(0)
         {
             for(auto e : reader::read<reader::array_type>(o, "cfg", "edges")){
-                std::vector<int_fast32_t> inds;
+                std::vector<spin_type> inds;
                 auto sub_array = reader::read<reader::array_type>(e);
                 for(const auto a : reader::read<reader::array_type>(sub_array[0])){
-                    int_fast32_t a_ = reader::read<int_fast32_t>(a);
+                    spin_type a_ = reader::read<spin_type>(a);
                     inds.push_back(a_);
                 }
 
@@ -71,28 +72,28 @@ namespace wdb { namespace entities { namespace ising {
                     nodes_[a].push_back(j);
         }
 
-        template<typename spin_type>
-        double total_energy(const std::vector<spin_type>& variables) const {
+        template<typename OtherSpinType>
+        double total_energy(const std::vector<OtherSpinType>& variables) const {
             double E(0.0);
             for(const auto& edge : edges_){
-                spin_type tmp(0);
+                OtherSpinType tmp(0);
                 for(const auto b : edge.first)
                     tmp ^= variables[b];
-                E += (2*tmp-1) * edge.second * (2*spin_type(edge.first.size()%2) - 1);
+                E += (2*tmp-1) * edge.second * (2*OtherSpinType(edge.first.size()%2) - 1);
             }
             return E;
         }
 
-        template<typename spin_type>
-        double delta_energy(const std::vector<spin_type>& variables, const unsigned ind) const {
+        template<typename OtherSpinType>
+        double delta_energy(const std::vector<OtherSpinType>& variables, const unsigned ind) const {
             double E(0.0);
             for(const auto a : nodes_[ind]){
                 const auto& edge(edges_[a]);
-                spin_type tmp(0);
+                OtherSpinType tmp(0);
                 for(const auto b : edge.first)
                     tmp ^= variables[b];
 
-                E += (2*tmp-1) * edge.second * (2*spin_type(edge.first.size()%2) - 1);
+                E += (2*tmp-1) * edge.second * (2*OtherSpinType(edge.first.size()%2) - 1);
             }
             return -2.0*E;
         }
@@ -108,11 +109,11 @@ namespace wdb { namespace entities { namespace ising {
             std::cout << "num edges: " << num_edges() << "\n";
         }
 
-        const int num_nodes() const{
+        const int num_nodes() const {
             return N_;
         }
 
-        const int num_edges() const{
+        const int num_edges() const {
             return edges_.size();
         }
 
