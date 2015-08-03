@@ -95,7 +95,7 @@ namespace wdb { namespace deployment {
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, const std::tuple<Args...>& target){
         for(auto &obj : properties.find_like(o)){
             signature signature_(*obj);
-        
+
             std::shared_ptr<entities::generic::property> p(fetch_property(signature_.get_id()));
             if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
 
