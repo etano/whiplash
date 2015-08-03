@@ -20,7 +20,6 @@ namespace wdb { namespace entities { namespace generic {
 
         model(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
-            class_id_ = reader::read<int>(o, "class_id");
             parent_ = reader::read<int>(o, "parent");
         }
 
@@ -30,7 +29,6 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual void serialize(odb::iobject& record, odb::iobject& cfg){
             writer::prop("class", class_) >> record;
-            writer::prop("class_id", class_id_) >> record;
             writer::prop("parent", parent_) >> record;
             writer::prop("cfg", cfg) >> record;
         }
@@ -42,7 +40,6 @@ namespace wdb { namespace entities { namespace generic {
         std::string get_class(){ return class_; }
     protected:
         std::string class_;
-        int class_id_;
         int parent_;
     };
 
