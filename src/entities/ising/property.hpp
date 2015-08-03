@@ -4,6 +4,7 @@
 namespace wdb { namespace entities { namespace ising {
 
     class property : public generic::property {
+        typedef int_fast32_t spin_type;
     public:
         property(const odb::iobject& o)
             : generic::property(o)
@@ -25,15 +26,17 @@ namespace wdb { namespace entities { namespace ising {
             } else {
                 throw std::runtime_error("Error: Property neither UNDEFINED nor DEFINED!\n");
             }
-            generic::property::serialize_cfg(cfg);
         }
 
-        void set_cfg(const std::vector<int>& cfg, double cost){
-            cfg_ = cfg;
+        template<typename spin_type>
+        void set_cfg(const std::vector<spin_type>& cfg, double cost){
+            cfg_.clear();
+            for (auto &spin : cfg)
+                cfg_.push_back(spin);
             cost_ = cost;
         }
     private:
-        std::vector<int> cfg_;
+        std::vector<spin_type> cfg_;
         double cost_;
     };
 

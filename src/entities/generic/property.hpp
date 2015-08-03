@@ -35,7 +35,7 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(reader::read<int>(o, "status"));
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, std::tie("cfg", "params"));
+            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, "params");
         }
 
         void print_params(){
@@ -72,14 +72,13 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual ~property(){};
 
-        virtual void serialize_cfg(odb::iobject& cfg){
+        virtual void serialize_cfg(odb::iobject& cfg) {};
+
+        void serialize(odb::iobject& record, const odb::iobject& cfg){
             odb::mongo::object params_object;
             for(auto &p : params_)
                 writer::prop(p.first, p.second) >> params_object;
-            writer::prop("params", params_object) >> cfg;
-        }
-
-        void serialize(odb::iobject& record, const odb::iobject& cfg){
+            writer::prop("params", params_object) >> record;
             writer::prop("class", class_) >> record;
             writer::prop("model_id", model_) >> record;
             writer::prop("executable_id", executable_) >> record;
