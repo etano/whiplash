@@ -9,13 +9,16 @@ namespace wdb {
         template<typename... Args>
         optional(Args... args) : value(args...), valid(true) {}
         optional() : valid(false) {}
+        operator T () { // for icc only
+            return *(T*)this;
+        }
         operator T () const {
             return *(T*)this;
         }
         explicit operator bool (){
             return valid;
         }
-        const optional& operator || (const optional& b) const {
+        optional operator || (const optional& b) const {
             if(valid) return *this;
             return b;
         }
@@ -38,7 +41,7 @@ namespace wdb {
         }
         explicit operator bool () const = delete;
 
-        const optional& operator || (const optional& b) const {
+        optional operator || (const optional& b) const {
             if(valid) return *this;
             return b;
         }
