@@ -23,6 +23,29 @@ namespace wdb {
         bool valid;
     };
 
+    template<>
+    class optional<bool> {
+    public:
+        template<typename... Args>
+        optional(Args... args) : value(args...), valid(true) {}
+        optional() : valid(false) {}
+
+        operator bool&& () const {
+            return std::move(*(bool*)this);
+        }
+        explicit operator bool&& (){
+            return std::move(valid);
+        }
+        explicit operator bool () const = delete;
+
+        const optional& operator || (const optional& b) const {
+            if(valid) return *this;
+            return b;
+        }
+        bool value;
+        bool valid;
+    };
+
 }
 
 #endif
