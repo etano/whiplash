@@ -1,7 +1,7 @@
-#ifndef WDB_RTE_CLUSTER_SCHEDULER_HPP
-#define WDB_RTE_CLUSTER_SCHEDULER_HPP
+#ifndef WDB_RTE_SLURM_SCHEDULER_HPP
+#define WDB_RTE_SLURM_SCHEDULER_HPP
 
-namespace wdb { namespace rte { namespace cluster {
+namespace wdb { namespace rte { namespace slurm {
 
     class scheduler : public ischeduler {
     public:

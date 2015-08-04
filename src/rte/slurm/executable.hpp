@@ -1,7 +1,7 @@
-#ifndef WDB_RTE_CLUSTER_EXECUTABLE_HPP
-#define WDB_RTE_CLUSTER_EXECUTABLE_HPP
+#ifndef WDB_RTE_SLURM_EXECUTABLE_HPP
+#define WDB_RTE_SLURM_EXECUTABLE_HPP
 
-namespace wdb { namespace rte { namespace cluster {
+namespace wdb { namespace rte { namespace slurm {
 
     class executable : public iexecutable {
     public:

@@ -25,7 +25,7 @@
 #include "odb/interface.hpp"
 #include "rte/interface.hpp"
 #include "odb/mongo.hpp"
-#include "rte/cluster.hpp"
+#include "rte/slurm.hpp"
 
 #include "entities/generic.hpp"
 #include "entities/ising.hpp"
