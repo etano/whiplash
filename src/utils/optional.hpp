@@ -22,6 +22,13 @@ namespace wdb {
             if(valid) return *this;
             return b;
         }
+        T unwrap() const {
+            return *(T*)this;
+        }
+        bool is_null(){
+            return !valid;
+        }
+    private:
         T value;
         bool valid;
     };
@@ -45,6 +52,13 @@ namespace wdb {
             if(valid) return *this;
             return b;
         }
+        bool&& unwrap() const {
+            return std::move(*(bool*)this);
+        }
+        bool is_null(){
+            return !valid;
+        }
+    private:
         bool value;
         bool valid;
     };
