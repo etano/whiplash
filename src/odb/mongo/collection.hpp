@@ -36,9 +36,10 @@ namespace wdb { namespace odb { namespace mongo {
         return docs;
     }
 
-    void collection::insert(iobject& o, const isignature& s){
+    int collection::insert(iobject& o, const isignature& s){
         s.sign(o);
         coll.insert_one(static_cast<odb::mongo::object&>(o).w.builder);
+        return s.get_id();
     }
 
     void collection::remove(iobject& o){

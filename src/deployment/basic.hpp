@@ -23,9 +23,7 @@ namespace wdb { namespace deployment {
         object record, serialized_cfg;
         p->serialize_cfg(serialized_cfg);
         p->serialize(record, serialized_cfg);
-        signature s(db, "properties", owner);
-        properties.insert(record, s);
-        return s.get_id();
+        return properties.insert(record, signature(db, "properties", owner));
     }
 
     int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, int parent_id, const std::unordered_map<std::string,std::string>& params){
@@ -35,9 +33,7 @@ namespace wdb { namespace deployment {
         object record, serialized_cfg;
         m->serialize_cfg(serialized_cfg);
         m->serialize(record, serialized_cfg);
-        signature s(db, "models", owner);
-        models.insert(record, s);
-        return s.get_id();
+        return models.insert(record, signature(db, "models", owner));
     }
 
     int basic::insert_executable(std::string problem_class, std::string owner, std::string file_name, std::string description, std::string algorithm, std::string version, std::string build_info, const std::unordered_map<std::string,std::string>& params)
@@ -57,9 +53,7 @@ namespace wdb { namespace deployment {
         writer::prop("cfg", params) >> record;
 
         // Sign and insert
-        signature s(db, "executables", owner);
-        executables.insert(record, s); // TODO: buggy
-        return s.get_id();
+        return executables.insert(record, signature(db, "executables", owner)); // TODO: buggy
     }
 
     std::shared_ptr<entities::generic::model> basic::fetch_model(int id){
