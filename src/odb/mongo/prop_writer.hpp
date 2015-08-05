@@ -46,7 +46,7 @@ namespace wdb { namespace odb { namespace mongo {
             return bsoncxx::builder::basic::kvp(name, str);
         }
         template<typename T>
-        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector<T> vec){
+        static prop_type<std::function<void(sub_array)> > prop(std::string name, std::vector<T>& vec){
             return bsoncxx::builder::basic::kvp(name, decompose(vec));
         }
         static prop_type<std::function<void(sub_document)> > prop(std::string name, const odb::iobject& obj){
