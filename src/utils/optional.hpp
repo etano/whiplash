@@ -1,15 +1,21 @@
 #ifndef WDB_UTILS_OPTIONAL_HPP
 #define WDB_UTILS_OPTIONAL_HPP
+#include <utility>
+#include <functional>
+#include <type_traits>
 
 namespace wdb {
 
     template<typename T>
     class optional {
     public:
+        template <typename Func, typename = typename std::enable_if<std::is_convertible<Func, std::function<T()>>::value>::type>
+        optional(Func f) : func(f), valid(false) {}
         template<typename... Args>
         optional(Args... args) : value(args...), valid(true) {}
         optional() : valid(false) {}
-        operator T () { // for icc only
+        operator T () { // (was for icc initially)
+            if(func){ value = func(); valid = true; }
             return *(T*)this;
         }
         operator T () const {
@@ -31,6 +37,7 @@ namespace wdb {
     private:
         T value;
         bool valid;
+        std::function<T()> func;
     };
 
     template<>

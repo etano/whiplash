@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     wdb::entities::ising::model& H = *(wdb::entities::ising::model*)argv[1];
     wdb::entities::ising::property& I = *(wdb::entities::ising::property*)argv[2];
 
-    int Nr = I.get_param<int>("Nr") or I.set_param<int>("Nr",10);
+    int Nr = I.get_param<int>("Nr") or [&](){ return I.set_param<int>("Nr", 10); };
     double Emin(std::numeric_limits<double>::max());
     std::vector<int> config_min;
     for(int i = 0; i < Nr; ++i){

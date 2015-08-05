@@ -58,11 +58,13 @@ namespace wdb { namespace entities { namespace generic {
 
         template<class T>
         optional<T> get_param(std::string key){
-            return utils::str_to_val<T>(params_[key]);
+            auto iterator = params_.find(key);
+            if(iterator == params_.end()) return optional<T>();
+            return utils::str_to_val<T>(iterator->second);
         }
 
         template<class T>
-        optional<T> set_param(std::string key, T value){
+        T set_param(std::string key, T value){
             params_[key] = std::to_string(value);
             return value;
         }
