@@ -19,7 +19,7 @@ all: $(APPS) $(DRIVERS) $(TESTS)
 %.app : apps/%.cpp
 	$(CXX) -fPIC -shared -o $(basename $<).app $< $(CXXFLAGS)
 
-%.driver : tests/drivers/%.cpp
+%.driver : apps/drivers/%.cpp
 	$(CXX) -o $(basename $<).driver $< $(CXXFLAGS)
 
 %.test : tests/%.cpp
@@ -27,9 +27,9 @@ all: $(APPS) $(DRIVERS) $(TESTS)
 
 clean:
 	-rm -f apps/*.app
-	-rm -f tests/drivers/*.driver
+	-rm -f apps/drivers/*.driver
 	-rm -f tests/*.test
 
 install:
 	install -m 0755 apps/*.app $(prefix)/bin
-	install -m 0755 tests/drivers/*.driver $(prefix)/bin
+	install -m 0755 apps/drivers/*.driver $(prefix)/bin
