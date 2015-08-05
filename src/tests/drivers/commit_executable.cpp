@@ -8,7 +8,30 @@ int main(int argc, char* argv[]){
     wdb::deployment::basic sf(db);
 
     auto params = wdb::parse_args(argc,argv);
-    std::cout << sf.insert_executable(params["file"], params["class"], params["description"], params["algorithm"], params["cfg"], params["version"], params["build"], params["owner"]) << std::endl;
+
+    // Required arguments
+    std::string problem_class = params["class"];
+    params.erase("class");
+    std::string owner = params["owner"];
+    params.erase("owner");
+    std::string file = params["file"];
+    params.erase("file");
+    std::string description = params["description"];
+    params.erase("description");
+    std::string algorithm = params["algorithm"];
+    params.erase("algorithm");
+    std::string version = params["version"];
+    params.erase("version");
+    std::string build = params["build"];
+    params.erase("build");
+
+    // Optional arguments
+
+    // User defined arguments
+    // (whatever is left in params)
+
+    // Insert
+    std::cout << sf.insert_executable(problem_class,owner,file,description,algorithm,version,build,params) << std::endl;
 
     return 0;
 }

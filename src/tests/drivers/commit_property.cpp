@@ -9,15 +9,23 @@ int main(int argc, char* argv[]){
 
     auto params = wdb::parse_args(argc,argv);
 
+    // Required arguments
     std::string class_name = params["class"];
     params.erase("class");
+    std::string owner = params["owner"];
+    params.erase("owner");
     int model_id = std::stoi(params["model"]);
     params.erase("model");
     int executable_id = std::stoi(params["executable"]);
     params.erase("executable");
-    std::string owner = params["owner"];
-    params.erase("owner");
-    std::cout << sf.insert_property(class_name, model_id, executable_id, params, owner) << std::endl;
+
+    // Optional arguments
+
+    // User defined arguments
+    // (whatever is left in params)
+
+    // Insert
+    std::cout << sf.insert_property(class_name, owner, model_id, executable_id, params) << std::endl;
 
     return 0;
 }

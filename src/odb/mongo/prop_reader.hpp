@@ -49,9 +49,13 @@ namespace wdb { namespace odb { namespace mongo {
         std::unordered_map<std::string,std::string> get<std::unordered_map<std::string,std::string>>(object_view doc, std::string field){
             std::unordered_map<std::string,std::string> umap;
             auto o = get<object_view>(doc,field);
-            for(auto &p : o) {
-                std::string key(p.key());
-                umap[key] = get<std::string>(o, key);
+            if (o.length() > 5) { // FIXME: HACK! bug in bsoncxx document view iterator for unset elements
+                for (auto& p : o) {
+                    if (p) {
+                        std::string key(p.key());
+                        umap[key] = get<std::string>(o, key);
+                    }
+                }
             }
             return umap;
         }

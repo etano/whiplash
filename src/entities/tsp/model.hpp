@@ -5,8 +5,8 @@ namespace wdb { namespace entities { namespace tsp {
 
     class model : public generic::model {
     public:
-        model(std::ifstream& in, int parent = -1)
-            : generic::model(typename entities::info<ptype::tsp>(), in, parent)
+        model(std::ifstream& in, int parent, const std::unordered_map<std::string,std::string>& params)
+            : generic::model(typename entities::info<ptype::tsp>(), in, parent, params)
         {}
 
         model(const odb::iobject& o)
