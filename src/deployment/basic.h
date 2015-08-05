@@ -8,7 +8,7 @@ namespace wdb { namespace deployment {
         basic(odb::iobjectdb& db);
         void purge();
 
-        void insert_executable(std::string location,      // where the executable is stored (this may depend on the machine!)
+        int insert_executable(std::string location,      // where the executable is stored (this may depend on the machine!)
                                std::string problem_class, // the problem class name on which the executable executes
                                std::string description,   // a description of what the executable does/is capable of
                                std::string algorithm,     // the algorithm that is being executed
@@ -17,14 +17,14 @@ namespace wdb { namespace deployment {
                                std::string build_info,    // specification of how executable was built
                                std::string owner);        // who created the model instance
 
-        void insert_model(std::string file_name,          // contains definition of the model
+        int insert_model(std::string file_name,          // contains definition of the model
                           std::string problem_class,      // name of problem class (ex: "JobShop")
                           std::string owner,              // who created the model instance
                           int parent_id = -1,             // if model derived from another model in the database, the id of this parent model (default : "none")
                           std::string lattice = "",       // the lattice structure of the underlying graph (if it exists)
                           std::string distribution = ""); // distribution of the couplings
 
-        void insert_property(std::string problem_class,   // name of problem class
+        int insert_property(std::string problem_class,   // name of problem class
                              int model_id,                // id of the associated model
                              int executable_id,           // id of the associated executable
                              const std::unordered_map<std::string,std::string>& params,  // extra parameters object

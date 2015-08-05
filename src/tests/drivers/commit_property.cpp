@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
     params.erase("executable");
     std::string owner = params["owner"];
     params.erase("owner");
-    sf.insert_property(class_name, model_id, executable_id, params, owner);
+    std::cout << sf.insert_property(class_name, model_id, executable_id, params, owner) << std::endl;
 
     return 0;
 }

@@ -18,15 +18,17 @@ namespace wdb { namespace deployment {
         db.reset_metadata();
     }
 
-    void basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params, std::string owner){
+    int basic::insert_property(std::string problem_class, int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params, std::string owner){
         std::shared_ptr<entities::generic::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
         object record, serialized_cfg;
         p->serialize_cfg(serialized_cfg);
         p->serialize(record, serialized_cfg);
-        properties.insert(record, signature(db, "properties", owner));
+        signature s(db, "properties", owner);
+        properties.insert(record, s);
+        return s.get_id();
     }
 
-    void basic::insert_model(std::string file_name, std::string problem_class, std::string owner, int parent_id, std::string lattice, std::string distribution){
+    int basic::insert_model(std::string file_name, std::string problem_class, std::string owner, int parent_id, std::string lattice, std::string distribution){
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id));
         in.close();
@@ -34,12 +36,14 @@ namespace wdb { namespace deployment {
         m->serialize_cfg(serialized_cfg);
         m->serialize(record, serialized_cfg);
 
-        writer::prop("lattice", lattice) >> record; // optional lattice info
-        writer::prop("distribution", distribution) >> record; // optional distribution info
-        models.insert(record, signature(db, "models", owner));
+        writer::prop("lattice", lattice) >> record; // optional lattice info FIXME: this does not belong here
+        writer::prop("distribution", distribution) >> record; // optional distribution info FIXME: this does not belong here
+        signature s(db, "models", owner);
+        models.insert(record, s);
+        return s.get_id();
     }
 
-    void basic::insert_executable(std::string location, std::string problem_class, std::string description, std::string algorithm,
+    int basic::insert_executable(std::string location, std::string problem_class, std::string description, std::string algorithm,
                                   std::string cfg, std::string version, std::string build_info, std::string owner)
     {
         object record;
@@ -50,7 +54,9 @@ namespace wdb { namespace deployment {
         writer::prop("cfg", cfg) >> record; // todo: should be custom sub-document
         writer::prop("version", version) >> record;
         writer::prop("build_info", build_info) >> record;
-        executables.insert(record, signature(db, "executables", owner)); // buggy
+        signature s(db, "executables", owner);
+        executables.insert(record, s); // buggy
+        return s.get_id();
     }
 
     std::shared_ptr<entities::generic::model> basic::fetch_model(int id){
