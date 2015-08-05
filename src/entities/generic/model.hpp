@@ -10,7 +10,7 @@ namespace wdb { namespace entities {
 
 namespace wdb { namespace entities { namespace generic {
 
-    class model {
+    class model : public wdb::rte::icacheable {
     public:
         template<class I>
         model(I info, std::ifstream& in, int parent, const std::unordered_map<std::string,std::string>& params){

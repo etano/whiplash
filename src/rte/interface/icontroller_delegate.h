@@ -3,11 +3,10 @@
 
 namespace wdb { namespace rte {
 
-    template<class Model, class Property>
     class icontroller_delegate {
     public:
         virtual ~icontroller_delegate(){}
-        virtual void resolve(rte::iexecutable& x, Model& m, Property& p) = 0;
+        virtual void resolve(rte::iexecutable& x, wdb::rte::icacheable& m, wdb::rte::icacheable& p) = 0; // type erasure?
     };
 
 } }

@@ -26,7 +26,7 @@ namespace wdb { namespace utils {
 
 namespace wdb { namespace entities { namespace generic {
 
-    class property {
+    class property : public wdb::rte::icacheable {
     public:
         enum class status { UNDEFINED, PROCESSING, DEFINED };
 
