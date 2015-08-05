@@ -77,13 +77,13 @@ namespace wdb { namespace entities { namespace generic {
         virtual void serialize_cfg(odb::iobject& cfg) {};
 
         void serialize(odb::iobject& record, odb::iobject& cfg){
-            writer::prop("params", params_) >> cfg;
             writer::prop("class", class_) >> record;
             writer::prop("model_id", model_) >> record;
             writer::prop("executable_id", executable_) >> record;
             writer::prop("status", int(status_)) >> record;
             writer::prop("walltime", walltime_) >> record;
             writer::prop("seed", int(seed_)) >> record;
+            writer::prop("params", params_) >> cfg;
             writer::prop("cfg", cfg) >> record;
         }
 
