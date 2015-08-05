@@ -6,16 +6,22 @@
 
 namespace wdb {
 
+    template<typename R>
+    class optional_expr;
+
     template<typename T>
     class optional {
     public:
-        template <typename Func, typename = typename std::enable_if<std::is_convertible<Func, std::function<T()>>::value>::type>
-        optional(Func f) : func(f), valid(false) {}
-        template<typename... Args>
-        optional(Args... args) : value(args...), valid(true) {}
+        friend optional_expr<T>;
+
+        template <typename Arg, typename = typename std::enable_if<!std::is_convertible<Arg, std::function<T()>>::value>::type>
+        optional(Arg arg) : value(arg), valid(true) {}
+
+        template<typename Arg, typename... Other, typename = typename std::enable_if<!std::is_convertible<Arg, std::function<T()>>::value>::type>
+        optional(Arg arg, Other... other) : value(arg, other...), valid(true) {}
+
         optional() : valid(false) {}
-        operator T () { // (was for icc initially)
-            if(func){ value = func(); valid = true; }
+        operator T () {
             return *(T*)this;
         }
         operator T () const {
@@ -28,6 +34,10 @@ namespace wdb {
             if(valid) return *this;
             return b;
         }
+        optional_expr<T> operator || (const optional_expr<T>& b) const {
+            if(valid) return *this;
+            return b;
+        }
         T unwrap() const {
             return *(T*)this;
         }
@@ -37,14 +47,29 @@ namespace wdb {
     private:
         T value;
         bool valid;
-        std::function<T()> func;
+    };
+
+    template<typename R>
+    class optional_expr : private optional<R> {
+    public:
+        template <typename Func, typename = typename std::enable_if<std::is_convertible<Func, std::function<R()>>::value>::type>
+        optional_expr(Func f) : func(f) {}
+
+        optional_expr(const optional<R>& r){ this->value = r.value; this->valid = r.valid; }
+
+        operator R (){
+            if(func){ this->value = func(); this->valid = true; }
+            return *(R*)this;
+        }
+    private:
+        std::function<R()> func;
     };
 
     template<>
     class optional<bool> {
     public:
-        template<typename... Args>
-        optional(Args... args) : value(args...), valid(true) {}
+        friend optional_expr<bool>;
+        optional(bool arg) : value(arg), valid(true) {}
         optional() : valid(false) {}
 
         operator bool&& () const {
@@ -56,6 +81,10 @@ namespace wdb {
         explicit operator bool () const = delete;
 
         optional operator || (const optional& b) const {
+            if(valid) return *this;
+            return b;
+        }
+        optional_expr<bool> operator || (const optional_expr<bool>& b) const {
             if(valid) return *this;
             return b;
         }
