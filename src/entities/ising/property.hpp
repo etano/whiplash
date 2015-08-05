@@ -18,10 +18,8 @@ namespace wdb { namespace entities { namespace ising {
 
         virtual void serialize_cfg(odb::iobject& cfg) override {
             if (status_ == status::UNDEFINED){
-                std::vector<double> nan_vec(1, std::numeric_limits<double>::quiet_NaN());
-                writer::prop("spins", nan_vec) >> cfg;
-                double nan(std::numeric_limits<double>::quiet_NaN());
-                writer::prop("cost", nan) >> cfg;
+                writer::prop("spins", std::vector<double>(1, std::numeric_limits<double>::quiet_NaN())) >> cfg;
+                writer::prop("cost", std::numeric_limits<double>::quiet_NaN()) >> cfg;
             } else if (status_ == status::DEFINED){
                 writer::prop("spins", cfg_) >> cfg;
                 writer::prop("cost", cost_) >> cfg;
