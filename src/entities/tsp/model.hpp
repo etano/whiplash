@@ -5,7 +5,7 @@ namespace wdb { namespace entities { namespace tsp {
 
     class model : public generic::model {
     public:
-        model(std::ifstream& in, int parent, const dictionary& params)
+        model(std::ifstream& in, optional<int> parent, const dictionary& params)
             : generic::model(typename entities::info<ptype::tsp>(), in, parent, params)
         {}
 

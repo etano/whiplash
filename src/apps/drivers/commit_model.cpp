@@ -13,14 +13,14 @@ int main(int argc, char* argv[]){
     std::string file = params.pop<std::string>("file");
 
     // Optional arguments
-    int parent_id = params.pop<int>("parent_id",-1);
-    int reps = params.pop<int>("reps",1);
+    wdb::optional<int> parent_id = params.pop<int>("parent_id");
+    int reps = params.pop<int>("reps") or 1;
 
     // User-defined arguments
     // (whatever is left in params)
 
     // Insert
-    for(int i=0; i<reps; i++)
+    for(int i = 0; i < reps; i++)
         std::cout << sf.insert_model(problem_class,owner,file,parent_id,params) << std::endl;
 
     return 0;

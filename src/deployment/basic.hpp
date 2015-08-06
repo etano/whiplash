@@ -26,7 +26,7 @@ namespace wdb { namespace deployment {
         return properties.insert(record, signature(db, "properties", owner));
     }
 
-    int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, int parent_id, const params_type& params){
+    int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, optional<int> parent_id, const params_type& params){
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));
         in.close();

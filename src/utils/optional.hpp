@@ -32,6 +32,10 @@ namespace wdb {
         explicit operator bool (){
             return valid;
         }
+        optional operator || (const T& b) const {
+            if(valid) return *this;
+            return b;
+        }
         optional operator || (const optional& b) const {
             if(valid) return *this;
             return b;
@@ -85,6 +89,10 @@ namespace wdb {
         }
         explicit operator bool () const = delete;
 
+        optional operator || (const bool& b) const {
+            if(valid) return *this;
+            return b;
+        }
         optional operator || (const optional& b) const {
             if(valid) return *this;
             return b;

@@ -10,25 +10,25 @@ namespace wdb { namespace deployment {
         basic(odb::iobjectdb& db);
         void purge();
 
-        int insert_executable(std::string problem_class, // the problem class name on which the executable executes
-                              std::string owner,         // who created the model instance
-                              std::string file_name,     // where the executable is stored (this may depend on the machine!)
-                              std::string description,   // a description of what the executable does/is capable of
-                              std::string algorithm,     // the algorithm that is being executed
-                              std::string version,       // version of the executable
-                              std::string build_info,    // specification of how executable was built
+        int insert_executable(std::string problem_class,  // the problem class name on which the executable executes
+                              std::string owner,          // who created the model instance
+                              std::string file_name,      // where the executable is stored (this may depend on the machine!)
+                              std::string description,    // a description of what the executable does/is capable of
+                              std::string algorithm,      // the algorithm that is being executed
+                              std::string version,        // version of the executable
+                              std::string build_info,     // specification of how executable was built
                               const params_type& params); // extra parameters object
 
-        int insert_model(std::string problem_class,      // name of problem class (ex: "JobShop")
-                         std::string owner,              // who created the model instance
-                         std::string file_name,          // contains definition of the model
-                         int parent_id,                  // if model derived from another model in the database, the id of this parent model
+        int insert_model(std::string problem_class,       // name of problem class (ex: "JobShop")
+                         std::string owner,               // who created the model instance
+                         std::string file_name,           // contains definition of the model
+                         optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
                          const params_type& params);      // extra parameters object
 
-        int insert_property(std::string problem_class,   // name of problem class
-                            std::string owner,           // who created the property
-                            int model_id,                // id of the associated model
-                            int executable_id,           // id of the associated executable
+        int insert_property(std::string problem_class,    // name of problem class
+                            std::string owner,            // who created the property
+                            int model_id,                 // id of the associated model
+                            int executable_id,            // id of the associated executable
                             const params_type& params);   // extra parameters object
 
         void list_properties();

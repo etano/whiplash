@@ -13,9 +13,9 @@ namespace wdb { namespace entities { namespace generic {
     class model : public wdb::rte::icacheable {
     public:
         template<class I>
-        model(I info, std::ifstream& in, int parent, const dictionary& params){
+        model(I info, std::ifstream& in, optional<int> parent, const dictionary& params){
             class_ = I::name;
-            parent_ = parent;
+            parent_ = parent or -1;
             params_ = params;
         }
 
