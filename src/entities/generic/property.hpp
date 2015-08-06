@@ -1,29 +1,6 @@
 #ifndef WDB_ENTITIES_GENERIC_PROPERTY_HPP
 #define WDB_ENTITIES_GENERIC_PROPERTY_HPP
 
-namespace std {
-    std::string to_string(std::string& val){ return val; }
-}
-
-namespace wdb { namespace utils {
-
-    template <class T>
-    T str_to_val(std::string& val) { return val; }
-    template <>
-    std::string str_to_val(std::string& val) { return val; }
-    template <>
-    double str_to_val(std::string& val) { return stod(val); }
-    template <>
-    float str_to_val(std::string& val) { return stof(val); }
-    template <>
-    int str_to_val(std::string& val) { return stoi(val); }
-    template <>
-    unsigned int str_to_val(std::string& val) { return stoi(val); }
-    template <>
-    bool str_to_val(std::string& val) { return stoi(val); }
-
-} }
-
 namespace wdb { namespace entities { namespace generic {
 
     class property : public wdb::rte::icacheable {
@@ -37,11 +14,11 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(reader::read<int>(o, "status"));
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<std::unordered_map<std::string,std::string>>(o, std::tie("cfg", "params"));
+            params_ = reader::read<params_type>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
-            for(auto p : params_)
+            for(auto& p : params_.get_params())
                 std::cout << p.first << " : " << p.second << std::endl;
         }
 
@@ -57,20 +34,13 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         template<class T>
-        optional<T> get_param(std::string key){
-            auto iterator = params_.find(key);
-            if(iterator == params_.end()) return optional<T>();
-            return utils::str_to_val<T>(iterator->second);
-        }
+        T get_param(std::string key){ return params_.get<T>(key); }
 
         template<class T>
-        T set_param(std::string key, T value){
-            params_[key] = std::to_string(value);
-            return value;
-        }
+        T get_param(std::string key, const T& default_val){ return params_.get<T>(key,default_val); }
 
         template<class I>
-        property(I info, int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params, int seed, status s = status::UNDEFINED, double t = -1)
+        property(I info, int model_id, int executable_id, const params_type& params, int seed, status s = status::UNDEFINED, double t = -1)
             : class_(I::name), model_(model_id), executable_(executable_id), params_(params), seed_(seed), status_(s), walltime_(t)
         {}
 
@@ -96,7 +66,7 @@ namespace wdb { namespace entities { namespace generic {
         double get_walltime(){ return walltime_; }
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
-        std::unordered_map<std::string,std::string>& get_params(){ return params_; }
+        params_type& get_params(){ return params_; }
         void set_status(status s){ status_ = s; }
         void set_walltime(double t){ walltime_ = t; }
     protected:
@@ -105,7 +75,7 @@ namespace wdb { namespace entities { namespace generic {
         std::string class_;
         status status_;
         double walltime_;
-        std::unordered_map<std::string,std::string> params_;
+        params_type params_;
         int seed_;
     };
 

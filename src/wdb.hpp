@@ -21,6 +21,7 @@
 
 #include "utils/timer.hpp"
 #include "utils/optional.hpp"
+#include "utils/parse_args.hpp"
 
 #include "odb/interface.hpp"
 #include "rte/interface.hpp"

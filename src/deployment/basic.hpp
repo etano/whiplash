@@ -18,7 +18,7 @@ namespace wdb { namespace deployment {
         db.reset_metadata();
     }
 
-    int basic::insert_property(std::string problem_class, std::string owner, int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params){
+    int basic::insert_property(std::string problem_class, std::string owner, int model_id, int executable_id, const params_type& params){
         std::shared_ptr<entities::generic::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
         object record, serialized_cfg;
         p->serialize_cfg(serialized_cfg);
@@ -26,7 +26,7 @@ namespace wdb { namespace deployment {
         return properties.insert(record, signature(db, "properties", owner));
     }
 
-    int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, int parent_id, const std::unordered_map<std::string,std::string>& params){
+    int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, int parent_id, const params_type& params){
         std::ifstream in(file_name);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));
         in.close();
@@ -36,7 +36,7 @@ namespace wdb { namespace deployment {
         return models.insert(record, signature(db, "models", owner));
     }
 
-    int basic::insert_executable(std::string problem_class, std::string owner, std::string file_name, std::string description, std::string algorithm, std::string version, std::string build_info, const std::unordered_map<std::string,std::string>& params)
+    int basic::insert_executable(std::string problem_class, std::string owner, std::string file_name, std::string description, std::string algorithm, std::string version, std::string build_info, const params_type& params)
     {
         // TODO: is there a reason this isn't also done the same way model and property are done?
         object record;

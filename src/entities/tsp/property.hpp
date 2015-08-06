@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace tsp {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const std::unordered_map<std::string,std::string>& params, int seed, status s = status::UNDEFINED)
+        property(int model_id, int executable_id, const params_type& params, int seed, status s = status::UNDEFINED)
             : generic::property(typename entities::info<ptype::tsp>(), model_id, executable_id, params, seed, s)
         {}
 

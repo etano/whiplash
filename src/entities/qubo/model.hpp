@@ -5,7 +5,7 @@ namespace wdb { namespace entities { namespace qubo {
 
     class model : public generic::model {
     public:
-        model(std::ifstream& in, int parent, const std::unordered_map<std::string,std::string>& params)
+        model(std::ifstream& in, int parent, const params_type& params)
             : generic::model(typename entities::info<ptype::qubo>(), in, parent, params)
         {}
 

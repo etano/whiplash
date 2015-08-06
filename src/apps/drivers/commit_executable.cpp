@@ -1,5 +1,4 @@
 #include "wdb.hpp"
-#include "utils/parse_args.hpp"
 
 using wdb::odb::mongo::objectdb;
 
@@ -7,23 +6,16 @@ int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
 
-    auto params = wdb::parse_args(argc,argv);
+    wdb::params_type params(argc,argv);
 
     // Required arguments
-    std::string problem_class = params["class"];
-    params.erase("class");
-    std::string owner = params["owner"];
-    params.erase("owner");
-    std::string file = params["file"];
-    params.erase("file");
-    std::string description = params["description"];
-    params.erase("description");
-    std::string algorithm = params["algorithm"];
-    params.erase("algorithm");
-    std::string version = params["version"];
-    params.erase("version");
-    std::string build = params["build"];
-    params.erase("build");
+    std::string problem_class = params.pop<std::string>("class");
+    std::string owner = params.pop<std::string>("owner");
+    std::string file = params.pop<std::string>("file");
+    std::string description = params.pop<std::string>("description");
+    std::string algorithm = params.pop<std::string>("algorithm");
+    std::string version = params.pop<std::string>("version");
+    std::string build = params.pop<std::string>("build");
 
     // Optional arguments
 
