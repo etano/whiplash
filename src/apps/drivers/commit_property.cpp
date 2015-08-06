@@ -5,8 +5,7 @@ using wdb::odb::mongo::objectdb;
 int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     wdb::deployment::basic sf(db);
-
-    wdb::params_type params(argc,argv);
+    wdb::deployment::basic::params_type params(argc,argv);
 
     // Required arguments
     std::string problem_class = params.pop<std::string>("class");

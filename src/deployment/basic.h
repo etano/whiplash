@@ -5,6 +5,8 @@ namespace wdb { namespace deployment {
 
     class basic {
     public:
+        typedef parameters params_type;
+
         basic(odb::iobjectdb& db);
         void purge();
 

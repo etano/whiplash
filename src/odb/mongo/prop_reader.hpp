@@ -61,7 +61,7 @@ namespace wdb { namespace odb { namespace mongo {
         }
 
         template<>
-        params_type get<params_type>(object_view doc, std::string field){
+        dictionary get<dictionary>(object_view doc, std::string field){
             std::unordered_map<std::string,std::string> umap;
             auto o = get<object_view>(doc,field);
             if (o.length() > 5) { // FIXME: HACK! bug in bsoncxx document view iterator for unset elements

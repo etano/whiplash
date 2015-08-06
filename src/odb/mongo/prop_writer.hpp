@@ -58,8 +58,8 @@ namespace wdb { namespace odb { namespace mongo {
         static prop_type<std::function<void(sub_document)>> prop(std::string name, const std::unordered_map<std::string,std::string>& umap){
             return bsoncxx::builder::basic::kvp(name, decompose(umap));
         }
-        static prop_type<std::function<void(sub_document)>> prop(std::string name, const params_type& params){
-            return prop(name, params.get_params());
+        static prop_type<std::function<void(sub_document)>> prop(std::string name, const dictionary& params){
+            return prop(name, params.get_container());
         }
     };
 

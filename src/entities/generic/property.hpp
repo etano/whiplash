@@ -14,11 +14,11 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(reader::read<int>(o, "status"));
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<params_type>(o, std::tie("cfg", "params"));
+            params_ = reader::read<dictionary>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
-            for(auto& p : params_.get_params())
+            for(auto& p : params_.get_container())
                 std::cout << p.first << " : " << p.second << std::endl;
         }
 
@@ -50,7 +50,7 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         template<class I>
-        property(I info, int model_id, int executable_id, const params_type& params, int seed, status s = status::UNDEFINED, double t = -1)
+        property(I info, int model_id, int executable_id, const dictionary& params, int seed, status s = status::UNDEFINED, double t = -1)
             : class_(I::name), model_(model_id), executable_(executable_id), params_(params), seed_(seed), status_(s), walltime_(t)
         {}
 
@@ -76,7 +76,7 @@ namespace wdb { namespace entities { namespace generic {
         double get_walltime(){ return walltime_; }
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
-        params_type& get_params(){ return params_; }
+        dictionary& get_params(){ return params_; }
         void set_status(status s){ status_ = s; }
         void set_walltime(double t){ walltime_ = t; }
     protected:
@@ -85,7 +85,7 @@ namespace wdb { namespace entities { namespace generic {
         std::string class_;
         status status_;
         double walltime_;
-        params_type params_;
+        dictionary params_;
         int seed_;
     };
 
