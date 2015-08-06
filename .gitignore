@@ -4,6 +4,6 @@ lib/
 share/
 src/apps/*.app
 src/tests/*.test
-src/tests/drivers/*.driver
+src/apps/drivers/*.driver
 *.swp
 *.swo
