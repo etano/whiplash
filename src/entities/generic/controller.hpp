@@ -25,6 +25,10 @@ namespace wdb { namespace entities { namespace generic {
             p.set_status(property::status::DEFINED);
             p.set_walltime(wt.get_time());
         }
+
+        virtual void prepare_for_segue(icontroller_delegate& dest) override {
+            printf("Preparing for segue...\n");
+        }
     };
 
 } } }
