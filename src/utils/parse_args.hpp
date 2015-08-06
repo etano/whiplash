@@ -53,49 +53,46 @@ namespace wdb {
             params_ = params;
         }
 
-        // Required
+        // Using optional
         template<typename T>
-        T get(const std::string& key){
+        optional<T> get(const std::string& key) const {
             auto iterator = params_.find(key);
-            if(iterator == params_.end()){
-                std::cerr << "ERROR: " << key << " not found!" << std::endl;
-                exit(1);
-            }
+            if(iterator == params_.end()) return optional<T>();
             return convert<T>::str_to_val(iterator->second);
         }
 
         template<typename T>
-        T pop(const std::string& key){
-            T val(get<T>(key));
-            params_.erase(key);
+        void set(const std::string& key, const T& val){
+            params_[key] = std::to_string(val);
+        }
+
+        template<typename T>
+        optional<T> pop(const std::string& key){
+            optional<T> val = get<T>(key);
+            if(val) params_.erase(key);
             return val;
         }
 
-        // Optional
+        // With side effects
         template<typename T>
         T get(const std::string& key, const T& default_val){
-            auto iterator = params_.find(key);
-            if(iterator == params_.end()){
-                params_[key] = default_val;
+            optional<T> val = get<T>(key);
+            if(!val){
+                set(key, default_val);
                 return default_val;
             }
-            return convert<T>::str_to_val(iterator->second);
+            return val;
         }
 
         template<typename T>
         T pop(const std::string& key, const T& default_val){
-            T val = get<T>(key,default_val);
+            T val = get<T>(key, default_val);
             params_.erase(key);
             return val;
         }
 
-        template<typename T>
-        void set(const std::string& key, const T& val) { params_[key] = std::to_string(val); }
-
         const std::unordered_map<std::string,std::string>& get_params() const { return params_; }
-
         // TODO: make an iterator
-
     private:
         // Specializations
         template<class T>

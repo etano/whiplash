@@ -22,9 +22,11 @@ namespace wdb {
 
         optional() : valid(false) {}
         operator T () {
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return *(T*)this;
         }
         operator T () const {
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return *(T*)this;
         }
         explicit operator bool (){
@@ -39,6 +41,7 @@ namespace wdb {
             return b;
         }
         T unwrap() const {
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return *(T*)this;
         }
         bool is_null(){
@@ -59,6 +62,7 @@ namespace wdb {
 
         operator R (){
             if(func){ this->value = func(); this->valid = true; }
+            if(!this->valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return *(R*)this;
         }
     private:
@@ -73,6 +77,7 @@ namespace wdb {
         optional() : valid(false) {}
 
         operator bool&& () const {
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return std::move(*(bool*)this);
         }
         explicit operator bool&& (){
@@ -89,6 +94,7 @@ namespace wdb {
             return b;
         }
         bool&& unwrap() const {
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
             return std::move(*(bool*)this);
         }
         bool is_null(){

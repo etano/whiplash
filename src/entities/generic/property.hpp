@@ -34,10 +34,20 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         template<class T>
-        T get_param(std::string key){ return params_.get<T>(key); }
+        optional<T> get_param(std::string key){ return params_.get<T>(key); }
 
         template<class T>
-        T get_param(std::string key, const T& default_val){ return params_.get<T>(key,default_val); }
+        optional<T> get_param(std::string key, const T& default_val){ return params_.get<T>(key, default_val); }
+
+        template<class T>
+        void set_param(std::string key, const T& value){ params_.set<T>(key, value); }
+
+        template<class T>
+        optional_expr<T> optional_set_param(std::string key, const T& default_value){
+           return [this,key,default_value](){
+               this->set_param(key, default_value); return default_value;
+           };
+        }
 
         template<class I>
         property(I info, int model_id, int executable_id, const params_type& params, int seed, status s = status::UNDEFINED, double t = -1)
