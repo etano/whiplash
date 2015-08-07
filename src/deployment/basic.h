@@ -31,6 +31,13 @@ namespace wdb { namespace deployment {
                             int executable_id,            // id of the associated executable
                             const params_type& params);   // extra parameters object
 
+        std::vector<int> insert_properties(std::string problem_class,    // name of problem class
+                            std::string owner,            // who created the property
+                            std::vector<int>& model_ids,  // id of the associated model
+                            int executable_id,            // id of the associated executable
+                            const params_type& params,    // extra parameters object
+                            int reps);                    // number of repetitions
+
         void list_properties();
         void list_model(int id);
 

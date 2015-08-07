@@ -26,6 +26,19 @@ namespace wdb { namespace deployment {
         return properties.insert(record, signature(db, "properties", owner));
     }
 
+    std::vector<int> basic::insert_properties(std::string problem_class, std::string owner, std::vector<int>& model_ids, int executable_id, const params_type& params, int reps){
+        std::vector<std::shared_ptr<odb::iobject>> records;
+        for(auto& model_id : model_ids)
+            for(int i=0; i<reps; i++) {
+                records.emplace_back(std::make_shared<object>());
+                std::shared_ptr<entities::generic::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
+                object serialized_cfg;
+                p->serialize_cfg(serialized_cfg);
+                p->serialize(*records[i], serialized_cfg);
+            }
+        return properties.insert_many(records, db, "properties", owner);
+    }
+
     int basic::insert_model(std::string problem_class, std::string owner, std::string path, optional<int> parent_id, const params_type& params){
         std::ifstream in(path);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));

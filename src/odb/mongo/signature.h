@@ -7,13 +7,14 @@ namespace wdb { namespace odb { namespace mongo {
     public:
         signature(iobject& s);
         signature(iobjectdb& db, std::string collection, std::string owner, int timestamp = (int)std::time(nullptr));
+        signature(int id, std::string owner, int timestamp = (int)std::time(nullptr));
         virtual void touch() override;
         virtual int get_id() const override;
         virtual void sign(iobject& record) const override;
     private:
-        std::string owner;
-        int timestamp;
-        int id;
+        std::string owner_;
+        int timestamp_;
+        int id_;
     };
 
 } } }

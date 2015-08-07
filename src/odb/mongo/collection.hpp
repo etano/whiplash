@@ -42,6 +42,19 @@ namespace wdb { namespace odb { namespace mongo {
         return s.get_id();
     }
 
+    std::vector<int> collection::insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner){
+        std::vector<bsoncxx::builder::basic::document> docs;
+        int n_docs = os.size();
+        std::vector<int> ids = db.get_next_ids(collection,n_docs);
+        for(int i=0; i<n_docs; i++){
+            signature s(ids[i], owner);
+            s.sign(*os[i]);
+            docs.push_back(std::move(static_cast<odb::mongo::object&>(*os[i]).w.builder));
+        }
+        coll.insert_many(docs);
+        return ids;
+    }
+
     void collection::remove(iobject& o){
         coll.delete_one(static_cast<odb::mongo::object&>(o).w.builder);
     }

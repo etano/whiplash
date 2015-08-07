@@ -5,7 +5,7 @@ wdb_home = '/Users/ethan/src/whiplashdb'
 prob_class = 'ising'
 owner = 'ebrown'
 n_probs = 100
-n_reps = 100
+n_reps = 1000
 n_sweeps = 1000
 schedule = 'linear'
 T_0 = 10.0
@@ -22,10 +22,6 @@ executable_id = wdb.CommitExecutable(executable)
 # Models
 print 'Committing models'
 model = {'class':prob_class,'owner':owner}
-#model_ids = []
-#for i_prob in range(n_probs):
-#    model['path'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
-#    model_ids.append(wdb.CommitModel(model))
 model['path'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
 model_ids = wdb.CommitModels(model, n_probs)
 
