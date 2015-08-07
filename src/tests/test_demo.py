@@ -4,7 +4,7 @@ wdb_home = '/Users/ethan/src/whiplashdb'
 # Settings
 prob_class = 'ising'
 owner = 'ebrown'
-n_probs = 100
+n_probs = 1
 n_reps = 100
 n_sweeps = 1000
 schedule = 'linear'
