@@ -24,6 +24,8 @@ int main(int argc, char* argv[]){
 
     // Insert
     std::vector<int> ids = f.insert_properties(problem_class, owner, model_ids, executable_id, params, reps);
+    for(auto& id : ids)
+        std::cout << id << std::endl;
 
     return 0;
 }

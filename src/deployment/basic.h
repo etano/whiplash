@@ -25,6 +25,12 @@ namespace wdb { namespace deployment {
                          optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
                          const params_type& params);      // extra parameters object
 
+        std::vector<int> insert_models(std::string problem_class,      // name of problem class (ex: "JobShop")
+                         std::string owner,               // who created the model instance
+                         const std::vector<std::string>& paths,  // contains definition of the model
+                         optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
+                         const params_type& params);      // extra parameters object
+
         int insert_property(std::string problem_class,    // name of problem class
                             std::string owner,            // who created the property
                             int model_id,                 // id of the associated model
@@ -33,7 +39,7 @@ namespace wdb { namespace deployment {
 
         std::vector<int> insert_properties(std::string problem_class,    // name of problem class
                             std::string owner,            // who created the property
-                            std::vector<int>& model_ids,  // id of the associated model
+                            const std::vector<int>& model_ids,  // id of the associated model
                             int executable_id,            // id of the associated executable
                             const params_type& params,    // extra parameters object
                             int reps);                    // number of repetitions

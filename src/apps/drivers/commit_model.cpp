@@ -13,18 +13,18 @@ int main(int argc, char* argv[]){
     // Required arguments
     std::string problem_class = params.pop<std::string>("class");
     std::string owner = params.pop<std::string>("owner");
-    std::string path = params.pop<std::string>("path");
+    std::vector<std::string> paths = params.pop<std::vector<std::string>>("path");
 
     // Optional arguments
     wdb::optional<int> parent_id = params.pop<int>("parent_id");
-    int reps = params.pop<int>("reps") or 1;
 
     // User-defined arguments
     // (whatever is left in params)
 
     // Insert
-    for(int i = 0; i < reps; i++)
-        std::cout << f.insert_model(problem_class,owner,path,parent_id,params) << std::endl;
+    std::vector<int> ids = f.insert_models(problem_class,owner,paths,parent_id,params);
+    for(auto& id : ids)
+        std::cout << id << std::endl;
 
     return 0;
 }
