@@ -44,15 +44,14 @@ namespace wdb { namespace odb { namespace mongo {
 
     std::vector<int> collection::insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner){
         std::vector<bsoncxx::builder::basic::document> docs;
-        for(auto& o : os){
-            signature s(db, collection, owner);
-            s.sign(*o);
-            docs.push_back(std::move(static_cast<odb::mongo::object&>(*o).w.builder));
+        int n_docs = os.size();
+        std::vector<int> ids = db.get_next_ids(collection,n_docs);
+        for(int i=0; i<n_docs; i++){
+            signature s(ids[i], owner);
+            s.sign(*os[i]);
+            docs.push_back(std::move(static_cast<odb::mongo::object&>(*os[i]).w.builder));
         }
-        auto id_map = coll.insert_many(docs)->inserted_ids();
-        std::vector<int> ids;
-        for(auto& id_pair : id_map)
-            ids.push_back((int)id_pair.second.get_int32());
+        coll.insert_many(docs);
         return ids;
     }
 

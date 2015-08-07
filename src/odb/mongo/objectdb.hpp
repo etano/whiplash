@@ -35,6 +35,28 @@ namespace wdb { namespace odb { namespace mongo {
         return res;
     }
 
+    std::vector<int> objectdb::get_next_ids(std::string cname, int n_ids){
+        using bsoncxx::builder::stream::document;
+        using bsoncxx::builder::stream::open_document;
+        using bsoncxx::builder::stream::close_document;
+
+        document filter, update;
+
+        filter << "_id" << cname;
+        auto doc = db["counters"].find_one(filter);
+        int prev_last_id = detail::get<int>(*doc,"seq");
+        int new_last_id = prev_last_id + n_ids;
+
+        update << "$set" << open_document << "seq" << new_last_id << close_document;
+        db["counters"].update_one(filter, update);
+
+        std::vector<int> ids;
+        for (int i=0; i<n_ids; i++)
+            ids.push_back(i);
+
+        return ids;
+    }
+
     void objectdb::reset_metadata(){
         auto&& counters = db["counters"];
         object properties_counter, models_counter, executables_counter;

@@ -4,28 +4,33 @@
 namespace wdb { namespace odb { namespace mongo {
 
     signature::signature(iobject& record){
-        this->id = prop_reader::read<int>(record, "_id");
-        this->owner = prop_reader::read<std::string>(record, "owner");
-        this->timestamp = prop_reader::read<int>(record, "timestamp");
+        this->id_ = prop_reader::read<int>(record, "_id");
+        this->owner_ = prop_reader::read<std::string>(record, "owner");
+        this->timestamp_ = prop_reader::read<int>(record, "timestamp");
     }
 
     signature::signature(iobjectdb& db, std::string collection, std::string owner, int timestamp) 
-        : id(db.get_next_id(collection)), owner(owner), timestamp(timestamp)
+        : id_(db.get_next_id(collection)), owner_(owner), timestamp_(timestamp)
+    {
+    }
+
+    signature::signature(int id, std::string owner, int timestamp)
+        : id_(id), owner_(owner), timestamp_(timestamp)
     {
     }
 
     int signature::get_id() const {
-        return this->id;
+        return this->id_;
     }
 
     void signature::touch(){
-        this->timestamp = (int)std::time(nullptr);
+        this->timestamp_ = (int)std::time(nullptr);
     }
 
     void signature::sign(iobject& record) const {
-        prop_writer::prop("_id", this->id) >> record;
-        prop_writer::prop("timestamp", this->timestamp) >> record;
-        prop_writer::prop("owner", this->owner) >> record;
+        prop_writer::prop("_id", this->id_) >> record;
+        prop_writer::prop("timestamp", this->timestamp_) >> record;
+        prop_writer::prop("owner", this->owner_) >> record;
     }
 
 } } }
