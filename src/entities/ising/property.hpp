@@ -10,7 +10,7 @@ namespace wdb { namespace entities { namespace ising {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const dictionary& params, int seed, status s = status::UNDEFINED)
+        property(int model_id, int executable_id, const optional<dictionary>& params, int seed, status s = status::UNDEFINED)
             : generic::property(typename entities::info<ptype::ising>(), model_id, executable_id, params, seed, s)
         {}
 

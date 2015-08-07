@@ -5,7 +5,7 @@ namespace wdb { namespace entities { namespace sat {
 
     class model : public generic::model {
     public:
-        model(std::ifstream& in, optional<int> parent, const dictionary& params)
+        model(std::ifstream& in, optional<int> parent, const optional<dictionary>& params)
             : generic::model(typename entities::info<ptype::sat>(), in, parent, params)
         {}
 

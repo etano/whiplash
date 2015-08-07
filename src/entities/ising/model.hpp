@@ -8,7 +8,7 @@ namespace wdb { namespace entities { namespace ising {
         typedef std::pair<std::vector<spin_type>, double> edge_type;
         typedef std::vector<spin_type> node_type;
     public:
-        model(std::ifstream& in, optional<int> parent, const dictionary& params)
+        model(std::ifstream& in, optional<int> parent, const optional<dictionary>& params)
             : generic::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
         {
             std::map<std::string,spin_type> index;
@@ -43,10 +43,10 @@ namespace wdb { namespace entities { namespace ising {
         model(const odb::iobject& o)
             : generic::model(o), N_(0)
         {
-            for(auto e : reader::read<reader::array_type>(o, "cfg", "edges")){
+            for(auto e : reader::read<reader::array_type>(o, "cfg", "edges").unwrap()){
                 std::vector<spin_type> inds;
-                auto sub_array = reader::read<reader::array_type>(e);
-                for(const auto a : reader::read<reader::array_type>(sub_array[0])){
+                auto sub_array = reader::read<reader::array_type>(e).unwrap();
+                for(const auto a : reader::read<reader::array_type>(sub_array[0]).unwrap()){
                     spin_type a_ = reader::read<spin_type>(a);
                     inds.push_back(a_);
                 }

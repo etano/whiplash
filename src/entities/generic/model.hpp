@@ -13,9 +13,9 @@ namespace wdb { namespace entities { namespace generic {
     class model : public wdb::rte::icacheable {
     public:
         template<class I>
-        model(I info, std::ifstream& in, optional<int> parent, const dictionary& params){
+        model(I info, std::ifstream& in, optional<int> parent, const optional<dictionary>& params){
             class_ = I::name;
-            parent_ = parent or -1;
+            parent_ = parent;
             params_ = params;
         }
 
@@ -31,8 +31,10 @@ namespace wdb { namespace entities { namespace generic {
 
         virtual void serialize(odb::iobject& record, odb::iobject& cfg){
             writer::prop("class", class_) >> record;
-            writer::prop("parent", parent_) >> record;
-            writer::prop("params", params_) >> cfg;
+            if (parent_)
+                writer::prop("parent", parent_) >> record;
+            if (params_)
+                writer::prop("params", params_) >> cfg;
             writer::prop("cfg", cfg) >> record;
         }
 
@@ -43,8 +45,8 @@ namespace wdb { namespace entities { namespace generic {
         std::string get_class(){ return class_; }
     protected:
         std::string class_;
-        int parent_;
-        dictionary params_;
+        optional<int> parent_;
+        optional<dictionary> params_;
     };
 
 } } }
