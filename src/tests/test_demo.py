@@ -16,7 +16,7 @@ executable_path = wdb_home+'/src/apps/test.app'
 
 # Executable
 print 'Committing executables'
-executable = {'class':prob_class,'owner':owner,'description':'','algorithm':'SA','version':'','build':'','schedule':schedule,'path':executable_path}
+executable = {'class':prob_class,'owner':owner,'description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':schedule,'path':executable_path}
 executable_id = wdb.CommitExecutable(executable)
 
 # Models
@@ -24,9 +24,9 @@ print 'Committing models'
 model = {'class':prob_class,'owner':owner}
 #model_ids = []
 #for i_prob in range(n_probs):
-#    model['file'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
+#    model['path'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
 #    model_ids.append(wdb.CommitModel(model))
-model['file'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
+model['path'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
 model_ids = wdb.CommitModels(model, n_probs)
 
 # Properties

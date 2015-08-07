@@ -26,8 +26,8 @@ namespace wdb { namespace deployment {
         return properties.insert(record, signature(db, "properties", owner));
     }
 
-    int basic::insert_model(std::string problem_class, std::string owner, std::string file_name, optional<int> parent_id, const params_type& params){
-        std::ifstream in(file_name);
+    int basic::insert_model(std::string problem_class, std::string owner, std::string path, optional<int> parent_id, const params_type& params){
+        std::ifstream in(path);
         std::shared_ptr<entities::generic::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));
         in.close();
         object record, serialized_cfg;
@@ -36,13 +36,13 @@ namespace wdb { namespace deployment {
         return models.insert(record, signature(db, "models", owner));
     }
 
-    int basic::insert_executable(std::string problem_class, std::string owner, std::string file_name, std::string description, std::string algorithm, std::string version, std::string build_info, const params_type& params)
+    int basic::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build_info, const params_type& params)
     {
         // TODO: is there a reason this isn't also done the same way model and property are done?
         object record;
 
         // Required arguments
-        writer::prop("file_name", file_name) >> record;
+        writer::prop("path", path) >> record;
         writer::prop("class", problem_class) >> record;
         writer::prop("description", description) >> record;
         writer::prop("algorithm", algorithm) >> record;
@@ -61,7 +61,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::slurm::executable>( new rte::slurm::executable(reader::read<std::string>(*executables.find(id), "file_name")) );
+        return std::shared_ptr<rte::slurm::executable>( new rte::slurm::executable(reader::read<std::string>(*executables.find(id), "path")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){

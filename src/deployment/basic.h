@@ -12,7 +12,7 @@ namespace wdb { namespace deployment {
 
         int insert_executable(std::string problem_class,  // the problem class name on which the executable executes
                               std::string owner,          // who created the model instance
-                              std::string file_name,      // where the executable is stored (this may depend on the machine!)
+                              std::string path,           // where the executable is stored (this may depend on the machine!)
                               std::string description,    // a description of what the executable does/is capable of
                               std::string algorithm,      // the algorithm that is being executed
                               std::string version,        // version of the executable
@@ -21,7 +21,7 @@ namespace wdb { namespace deployment {
 
         int insert_model(std::string problem_class,       // name of problem class (ex: "JobShop")
                          std::string owner,               // who created the model instance
-                         std::string file_name,           // contains definition of the model
+                         std::string path,                // contains definition of the model
                          optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
                          const params_type& params);      // extra parameters object
 
