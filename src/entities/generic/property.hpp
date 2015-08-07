@@ -15,7 +15,7 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(tmp_status);
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<parameters::container_type>(o, std::tie("cfg", "params"));
+            params_ = reader::read<parameters>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
@@ -38,12 +38,18 @@ namespace wdb { namespace entities { namespace generic {
 
         template<class T>
         optional<T> get_param(std::string key){
-            if (params_) return params_.unwrap().get<T>(key);
+            if (params_)
+                if (params_.unwrap().get_container())
+                    return params_.unwrap().get<T>(key);
             return optional<T>();
         }
 
         template<class T>
-        void set_param(std::string key, const T& value){ params_.unwrap().set<T>(key, value); }
+        void set_param(std::string key, const T& value){
+            if (!params_)
+                params_ = optional<parameters>(parameters::container_type());
+            params_.unwrap().set<T>(key, value);
+        }
 
         template<class T>
         optional_expr<T> optional_set_param(std::string key, const T& default_value){
@@ -69,12 +75,8 @@ namespace wdb { namespace entities { namespace generic {
             writer::prop("walltime", walltime_) >> record;
             writer::prop("seed", int(seed_)) >> record;
             if (params_)
-                if (params_.unwrap().get_container()){
-                    for(auto& e : params_.unwrap().get_container().unwrap())
-                        std::cout << e.first << " " << e.second << std::endl;
+                if (params_.unwrap().get_container())
                     writer::prop("params", params_) >> cfg;
-                }
-            std::cout << "wrote params" << std::endl;
             writer::prop("cfg", cfg) >> record;
         }
 

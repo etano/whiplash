@@ -25,10 +25,6 @@ namespace wdb { namespace deployment {
     }
 
     std::vector<int> basic::insert_properties(std::string problem_class, std::string owner, const std::vector<int>& model_ids, int executable_id, optional<params_type> params, int reps){
-        if (params)
-            if (params.unwrap().get_container())
-                for(auto& e : params.unwrap().get_container().unwrap())
-                    std::cout << e.first << " " << e.second << std::endl;
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& model_id : model_ids)
             for(int i=0; i<reps; i++) {

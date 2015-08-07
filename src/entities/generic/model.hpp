@@ -15,7 +15,6 @@ namespace wdb { namespace entities { namespace generic {
         template<class I>
         model(I info, std::ifstream& in, optional<int> parent, optional<parameters> params){
             class_ = I::name;
-            std::cout << "asdf" << std::endl;
             parent_ = parent;
             params_ = params;
         }
@@ -23,8 +22,7 @@ namespace wdb { namespace entities { namespace generic {
         model(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
             parent_ = reader::read<int>(o, "parent");
-            std::cout << "asdf2" << std::endl;
-            params_ = reader::read<parameters::container_type>(o, std::tie("cfg", "params"));
+            params_ = reader::read<parameters>(o, std::tie("cfg", "params"));
         }
 
         virtual ~model() {};
@@ -35,7 +33,6 @@ namespace wdb { namespace entities { namespace generic {
             writer::prop("class", class_) >> record;
             if (parent_)
                 writer::prop("parent", parent_) >> record;
-            std::cout << "asdf3" << std::endl;
             if (params_)
                 if (params_.unwrap().get_container())
                     writer::prop("params", params_) >> cfg;
