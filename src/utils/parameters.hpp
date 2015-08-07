@@ -68,7 +68,7 @@ namespace wdb {
             static std::vector<T> str_to_val(const std::string& vals) {
                 std::istringstream val_ss(vals);
                 std::string val_s;
-                std::vector<int> val;
+                std::vector<T> val;
                 while (getline(val_ss,val_s,','))
                     val.push_back(utils::str_to_val<T>(val_s));
                 return val;

@@ -9,10 +9,10 @@ def CommitModel(model):
     args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
     return Commit(args)[0]
 
-def CommitModels(model, reps):
+def CommitModels(model, paths):
     args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
-    args.append('-reps')
-    args.append(str(reps))
+    args.append('-path')
+    args.append(','.join(paths))
     return Commit(args)
 
 def CommitProperty(property):

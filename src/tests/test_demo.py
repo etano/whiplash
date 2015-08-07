@@ -22,8 +22,10 @@ executable_id = wdb.CommitExecutable(executable)
 # Models
 print 'Committing models'
 model = {'class':prob_class,'owner':owner}
-model['path'] = wdb_home+'/src/apps/108problem.lat' # GenRandomLattice(n_spins,spin_type,lattice_type,coupling_type)
-model_ids = wdb.CommitModels(model, n_probs)
+paths = []
+for i_prob in range(n_probs):
+    paths.append(wdb_home+'/src/apps/108problem.lat')
+model_ids = wdb.CommitModels(model, paths)
 
 # Properties
 print 'Committing properties'
