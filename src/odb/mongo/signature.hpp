@@ -6,7 +6,7 @@ namespace wdb { namespace odb { namespace mongo {
     signature::signature(iobject& record){
         this->id = prop_reader::read<int>(record, "_id");
         this->owner = prop_reader::read<std::string>(record, "owner");
-        this->timestamp = prop_reader::read<int>(record, "timestamp");  
+        this->timestamp = prop_reader::read<int>(record, "timestamp");
     }
 
     signature::signature(iobjectdb& db, std::string collection, std::string owner, int timestamp) 

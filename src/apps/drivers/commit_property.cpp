@@ -23,9 +23,7 @@ int main(int argc, char* argv[]){
     // (whatever is left in params)
 
     // Insert
-    for(auto& model_id : model_ids)
-        for(int i=0; i<reps; i++)
-            std::cout << f.insert_properties(problem_class, owner, model_id, executable_id, params) << std::endl;
+    std::vector<int> ids = f.insert_properties(problem_class, owner, model_ids, executable_id, params, reps);
 
     return 0;
 }

@@ -39,7 +39,7 @@ namespace wdb { namespace odb { namespace mongo {
         auto&& counters = db["counters"];
         object properties_counter, models_counter, executables_counter;
         counters.delete_many({});
-        
+
         prop_writer::prop("_id", "properties") >> properties_counter;
         prop_writer::prop("seq", -1) >> properties_counter;
         prop_writer::prop("_id", "models") >> models_counter;

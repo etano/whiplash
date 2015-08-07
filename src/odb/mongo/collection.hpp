@@ -42,16 +42,18 @@ namespace wdb { namespace odb { namespace mongo {
         return s.get_id();
     }
 
-    int collection::insert_many(std::vector<std::shared_ptr<iobject>>& os, const isignature& s){
-        mongocxx::bulk_write bw(0);
+    std::vector<int> collection::insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner){
+        std::vector<bsoncxx::builder::basic::document> docs;
         for(auto& o : os){
+            signature s(db, collection, owner);
             s.sign(*o);
-            std::cout << "ji" << s.get_id() << std::endl;
-            bw.append(mongocxx::model::insert_one(static_cast<odb::mongo::object&>(*o).w.builder));
-            std::cout << s.get_id() << std::endl;
+            docs.push_back(std::move(static_cast<odb::mongo::object&>(*o).w.builder));
         }
-        coll.bulk_write(bw);
-        return 0;
+        auto id_map = coll.insert_many(docs)->inserted_ids();
+        std::vector<int> ids;
+        for(auto& id_pair : id_map)
+            ids.push_back((int)id_pair.second.get_int32());
+        return ids;
     }
 
     void collection::remove(iobject& o){
