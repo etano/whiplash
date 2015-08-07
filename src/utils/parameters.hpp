@@ -3,7 +3,7 @@
 
 
 namespace std {
-    std::string to_string(std::string& val){ return val; }
+    std::string to_string(const std::string& val){ return val; }
 }
 
 namespace wdb { namespace utils {
