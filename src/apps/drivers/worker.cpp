@@ -3,28 +3,20 @@ using wdb::odb::mongo::objectdb;
 
 int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
+    using dep = wdb::deployment::basic; dep sf(db);
+    wdb::rte::slurm::root_controller root;
 
-    using dep = wdb::deployment::basic;
+    auto ising_controller = wdb::entities::factory::make_entity<dep::e::controller>("ising");
+    auto sat_controller   = wdb::entities::factory::make_entity<dep::e::controller>("sat");
+    auto qubo_controller  = wdb::entities::factory::make_entity<dep::e::controller>("qubo");
 
-    dep sf(db);
+    root.add_controller( *ising_controller );
+    root.add_controller( *sat_controller );
+    root.add_controller( *qubo_controller );
 
-    wdb::rte::slurm::root_controller rc;
+    root.declare_segue( *sat_controller, *ising_controller );
+    root.declare_segue( *ising_controller, *sat_controller );
 
-    rc.add_controller( *wdb::entities::factory::make_entity<dep::e::controller>("ising") );
-    rc.add_controller( *wdb::entities::factory::make_entity<dep::e::controller>("sat") );
-
-    rc.yield();
-
-    /*void** params = (void**)malloc(sizeof(void*)*std::max(10,argc));
-    for(int i = 0; i < argc; i++) params[i] = argv[i];
-
-    auto H(sf.fetch_model(0));    params[1] = &(*H);
-    auto I(sf.fetch_property(0)); params[2] = &(*I);
-
-    wdb::rte::slurm::executable test("apps/test.app");
-
-    test(argc, (char**)params);
-    free(params);*/
-
+    root.yield();
     return 0;
 }

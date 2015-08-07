@@ -7,6 +7,7 @@ namespace wdb { namespace rte {
     public:
         virtual ~icontroller_delegate(){}
         virtual void resolve(rte::iexecutable& x, wdb::rte::icacheable& m, wdb::rte::icacheable& p) = 0; // type erasure?
+        virtual void prepare_for_segue(icontroller_delegate& dest) = 0;
     };
 
 } }
