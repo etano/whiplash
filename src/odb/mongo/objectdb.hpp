@@ -52,7 +52,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         std::vector<int> ids;
         for (int i=0; i<n_ids; i++)
-            ids.push_back(i);
+            ids.push_back(prev_last_id + i + 1);
 
         return ids;
     }
