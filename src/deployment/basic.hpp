@@ -18,13 +18,17 @@ namespace wdb { namespace deployment {
         db.reset_metadata();
     }
 
-    int basic::insert_property(std::string problem_class, std::string owner, int model_id, int executable_id, const params_type& params){
+    int basic::insert_property(std::string problem_class, std::string owner, int model_id, int executable_id, optional<params_type> params){
         std::vector<int> model_ids{model_id};
         int reps = 1;
         return insert_properties(problem_class, owner, model_ids, executable_id, params, reps)[0];
     }
 
-    std::vector<int> basic::insert_properties(std::string problem_class, std::string owner, const std::vector<int>& model_ids, int executable_id, const params_type& params, int reps){
+    std::vector<int> basic::insert_properties(std::string problem_class, std::string owner, const std::vector<int>& model_ids, int executable_id, optional<params_type> params, int reps){
+        if (params)
+            if (params.unwrap().get_container())
+                for(auto& e : params.unwrap().get_container().unwrap())
+                    std::cout << e.first << " " << e.second << std::endl;
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& model_id : model_ids)
             for(int i=0; i<reps; i++) {
@@ -37,12 +41,12 @@ namespace wdb { namespace deployment {
         return properties.insert_many(records, db, "properties", owner);
     }
 
-    int basic::insert_model(std::string problem_class, std::string owner, std::string path, optional<int> parent_id, const params_type& params){
+    int basic::insert_model(std::string problem_class, std::string owner, std::string path, optional<int> parent_id, optional<params_type> params){
         std::vector<std::string> paths{path};
         return insert_models(problem_class, owner, paths, parent_id, params)[0];
     }
 
-    std::vector<int> basic::insert_models(std::string problem_class, std::string owner, const std::vector<std::string>& paths, optional<int> parent_id, const params_type& params){
+    std::vector<int> basic::insert_models(std::string problem_class, std::string owner, const std::vector<std::string>& paths, optional<int> parent_id, optional<params_type> params){
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& path : paths){
             std::ifstream in(path);
@@ -56,7 +60,7 @@ namespace wdb { namespace deployment {
         return models.insert_many(records, db, "models", owner);
     }
 
-    int basic::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build_info, const params_type& params)
+    int basic::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build_info, optional<params_type> params)
     {
         // TODO: is there a reason this isn't also done the same way model and property are done?
         object record;
@@ -70,7 +74,9 @@ namespace wdb { namespace deployment {
         writer::prop("build_info", build_info) >> record;
 
         // Optional arguments
-        writer::prop("cfg", params) >> record;
+        if (params)
+            if (params.unwrap().get_container())
+                writer::prop("cfg", params) >> record;
 
         // Sign and insert
         return executables.insert(record, signature(db, "executables", owner)); // TODO: buggy

@@ -19,7 +19,6 @@ int main(int argc, char* argv[]){
     wdb::optional<int> parent_id = params.pop<int>("parent_id");
 
     // User-defined arguments
-    // (whatever is left in params)
 
     // Insert
     std::vector<int> ids = f.insert_models(problem_class,owner,paths,parent_id,params);

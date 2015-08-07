@@ -20,8 +20,17 @@ namespace wdb { namespace odb { namespace mongo {
         }
         template<typename T>
         static std::function<void(sub_document)> decompose(const std::unordered_map<std::string,T>& t){
+            std::cout << "fdw" << std::endl;
+           for(auto& e : t) {
+               std::cout << e.first << " " << e.second << std::endl;
+           }
             return [&t](sub_document doc){
-                for(auto i : t) doc.append(prop(i.first,i.second));
+                std::cout << "outside the lambda" << std::endl;
+                for(auto i : t){
+                  std::cout << "in the lambda" << std::endl;
+                  std::cout << i.first << " " << i.second << std::endl;
+                  doc.append(prop(i.first,i.second));
+                }
             };
         }
         template<typename T>
@@ -56,10 +65,24 @@ namespace wdb { namespace odb { namespace mongo {
             });
         }
         static prop_type<std::function<void(sub_document)>> prop(std::string name, const std::unordered_map<std::string,std::string>& umap){
+            if (umap.empty()){
+                std::cerr << "ERROR: Attempting to write empty unordered map." << std::endl;
+            }
+            std::cout << "umap" << std::endl;
             return bsoncxx::builder::basic::kvp(name, decompose(umap));
         }
-        static prop_type<std::function<void(sub_document)>> prop(std::string name, const dictionary& params){
-            return prop(name, params.get_container());
+        static prop_type<std::function<void(sub_document)>> prop(std::string name, const parameters& params){
+                if (params.get_container()){
+                    for(auto& e : params.get_container().unwrap()) {
+                        std::cout << "hi" << std::endl;
+                        std::cout << e.first << " " << e.second << std::endl;
+                    }
+                }
+                std::cout << "asdf" << std::endl;
+            parameters::container_type c = params.get_container().unwrap();
+                std::cout << "asdf" << std::endl;
+
+            return prop(name, c);
         }
     };
 
@@ -67,7 +90,9 @@ namespace wdb { namespace odb { namespace mongo {
 
 template<typename U>
 inline void operator>>(std::tuple<std::string, U> p, wdb::odb::iobject& ss){
+    std::cout << "called operator" << std::endl;
     static_cast<wdb::odb::mongo::object&>(ss).w.builder.append( std::move(p) );
+    std::cout << "asdfasdf" << std::endl;
 }
 
 #endif

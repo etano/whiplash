@@ -59,8 +59,8 @@ namespace wdb { namespace odb { namespace mongo {
         }
 
         template<>
-        dictionary get_sp<dictionary>(object_view doc, std::string field){
-            return get_sp<dictionary::container_type>(doc,field);
+        parameters get_sp<parameters>(object_view doc, std::string field){
+            return get_sp<parameters::container_type>(doc,field);
         }
 
         template<typename T>

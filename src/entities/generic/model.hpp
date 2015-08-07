@@ -13,8 +13,9 @@ namespace wdb { namespace entities { namespace generic {
     class model : public wdb::rte::icacheable {
     public:
         template<class I>
-        model(I info, std::ifstream& in, optional<int> parent, const optional<dictionary>& params){
+        model(I info, std::ifstream& in, optional<int> parent, optional<parameters> params){
             class_ = I::name;
+            std::cout << "asdf" << std::endl;
             parent_ = parent;
             params_ = params;
         }
@@ -22,7 +23,8 @@ namespace wdb { namespace entities { namespace generic {
         model(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
             parent_ = reader::read<int>(o, "parent");
-            params_ = reader::read<dictionary>(o, std::tie("cfg", "params"));
+            std::cout << "asdf2" << std::endl;
+            params_ = reader::read<parameters::container_type>(o, std::tie("cfg", "params"));
         }
 
         virtual ~model() {};
@@ -33,8 +35,10 @@ namespace wdb { namespace entities { namespace generic {
             writer::prop("class", class_) >> record;
             if (parent_)
                 writer::prop("parent", parent_) >> record;
+            std::cout << "asdf3" << std::endl;
             if (params_)
-                writer::prop("params", params_) >> cfg;
+                if (params_.unwrap().get_container())
+                    writer::prop("params", params_) >> cfg;
             writer::prop("cfg", cfg) >> record;
         }
 
@@ -46,7 +50,7 @@ namespace wdb { namespace entities { namespace generic {
     protected:
         std::string class_;
         optional<int> parent_;
-        optional<dictionary> params_;
+        optional<parameters> params_;
     };
 
 } } }

@@ -27,37 +27,53 @@ namespace wdb { namespace utils {
 
 namespace wdb {
 
-    class dictionary {
+    class parameters {
     public:
         typedef std::unordered_map<std::string,std::string> container_type;
-
-        dictionary(){}
-
-        dictionary(const container_type& map)
-          : map_(map)
-        {}
-
-        dictionary& operator= (const container_type& map){
-            map_ = map;
+        parameters(int argc, char *argv[]) {
+            bool have_key = false;
+            std::string key;
+            for(int i = 1; i < argc; ++i){
+                if(argv[i][0] == '-'){
+                    if(!have_key) have_key = true;
+                    key = argv[i] + 1;
+                }else if(have_key){
+                    this->c_[key] = std::string(argv[i]);
+                    have_key = false;
+                }
+            }
         }
+
+        parameters(){}
+
+        parameters(const container_type& c)
+          : c_(c)
+        {}
 
         template<typename T>
         optional<T> get(const std::string& key) const {
-            auto iterator = map_.find(key);
-            if(iterator == map_.end()) return optional<T>();
+            auto iterator = c_.find(key);
+            if(iterator == c_.end()) return optional<T>();
             return convert<T>::str_to_val(iterator->second);
         }
 
         template<typename T>
         void set(const std::string& key, const T& val){
-            map_[key] = std::to_string(val);
+            c_[key] = std::to_string(val);
         }
 
-        const container_type& get_container() const {
-            return map_;
+        optional<container_type> get_container() const {
+            if (c_.empty()) return optional<container_type>();
+            return c_;
         }
-        // TODO: make an iterator
-    private:
+
+        template<typename T>
+        optional<T> pop(const std::string& key){
+            optional<T> val = get<T>(key);
+            if(val) this->c_.erase(key);
+            return val;
+        }
+     private:
         // Specializations // why here?
         template<class T>
         struct convert{
@@ -74,49 +90,7 @@ namespace wdb {
                 return val;
             }
         };
-    protected:
-        container_type map_;
-    };
-
-    class parameters : public dictionary {
-    public:
-        parameters(int argc, char *argv[]) : dictionary() {
-            bool have_key = false;
-            std::string key;
-            for(int i = 1; i < argc; ++i){
-                if(argv[i][0] == '-'){
-                    if(!have_key) have_key = true;
-                    key = argv[i] + 1;
-                }else if(have_key){
-                    this->map_[key] = std::string(argv[i]);
-                    have_key = false;
-                }
-            }
-        }
-
-        template<typename T>
-        T get(const std::string& key, const T& default_val){
-            optional<T> val = dictionary::get<T>(key);
-            if(!val){
-                dictionary::set(key, default_val);
-                return default_val;
-            }
-            return val;
-        }
-
-        template<typename T>
-        optional<T> pop(const std::string& key){
-            optional<T> val = dictionary::get<T>(key);
-            if(val) this->map_.erase(key);
-            return val;
-        }
-
-        template<typename T>
-        T pop(const std::string& key, const T& default_val){
-            T val = get<T>(key, default_val);
-            this->map_.erase(key);
-            return val;
-        }
+        container_type c_;
     };
 
 }

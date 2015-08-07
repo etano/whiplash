@@ -15,13 +15,14 @@ namespace wdb { namespace entities { namespace generic {
             status_ = static_cast<status>(tmp_status);
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<dictionary>(o, std::tie("cfg", "params"));
+            params_ = reader::read<parameters::container_type>(o, std::tie("cfg", "params"));
         }
 
         void print_params(){
             if (params_)
-                for(auto& p : params_.unwrap().get_container())
-                    std::cout << p.first << " : " << p.second << std::endl;
+                if (params_.unwrap().get_container())
+                    for(auto& p : params_.unwrap().get_container().unwrap())
+                        std::cout << p.first << " : " << p.second << std::endl;
         }
 
         void info(){
@@ -52,7 +53,7 @@ namespace wdb { namespace entities { namespace generic {
         }
 
         template<class I>
-        property(I info, int model_id, int executable_id, const dictionary& params, int seed, status s = status::UNDEFINED, double t = -1)
+        property(I info, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED, double t = -1)
             : class_(I::name), model_(model_id), executable_(executable_id), params_(params), seed_(seed), status_(s), walltime_(t)
         {}
 
@@ -67,8 +68,13 @@ namespace wdb { namespace entities { namespace generic {
             writer::prop("status", int(status_)) >> record;
             writer::prop("walltime", walltime_) >> record;
             writer::prop("seed", int(seed_)) >> record;
-            if (!params_.unwrap().get_container().empty())
-                writer::prop("params", params_) >> cfg;
+            if (params_)
+                if (params_.unwrap().get_container()){
+                    for(auto& e : params_.unwrap().get_container().unwrap())
+                        std::cout << e.first << " " << e.second << std::endl;
+                    writer::prop("params", params_) >> cfg;
+                }
+            std::cout << "wrote params" << std::endl;
             writer::prop("cfg", cfg) >> record;
         }
 
@@ -79,7 +85,7 @@ namespace wdb { namespace entities { namespace generic {
         double get_walltime(){ return walltime_; }
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
-        optional<dictionary>& get_params(){ return params_; }
+        optional<parameters>& get_params(){ return params_; }
         void set_status(status s){ status_ = s; }
         void set_walltime(double t){ walltime_ = t; }
     protected:
@@ -89,7 +95,7 @@ namespace wdb { namespace entities { namespace generic {
         status status_;
         double walltime_;
         int seed_;
-        optional<dictionary> params_;
+        optional<parameters> params_;
     };
 
 } } }

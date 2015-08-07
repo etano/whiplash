@@ -9,7 +9,7 @@ namespace wdb { namespace entities { namespace tsp {
             : generic::property(o)
         {}
 
-        property(int model_id, int executable_id, const optional<dictionary>& params, int seed, status s = status::UNDEFINED)
+        property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
             : generic::property(typename entities::info<ptype::tsp>(), model_id, executable_id, params, seed, s)
         {}
 

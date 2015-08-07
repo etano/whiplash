@@ -8,7 +8,7 @@ namespace wdb { namespace entities { namespace ising {
         typedef std::pair<std::vector<spin_type>, double> edge_type;
         typedef std::vector<spin_type> node_type;
     public:
-        model(std::ifstream& in, optional<int> parent, const optional<dictionary>& params)
+        model(std::ifstream& in, optional<int> parent, optional<parameters> params)
             : generic::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
         {
             std::map<std::string,spin_type> index;

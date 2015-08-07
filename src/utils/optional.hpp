@@ -3,6 +3,14 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+#include <execinfo.h>
+
+inline void trace(){
+
+    void* b[15]; backtrace_symbols_fd(b,backtrace(b,15),2);
+
+}
+
 
 namespace wdb {
 
@@ -22,11 +30,11 @@ namespace wdb {
 
         optional() : valid(false) {}
         operator T () {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
             return *(T*)this;
         }
         operator T () const {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; exit(1); }
+            if(!valid){ std::cerr << "ERROR: unwrapping empty optional const value" << std::endl; exit(1); }
             return *(T*)this;
         }
         explicit operator bool (){

@@ -17,31 +17,31 @@ namespace wdb { namespace deployment {
                               std::string algorithm,      // the algorithm that is being executed
                               std::string version,        // version of the executable
                               std::string build_info,     // specification of how executable was built
-                              const params_type& params); // extra parameters object
+                              optional<params_type> params); // extra parameters object
 
         int insert_model(std::string problem_class,       // name of problem class (ex: "JobShop")
                          std::string owner,               // who created the model instance
                          std::string path,                // contains definition of the model
                          optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
-                         const params_type& params);      // extra parameters object
+                         optional<params_type> params);      // extra parameters object
 
         std::vector<int> insert_models(std::string problem_class,      // name of problem class (ex: "JobShop")
                          std::string owner,               // who created the model instance
                          const std::vector<std::string>& paths,  // contains definition of the model
                          optional<int> parent_id,         // if model derived from another model in the database, the id of this parent model
-                         const params_type& params);      // extra parameters object
+                         optional<params_type> params);      // extra parameters object
 
         int insert_property(std::string problem_class,    // name of problem class
                             std::string owner,            // who created the property
                             int model_id,                 // id of the associated model
                             int executable_id,            // id of the associated executable
-                            const params_type& params);   // extra parameters object
+                            optional<params_type> params);   // extra parameters object
 
         std::vector<int> insert_properties(std::string problem_class,    // name of problem class
                             std::string owner,            // who created the property
                             const std::vector<int>& model_ids,  // id of the associated model
                             int executable_id,            // id of the associated executable
-                            const params_type& params,    // extra parameters object
+                            optional<params_type> params,    // extra parameters object
                             int reps);                    // number of repetitions
 
         void list_properties();
