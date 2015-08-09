@@ -19,9 +19,11 @@ namespace wdb { namespace utils {
     template <>
     int str_to_val(const std::string& val) { return stoi(val); }
     template <>
-    unsigned int str_to_val(const std::string& val) { return stoi(val); }
-    template <>
     bool str_to_val(const std::string& val) { return stoi(val); }
+    template <>
+    uint64_t str_to_val(const std::string& val) { return stoi(val); }
+    template <>
+    uint32_t str_to_val(const std::string& val) { return stoi(val); }
 
 } }
 
