@@ -22,11 +22,11 @@
 template<class base_type>
 void Simulation<base_type>::read_lattice_wdb(const wdb::entities::ising::model& H, std::vector<double>& h_field, size_t nr_ts){
 
+	std::vector<size_t> site_nr; // fixme: don't rename spins or save map how spins have been renamed
 	for (const auto& edge : H.get_edges()) {
 
 		std::vector<size_t> neighbors;
 		for (auto& site : edge.first){
-			std::vector<size_t> site_nr; // fixme: don't rename spins or save map how spins have been renamed
 			uint32_t current_site = rename(site, site_nr, spin, SpinProperties(nr_ts));
 			if(site_nr.size() != h_field.size()) h_field.push_back(0);
 			assert(site_nr.size() == h_field.size());
@@ -60,6 +60,7 @@ void Simulation<base_type>::read_lattice_file(std::string lattice_file, std::vec
 	if (!input_file)
 		throw std::runtime_error("cannot open file " + lattice_file);
 
+	std::vector<size_t> site_nr; // fixme: don't rename spins or save map how spins have been renamed
 	for(uint64_t line_nr = 0; input_file; ++line_nr){
 		std::string line;
 		getline(input_file, line);
@@ -78,7 +79,6 @@ void Simulation<base_type>::read_lattice_file(std::string lattice_file, std::vec
 
 		std::vector<size_t> neighbors;
 		for (auto& site_str : entries){
-			std::vector<size_t> site_nr; // fixme: don't rename spins or save map how spins have been renamed
 			size_t site = std::stoi(site_str);
 			uint32_t current_site = rename(site, site_nr, spin, SpinProperties(nr_ts));
 			if(site_nr.size() != h_field.size()) h_field.push_back(0);

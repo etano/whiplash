@@ -33,17 +33,17 @@ int main(int argc, char* argv[]){
 	wdb::entities::ising::property& P = *(wdb::entities::ising::property*)argv[2];
 
 	uint32_t seed = P.get_seed();
-	bool periodic = P.get_param<int>("periodic");
-	uint32_t nr_ts = P.get_param<uint32_t>("n_slices");
-	uint64_t nr_MCS = P.get_param<uint64_t>("n_sweeps");
+	bool periodic = P.get_param<int>("periodic") or P.optional_set_param<int>("periodic",1);
+	uint32_t nr_ts = P.get_param<uint32_t>("nslices");
+	uint64_t nr_MCS = P.get_param<uint64_t>("nsweeps");
 	double g0 = P.get_param<double>("gamma_0");
 	double ge = P.get_param<double>("gamma_1");
 
 	double t0 = P.get_param<double>("T_0");
 	double te = P.get_param<double>("T_1");
 	if (t0 == 0 || te == 0) cerr << "Warning: replaced the given temperature 0 by a value of 1e-8." << endl;
-	double b0 = t0 == 0 ? 1.e-8 : 1/t0;
-	double be = te == 0 ? 1.e-8 : 1/te;
+	double b0 = t0 == 0 ? 1.e8 : 1/t0;
+	double be = te == 0 ? 1.e8 : 1/te;
 
 	Parameters param(nr_MCS, nr_ts, b0, be, g0, ge);
 	Simulation<> sim(H, seed, nr_ts);
