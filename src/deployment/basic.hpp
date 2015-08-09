@@ -122,7 +122,7 @@ namespace wdb { namespace deployment {
             signature signature_(*obj);
 
             std::shared_ptr<entities::generic::property> p(fetch_property(signature_.get_id()));
-            if(std::isnan(reader::read<double>(*obj, target))){ // should use status instead
+            if(p->get_status() == entities::generic::property::status::UNDEFINED){ // TODO: namespace hell!
 
                 entities::generic::controller ctrl;
                 ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);

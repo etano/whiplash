@@ -12,8 +12,10 @@ int main(int argc, char* argv[]){
     basic::writer::prop("class", std::string("ising")) >> filter;
 
     // Query and print results
-    for(const auto& result : deployment.query( filter, std::tie("cfg", "cost") ))
-        std::cout << basic::reader::read<double>(*result, std::tie("cfg","cost") ) << std::endl;
+    for(const auto& result : deployment.query( filter, std::tie("cfg", "costs") )){
+        for(const auto cost : basic::reader::read<basic::reader::array_type>(*result, std::tie("cfg","costs")).unwrap())
+            std::cout << basic::reader::read<double>(cost) << std::endl;
+    }
 
     return 0;
 }
