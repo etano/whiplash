@@ -65,8 +65,8 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<typename T>
         optional<T> get(object_view doc, std::string field){
-            if (doc.find(field) == doc.end()) return optional<T>();
-            return optional<T>(get_sp<T>(doc, field));
+            if(doc.find(field) == doc.end()) return optional<T>();
+            return get_sp<T>(doc, field);
         }
 
         template<typename T>

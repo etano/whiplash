@@ -21,9 +21,7 @@ namespace wdb { namespace odb { namespace mongo {
         template<typename T>
         static std::function<void(sub_document)> decompose(const std::unordered_map<std::string,T>& t){
             return [t](sub_document doc){
-                for(auto i : t){
-                  doc.append(prop(i.first,i.second));
-                }
+                for(auto i : t) doc.append(prop(i.first,i.second));
             };
         }
         template<typename T>
@@ -58,7 +56,7 @@ namespace wdb { namespace odb { namespace mongo {
             });
         }
         static prop_type<std::function<void(sub_document)>> prop(std::string name, const std::unordered_map<std::string,std::string>& umap){
-            if (umap.empty()){
+            if(umap.empty()){
                 std::cerr << "ERROR: Attempting to write empty unordered map." << std::endl;
             }
             return bsoncxx::builder::basic::kvp(name, decompose(umap));
