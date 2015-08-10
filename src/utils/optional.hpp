@@ -5,12 +5,11 @@
 #include <type_traits>
 #include <execinfo.h>
 
-
-
-
 namespace wdb {
-    inline void trace(){
+    inline void trace_exit(){
+        std::cerr << "ERROR: unwrapping empty optional value" << std::endl;
         void* b[15]; backtrace_symbols_fd(b,backtrace(b,15),2);
+        exit(1);
     }
 
     template<typename R>
@@ -29,11 +28,11 @@ namespace wdb {
 
         optional() : valid(false) {}
         operator T () {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!valid) trace_exit();
             return *(T*)this;
         }
         operator T () const {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!valid) trace_exit();
             return *(T*)this;
         }
         explicit operator bool (){
@@ -52,7 +51,7 @@ namespace wdb {
             return b;
         }
         T unwrap() const {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!valid) trace_exit();
             return *(T*)this;
         }
         bool is_null(){
@@ -73,7 +72,7 @@ namespace wdb {
 
         operator R (){
             if(func){ this->value = func(); this->valid = true; }
-            if(!this->valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!this->valid) trace_exit();
             return *(R*)this;
         }
     private:
@@ -88,7 +87,7 @@ namespace wdb {
         optional() : valid(false) {}
 
         operator bool&& () const {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!valid) trace_exit();
             return std::move(*(bool*)this);
         }
         explicit operator bool&& (){
@@ -109,7 +108,7 @@ namespace wdb {
             return b;
         }
         bool&& unwrap() const {
-            if(!valid){ std::cerr << "ERROR: unwrapping empty optional value" << std::endl; trace(); exit(1); }
+            if(!valid) trace_exit();
             return std::move(*(bool*)this);
         }
         bool is_null(){
