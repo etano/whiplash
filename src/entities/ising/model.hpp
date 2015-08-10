@@ -45,8 +45,8 @@ namespace wdb { namespace entities { namespace ising {
         {
             for(auto e : reader::read<reader::array_type>(o, "cfg", "edges").unwrap()){
                 std::vector<spin_type> inds;
-                auto sub_array = reader::read<reader::array_type>(e).unwrap();
-                for(const auto a : reader::read<reader::array_type>(sub_array[0]).unwrap()){
+                auto sub_array = reader::read<reader::array_type>(e);
+                for(const auto a : reader::read<reader::array_type>(sub_array[0])){
                     spin_type a_ = reader::read<spin_type>(a);
                     inds.push_back(a_);
                 }

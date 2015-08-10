@@ -134,7 +134,7 @@ namespace wdb { namespace odb { namespace mongo {
         }
 
         template<typename T>
-        static optional<T> read(prop_type e){
+        static T read(prop_type e){
             return detail::get<T>(e);
         }
 
