@@ -8,7 +8,7 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 
 APPS = test.app
 DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver init_db.driver query.driver worker.driver daemon.driver
-TESTS = property.test
+TESTS = property.test optional.test
 prefix = ..
 
 all: $(APPS) $(DRIVERS) $(TESTS)
