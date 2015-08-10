@@ -83,7 +83,7 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::slurm::executable>( new rte::slurm::executable(reader::read<std::string>(*executables.find(id), "path")) );
+        return std::shared_ptr<rte::executable>( new rte::executable(reader::read<std::string>(*executables.find(id), "path")) );
     }
 
     std::shared_ptr<entities::generic::property> basic::fetch_property(int id){

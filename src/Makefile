@@ -7,7 +7,7 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 # TODO: Make it so everything doens't have to recompile everytime
 
 APPS = test.app
-DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver init_db.driver query.driver worker.driver daemon.driver
+DRIVERS = commit_property.driver commit_model.driver commit_executable.driver fetch_model.driver init_db.driver query.driver worker.driver daemon.driver scheduler.driver
 TESTS = property.test optional.test
 prefix = ..
 

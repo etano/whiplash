@@ -1,7 +1,7 @@
-#ifndef WDB_RTE_SLURM_EXECUTABLE_HPP
-#define WDB_RTE_SLURM_EXECUTABLE_HPP
+#ifndef WDB_RTE_COMMON_EXECUTABLE_HPP
+#define WDB_RTE_COMMON_EXECUTABLE_HPP
 
-namespace wdb { namespace rte { namespace slurm {
+namespace wdb { namespace rte {
 
     class executable : public iexecutable {
     public:
@@ -31,6 +31,6 @@ namespace wdb { namespace rte { namespace slurm {
         void* fptr;
     };
 
-} } }
+} }
 
 #endif
