@@ -4,7 +4,7 @@ using wdb::odb::mongo::objectdb;
 int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     using dep = wdb::deployment::basic; dep sf(db);
-    wdb::rte::slurm::root_controller root;
+    wdb::rte::simple::root_controller root;
 
     auto ising_controller = wdb::entities::factory::make_entity<dep::e::controller>("ising");
     auto sat_controller   = wdb::entities::factory::make_entity<dep::e::controller>("sat");

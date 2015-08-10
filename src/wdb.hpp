@@ -17,6 +17,9 @@
 #include <time.h>
 #include <unordered_map>
 #include <tuple>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <syslog.h>
 // }}}
 
 #include "utils/timer.hpp"
@@ -26,6 +29,7 @@
 #include "odb/interface.hpp"
 #include "rte/interface.hpp"
 #include "odb/mongo.hpp"
+#include "rte/simple.hpp"
 #include "rte/slurm.hpp"
 
 #include "entities/generic.hpp"
