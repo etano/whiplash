@@ -11,62 +11,62 @@ namespace wdb { namespace odb { namespace mongo {
         using element = bsoncxx::v0::array::element;
 
         template<typename T>
-        T get_sp(object_view doc, std::string field){
+        T get(object_view doc, std::string field){
             printf("Error: unknown type for %s \n", field.c_str());
         }
 
         template<>
-        double get_sp<double>(object_view doc, std::string field){
+        double get<double>(object_view doc, std::string field){
             return (double)doc[field].get_double();
         }
 
         template<>
-        int get_sp<int>(object_view doc, std::string field){
+        int get<int>(object_view doc, std::string field){
             return (int)doc[field].get_int32();
         }
 
         template<>
-        int64_t get_sp<int64_t>(object_view doc, std::string field){
+        int64_t get<int64_t>(object_view doc, std::string field){
             return (int64_t)doc[field].get_int64();
         }
 
         template<>
-        std::string get_sp<std::string>(object_view doc, std::string field){
+        std::string get<std::string>(object_view doc, std::string field){
             return (std::string)doc[field].get_utf8().value;
         }
 
         template<>
-        array_view get_sp<array_view>(object_view doc, std::string field){
+        array_view get<array_view>(object_view doc, std::string field){
             return (array_view)doc[field].get_array();
         }
 
         template<>
-        object_view get_sp<object_view>(object_view doc, std::string field){
+        object_view get<object_view>(object_view doc, std::string field){
             return (object_view)doc[field].get_document();
         }
 
         template<>
-        std::unordered_map<std::string,std::string> get_sp<std::unordered_map<std::string,std::string>>(object_view doc, std::string field){
+        std::unordered_map<std::string,std::string> get<std::unordered_map<std::string,std::string>>(object_view doc, std::string field){
             std::unordered_map<std::string,std::string> umap;
-            auto o = get_sp<object_view>(doc,field);
+            auto o = get<object_view>(doc,field);
             for (auto& p : o) {
                 if (p) {
                     std::string key(p.key());
-                    umap[key] = get_sp<std::string>(o, key);
+                    umap[key] = get<std::string>(o, key);
                 }
             }
             return umap;
         }
 
         template<>
-        parameters get_sp<parameters>(object_view doc, std::string field){
-            return get_sp<parameters::container_type>(doc,field);
+        parameters get<parameters>(object_view doc, std::string field){
+            return get<parameters::container_type>(doc,field);
         }
 
         template<typename T>
-        optional<T> get(object_view doc, std::string field){
+        optional<T> checked_get(object_view doc, std::string field){
             if(doc.find(field) == doc.end()) return optional<T>();
-            return get_sp<T>(doc, field);
+            return get<T>(doc, field);
         }
 
         template<typename T>
@@ -114,12 +114,12 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<typename T, typename... Args, unsigned I>
         static optional<T> read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I>){
-            return detail::get<T>(v, std::get<I>(args));
+            return detail::checked_get<T>(v, std::get<I>(args));
         }
 
         template<typename T, typename... Args, unsigned I, unsigned... Is>
         static optional<T> read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I, Is...>){
-            return read<T>( detail::get<object_view>(v, std::get<I>(args)), args, redi::index_tuple<Is...>() );
+            return read<T>( detail::checked_get<object_view>(v, std::get<I>(args)), args, redi::index_tuple<Is...>() );
         }
 
         template<typename T, typename... Args>

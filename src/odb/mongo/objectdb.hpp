@@ -27,7 +27,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         filter << "_id" << cname;
         auto doc = db["counters"].find_one(filter);
-        int res = detail::get<int>(*doc,"seq") + 1;
+        int res = detail::checked_get<int>(*doc,"seq") + 1;
 
         update << "$set" << open_document << "seq" << res << close_document;
         db["counters"].update_one(filter, update);
@@ -44,7 +44,7 @@ namespace wdb { namespace odb { namespace mongo {
 
         filter << "_id" << cname;
         auto doc = db["counters"].find_one(filter);
-        int prev_last_id = detail::get<int>(*doc,"seq");
+        int prev_last_id = detail::checked_get<int>(*doc,"seq");
         int new_last_id = prev_last_id + n_ids;
 
         update << "$set" << open_document << "seq" << new_last_id << close_document;
