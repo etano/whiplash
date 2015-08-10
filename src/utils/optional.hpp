@@ -49,7 +49,7 @@ namespace wdb {
         template<typename T2>
         operator optional<T2> (){
             if(!valid) return optional<T2>();
-            return optional<T2>( this->unwrap() );
+            return optional<T2>( static_cast<T2>(this->unwrap()) );
         }
 
         operator T () {
@@ -102,7 +102,7 @@ namespace wdb {
         }
         template<typename T2>
         operator optional<T2> (){
-            return optional<T2>( this->operator R() );
+            return optional<T2>( static_cast<T2>(this->operator R()) );
         }
     private:
         R value;
@@ -120,7 +120,7 @@ namespace wdb {
         template<typename T2>
         operator optional<T2> (){
             if(!valid) return optional<T2>();
-            return optional<T2>( this->unwrap() );
+            return optional<T2>( static_cast<T2>(this->unwrap()) );
         }
 
         operator bool&& () const {

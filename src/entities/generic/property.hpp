@@ -11,8 +11,7 @@ namespace wdb { namespace entities { namespace generic {
             class_ = reader::read<std::string>(o, "class");
             model_ = reader::read<int>(o, "model_id");
             executable_ = reader::read<int>(o, "executable_id");
-            int tmp_status = reader::read<int>(o, "status");
-            status_ = static_cast<status>(tmp_status);
+            status_ = (optional<status>)reader::read<int>(o, "status");
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
             params_ = reader::read<parameters>(o, std::tie("cfg", "params"));
