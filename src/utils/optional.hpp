@@ -6,8 +6,8 @@
 #include <execinfo.h>
 
 namespace wdb {
-    inline void trace_exit(){
-        std::cerr << "ERROR: unwrapping empty optional value" << std::endl;
+    inline void trace_exit(int e){
+        std::cerr << "ERROR: unwrapping empty optional value (" << e << ")\n";
         void* b[15]; backtrace_symbols_fd(b,backtrace(b,15),2);
         exit(1);
     }
@@ -15,24 +15,49 @@ namespace wdb {
     template<typename R>
     class optional_expr;
 
+    template<typename R>
+    class optional;
+
+    template<class T>
+    struct is_optional {
+        static bool const value = false;
+    };
+
+    template<class T>
+    struct is_optional<optional<T> > {
+        static bool const value = true;
+    };
+
+    template<class T>
+    struct is_optional<optional_expr<T> > {
+        static bool const value = true;
+    };
+
     template<typename T>
     class optional {
     public:
         friend optional_expr<T>;
 
-        template <typename Arg, typename = typename std::enable_if<!std::is_convertible<Arg, std::function<T()>>::value>::type>
+        template <typename Arg, typename = typename std::enable_if<!is_optional<Arg>::value && !std::is_convertible<Arg, std::function<T()>>::value>::type>
         optional(Arg arg) : value(arg), valid(true) {}
 
-        template<typename Arg, typename... Other, typename = typename std::enable_if<!std::is_convertible<Arg, std::function<T()>>::value>::type>
+        template<typename Arg, typename... Other, typename = typename std::enable_if<!is_optional<Arg>::value && !std::is_convertible<Arg, std::function<T()>>::value>::type>
         optional(Arg arg, Other... other) : value(arg, other...), valid(true) {}
 
         optional() : valid(false) {}
+
+        template<typename T2>
+        operator optional<T2> (){
+            if(!valid) return optional<T2>();
+            return optional<T2>( this->unwrap() );
+        }
+
         operator T () {
-            if(!valid) trace_exit();
+            if(!valid) trace_exit(0);
             return *(T*)this;
         }
         operator T () const {
-            if(!valid) trace_exit();
+            if(!valid) trace_exit(1);
             return *(T*)this;
         }
         explicit operator bool (){
@@ -51,7 +76,7 @@ namespace wdb {
             return b;
         }
         T unwrap() const {
-            if(!valid) trace_exit();
+            if(!valid) trace_exit(2);
             return *(T*)this;
         }
         bool is_null(){
@@ -63,7 +88,7 @@ namespace wdb {
     };
 
     template<typename R>
-    class optional_expr : private optional<R> {
+    class optional_expr {
     public:
         template <typename Func, typename = typename std::enable_if<std::is_convertible<Func, std::function<R()>>::value>::type>
         optional_expr(Func f) : func(f) {}
@@ -72,10 +97,16 @@ namespace wdb {
 
         operator R (){
             if(func){ this->value = func(); this->valid = true; }
-            if(!this->valid) trace_exit();
+            if(!this->valid) trace_exit(3);
             return *(R*)this;
         }
+        template<typename T2>
+        operator optional<T2> (){
+            return optional<T2>( this->operator R() );
+        }
     private:
+        R value;
+        bool valid;
         std::function<R()> func;
     };
 
@@ -86,8 +117,14 @@ namespace wdb {
         optional(bool arg) : value(arg), valid(true) {}
         optional() : valid(false) {}
 
+        template<typename T2>
+        operator optional<T2> (){
+            if(!valid) return optional<T2>();
+            return optional<T2>( this->unwrap() );
+        }
+
         operator bool&& () const {
-            if(!valid) trace_exit();
+            if(!valid) trace_exit(4);
             return std::move(*(bool*)this);
         }
         explicit operator bool&& (){
@@ -108,7 +145,7 @@ namespace wdb {
             return b;
         }
         bool&& unwrap() const {
-            if(!valid) trace_exit();
+            if(!valid) trace_exit(5);
             return std::move(*(bool*)this);
         }
         bool is_null(){
