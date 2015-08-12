@@ -1,6 +1,8 @@
 #ifndef WDB_RTE_SIMPLE_SCHEDULER_HPP
 #define WDB_RTE_SIMPLE_SCHEDULER_HPP
 
+#define WORKER_BINARY "worker.driver"
+
 namespace wdb { namespace rte { namespace simple {
 
     class scheduler : public ischeduler {
@@ -24,8 +26,6 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         void yield(){
-            // launch a test-worker
-            // monitor the data-base state / report
             while(true){
                 sleep(1);
             }
@@ -36,11 +36,15 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         virtual void expand(size_t res) override {
-            // spawn a new process
+            pid = fork();
+            if(pid < 0) logger->error("Could not create a process");
+            if(pid > 0) return;
+            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE);
+            // ... not reachable
         }
 
         virtual void shrink(size_t res) override {
-            // shrink if possible
+            kill(pid, SIGKILL);
         }
 
         virtual void schedule() override {}

@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <syslog.h>
+#include <signal.h>
 // }}}
 
 #include "utils/timer.hpp"
