@@ -1,10 +1,12 @@
 #include "wdb.hpp"
-using wdb::odb::mongo::objectdb;
+
+using objectdb = wdb::odb::mongo::objectdb;
+using framework = wdb::deployment::basic;
 
 int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
-    wdb::deployment::basic sf(db);
+    framework f(db);
 
-    sf.purge();
+    f.purge();
     return 0;
 }

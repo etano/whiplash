@@ -3,7 +3,9 @@
 #include <sys/stat.h>
 #include <syslog.h>
 #include "wdb.hpp"
-using wdb::odb::mongo::objectdb;
+
+using objectdb = wdb::odb::mongo::objectdb;
+using framework = wdb::deployment::basic;
 
 int main(int argc, char* argv[]){
     // Spawn child
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]){
         sleep(1);
         // Check for unresolved properties and resolve them
         objectdb db("cwave.ethz.ch:27017");
-        wdb::deployment::basic sf(db);
+        framework sf(db);
         //sf.resolve_properties(); // TODO replace with query
     }
 
