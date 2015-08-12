@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo 'Initializing WDB...'
-$1 ./drivers/init_db.driver
+$1 ./drivers/format_db.driver
 echo 'Committing model...'
 $1 ./drivers/commit_model.driver -path apps/108problem.lat -class ising -owner akosenko
 echo 'Committing executable...'

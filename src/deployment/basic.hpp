@@ -11,7 +11,7 @@ namespace wdb { namespace deployment {
         rng( wdb::timer::now() )
     {}
 
-    void basic::purge(){
+    void basic::format(){
         properties.purge();
         models.purge();
         executables.purge();

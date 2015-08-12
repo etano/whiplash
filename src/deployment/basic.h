@@ -8,7 +8,7 @@ namespace wdb { namespace deployment {
         typedef parameters params_type;
 
         basic(odb::iobjectdb& db);
-        void purge();
+        void format();
 
         int insert_executable(std::string problem_class,  // the problem class name on which the executable executes
                               std::string owner,          // who created the model instance
