@@ -45,8 +45,8 @@ int main(int argc, char* argv[]){
         sleep(1);
         // Check for unresolved properties and resolve them
         objectdb db("cwave.ethz.ch:27017");
-        framework sf(db);
-        //sf.resolve_properties(); // TODO replace with query
+        framework f(db);
+        //f.resolve_properties(); // TODO replace with query
     }
 
     // Close log
