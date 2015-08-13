@@ -35,7 +35,7 @@ namespace wdb { namespace rte { namespace simple {
             delete logger;
         }
 
-        virtual void expand(size_t res) override {
+        virtual void expand() override {
             pid = fork();
             if(pid < 0) logger->error("Could not create a process");
             if(pid > 0) return;
@@ -43,7 +43,7 @@ namespace wdb { namespace rte { namespace simple {
             // ... not reachable
         }
 
-        virtual void shrink(size_t res) override {
+        virtual void shrink() override {
             kill(pid, SIGKILL);
         }
 

@@ -7,8 +7,8 @@ namespace wdb { namespace rte { namespace slurm {
     public:
         virtual ~scheduler() override {}
 
-        virtual void expand(size_t res) override {}
-        virtual void shrink(size_t res) override {}
+        virtual void expand() override {}
+        virtual void shrink() override {}
 
         virtual void schedule(/* what? */) override {}
     };
