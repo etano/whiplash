@@ -3,15 +3,15 @@
 
 namespace wdb { namespace entities { namespace ising {
 
-    class property : public generic::property {
+    class property : public entities::property {
         typedef int64_t spin_type;
     public:
         property(const odb::iobject& o)
-            : generic::property(o)
+            : entities::property(o)
         {}
 
         property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
-            : generic::property(typename entities::info<ptype::ising>(), model_id, executable_id, params, seed, s)
+            : entities::property(typename entities::info<ptype::ising>(), model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};

@@ -3,7 +3,7 @@
 
 namespace wdb { namespace entities { namespace tsp {
 
-    class controller : public generic::controller {
+    class controller : public entities::controller {
     public:
         virtual ~controller() override {};
     };

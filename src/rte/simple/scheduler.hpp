@@ -13,7 +13,7 @@ namespace wdb { namespace rte { namespace simple {
         scheduler(const DB& db){
             pid = fork();
             if(pid < 0) exit(EXIT_FAILURE);
-            if(pid > 0) exit(EXIT_SUCCESS); 
+            if(pid > 0) exit(EXIT_SUCCESS);
             umask(0);
             
             logger = new logger_type();
@@ -56,4 +56,5 @@ namespace wdb { namespace rte { namespace simple {
 
 } } }
 
+#undef WORKER_BINARY
 #endif

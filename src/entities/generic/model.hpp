@@ -8,7 +8,7 @@ namespace wdb { namespace entities {
 
 } }
 
-namespace wdb { namespace entities { namespace generic {
+namespace wdb { namespace entities {
 
     class model : public wdb::rte::icacheable {
     public:
@@ -50,6 +50,6 @@ namespace wdb { namespace entities { namespace generic {
         optional<parameters> params_;
     };
 
-} } }
+} }
 
 #endif

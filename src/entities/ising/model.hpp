@@ -3,13 +3,13 @@
 
 namespace wdb { namespace entities { namespace ising {
 
-    class model : public generic::model {
+    class model : public entities::model {
         typedef int64_t spin_type;
         typedef std::pair<std::vector<spin_type>, double> edge_type;
         typedef std::vector<spin_type> node_type;
     public:
         model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : generic::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
+            : entities::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
         {
             std::map<std::string,spin_type> index;
             while(in){
@@ -41,7 +41,7 @@ namespace wdb { namespace entities { namespace ising {
         }
 
         model(const odb::iobject& o)
-            : generic::model(o), N_(0)
+            : entities::model(o), N_(0)
         {
             for(auto e : reader::read<reader::array_type>(o, "cfg", "edges").unwrap()){
                 std::vector<spin_type> inds;

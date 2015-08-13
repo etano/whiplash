@@ -50,10 +50,10 @@ namespace wdb { namespace deployment {
         int random_seed();
 
         std::shared_ptr<rte::iexecutable> fetch_executable(int id);
-        std::shared_ptr<entities::generic::model> fetch_model(int id);
-        std::shared_ptr<entities::generic::property> fetch_property(int id);
-        std::vector<std::shared_ptr<entities::generic::model>> fetch_models_like(odb::iobject& o);
-        std::vector<std::shared_ptr<entities::generic::property>> fetch_properties_like(odb::iobject& o);
+        std::shared_ptr<entities::model> fetch_model(int id);
+        std::shared_ptr<entities::property> fetch_property(int id);
+        std::vector<std::shared_ptr<entities::model>> fetch_models_like(odb::iobject& o);
+        std::vector<std::shared_ptr<entities::property>> fetch_properties_like(odb::iobject& o);
 
         template<typename... Args>
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o, const std::tuple<Args...>& target);

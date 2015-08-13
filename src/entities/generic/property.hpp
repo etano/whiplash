@@ -1,7 +1,7 @@
 #ifndef WDB_ENTITIES_GENERIC_PROPERTY_HPP
 #define WDB_ENTITIES_GENERIC_PROPERTY_HPP
 
-namespace wdb { namespace entities { namespace generic {
+namespace wdb { namespace entities {
 
     class property : public wdb::rte::icacheable {
     public:
@@ -86,6 +86,7 @@ namespace wdb { namespace entities { namespace generic {
         double get_walltime(){ return walltime_; }
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
+        bool is_undefined(){ return status_ == status::UNDEFINED; }
         optional<parameters>& get_params(){ return params_; }
         void set_status(status s){ status_ = s; }
         void set_walltime(double t){ walltime_ = t; }
@@ -99,6 +100,6 @@ namespace wdb { namespace entities { namespace generic {
         optional<parameters> params_;
     };
 
-} } }
+} }
 
 #endif

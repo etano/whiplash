@@ -15,9 +15,9 @@ namespace wdb { namespace entities {
     };
 
     struct generic_tuple {
-        typedef std::tuple< generic::model,
-                            generic::property,
-                            generic::controller > triplet;
+        typedef std::tuple< entities::model,
+                            entities::property,
+                            entities::controller > triplet;
     };
 
     class factory {

@@ -1,7 +1,7 @@
 #ifndef WDB_ENTITIES_GENERIC_CONTROLLER_HPP
 #define WDB_ENTITIES_GENERIC_CONTROLLER_HPP
 
-namespace wdb { namespace entities { namespace generic {
+namespace wdb { namespace entities {
 
     class controller : public wdb::rte::icontroller_delegate, public wdb::rte::icacheable {
     public:
@@ -31,6 +31,6 @@ namespace wdb { namespace entities { namespace generic {
         }
     };
 
-} } }
+} }
 
 #endif

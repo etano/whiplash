@@ -3,14 +3,14 @@
 
 namespace wdb { namespace entities { namespace tsp {
 
-    class model : public generic::model {
+    class model : public entities::model {
     public:
         model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : generic::model(typename entities::info<ptype::tsp>(), in, parent, params)
+            : entities::model(typename entities::info<ptype::tsp>(), in, parent, params)
         {}
 
         model(const odb::iobject& o)
-            : generic::model(o)
+            : entities::model(o)
         {}
 
         virtual ~model() override {};
