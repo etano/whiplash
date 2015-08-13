@@ -2,11 +2,12 @@
 
 using objectdb = wdb::odb::mongo::objectdb;
 using framework = wdb::deployment::basic;
+using root_controller = wdb::rte::simple::root_controller;
 
 int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     framework f(db);
-    wdb::rte::simple::root_controller root;
+    root_controller root(f.get_worker_pool());
 
     auto ising_controller = wdb::entities::factory::make_entity<framework::e::controller>("ising");
     auto sat_controller   = wdb::entities::factory::make_entity<framework::e::controller>("sat");

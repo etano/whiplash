@@ -7,6 +7,8 @@ namespace wdb { namespace rte { namespace simple {
     public:
         virtual ~root_controller() override {}
 
+        root_controller(ipool& p) : pool(p) {}
+
         virtual void add_controller(icontroller_delegate& ctrl) override {
             controllers.push_back(make_pair(&ctrl,std::vector<int>()));
         }
@@ -18,6 +20,7 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         virtual void yield() override {
+
             //for(;;){
                 //query_jobs();
                 for(int i = 0; i < controllers.size(); i++){
@@ -58,6 +61,7 @@ namespace wdb { namespace rte { namespace simple {
         std::vector<std::pair<icontroller_delegate*,std::vector<int>>> controllers;
         icontroller_delegate* child;
         std::vector<int> segues;
+        ipool& pool;
     };
 
 } } }
