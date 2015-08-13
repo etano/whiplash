@@ -3,13 +3,31 @@
 
 namespace wdb { namespace deployment {
 
+    basic::job_pool::job_pool(odb::icollection& t) : tasks(t) { }
+
+    size_t basic::job_pool::beat(){
+        object filter;
+        writer::prop("status", (int)entities::property::status::UNDEFINED) >> filter;
+        return tasks.find_like(filter).size(); // TODO: optimize me
+    }
+
     basic::basic(odb::iobjectdb& db)
       : db(db),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
-        rng( wdb::timer::now() )
+        rng( wdb::timer::now() ),
+        pool( properties ),
+        worker_pool( properties )
     {}
+
+    basic::job_pool& basic::get_pool(){
+        return pool;
+    }
+
+    basic::job_pool& basic::get_worker_pool(){
+        return worker_pool;
+    }
 
     void basic::format(){
         properties.purge();

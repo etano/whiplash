@@ -6,9 +6,25 @@ namespace wdb { namespace deployment {
     class basic {
     public:
         typedef parameters params_type;
+        using reader = wdb::odb::mongo::prop_reader;
+        using writer = wdb::odb::mongo::prop_writer;
+        using signature = wdb::odb::mongo::signature;
+        using object = wdb::odb::mongo::object;
+        using e = wdb::entities::etype;
+
+        class job_pool : public rte::ipool {
+        public:
+            job_pool(odb::icollection& t);
+            virtual size_t beat() override;
+        private:
+            odb::icollection& tasks;
+        };
 
         basic(odb::iobjectdb& db);
         void format();
+
+        job_pool& get_pool();
+        job_pool& get_worker_pool();
 
         int insert_executable(std::string problem_class,  // the problem class name on which the executable executes
                               std::string owner,          // who created the model instance
@@ -57,17 +73,14 @@ namespace wdb { namespace deployment {
 
         template<typename... Args>
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o, const std::tuple<Args...>& target);
-
-        using reader = wdb::odb::mongo::prop_reader;
-        using writer = wdb::odb::mongo::prop_writer;
-        using signature = wdb::odb::mongo::signature;
-        using object = wdb::odb::mongo::object;
-        using e = wdb::entities::etype;
     private:
         odb::icollection& properties;
         odb::icollection& models;
         odb::icollection& executables;
         odb::iobjectdb& db;
+
+        job_pool pool;
+        job_pool worker_pool;
 
         std::mt19937 rng;
         std::uniform_int_distribution<uint32_t> uint_dist;
