@@ -9,8 +9,7 @@ namespace wdb { namespace rte { namespace simple {
     public:
         typedef wdb::syslog logger_type;
 
-        template<class DB>
-        scheduler(const DB& db){
+        scheduler(ipool& p) : pool(p) {
             pid = fork();
             if(pid < 0) exit(EXIT_FAILURE);
             if(pid > 0) exit(EXIT_SUCCESS);
@@ -26,7 +25,12 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         void yield(){
-            while(true){
+            for(;;){
+                if(pool.beat()){
+                    if(!children.size()) this->expand();
+                }else{
+                    if(children.size())  this->shrink();
+                }
                 sleep(1);
             }
         }
@@ -38,13 +42,21 @@ namespace wdb { namespace rte { namespace simple {
         virtual void expand() override {
             pid = fork();
             if(pid < 0) logger->error("Could not create a process");
-            if(pid > 0) return;
+            if(pid > 0){
+                logger->notice("Expanded the number of workers");
+                children.push_back(pid);
+                return;
+            }
             if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE);
             // ... not reachable
         }
 
         virtual void shrink() override {
-            kill(pid, SIGKILL);
+            if(children.size()){
+                kill(children.back(), SIGKILL);
+                children.pop_back();
+                logger->notice("Shrank the number of workers");
+            }
         }
 
         virtual void schedule() override {}
@@ -52,6 +64,8 @@ namespace wdb { namespace rte { namespace simple {
         pid_t pid;
         pid_t sid;
         logger_type* logger;
+        std::vector<pid_t> children;
+        ipool& pool;
     };
 
 } } }
