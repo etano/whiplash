@@ -8,12 +8,28 @@ int main(int argc, char* argv[]){
     objectdb db("cwave.ethz.ch:27017");
     framework deployment(db);
 
-    // Create query object
+    // Parse arguments
+    framework::params_type params(argc,argv);
+
+    // Required arguments
+    std::string target = params.pop<std::string>("target");
+
+    // Optional arguments
+
+    // User defined arguments
+    // (whatever is left in params)
+
+    // Create query filter
     framework::object filter;
-    framework::writer::prop("class", std::string("ising")) >> filter;
+    for(const auto& param : params.get_container().unwrap()){
+        if(wdb::utils::is_numeric(param.second))
+            framework::writer::prop(param.first, wdb::utils::str_to_val<int>(param.second)) >> filter;
+        else
+            framework::writer::prop(param.first, param.second) >> filter;
+    }
 
     // Query and print results
-    for(const auto& result : deployment.query( filter, std::tie("cfg", "costs") )){
+    for(const auto& result : deployment.query( filter, std::tie("cfg", target) )){
         for(const auto cost : framework::reader::read<framework::reader::array_type>(*result, std::tie("cfg","costs")).unwrap())
             std::cout << framework::reader::read<double>(cost) << std::endl;
     }

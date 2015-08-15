@@ -8,6 +8,10 @@ namespace std {
 
 namespace wdb { namespace utils {
 
+    bool is_numeric(const std::string& val) {
+        return std::all_of(val.begin(), val.end(), ::isdigit);
+    }
+
     template <class T>
     T str_to_val(const std::string& val) { return val; }
     template <>

@@ -1,31 +1,5 @@
-import commands
+from subprocess import Popen, PIPE
 wdb_home = '/Users/ethan/src/whiplashdb'
-
-def CommitExecutable(executable):
-    args = FormArgs(wdb_home+'/src/apps/drivers/commit_executable.driver',executable)
-    return Commit(args)[0]
-
-def CommitModel(model):
-    args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
-    return Commit(args)[0]
-
-def CommitModels(model, paths):
-    args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
-    args.append('-path')
-    args.append(','.join(paths))
-    return Commit(args)
-
-def CommitProperty(property):
-    args = FormArgs(wdb_home+'/src/apps/drivers/commit_property.driver',property)
-    return Commit(args)[0]
-
-def CommitProperties(property, model_ids, reps):
-    args = FormArgs(wdb_home+'/src/apps/drivers/commit_property.driver',property)
-    args.append('-reps')
-    args.append(str(reps))
-    args.append('-model')
-    args.append(','.join(model_ids))
-    return Commit(args)
 
 def FormArgs(path,entity):
     args = [path]
@@ -34,9 +8,36 @@ def FormArgs(path,entity):
         args.append(str(val))
     return args
 
-def Commit(args):
-    ids = commands.getoutput(' '.join(args)).split('\n')
-    return ids
+def Execute(args):
+    p = Popen(args,stdout=PIPE,stderr=PIPE,bufsize=1)
+    (stdout, stderr) = p.communicate()
+    res = [x for x in stdout.split('\n') if x]
+    return res
+
+def CommitExecutable(executable):
+    args = FormArgs(wdb_home+'/src/apps/drivers/commit_executable.driver',executable)
+    return Execute(args)[0]
+
+def CommitModel(model):
+    args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
+    return Execute(args)[0]
+
+def CommitModels(model, paths):
+    model['path'] = ','.join(paths)
+    args = FormArgs(wdb_home+'/src/apps/drivers/commit_model.driver',model)
+    return Execute(args)
+
+def CommitProperty(property):
+    args = FormArgs(wdb_home+'/src/apps/drivers/commit_property.driver',property)
+    return Execute(args)[0]
+
+def CommitProperties(property, model_ids, reps):
+    property['reps'] = reps
+    property['model'] = ','.join(model_ids)
+    args = FormArgs(wdb_home+'/src/apps/drivers/commit_property.driver',property)
+    return Execute(args)
 
 def Query(filter,target):
-    return 0
+    filter['target'] = target
+    args = FormArgs(wdb_home+'/src/apps/drivers/query.driver',filter)
+    return Execute(args)

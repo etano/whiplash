@@ -9,6 +9,6 @@ $1 ./drivers/commit_executable.driver -path apps/test.app -class ising -descript
 echo 'Committing property...'
 $1 ./drivers/commit_property.driver -class ising -model 0 -executable 0 -owner akosenko -n_sweeps 7
 echo 'Querying property...'
-$1 ./drivers/query.driver
+$1 ./drivers/query.driver -class ising -target costs
 echo 'Querying property again...'
-$1 ./drivers/query.driver
+$1 ./drivers/query.driver -class ising -target costs -model_id 0

@@ -4,9 +4,9 @@ wdb_home = '/Users/ethan/src/whiplashdb'
 # Settings
 prob_class = 'ising'
 owner = 'ebrown'
-n_probs = 100
-n_reps = 1000
-n_sweeps = 1000
+n_probs = 10
+n_reps = 10
+n_sweeps = 100
 schedule = 'linear'
 T_0 = 10.0
 T_1 = 1e-8
@@ -32,8 +32,9 @@ print 'Committing properties'
 property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':n_sweeps,'T_0':T_0,'T_1':T_1}
 property_ids = wdb.CommitProperties(property, model_ids, n_reps)
 
-## Query
-#filter = {'class':prob_class}
-#target = {'cfg':'cost'}
-#results = wdb.Query(filter,target)
-#print results
+# Query
+print 'Querying'
+filter = {'class':prob_class}
+target = 'costs'
+results = [float(x) for x in wdb.Query(filter,target)]
+print results
