@@ -134,7 +134,6 @@ namespace wdb { namespace deployment {
         return uint_dist(rng);
     }
 
-    template<typename... Args>
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
             signature signature_(*obj);

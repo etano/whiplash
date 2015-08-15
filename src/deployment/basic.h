@@ -70,8 +70,6 @@ namespace wdb { namespace deployment {
         std::shared_ptr<entities::property> fetch_property(int id);
         std::vector<std::shared_ptr<entities::model>> fetch_models_like(odb::iobject& o);
         std::vector<std::shared_ptr<entities::property>> fetch_properties_like(odb::iobject& o);
-
-        template<typename... Args>
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
     private:
         odb::icollection& properties;
