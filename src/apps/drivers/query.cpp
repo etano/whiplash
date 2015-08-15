@@ -29,9 +29,9 @@ int main(int argc, char* argv[]){
     }
 
     // Query and print results
-    for(const auto& result : deployment.query( filter, std::tie("cfg", target) )){
-        for(const auto cost : framework::reader::read<framework::reader::array_type>(*result, std::tie("cfg","costs")).unwrap())
-            std::cout << framework::reader::read<double>(cost) << std::endl;
+    for(const auto& results : deployment.query( filter, std::tie("cfg", target) )){
+        for(const auto result : framework::reader::read<framework::reader::array_type>(*results, std::tie("cfg",target)).unwrap())
+            std::cout << framework::reader::read<double>(result) << std::endl;
     }
 
     return 0;
