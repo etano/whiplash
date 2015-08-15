@@ -135,10 +135,9 @@ namespace wdb { namespace deployment {
     }
 
     template<typename... Args>
-    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o, const std::tuple<Args...>& target){
+    std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
             signature signature_(*obj);
-
             std::shared_ptr<entities::property> p(fetch_property(signature_.get_id()));
             if(p->is_undefined()){
                 entities::controller ctrl;
