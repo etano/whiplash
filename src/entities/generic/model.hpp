@@ -40,7 +40,7 @@ namespace wdb { namespace entities {
         }
 
         virtual void print(){
-            std::cout << "print not defined" << std::endl;
+            std::cerr << "print not defined" << std::endl;
         }
 
         std::string get_class(){ return class_; }
