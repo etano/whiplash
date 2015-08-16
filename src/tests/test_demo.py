@@ -1,6 +1,9 @@
 import os
-import wdb
+import whiplashdb
+
+# Make WhiplashDB instance
 wdb_home = os.environ.get('WDB_HOME')
+wdb = whiplashdb.wdb(wdb_home)
 
 # Settings
 prob_class = 'ising'
