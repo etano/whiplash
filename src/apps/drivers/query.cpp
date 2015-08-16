@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
     framework::params_type params(argc,argv);
 
     // Required arguments
-    std::string target = params.pop<std::string>("target");
+    std::vector<std::string> target = params.pop<std::vector<std::string>>("target");
 
     // Optional arguments
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
 
     // Query and print results
     for(const auto& results : deployment.query( filter )){
-        for(const auto result : framework::reader::read<framework::reader::array_type>(*results, std::tie("cfg",target)).unwrap())
+        for(const auto result : framework::reader::read<framework::reader::array_type>(*results, target).unwrap())
             std::cout << framework::reader::read<double>(result) << std::endl;
     }
 

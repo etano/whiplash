@@ -9,6 +9,6 @@ $1 ./drivers/commit_executable.driver -path apps/DT-SQA/dtsqa -class ising -desc
 echo 'Committing property...'
 $1 ./drivers/commit_property.driver -class ising -model 0 -executable 0 -owner akosenko -nsweeps 10000 -T_0 0.05  -T_1 0.05 -schedule "lin" -nslices 50 -gamma_0 2.5 -gamma_1 0
 echo 'Querying property...'
-$1 ./drivers/query.driver -class ising -target costs
+$1 ./drivers/query.driver -class ising -target cfg,costs
 echo 'Querying property again...'
-$1 ./drivers/query.driver -class ising -target costs -model_id 0
+$1 ./drivers/query.driver -class ising -target cfg,costs -model_id 0

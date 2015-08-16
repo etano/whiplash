@@ -128,6 +128,24 @@ namespace wdb { namespace odb { namespace mongo {
             return read<T>(m_obj.r.view, args, redi::to_index_tuple<Args...>());
         }
 
+        template<typename T>
+        static optional<T> read(const object_view& v, std::vector<std::string> args){
+            args.erase(args.begin());
+            if (args.size() == 1)
+                return detail::checked_get<T>(v, args[0]);
+            else
+                return read<T>( detail::checked_get<object_view>(v, args[0]), args );
+        }
+
+        template<typename T>
+        static optional<T> read(const iobject& obj, std::vector<std::string> args){
+            const auto& m_obj = static_cast<const odb::mongo::object&>(obj);
+            if(args.size() == 1)
+                return detail::checked_get<T>(m_obj.r.view, args[0]);
+            else
+                return read<T>( detail::checked_get<object_view>(m_obj.r.view, args[0]), args );
+        }
+
         template<typename T, typename... Args>
         static optional<T> read(const iobject& obj, const Args&... args){
             return read<T>(obj, std::tie(args...));

@@ -9,6 +9,6 @@ $1 ./drivers/commit_executable.driver -path apps/anc/an_ss_rn_fi -class ising -d
 echo 'Committing property...'
 $1 ./drivers/commit_property.driver -class ising -model 0 -executable 0 -owner akosenko -nsweeps 100000 -b0 0.1 -b1 3.0 -schedule "lin"
 echo 'Querying property...'
-$1 ./drivers/query.driver -class ising -target costs
+$1 ./drivers/query.driver -class ising -target cfg,costs
 echo 'Querying property again...'
-$1 ./drivers/query.driver -class ising -target costs -model_id 0
+$1 ./drivers/query.driver -class ising -target cfg,costs -model_id 0
