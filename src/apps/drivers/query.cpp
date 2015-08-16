@@ -22,9 +22,14 @@ int main(int argc, char* argv[]){
     // Create query filter
     framework::object filter;
     for(const auto& param : params.get_container().unwrap()){
-        if(wdb::utils::is_numeric(param.second))
-            framework::writer::prop(param.first, wdb::utils::str_to_val<int>(param.second)) >> filter;
-        else
+        if(wdb::utils::is_numeric(param.second)){
+            double val = wdb::utils::str_to_val<double>(param.second);
+            int ival = static_cast<int>(val);
+            if(val==ival)
+                framework::writer::prop(param.first, ival) >> filter;
+            else
+                framework::writer::prop(param.first, val) >> filter;
+        }else
             framework::writer::prop(param.first, param.second) >> filter;
     }
 
