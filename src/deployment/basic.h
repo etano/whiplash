@@ -64,6 +64,7 @@ namespace wdb { namespace deployment {
         void list_model(int id);
 
         int random_seed();
+        int count_undefined(odb::iobject& o);
 
         std::shared_ptr<rte::iexecutable> fetch_executable(int id);
         std::shared_ptr<entities::model> fetch_model(int id);

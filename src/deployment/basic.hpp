@@ -134,6 +134,16 @@ namespace wdb { namespace deployment {
         return uint_dist(rng);
     }
 
+    int basic::count_undefined(odb::iobject& o){
+        unsigned n_undefined = 0;
+        for(auto &obj : properties.find_like(o)){
+            signature signature_(*obj);
+            std::shared_ptr<entities::property> p(fetch_property(signature_.get_id()));
+            if(p->is_undefined()) n_undefined++;
+        }
+        return n_undefined;
+    }
+
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
             signature signature_(*obj);
