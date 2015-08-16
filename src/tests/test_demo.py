@@ -1,11 +1,12 @@
+import os
 import wdb
-wdb_home = '/Users/ethan/src/whiplashdb'
+wdb_home = os.environ.get('WDB_HOME')
 
 # Settings
 prob_class = 'ising'
 owner = 'ebrown'
 n_probs = 10
-n_reps = 10
+n_reps = 1
 n_sweeps = 100
 schedule = 'linear'
 T_0 = 10.0
@@ -35,6 +36,6 @@ property_ids = wdb.CommitProperties(property, model_ids, n_reps)
 # Query
 print 'Querying'
 filter = {'class':prob_class}
-target = 'costs'
+target = ['cfg','costs']
 results = [float(x) for x in wdb.Query(filter,target)]
 print results

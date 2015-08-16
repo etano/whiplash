@@ -1,5 +1,6 @@
+import os
 from subprocess import Popen, PIPE
-wdb_home = '/Users/ethan/src/whiplashdb'
+wdb_home = os.environ.get('WDB_HOME')
 
 def FormArgs(path,entity):
     args = [path]
@@ -38,6 +39,6 @@ def CommitProperties(property, model_ids, reps):
     return Execute(args)
 
 def Query(filter,target):
-    filter['target'] = target
+    filter['target'] = ','.join(target)
     args = FormArgs(wdb_home+'/src/apps/drivers/query.driver',filter)
     return Execute(args)
