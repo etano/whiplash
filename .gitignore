@@ -7,3 +7,4 @@ src/tests/*.test
 src/apps/drivers/*.driver
 *.swp
 *.swo
+*.pyc

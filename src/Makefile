@@ -9,7 +9,7 @@ CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --l
 APPS = test.app
 DRIVERS = commit_property.driver commit_model.driver commit_executable.driver format_db.driver query.driver worker.driver scheduler.driver
 TESTS = fetch.test optional.test
-prefix = ..
+PREFIX = ..
 
 all: $(APPS) $(DRIVERS) $(TESTS)
 
@@ -29,7 +29,12 @@ clean:
 	-rm -f apps/*.app
 	-rm -f apps/drivers/*.driver
 	-rm -f tests/*.test
+	-rm -f ../bin/*.driver
 
-install:
-	install -m 0755 apps/*.app $(prefix)/bin
-	install -m 0755 apps/drivers/*.driver $(prefix)/bin
+install: all
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp apps/*.app $(DESTDIR)$(PREFIX)/bin
+	cp apps/drivers/*.driver $(DESTDIR)$(PREFIX)/bin
+	cp tests/*.test $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/lib/python
+	cp apps/python/whiplashdb.py $(DESTDIR)$(PREFIX)/lib/python
