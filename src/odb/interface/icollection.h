@@ -15,7 +15,8 @@ namespace wdb { namespace odb {
         virtual int insert(iobject& o, const isignature& s) = 0;
         virtual std::vector<int> insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner) = 0;
         virtual void remove(iobject& o) = 0;
-        virtual void replace(iobject& o_old, iobject& o_new, const isignature& s) = 0;
+        virtual void replace(iobject& filter, iobject& o_new, const isignature& s) = 0;
+        virtual void replace(iobject& o_old, iobject& o_new) = 0;
         virtual void update(iobject& o_old, iobject& o_new) = 0;
         virtual void purge() = 0;
     };
