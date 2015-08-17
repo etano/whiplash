@@ -14,10 +14,12 @@ namespace wdb { namespace deployment {
 
         class job_pool : public rte::ipool {
         public:
-            job_pool(odb::icollection& t);
+            job_pool(odb::icollection& t, odb::icollection& m, odb::icollection& e);
             virtual size_t beat() override;
         private:
             odb::icollection& tasks;
+            odb::icollection& models;
+            odb::icollection& executables;
         };
 
         basic(odb::iobjectdb& db);

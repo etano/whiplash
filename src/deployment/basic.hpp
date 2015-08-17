@@ -3,7 +3,8 @@
 
 namespace wdb { namespace deployment {
 
-    basic::job_pool::job_pool(odb::icollection& t) : tasks(t) { }
+    basic::job_pool::job_pool(odb::icollection& t, odb::icollection& m, odb::icollection& e)
+        : tasks(t), models(m), executables(e) { }
 
     size_t basic::job_pool::beat(){
         object filter;
@@ -17,8 +18,8 @@ namespace wdb { namespace deployment {
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
         rng( wdb::timer::now() ),
-        pool( properties ),
-        worker_pool( properties )
+        pool( properties, models, executables ),
+        worker_pool( properties, models, executables )
     {}
 
     basic::job_pool& basic::get_pool(){
@@ -146,18 +147,15 @@ namespace wdb { namespace deployment {
 
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
         for(auto &obj : properties.find_like(o)){
-            signature signature_(*obj);
-            std::shared_ptr<entities::property> p(fetch_property(signature_.get_id()));
+            std::shared_ptr<entities::property> p = entities::factory::make_entity<e::property>(*obj);
             if(p->is_undefined()){
                 entities::controller ctrl;
-                ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
-
                 object record, serialized_cfg;
-                p->serialize_cfg(serialized_cfg);
-                p->serialize(record, serialized_cfg);
 
-                object filter; writer::prop("_id", signature_.get_id()) >> filter;
-                properties.replace(filter, record, signature_);
+                ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
+                ctrl.finalize(*p, record, serialized_cfg);
+
+                properties.replace(*obj, record);
             }
         }
         return properties.find_like(o);
