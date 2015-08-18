@@ -8,29 +8,29 @@ namespace wdb { namespace entities {
         controller(){}
         virtual ~controller() {};
 
-        virtual void resolve(rte::iexecutable& x, rte::icacheable& m, rte::icacheable& p_) override {
-            auto& p = static_cast<property&>(p_);
+        virtual void resolve(odb::iobject& obj, rte::ipool& provider){
+
+            auto p_ = provider.make_property(obj); auto& p = static_cast<property&>(*p_);
+            auto m = provider.model(p.get_model());
+            auto x = provider.executable(p.get_executable());
+
             if(!p.is_undefined()) throw std::runtime_error("Error: property is already defined");
             p.set_status(property::status::PROCESSING);
 
             int argc = 3;
             void** argv = (void**)malloc(sizeof(void*)*argc);
-            argv[1] = &m;
+            argv[1] = &*m;
             argv[2] = &p;
 
             wdb::timer wt("walltime"); wt.begin();
-            x(argc, (char**)argv);
+            (*x)(argc, (char**)argv);
             free(argv);
             wt.end();
 
             p.set_status(property::status::DEFINED);
             p.set_walltime(wt.get_time());
-        }
 
-        virtual void finalize(rte::icacheable& p_, odb::iobject& record, odb::iobject& cfg){
-            auto& p = static_cast<property&>(p_);
-            p.serialize_cfg(cfg);
-            p.serialize(record, cfg);
+            provider.finalize(obj,p);
         }
 
         virtual void prepare_for_segue(icontroller_delegate& dest) override {

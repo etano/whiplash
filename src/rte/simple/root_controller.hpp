@@ -20,16 +20,10 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         virtual void yield() override {
-
-            //for(;;){
-                //query_jobs();
-                for(int i = 0; i < controllers.size(); i++){
-                    focus(i);
-                    // request workload
-                    // child->resolve();
-                    // check if segues
-                }
-            //}
+            for(int i = 0; i < controllers.size(); i++){
+                segue(i); for(auto& obj : pool.quote())
+                    delegate->resolve(*obj, pool);
+            }
         }
 
         int position(icontroller_delegate& ctrl) const {
@@ -42,8 +36,8 @@ namespace wdb { namespace rte { namespace simple {
             return std::distance(controllers.begin(), iter);
         }
 
-        void focus(int c){
-            this->child = controllers[c].first;
+        void segue(int c){
+            this->delegate = controllers[c].first;
             this->segues = controllers[c].second;
             printf("Controller %d: ", c); for(auto& s : controllers[c].second) printf("%d ", s);
             printf("\n");
@@ -59,7 +53,7 @@ namespace wdb { namespace rte { namespace simple {
         }
     private:
         std::vector<std::pair<icontroller_delegate*,std::vector<int>>> controllers;
-        icontroller_delegate* child;
+        icontroller_delegate* delegate;
         std::vector<int> segues;
         ipool& pool;
     };

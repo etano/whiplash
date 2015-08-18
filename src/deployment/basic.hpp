@@ -7,9 +7,34 @@ namespace wdb { namespace deployment {
         : tasks(t), models(m), executables(e) { }
 
     size_t basic::job_pool::beat(){
+        return quote().size(); // TODO: optimize me
+    }
+
+    std::vector<std::shared_ptr<odb::iobject>> basic::job_pool::quote(){
         object filter;
         writer::prop("status", (int)entities::property::status::UNDEFINED) >> filter;
-        return tasks.find_like(filter).size(); // TODO: optimize me
+        return tasks.find_like(filter);
+    }
+
+    void basic::job_pool::finalize(odb::iobject& obj, rte::icacheable& p_){
+        auto record = tasks.create();
+        auto cfg = tasks.create();
+        auto& p = static_cast<entities::property&>(p_);
+        p.serialize_cfg(*cfg);
+        p.serialize(*record, *cfg);
+        tasks.replace(obj, *record);
+    }
+
+    std::shared_ptr<rte::icacheable> basic::job_pool::make_property(odb::iobject& obj){
+        return entities::factory::make_entity<e::property>(obj);
+    }
+
+    std::shared_ptr<rte::icacheable> basic::job_pool::model(int id){
+        return entities::factory::make_entity<e::model>(*models.find(id));
+    }
+
+    std::shared_ptr<rte::iexecutable> basic::job_pool::executable(int id){
+        return std::shared_ptr<rte::iexecutable>( new rte::executable(reader::read<std::string>(*executables.find(id), "path")) );
     }
 
     basic::basic(odb::iobjectdb& db)
@@ -111,14 +136,14 @@ namespace wdb { namespace deployment {
 
     std::vector<std::shared_ptr<entities::model>> basic::fetch_models_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::model>> ms;
-        for(auto &obj : models.find_like(o))
+        for(auto& obj : models.find_like(o))
             ms.emplace_back(entities::factory::make_entity<e::model>(*obj));
         return ms;
     }
 
     std::vector<std::shared_ptr<entities::property>> basic::fetch_properties_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::property>> ps;
-        for(auto &obj : properties.find_like(o))
+        for(auto& obj : properties.find_like(o))
             ps.emplace_back(entities::factory::make_entity<e::property>(*obj));
         return ps;
     }
@@ -137,27 +162,16 @@ namespace wdb { namespace deployment {
 
     int basic::count_undefined(odb::iobject& o){
         unsigned n_undefined = 0;
-        for(auto &obj : properties.find_like(o)){
-            signature signature_(*obj);
-            std::shared_ptr<entities::property> p(fetch_property(signature_.get_id()));
-            if(p->is_undefined()) n_undefined++;
-        }
+        for(auto& obj : properties.find_like(o))
+            if(entities::property::is_undefined(*obj)) n_undefined++;
         return n_undefined;
     }
 
     std::vector<std::shared_ptr<odb::iobject>> basic::query(odb::iobject& o){
-        for(auto &obj : properties.find_like(o)){
-            std::shared_ptr<entities::property> p = entities::factory::make_entity<e::property>(*obj);
-            if(p->is_undefined()){
-                entities::controller ctrl;
-                object record, serialized_cfg;
-
-                ctrl.resolve(*fetch_executable(p->get_executable()),*fetch_model(p->get_model()),*p);
-                ctrl.finalize(*p, record, serialized_cfg);
-
-                properties.replace(*obj, record);
-            }
-        }
+        entities::controller c;
+        rte::simple::root_controller r(get_worker_pool());
+        r.add_controller(c);
+        r.yield();
         return properties.find_like(o);
     }
 
