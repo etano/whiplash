@@ -9,6 +9,7 @@ namespace wdb { namespace odb { namespace mongo {
         collection(impl coll);
         virtual ~collection(){}
         virtual void list_objects() override;
+        virtual std::shared_ptr<iobject> create() override;
         virtual std::shared_ptr<iobject> find(int id) override;
         virtual std::vector<std::shared_ptr<iobject>> find_like(iobject& o) override;
         virtual void print_object(int id) override;

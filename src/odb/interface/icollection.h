@@ -9,6 +9,7 @@ namespace wdb { namespace odb {
     public:
         virtual ~icollection(){}
         virtual void list_objects() = 0;
+        virtual std::shared_ptr<iobject> create() = 0;
         virtual std::shared_ptr<iobject> find(int id) = 0;
         virtual std::vector<std::shared_ptr<iobject>> find_like(iobject& o) = 0;
         virtual void print_object(int id) = 0;

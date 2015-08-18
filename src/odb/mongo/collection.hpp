@@ -21,6 +21,10 @@ namespace wdb { namespace odb { namespace mongo {
             std::cout << bsoncxx::to_json(doc) << std::endl;
     }
 
+    std::shared_ptr<iobject> collection::create(){
+        return std::shared_ptr<iobject>(new object());
+    }
+
     std::shared_ptr<iobject> collection::find(int id){
         bsoncxx::builder::stream::document filter;
         filter << "_id" << id;
