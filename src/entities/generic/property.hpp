@@ -87,6 +87,9 @@ namespace wdb { namespace entities {
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
         bool is_undefined(){ return status_ == status::UNDEFINED; }
+        static bool is_undefined(const odb::iobject& o){
+            return status::UNDEFINED == (optional<status>)reader::read<int>(o, "status");
+        }
         optional<parameters>& get_params(){ return params_; }
         void set_status(status s){ status_ = s; }
         void set_walltime(double t){ walltime_ = t; }
