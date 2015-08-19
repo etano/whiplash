@@ -9,9 +9,9 @@ int main(int argc, char* argv[]){
     framework f(db);
     root_controller root(f.get_worker_pool());
 
-    auto ising_controller = wdb::entities::factory::make_entity<framework::e::controller>("ising");
-    auto sat_controller   = wdb::entities::factory::make_entity<framework::e::controller>("sat");
-    auto qubo_controller  = wdb::entities::factory::make_entity<framework::e::controller>("qubo");
+    auto ising_controller = wdb::entities::factory::make<framework::e::controller>("ising");
+    auto sat_controller   = wdb::entities::factory::make<framework::e::controller>("sat");
+    auto qubo_controller  = wdb::entities::factory::make<framework::e::controller>("qubo");
 
     root.add_controller( *ising_controller );
     root.add_controller( *sat_controller );

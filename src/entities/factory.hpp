@@ -8,15 +8,15 @@
 namespace wdb { namespace entities {
 
     template<etype E, ptype T, typename... Params>
-    std::shared_ptr< factory::generic_entity<E> > factory::make_entity(Params&&... parameters){
+    std::shared_ptr< factory::generic_entity<E> > factory::make(Params&&... parameters){
         using concrete_entity = typename std::tuple_element<(int)E, typename factory::associated_tuple<T>::triplet >::type;
         return std::shared_ptr< concrete_entity >(new concrete_entity(parameters...));
     }
 
     template<etype E, typename... Params>
-    std::shared_ptr< factory::generic_entity<E> > factory::make_entity(std::string class_name, Params&&... parameters) {
+    std::shared_ptr< factory::generic_entity<E> > factory::make(std::string class_name, Params&&... parameters) {
         switch(lookup_table[class_name]){
-            #define CASE(N) case (ptype)N : return make_entity<E,(ptype)N>(parameters...);
+            #define CASE(N) case (ptype)N : return make<E,(ptype)N>(parameters...);
             CASE_UNROLL
             #undef CASE
         }
@@ -24,14 +24,14 @@ namespace wdb { namespace entities {
     }
 
     template<etype E>
-    std::shared_ptr< factory::generic_entity<E> > factory::make_entity(odb::iobject& o){
+    std::shared_ptr< factory::generic_entity<E> > factory::make(odb::iobject& o){
         std::string problem_class = reader::read<std::string>(o, "class");
-        return make_entity<E>(problem_class, o);
+        return make<E>(problem_class, o);
     }
 
     template<etype E>
-    std::shared_ptr< factory::generic_entity<E> > factory::make_entity(int id){
-        return make_entity<E>(*factory::weak_instance<void>::w.collections[(int)E]->find(id));
+    std::shared_ptr< factory::generic_entity<E> > factory::make(int id){
+        return make<E>(*factory::weak_instance<void>::w.collections[(int)E]->find(id));
     }
 
     template<etype E>

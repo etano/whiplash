@@ -34,6 +34,7 @@ namespace wdb { namespace deployment {
         pool( properties ),
         worker_pool( properties )
     {
+        entities::factory::init<e::property>(properties);
         entities::factory::init<e::model>(models);
         entities::factory::init<e::executable>(executables);
     }
@@ -63,7 +64,7 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& model_id : model_ids)
             for(int i=0; i<reps; i++) {
-                std::shared_ptr<entities::property> p(entities::factory::make_entity<e::property>(problem_class, model_id, executable_id, params, random_seed()));
+                std::shared_ptr<entities::property> p(entities::factory::make<e::property>(problem_class, model_id, executable_id, params, random_seed()));
                 object serialized_cfg;
                 p->serialize_cfg(serialized_cfg);
                 records.emplace_back(std::make_shared<object>());
@@ -81,7 +82,7 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& path : paths){
             std::ifstream in(path);
-            std::shared_ptr<entities::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));
+            std::shared_ptr<entities::model> m(entities::factory::make<e::model>(problem_class, in, parent_id, params));
             in.close();
             object serialized_cfg;
             m->serialize_cfg(serialized_cfg);
@@ -94,7 +95,7 @@ namespace wdb { namespace deployment {
     int basic::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build_info, optional<params_type> params)
     {
         std::vector<std::shared_ptr<odb::iobject>> records;
-        std::shared_ptr<entities::executable> x(entities::factory::make_entity<e::executable>(problem_class, path, description, algorithm, version, build_info, params));
+        std::shared_ptr<entities::executable> x(entities::factory::make<e::executable>(problem_class, path, description, algorithm, version, build_info, params));
 
         object serialized_cfg;
         x->serialize_cfg(serialized_cfg);
@@ -104,28 +105,28 @@ namespace wdb { namespace deployment {
     }
 
     std::shared_ptr<entities::model> basic::fetch_model(int id){
-        return entities::factory::make_entity<e::model>(*models.find(id));
+        return entities::factory::make<e::model>(*models.find(id));
     }
 
     std::shared_ptr<entities::executable> basic::fetch_executable(int id){
-        return entities::factory::make_entity<e::executable>(*executables.find(id));
+        return entities::factory::make<e::executable>(*executables.find(id));
     }
 
     std::shared_ptr<entities::property> basic::fetch_property(int id){
-        return entities::factory::make_entity<e::property>(*properties.find(id));
+        return entities::factory::make<e::property>(*properties.find(id));
     }
 
     std::vector<std::shared_ptr<entities::model>> basic::fetch_models_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::model>> ms;
         for(auto& obj : models.find_like(o))
-            ms.emplace_back(entities::factory::make_entity<e::model>(*obj));
+            ms.emplace_back(entities::factory::make<e::model>(*obj));
         return ms;
     }
 
     std::vector<std::shared_ptr<entities::property>> basic::fetch_properties_like(odb::iobject& o){
         std::vector<std::shared_ptr<entities::property>> ps;
         for(auto& obj : properties.find_like(o))
-            ps.emplace_back(entities::factory::make_entity<e::property>(*obj));
+            ps.emplace_back(entities::factory::make<e::property>(*obj));
         return ps;
     }
 

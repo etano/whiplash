@@ -49,16 +49,16 @@ namespace wdb { namespace entities {
         using generic_entity = typename std::tuple_element<(int)E, typename generic_tuple::triplet >::type;
 
         template<etype E, ptype T, typename... Params>
-        static std::shared_ptr< generic_entity<E> > make_entity(Params&&... parameters);
+        static std::shared_ptr< generic_entity<E> > make(Params&&... parameters);
 
         template<etype E, typename... Params>
-        static std::shared_ptr< generic_entity<E> > make_entity(std::string class_name, Params&&... parameters);
+        static std::shared_ptr< generic_entity<E> > make(std::string class_name, Params&&... parameters);
 
         template<etype E>
-        static std::shared_ptr< generic_entity<E> > make_entity(odb::iobject& o);
+        static std::shared_ptr< generic_entity<E> > make(odb::iobject& o);
 
         template<etype E>
-        static std::shared_ptr< generic_entity<E> > make_entity(int id);
+        static std::shared_ptr< generic_entity<E> > make(int id);
 
         template<etype E>
         static void init(odb::icollection& c);
