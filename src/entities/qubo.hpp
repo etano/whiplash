@@ -5,12 +5,14 @@ namespace wdb { namespace entities {
     namespace qubo {
         class model;
         class property;
+        class executable;
         class controller;
     }
     template<>
     struct info<ptype::qubo> {
         typedef qubo::model associated_model_type;
         typedef qubo::property associated_property_type;
+        typedef qubo::executable associated_executable_type;
         typedef qubo::controller associated_controller_type;
         static constexpr char name[]= "qubo";
     };
@@ -19,6 +21,7 @@ namespace wdb { namespace entities {
 
 #include "entities/qubo/model.hpp"
 #include "entities/qubo/property.hpp"
+#include "entities/qubo/executable.hpp"
 #include "entities/qubo/controller.hpp"
 
 #endif

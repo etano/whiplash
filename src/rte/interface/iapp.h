@@ -1,11 +1,11 @@
-#ifndef WDB_RTE_IEXECUTABLE_H
-#define WDB_RTE_IEXECUTABLE_H
+#ifndef WDB_RTE_IAPP_H
+#define WDB_RTE_IAPP_H
 
 namespace wdb { namespace rte {
 
-    class iexecutable {
+    class iapp {
     public:
-        virtual ~iexecutable(){}
+        virtual ~iapp(){}
         virtual void operator()(int argc, char** argv) = 0;
         virtual void operator()() = 0;
     };

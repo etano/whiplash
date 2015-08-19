@@ -5,10 +5,12 @@ namespace wdb { namespace entities {
 
     class model;
     class property;
+    class executable;
     class controller;
 
     enum class etype { model,
                        property,
+                       executable,
                        controller };
 
     enum class ptype {
@@ -32,12 +34,14 @@ namespace wdb { namespace entities {
         struct associated_tuple {
             typedef std::tuple< typename info<(ptype)T>::associated_model_type,
                                 typename info<(ptype)T>::associated_property_type,
+                                typename info<(ptype)T>::associated_executable_type,
                                 typename info<(ptype)T>::associated_controller_type > triplet;
         };
 
         struct generic_tuple {
             typedef std::tuple< entities::model,
                                 entities::property,
+                                entities::executable,
                                 entities::controller > triplet;
         };
 

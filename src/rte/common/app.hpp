@@ -1,14 +1,14 @@
-#ifndef WDB_RTE_COMMON_EXECUTABLE_HPP
-#define WDB_RTE_COMMON_EXECUTABLE_HPP
+#ifndef WDB_RTE_COMMON_APP_HPP
+#define WDB_RTE_COMMON_APP_HPP
 
 namespace wdb { namespace rte {
 
-    class executable : public iexecutable {
+    class app : public iapp {
     public:
-        executable(std::string path){
+        app(std::string path){
             open(path);
         }
-        virtual ~executable() override {
+        virtual ~app() override {
             dlclose(handle);
         }
         virtual void operator()(int argc, char** argv) override {

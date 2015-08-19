@@ -3,8 +3,8 @@
 
 namespace wdb { namespace deployment {
 
-    basic::job_pool::job_pool(odb::icollection& t, odb::icollection& e)
-        : tasks(t), executables(e) { }
+    basic::job_pool::job_pool(odb::icollection& t)
+        : tasks(t) { }
 
     size_t basic::job_pool::beat(){
         return quote().size(); // TODO: optimize me
@@ -25,20 +25,17 @@ namespace wdb { namespace deployment {
         tasks.replace(obj, *record);
     }
 
-    std::shared_ptr<rte::iexecutable> basic::job_pool::executable(int id){
-        return std::shared_ptr<rte::iexecutable>( new rte::executable(reader::read<std::string>(*executables.find(id), "path")) );
-    }
-
     basic::basic(odb::iobjectdb& db)
       : db(db),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
         rng( wdb::timer::now() ),
-        pool( properties, executables ),
-        worker_pool( properties, executables )
+        pool( properties ),
+        worker_pool( properties )
     {
         entities::factory::init<e::model>(models);
+        entities::factory::init<e::executable>(executables);
     }
 
     basic::job_pool& basic::get_pool(){
@@ -86,7 +83,7 @@ namespace wdb { namespace deployment {
             std::ifstream in(path);
             std::shared_ptr<entities::model> m(entities::factory::make_entity<e::model>(problem_class, in, parent_id, params));
             in.close();
-            object record, serialized_cfg;
+            object serialized_cfg;
             m->serialize_cfg(serialized_cfg);
             records.emplace_back(std::make_shared<object>());
             m->serialize(*records.back(), serialized_cfg);
@@ -96,32 +93,22 @@ namespace wdb { namespace deployment {
 
     int basic::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build_info, optional<params_type> params)
     {
-        // TODO: is there a reason this isn't also done the same way model and property are done?
-        object record;
+        std::vector<std::shared_ptr<odb::iobject>> records;
+        std::shared_ptr<entities::executable> x(entities::factory::make_entity<e::executable>(problem_class, path, description, algorithm, version, build_info, params));
 
-        // Required arguments
-        writer::prop("path", path) >> record;
-        writer::prop("class", problem_class) >> record;
-        writer::prop("description", description) >> record;
-        writer::prop("algorithm", algorithm) >> record;
-        writer::prop("version", version) >> record;
-        writer::prop("build_info", build_info) >> record;
-
-        // Optional arguments
-        if (params)
-            if (params.unwrap().get_container())
-                writer::prop("cfg", params) >> record;
-
-        // Sign and insert
-        return executables.insert(record, signature(db, "executables", owner)); // TODO: buggy
+        object serialized_cfg;
+        x->serialize_cfg(serialized_cfg);
+        records.emplace_back(std::make_shared<object>());
+        x->serialize(*records.back(), serialized_cfg);
+        return executables.insert_many(records, db, "executables", owner)[0];
     }
 
     std::shared_ptr<entities::model> basic::fetch_model(int id){
         return entities::factory::make_entity<e::model>(*models.find(id));
     }
 
-    std::shared_ptr<rte::iexecutable> basic::fetch_executable(int id){
-        return std::shared_ptr<rte::executable>( new rte::executable(reader::read<std::string>(*executables.find(id), "path")) );
+    std::shared_ptr<entities::executable> basic::fetch_executable(int id){
+        return entities::factory::make_entity<e::executable>(*executables.find(id));
     }
 
     std::shared_ptr<entities::property> basic::fetch_property(int id){

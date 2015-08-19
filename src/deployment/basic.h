@@ -14,14 +14,12 @@ namespace wdb { namespace deployment {
 
         class job_pool : public rte::ipool {
         public:
-            job_pool(odb::icollection& t, odb::icollection& e);
+            job_pool(odb::icollection& t);
             virtual size_t beat() override;
             virtual std::vector<std::shared_ptr<odb::iobject>> quote() override;
-            virtual std::shared_ptr<rte::iexecutable> executable(int id) override;
             virtual void finalize(odb::iobject& obj, rte::icacheable& p_) override;
         private:
             odb::icollection& tasks;
-            odb::icollection& executables;
         };
 
         basic(odb::iobjectdb& db);
@@ -70,7 +68,7 @@ namespace wdb { namespace deployment {
         int random_seed();
         int count_undefined(odb::iobject& o);
 
-        std::shared_ptr<rte::iexecutable> fetch_executable(int id);
+        std::shared_ptr<entities::executable> fetch_executable(int id);
         std::shared_ptr<entities::model> fetch_model(int id);
         std::shared_ptr<entities::property> fetch_property(int id);
         std::vector<std::shared_ptr<entities::model>> fetch_models_like(odb::iobject& o);
