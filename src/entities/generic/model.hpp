@@ -3,13 +3,6 @@
 
 namespace wdb { namespace entities {
 
-    template<ptype Problem>
-    struct info {};
-
-} }
-
-namespace wdb { namespace entities {
-
     class model : public wdb::rte::icacheable {
     public:
         template<class I>

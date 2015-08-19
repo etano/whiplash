@@ -35,6 +35,7 @@
 #include "rte/simple.hpp"
 #include "rte/slurm.hpp"
 
+#include "entities/factory.h"
 #include "entities/generic.hpp"
 #include "entities/ising.hpp"
 #include "entities/qubo.hpp"

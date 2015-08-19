@@ -25,10 +25,6 @@ namespace wdb { namespace deployment {
         tasks.replace(obj, *record);
     }
 
-    std::shared_ptr<rte::icacheable> basic::job_pool::make_property(odb::iobject& obj){
-        return entities::factory::make_entity<e::property>(obj);
-    }
-
     std::shared_ptr<rte::icacheable> basic::job_pool::model(int id){
         return entities::factory::make_entity<e::model>(*models.find(id));
     }

@@ -19,7 +19,6 @@ namespace wdb { namespace deployment {
             virtual std::vector<std::shared_ptr<odb::iobject>> quote() override;
             virtual std::shared_ptr<rte::iexecutable> executable(int id) override;
             virtual std::shared_ptr<rte::icacheable> model(int id) override;
-            virtual std::shared_ptr<rte::icacheable> make_property(odb::iobject& obj) override;
             virtual void finalize(odb::iobject& obj, rte::icacheable& p_) override;
         private:
             odb::icollection& tasks;
