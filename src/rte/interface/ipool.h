@@ -8,7 +8,7 @@ namespace wdb { namespace rte {
         virtual ~ipool(){}
         virtual size_t beat() = 0;
         virtual std::vector<std::shared_ptr<odb::iobject>> quote() = 0;
-        virtual void finalize(odb::iobject& obj, rte::icacheable& p) = 0;
+        virtual void submit(odb::iobject& orig, rte::icacheable& mod) = 0;
     };
 
 } }

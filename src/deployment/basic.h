@@ -17,9 +17,9 @@ namespace wdb { namespace deployment {
             job_pool(odb::icollection& t);
             virtual size_t beat() override;
             virtual std::vector<std::shared_ptr<odb::iobject>> quote() override;
-            virtual void finalize(odb::iobject& obj, rte::icacheable& p_) override;
+            virtual void submit(odb::iobject& orig, rte::icacheable& mod) override;
         private:
-            odb::icollection& tasks;
+            odb::icollection& properties;
         };
 
         basic(odb::iobjectdb& db);

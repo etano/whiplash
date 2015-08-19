@@ -3,8 +3,8 @@
 
 namespace wdb { namespace deployment {
 
-    basic::job_pool::job_pool(odb::icollection& t)
-        : tasks(t) { }
+    basic::job_pool::job_pool(odb::icollection& p)
+        : properties(p) { }
 
     size_t basic::job_pool::beat(){
         return quote().size(); // TODO: optimize me
@@ -13,16 +13,16 @@ namespace wdb { namespace deployment {
     std::vector<std::shared_ptr<odb::iobject>> basic::job_pool::quote(){
         object filter;
         writer::prop("status", (int)entities::property::status::UNDEFINED) >> filter;
-        return tasks.find_like(filter);
+        return properties.find_like(filter);
     }
 
-    void basic::job_pool::finalize(odb::iobject& obj, rte::icacheable& p_){
-        auto record = tasks.create();
-        auto cfg = tasks.create();
-        auto& p = static_cast<entities::property&>(p_);
+    void basic::job_pool::submit(odb::iobject& orig, rte::icacheable& mod){
+        auto record = properties.create();
+        auto cfg = properties.create();
+        auto& p = static_cast<entities::property&>(mod);
         p.serialize_cfg(*cfg);
         p.serialize(*record, *cfg);
-        tasks.replace(obj, *record);
+        properties.replace(orig, *record);
     }
 
     basic::basic(odb::iobjectdb& db)

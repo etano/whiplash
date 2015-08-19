@@ -8,7 +8,7 @@ namespace wdb { namespace entities {
         controller(){}
         virtual ~controller() {};
 
-        virtual void resolve(odb::iobject& obj, rte::ipool& provider){
+        virtual void resolve(odb::iobject& obj, rte::ipool& pool){
 
             auto p = factory::make_entity<etype::property>(obj);
             auto m = factory::make_entity<etype::model>(p->get_model());
@@ -30,7 +30,7 @@ namespace wdb { namespace entities {
             p->set_status(property::status::DEFINED);
             p->set_walltime(wt.get_time());
 
-            provider.finalize(obj,*p);
+            pool.submit(obj, *p);
         }
 
         virtual void prepare_for_segue(icontroller_delegate& dest) override {
