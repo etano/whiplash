@@ -24,6 +24,9 @@ namespace wdb { namespace entities {
     struct info {};
 
     class factory {
+        factory(const factory&) = delete;
+        factory& operator=(const factory&) = delete;
+        factory() = default;
     public:
         template<ptype T>
         struct associated_tuple {
@@ -50,8 +53,22 @@ namespace wdb { namespace entities {
         template<etype E>
         static std::shared_ptr< generic_entity<E> > make_entity(odb::iobject& o);
 
+        template<etype E>
+        static std::shared_ptr< generic_entity<E> > make_entity(int id);
+
+        template<etype E>
+        static void init(odb::icollection& c);
+
         static std::unordered_map<std::string, ptype> lookup_table;
+    private:
+        std::vector<odb::icollection*> collections;
+        template<class T> struct weak_instance {
+            static factory w;
+        };
     };
+
+    template<class T>
+    factory factory::weak_instance<T>::w;
 
     using reader = wdb::odb::mongo::prop_reader;
     using writer = wdb::odb::mongo::prop_writer;

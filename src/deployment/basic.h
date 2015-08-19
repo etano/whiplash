@@ -14,15 +14,13 @@ namespace wdb { namespace deployment {
 
         class job_pool : public rte::ipool {
         public:
-            job_pool(odb::icollection& t, odb::icollection& m, odb::icollection& e);
+            job_pool(odb::icollection& t, odb::icollection& e);
             virtual size_t beat() override;
             virtual std::vector<std::shared_ptr<odb::iobject>> quote() override;
             virtual std::shared_ptr<rte::iexecutable> executable(int id) override;
-            virtual std::shared_ptr<rte::icacheable> model(int id) override;
             virtual void finalize(odb::iobject& obj, rte::icacheable& p_) override;
         private:
             odb::icollection& tasks;
-            odb::icollection& models;
             odb::icollection& executables;
         };
 

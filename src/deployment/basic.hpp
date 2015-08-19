@@ -3,8 +3,8 @@
 
 namespace wdb { namespace deployment {
 
-    basic::job_pool::job_pool(odb::icollection& t, odb::icollection& m, odb::icollection& e)
-        : tasks(t), models(m), executables(e) { }
+    basic::job_pool::job_pool(odb::icollection& t, odb::icollection& e)
+        : tasks(t), executables(e) { }
 
     size_t basic::job_pool::beat(){
         return quote().size(); // TODO: optimize me
@@ -25,10 +25,6 @@ namespace wdb { namespace deployment {
         tasks.replace(obj, *record);
     }
 
-    std::shared_ptr<rte::icacheable> basic::job_pool::model(int id){
-        return entities::factory::make_entity<e::model>(*models.find(id));
-    }
-
     std::shared_ptr<rte::iexecutable> basic::job_pool::executable(int id){
         return std::shared_ptr<rte::iexecutable>( new rte::executable(reader::read<std::string>(*executables.find(id), "path")) );
     }
@@ -39,9 +35,11 @@ namespace wdb { namespace deployment {
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
         rng( wdb::timer::now() ),
-        pool( properties, models, executables ),
-        worker_pool( properties, models, executables )
-    {}
+        pool( properties, executables ),
+        worker_pool( properties, executables )
+    {
+        entities::factory::init<e::model>(models);
+    }
 
     basic::job_pool& basic::get_pool(){
         return pool;

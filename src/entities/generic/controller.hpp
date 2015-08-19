@@ -11,7 +11,7 @@ namespace wdb { namespace entities {
         virtual void resolve(odb::iobject& obj, rte::ipool& provider){
 
             auto p = factory::make_entity<etype::property>(obj);
-            auto m = provider.model(p->get_model());
+            auto m = factory::make_entity<etype::model>(p->get_model());
             auto x = provider.executable(p->get_executable());
 
             if(!p->is_undefined()) throw std::runtime_error("Error: property is already defined");

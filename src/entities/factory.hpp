@@ -25,8 +25,20 @@ namespace wdb { namespace entities {
 
     template<etype E>
     std::shared_ptr< factory::generic_entity<E> > factory::make_entity(odb::iobject& o){
-        std::string model_class = reader::read<std::string>(o, "class");
-        return make_entity<E>(model_class, o);
+        std::string problem_class = reader::read<std::string>(o, "class");
+        return make_entity<E>(problem_class, o);
+    }
+
+    template<etype E>
+    std::shared_ptr< factory::generic_entity<E> > factory::make_entity(int id){
+        return make_entity<E>(*factory::weak_instance<void>::w.collections[(int)E]->find(id));
+    }
+
+    template<etype E>
+    void factory::init(odb::icollection& c){
+        int i = (int)E;
+        factory::weak_instance<void>::w.collections.resize(i+1);
+        factory::weak_instance<void>::w.collections[i] = &c;
     }
 
     std::unordered_map<std::string, ptype> factory::lookup_table {
