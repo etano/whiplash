@@ -1,12 +1,9 @@
 #include "wdb.hpp"
-
-using objectdb = wdb::odb::mongo::objectdb;
-using framework = wdb::deployment::basic;
+using framework = wdb::deployment::cwave;
 
 int main(int argc, char* argv[]){
     // Initialize database and deployment
-    objectdb db("cwave.ethz.ch:27017");
-    framework deployment(db);
+    framework deployment;
 
     // Parse arguments
     framework::params_type params(argc,argv);

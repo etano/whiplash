@@ -3,30 +3,14 @@
 
 namespace wdb { namespace deployment {
 
+    template<class D>
     class basic {
     public:
         typedef parameters params_type;
-        using reader = wdb::odb::mongo::prop_reader;
-        using writer = wdb::odb::mongo::prop_writer;
-        using signature = wdb::odb::mongo::signature;
-        using object = wdb::odb::mongo::object;
         using e = wdb::entities::etype;
 
-        class job_pool : public rte::ipool {
-        public:
-            job_pool(odb::icollection& t);
-            virtual size_t left() override;
-            virtual std::vector<std::shared_ptr<odb::iobject>> pull() override;
-            virtual void push(odb::iobject& orig, rte::icacheable& mod) override;
-        private:
-            odb::icollection& properties;
-        };
-
-        basic(odb::iobjectdb& db);
+        basic() : rng( wdb::timer::now() ) {}
         void format();
-
-        job_pool& get_pool();
-        job_pool& get_worker_pool();
 
         int insert_model(std::string problem_class,                            // name of problem class (ex: "JobShop")
                          std::string owner,                                    // who created the model instance
@@ -75,15 +59,14 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<entities::property>> fetch_properties_like(odb::iobject& o);
 
         std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
-    private:
-        odb::icollection& properties;
-        odb::icollection& models;
-        odb::icollection& executables;
-        odb::iobjectdb& db;
 
-        job_pool pool;
-        job_pool worker_pool;
-
+        virtual odb::icollection& get_models() = 0;
+        virtual odb::icollection& get_properties() = 0;
+        virtual odb::icollection& get_executables() = 0;
+        virtual odb::iobjectdb& get_db() = 0;
+        virtual rte::ipool& get_pool() = 0;
+        virtual rte::ipool& get_worker_pool() = 0;
+    protected:
         std::mt19937 rng;
         std::uniform_int_distribution<uint32_t> uint_dist;
     };

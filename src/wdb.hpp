@@ -46,4 +46,7 @@
 #include "deployment/basic.h"
 #include "deployment/basic.hpp"
 
+#include "deployment/cwave.h"
+#include "deployment/cwave.hpp"
+
 #endif

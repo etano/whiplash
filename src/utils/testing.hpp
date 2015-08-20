@@ -6,6 +6,4 @@
 #include "utils/catch.hpp"
 #include "utils/timer.hpp"
 
-#define TEST_SERVER "cwave.ethz.ch:27017"
-
 #endif
