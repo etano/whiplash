@@ -16,14 +16,6 @@ namespace wdb { namespace deployment {
         entities::factory::init<e::executable>(executables);
     }
 
-    std::vector<std::shared_ptr<odb::iobject>> cwave::query(odb::iobject& o){
-        entities::controller c;
-        root_controller r(get_worker_pool());
-        r.add_controller(c);
-        r.yield();
-        return properties.find_like(o);
-    }
-
     odb::icollection& cwave::get_models(){
         return models;
     }

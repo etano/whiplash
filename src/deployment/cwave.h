@@ -24,7 +24,6 @@ namespace wdb { namespace deployment {
         };
 
         cwave();
-        std::vector<std::shared_ptr<odb::iobject>> query(odb::iobject& o);
 
         virtual odb::icollection& get_models() override;
         virtual odb::icollection& get_properties() override;
