@@ -1,7 +1,7 @@
 #ifndef WDB_RTE_SIMPLE_SCHEDULER_HPP
 #define WDB_RTE_SIMPLE_SCHEDULER_HPP
 
-#define WORKER_BINARY "worker.driver"
+#define WORKER_BINARY "drivers/worker.driver"
 
 namespace wdb { namespace rte { namespace simple {
 
@@ -18,7 +18,6 @@ namespace wdb { namespace rte { namespace simple {
             logger = new logger_type();
 
             if((sid = setsid()) < 0) logger->error("Could not create process group\n");
-            if((chdir("/")) < 0) logger->error("Could not change working directory to /\n");
             close(STDIN_FILENO); close(STDOUT_FILENO); close(STDERR_FILENO);
 
             logger->notice("Successfully started daemon\n");
@@ -48,7 +47,7 @@ namespace wdb { namespace rte { namespace simple {
                 return;
             }
             if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE);
-            // ... not reachable
+            throw std::runtime_error("execvp error"); // unreachable
         }
 
         virtual void shrink() override {
