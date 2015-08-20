@@ -30,15 +30,10 @@ int main(int argc, char* argv[]){
             framework::writer::prop(param.first, param.second) >> filter;
     }
 
-    // Manually resolve unresolved properties
-    wdb::entities::controller c;
-    framework::root_controller r(deployment.get_worker_pool());
-    r.add_controller(c);
-    r.yield();
-
     // Query and print results
     for(const auto& results : deployment.query( filter )){
-        for(const auto result : framework::reader::read<framework::reader::array_type>(*results, target).unwrap())
+        if(wdb::entities::property::is_undefined(*results)) std::cout << "Unresolved property\n";
+        else for(const auto result : framework::reader::read<framework::reader::array_type>(*results, target).unwrap())
             std::cout << framework::reader::read<double>(result) << std::endl;
     }
 
