@@ -26,7 +26,7 @@ namespace wdb { namespace rte { namespace simple {
 
         void yield(){
             for(;;){
-                if(pool.left()){
+                if(pool.size()){
                     if(!children.size()) this->expand();
                 }else{
                     if(children.size())  this->shrink();

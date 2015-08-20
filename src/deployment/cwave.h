@@ -16,7 +16,7 @@ namespace wdb { namespace deployment {
         class job_pool : public rte::ipool {
         public:
             job_pool(odb::icollection& t);
-            virtual size_t left() override;
+            virtual size_t size() override;
             virtual std::vector<std::shared_ptr<odb::iobject>> pull() override;
             virtual void push(odb::iobject& orig, rte::icacheable& mod) override;
         private:

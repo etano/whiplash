@@ -51,7 +51,7 @@ namespace wdb { namespace deployment {
     cwave::job_pool::job_pool(odb::icollection& p)
         : properties(p) { }
 
-    size_t cwave::job_pool::left(){
+    size_t cwave::job_pool::size(){
         return pull().size(); // TODO: optimize me
     }
 
