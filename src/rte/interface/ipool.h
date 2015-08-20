@@ -6,9 +6,9 @@ namespace wdb { namespace rte {
     class ipool {
     public:
         virtual ~ipool(){}
-        virtual size_t beat() = 0;
-        virtual std::vector<std::shared_ptr<odb::iobject>> quote() = 0;
-        virtual void submit(odb::iobject& orig, rte::icacheable& mod) = 0;
+        virtual size_t left() = 0;
+        virtual std::vector<std::shared_ptr<odb::iobject>> pull() = 0;
+        virtual void push(odb::iobject& orig, rte::icacheable& mod) = 0;
     };
 
 } }

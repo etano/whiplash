@@ -6,17 +6,17 @@ namespace wdb { namespace deployment {
     basic::job_pool::job_pool(odb::icollection& p)
         : properties(p) { }
 
-    size_t basic::job_pool::beat(){
-        return quote().size(); // TODO: optimize me
+    size_t basic::job_pool::left(){
+        return pull().size(); // TODO: optimize me
     }
 
-    std::vector<std::shared_ptr<odb::iobject>> basic::job_pool::quote(){
+    std::vector<std::shared_ptr<odb::iobject>> basic::job_pool::pull(){
         object filter;
         writer::prop("status", (int)entities::property::status::UNDEFINED) >> filter;
         return properties.find_like(filter);
     }
 
-    void basic::job_pool::submit(odb::iobject& orig, rte::icacheable& mod){
+    void basic::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
         auto record = properties.create();
         auto cfg = properties.create();
         auto& p = static_cast<entities::property&>(mod);

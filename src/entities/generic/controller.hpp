@@ -30,7 +30,7 @@ namespace wdb { namespace entities {
             p->set_status(property::status::DEFINED);
             p->set_walltime(wt.get_time());
 
-            pool.submit(obj, *p);
+            pool.push(obj, *p);
         }
 
         virtual void prepare_for_segue(icontroller_delegate& dest) override {

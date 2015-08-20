@@ -21,7 +21,7 @@ namespace wdb { namespace rte { namespace simple {
 
         virtual void yield() override {
             for(int i = 0; i < controllers.size(); i++){
-                segue(i); for(auto& obj : pool.quote())
+                segue(i); for(auto& obj : pool.pull())
                     delegate->resolve(*obj, pool);
             }
         }
