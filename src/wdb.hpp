@@ -38,7 +38,7 @@
 #include "entities/factory.h"
 #include "entities/generic.hpp"
 #include "entities/ising.hpp"
-#include "entities/qubo.hpp"
+#include "entities/xx.hpp"
 #include "entities/sat.hpp"
 #include "entities/tsp.hpp"
 #include "entities/factory.hpp"

@@ -17,7 +17,7 @@ namespace wdb { namespace entities {
         unknown,
         ising,
         tsp,
-        qubo,
+        xx,
         sat,
         LENGTH // 5
     };

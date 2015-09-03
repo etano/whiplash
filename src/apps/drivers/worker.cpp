@@ -7,11 +7,11 @@ int main(int argc, char* argv[]){
 
     auto ising_controller = wdb::entities::factory::make<framework::e::controller>("ising");
     auto sat_controller   = wdb::entities::factory::make<framework::e::controller>("sat");
-    auto qubo_controller  = wdb::entities::factory::make<framework::e::controller>("qubo");
+    auto xx_controller  = wdb::entities::factory::make<framework::e::controller>("xx");
 
     root.add_controller( *ising_controller );
     root.add_controller( *sat_controller );
-    root.add_controller( *qubo_controller );
+    root.add_controller( *xx_controller );
 
     root.declare_segue( *sat_controller, *ising_controller );
     root.declare_segue( *ising_controller, *sat_controller );

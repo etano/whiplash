@@ -1,7 +1,7 @@
-#ifndef WDB_ENTITIES_QUBO_PROPERTY_HPP
-#define WDB_ENTITIES_QUBO_PROPERTY_HPP
+#ifndef WDB_ENTITIES_XX_PROPERTY_HPP
+#define WDB_ENTITIES_XX_PROPERTY_HPP
 
-namespace wdb { namespace entities { namespace qubo {
+namespace wdb { namespace entities { namespace xx {
 
     class property : public entities::property {
     public:
@@ -10,7 +10,7 @@ namespace wdb { namespace entities { namespace qubo {
         {}
 
         property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
-            : entities::property(typename entities::info<ptype::qubo>(), model_id, executable_id, params, seed, s)
+            : entities::property(typename entities::info<ptype::xx>(), model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};
