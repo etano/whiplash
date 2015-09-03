@@ -3,7 +3,7 @@
 echo 'Initializing WDB...'
 $1 ./drivers/format_db.driver
 echo 'Committing model...'
-$1 ./drivers/commit_model.driver -path 108problem.lat -class ising -owner akosenko -random "info"
+$1 ./drivers/commit_model.driver -path 108ising.lat -class ising -owner akosenko -random "info"
 echo 'Committing executable...'
 $1 ./drivers/commit_executable.driver -path apps/anc/an_ss_rn_fi -class ising -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner ebrown
 echo 'Committing property...'
