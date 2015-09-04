@@ -7,7 +7,7 @@ export WDB_HOME=$(pwd)/../../
 cd DT-SQA && make clean && make -j && cd ../
 
 ## XX solver ##
-cd XXcode && make clean && make -j && cd ../
+cd XXcode && make -f Makefile.wdb clean && make -f Makefile.wdb -j && cd ../
 
 ## Annealing codes ##
 cd anc && make clean && make -j single
