@@ -5,9 +5,10 @@ $1 ./drivers/format_db.driver
 echo 'Committing model...'
 $1 ./drivers/commit_model.driver -path 10xx.lat -class xx -owner akosenko
 echo 'Committing executable...'
-$1 ./drivers/commit_executable.driver -path apps/XXcode/main.xx -class xx -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner akosenko
+$1 ./drivers/commit_executable.driver -path apps/XXcode/xx.app -class xx -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner akosenko
 echo 'Committing property...'
-$1 ./drivers/commit_property.driver -class xx -model 0 -executable 0 -owner akosenko -n_sweeps 7
+$1 ./drivers/commit_property.driver -class xx -model 0 -executable 0 -owner akosenko -loops 10xx.loops
+
 echo 'Bootstrapping the scheduler...'
 ./drivers/scheduler.driver
 echo 'Querying property...'
