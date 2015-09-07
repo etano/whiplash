@@ -15,6 +15,12 @@ namespace wdb { namespace rte {
             typedef int (*fptr_t)(int,char**);
             ((fptr_t)fptr)(argc, argv);
         }
+        virtual bool preload(int argc, char** argv) override {
+            if(!fptr_preload) return false;
+            typedef int (*fptr_t)(int,char**);
+            ((fptr_t)fptr_preload)(argc, argv);
+            return true;
+        }
         virtual void operator()() override {
             typedef int (*fptr_t)();
             ((fptr_t)fptr)();
@@ -25,9 +31,12 @@ namespace wdb { namespace rte {
             dlerror(); // reset errors
             fptr = dlsym(handle, "main");
             if(dlerror()) throw std::runtime_error("Error: cannot load symbol!");
+            fptr_preload = dlsym(handle, "wdb_preload");
+            if(dlerror()) fptr_preload = NULL;
         }
     private:
         void* handle;
+        void* fptr_preload;
         void* fptr;
     };
 
