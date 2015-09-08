@@ -62,7 +62,7 @@ namespace wdb { namespace entities { namespace xx {
             writer::prop("bonds", bonds_) >> cfg;
         }
 
-        const int num_sites() const {
+        const int num_spins() const {
             return N_;
         }
 

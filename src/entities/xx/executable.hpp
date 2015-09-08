@@ -15,7 +15,7 @@ namespace wdb { namespace entities { namespace xx {
 
         virtual void operator()(int argc, char** argv){
             if(!this->app_->preload(argc, argv)) throw std::runtime_error("Could not preload Fortran binary");
-            (*this->app_)();
+            entities::executable::operator()(argc, argv);
         }
 
         virtual ~executable() override {};

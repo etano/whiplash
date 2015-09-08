@@ -17,7 +17,7 @@ namespace wdb { namespace rte {
         }
         virtual bool preload(int argc, char** argv) override {
             if(!fptr_preload) return false;
-            typedef int (*fptr_t)(int,char**);
+            typedef void (*fptr_t)(int,char**);
             ((fptr_t)fptr_preload)(argc, argv);
             return true;
         }
