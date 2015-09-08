@@ -6,6 +6,7 @@ namespace wdb { namespace rte {
     class iapp {
     public:
         virtual ~iapp(){}
+        virtual bool preload(int argc, char** argv) = 0;
         virtual void operator()(int argc, char** argv) = 0;
         virtual void operator()() = 0;
     };

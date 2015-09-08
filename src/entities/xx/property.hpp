@@ -4,8 +4,9 @@
 namespace wdb { namespace entities { namespace xx {
 
     class property : public entities::property {
-        typedef int64_t index_type;
     public:
+        typedef int64_t index_type;
+
         property(const odb::iobject& o)
             : entities::property(o)
         {
@@ -58,6 +59,10 @@ namespace wdb { namespace entities { namespace xx {
             } else {
                 throw std::runtime_error("Error: Property neither UNDEFINED nor DEFINED!\n");
             }
+        }
+
+        std::vector<std::vector<index_type>> get_loops(){
+            return loops_;
         }
     private:
         std::vector<std::vector<index_type>> loops_;

@@ -1,7 +1,7 @@
 #ifndef WDB_RTE_SIMPLE_SCHEDULER_HPP
 #define WDB_RTE_SIMPLE_SCHEDULER_HPP
 
-#define WORKER_BINARY "drivers/worker.driver"
+#define WORKER_BINARY "./apps/drivers/worker.driver"
 
 namespace wdb { namespace rte { namespace simple {
 
