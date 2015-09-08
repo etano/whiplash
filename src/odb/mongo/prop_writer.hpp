@@ -1,6 +1,8 @@
 #ifndef WDB_ODB_MONGO_PROP_WRITER_HPP
 #define WDB_ODB_MONGO_PROP_WRITER_HPP
 
+#include <tuple>
+
 namespace wdb { namespace odb { namespace mongo {
 
     class prop_writer {
@@ -11,6 +13,7 @@ namespace wdb { namespace odb { namespace mongo {
         static T decompose(const T& t){
             return t;
         }
+        
         template<typename T1, typename T2>
         static std::function<void(sub_array)> decompose(const std::pair<T1, T2>& t){
             return [&t](sub_array pair){
@@ -33,6 +36,34 @@ namespace wdb { namespace odb { namespace mongo {
         static std::function<void(sub_array)> decompose(const std::vector<bool>& t){
             return [&t](sub_array array){
                 for(auto i : t) array.append(int(i));
+            };
+        }
+        
+        template<int N, class... T>
+        struct append_tuple_element{
+            sub_array a;
+            append_tuple_element(sub_array a) : a(a) {}
+            void operator()(const std::tuple<T...>& t){
+                a.append(std::get<N>(t));
+                auto next = append_tuple_element<N-1, T...>(a);
+                next(t);
+            }
+        };
+        
+        template<class... T>
+        struct append_tuple_element<0, T...>{
+            sub_array a;
+            append_tuple_element(sub_array a) : a(a) {}
+            void operator()(const std::tuple<T...>& t){
+                a.append(std::get<0>(t));
+            }
+        };
+        
+        template<typename... T>
+        static std::function<void(sub_array)> decompose(const std::tuple<T...>& t){
+            return [&t](sub_array a){
+                auto appender = append_tuple_element<std::tuple_size<std::tuple<T...>>::value-1, T...>(a);
+                appender(t);
             };
         }
 
