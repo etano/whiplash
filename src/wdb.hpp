@@ -49,4 +49,5 @@
 #include "deployment/cwave.h"
 #include "deployment/cwave.hpp"
 
+#include "utils/find.hpp"
 #endif
