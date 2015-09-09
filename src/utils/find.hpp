@@ -39,6 +39,16 @@ namespace wdb {
                               redi::make_index_tuple<(int)wdb::entities::ptype::LENGTH>::type()
                           ) >::value + 1 ];
     }
+
+    template<typename T>
+    void push(T& obj, int& argc, char**& argv){
+        int pos = checked_get< find_type<T,wdb::entities::factory::generic_tuple::triplet>() >::value + 1;
+        if(pos >= argc){
+            argc = pos+1;
+            argv = (char**)realloc(argv, sizeof(char*)*argc);
+        }
+        argv[pos] = (char*)&obj;
+    }
 }
 
 #endif

@@ -1,6 +1,13 @@
 #ifndef WDB_ENTITIES_GENERIC_CONTROLLER_HPP
 #define WDB_ENTITIES_GENERIC_CONTROLLER_HPP
 
+namespace wdb {
+
+    template<typename T>
+    void push(T& obj, int& argc, char**& argv);
+
+}
+
 namespace wdb { namespace entities {
 
     class controller : public wdb::rte::icontroller_delegate, public wdb::rte::icacheable {
@@ -9,6 +16,8 @@ namespace wdb { namespace entities {
         virtual ~controller() {};
 
         virtual void resolve(odb::iobject& obj, rte::ipool& pool){
+            int argc = 0;
+            char** argv = NULL;
 
             auto p = factory::make<etype::property>(obj);
             auto m = factory::make<etype::model>(p->get_model());
@@ -17,13 +26,11 @@ namespace wdb { namespace entities {
             if(!p->is_undefined()) throw std::runtime_error("Error: property is already defined");
             p->set_status(property::status::PROCESSING);
 
-            int argc = 3;
-            void** argv = (void**)malloc(sizeof(void*)*argc);
-            argv[1] = &*m;
-            argv[2] = &*p;
+            push<model>(*m, argc, argv);
+            push<property>(*p, argc, argv);
 
             wdb::timer wt("walltime"); wt.begin();
-            (*x)(argc, (char**)argv);
+            (*x)(argc, argv);
             free(argv);
             wt.end();
 
