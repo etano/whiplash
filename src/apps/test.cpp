@@ -12,8 +12,8 @@
 
 int main(int argc, char* argv[]){
 
-    wdb::entities::ising::model& H = *(wdb::entities::ising::model*)argv[1];
-    wdb::entities::ising::property& I = *(wdb::entities::ising::property*)argv[2];
+    wdb::entities::ising::model& H = wdb::find<wdb::entities::ising::model>(argv);
+    wdb::entities::ising::property& I = wdb::find<wdb::entities::ising::property>(argv);
 
     int n_sweeps = I.get_param<int>("n_sweeps") or I.optional_set_param<int>("n_sweeps", 10);
     double Emin(std::numeric_limits<double>::max());
