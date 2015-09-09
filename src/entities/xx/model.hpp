@@ -18,10 +18,11 @@ class parameters;
 namespace wdb { namespace entities { namespace xx {
 
     class model : public entities::model {
-        using edge = std::tuple<double, int, int, int>; ///< weight, node1, node2, color
+        using index_type = int;
+        using edge = std::tuple<double, index_type, index_type, index_type>; ///< weight, node1, node2, color
         
         bool is_valid(const edge& e){
-            const size_t nope = size_t(-1);
+            const index_type nope = index_type(-1);
             return     std::get<1>(e) != std::get<2>(e) 
                     && std::get<1>(e) != nope 
                     && std::get<2>(e) != nope;
@@ -45,11 +46,11 @@ namespace wdb { namespace entities { namespace xx {
                 if(l.find(' ') == std::string::npos || l.find('#') != std::string::npos){
                     continue;
                 }
-                edges.emplace_back(make_edge(l));
+                bonds_.emplace_back(make_edge(l));
             }
 
             N_ = 0;
-            for(const auto& e : edges){
+            for(const auto& e : bonds_){
                 N_ = std::max(N_, std::max(std::get<1>(e), std::get<2>(e)));
             }
         }
@@ -57,40 +58,37 @@ namespace wdb { namespace entities { namespace xx {
         model(const odb::iobject& o)
             : entities::model(o), N_(0)
         {
-//            for(auto e : reader::read<reader::array_type>(o, "cfg", "bonds").unwrap()){
-//                std::vector<spin_type> inds;
-//                auto sub_array = reader::read<reader::array_type>(e);
-//                for(const auto a : reader::read<reader::array_type>(sub_array[0])){
-//                    spin_type a_ = reader::read<spin_type>(a);
-//                    inds.push_back(a_);
-//                }
-
-//                double val = reader::read<double>(sub_array[1]);
-//                bonds_.push_back(std::make_pair(inds, val));
-//            }
-//            N_ = reader::read<int>(o, "cfg", "n_spins");
+            for(auto& e : reader::read<reader::array_type>(o, "cfg", "bonds").unwrap()){
+                auto edge_data = reader::read<reader::array_type>(e);
+//                edges.emplace_back(reader::read<edge>(edge_data));
+                bonds_.emplace_back(std::make_tuple( reader::read<double>(edge_data[0])
+                                                  , reader::read<index_type>(edge_data[1])
+                                                  , reader::read<index_type>(edge_data[2])
+                                                  , reader::read<index_type>(edge_data[3])));
+            }
+            N_ = reader::read<index_type>(o, "cfg", "n_spins");
         }
 
         virtual ~model() override {};
 
         virtual void serialize_cfg(odb::iobject& cfg) override {
             writer::prop("n_spins", N_) >> cfg;
-            writer::prop("bonds", edges) >> cfg;
+            writer::prop("bonds", bonds_) >> cfg;
         }
 
-        const int num_spins() const {
+        const index_type num_spins() const {
             return N_;
         }
 
-        const int num_bonds() const {
-            return edges.size();
+        const size_t num_bonds() const {
+            return bonds_.size();
         }
 
-        const std::vector<edge>& get_bonds() const { return edges; }
+        const std::vector<edge>& get_bonds() const { return bonds_; }
 
     private:
-        std::vector<edge> edges;  ///< edges
-        int N_;                   ///< number of nodes
+        std::vector<edge> bonds_;  ///< edges
+        index_type N_;                   ///< number of nodes
     };
 
 } } }
