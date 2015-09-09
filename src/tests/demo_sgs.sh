@@ -13,7 +13,7 @@ echo 'Bootstrapping the scheduler...'
 echo 'Querying property...'
 $1 ./drivers/query.driver -class ising -target cfg,costs
 
-sleep 1;
+sleep 2;
 
 echo 'Querying property again...'
 $1 ./drivers/query.driver -class ising -target cfg,costs -model_id 0

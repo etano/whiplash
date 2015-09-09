@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
-
 echo 'Initializing WDB...'
 $1 ./drivers/format_db.driver
 echo 'Committing model...'
