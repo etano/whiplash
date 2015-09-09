@@ -44,7 +44,7 @@ namespace wdb { namespace odb { namespace mongo {
             sub_array a;
             append_tuple_element(sub_array a) : a(a) {}
             void operator()(const std::tuple<T...>& t){
-                a.append(std::get<N>(t));
+                a.append(std::get<sizeof...(T) - N>(t));
                 auto next = append_tuple_element<N-1, T...>(a);
                 next(t);
             }
@@ -59,10 +59,11 @@ namespace wdb { namespace odb { namespace mongo {
             }
         };
         
+        /// @todo(slava) rewrite tuple serialization once compiler supports std::integer_sequence
         template<typename... T>
         static std::function<void(sub_array)> decompose(const std::tuple<T...>& t){
             return [&t](sub_array a){
-                auto appender = append_tuple_element<std::tuple_size<std::tuple<T...>>::value-1, T...>(a);
+                auto appender = append_tuple_element<sizeof...(T), T...>(a);
                 appender(t);
             };
         }
