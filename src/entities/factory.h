@@ -34,18 +34,18 @@ namespace wdb { namespace entities {
             typedef std::tuple< typename info<(ptype)T>::associated_model_type,
                                 typename info<(ptype)T>::associated_property_type,
                                 typename info<(ptype)T>::associated_executable_type,
-                                typename info<(ptype)T>::associated_controller_type > triplet;
+                                typename info<(ptype)T>::associated_controller_type > type;
         };
 
         struct generic_tuple {
             typedef std::tuple< entities::model,
                                 entities::property,
                                 entities::executable,
-                                entities::controller > triplet;
+                                entities::controller > type;
         };
 
         template<etype E>
-        using generic_entity = typename std::tuple_element<(int)E, typename generic_tuple::triplet >::type;
+        using generic_entity = typename std::tuple_element<(int)E, typename generic_tuple::type >::type;
 
         template<etype E, ptype T, typename... Params>
         static std::shared_ptr< generic_entity<E> > make(Params&&... parameters);

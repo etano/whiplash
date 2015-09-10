@@ -9,7 +9,7 @@ namespace wdb { namespace entities {
 
     template<etype E, ptype T, typename... Params>
     std::shared_ptr< factory::generic_entity<E> > factory::make(Params&&... parameters){
-        using concrete_entity = typename std::tuple_element<(int)E, typename factory::associated_tuple<T>::triplet >::type;
+        using concrete_entity = typename std::tuple_element<(int)E, typename factory::associated_tuple<T>::type >::type;
         return std::shared_ptr< concrete_entity >(new concrete_entity(parameters...));
     }
 
