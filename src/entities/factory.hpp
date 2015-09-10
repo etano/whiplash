@@ -1,8 +1,8 @@
 #ifndef WDB_ENTITIES_FACTORY_HPP
 #define WDB_ENTITIES_FACTORY_HPP
 
-#define CASE_UNROLL CASE(1) CASE(2) CASE(3) CASE(4)
-#define LIST_UNROLL CASE(1),CASE(2),CASE(3),CASE(4)
+#define CASE_UNROLL CASE(0) CASE(1) CASE(2) CASE(3)
+#define LIST_UNROLL CASE(0),CASE(1),CASE(2),CASE(3)
 // TODO: make templated repeat instead (ptype::LENGTH)
 
 namespace wdb { namespace entities {

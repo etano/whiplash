@@ -14,12 +14,11 @@ namespace wdb { namespace entities {
                        controller };
 
     enum class ptype {
-        unknown,
         ising,
         tsp,
         xx,
         sat,
-        LENGTH // 5
+        LENGTH // 4
     };
 
     template<ptype Problem>

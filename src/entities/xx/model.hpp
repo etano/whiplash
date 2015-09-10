@@ -43,7 +43,6 @@ namespace wdb { namespace entities { namespace xx {
         {
             for(auto& e : reader::read<reader::array_type>(o, "cfg", "bonds").unwrap()){
                 auto edge_data = reader::read<reader::array_type>(e);
-//                edges.emplace_back(reader::read<edge>(edge_data));
                 bonds_.emplace_back(std::make_tuple( reader::read<double>(edge_data[0])
                                                   , reader::read<index_type>(edge_data[1])
                                                   , reader::read<index_type>(edge_data[2])
@@ -72,7 +71,7 @@ namespace wdb { namespace entities { namespace xx {
     private: // data
         std::vector<bond_type> bonds_;  ///< edges
         index_type N_;                  ///< number of nodes
-        
+
     private: // helpers
 
         bool is_valid(const bond_type& e){
