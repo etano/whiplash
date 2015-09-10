@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-CXXFLAGS?= -std=c++11 -O0 -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --libs libmongocxx`
+CXXFLAGS?= -std=c++11 -O0 -Wall -pedantic -g -w -Wfatal-errors -I. -ldl `pkg-config --cflags --libs libmongocxx`
 
 .DEFAULT: all
 .PHONY: all clean install
