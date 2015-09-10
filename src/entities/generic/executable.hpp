@@ -18,8 +18,8 @@ namespace wdb { namespace entities {
         }
 
         executable(const odb::iobject& o){
-            path_ = reader::read<std::string>(o, "path");
             class_ = reader::read<std::string>(o, "class");
+            path_ = reader::read<std::string>(o, "path");
             description_ = reader::read<std::string>(o, "description");
             algorithm_ = reader::read<std::string>(o, "algorithm");
             version_ = reader::read<std::string>(o, "version");
@@ -52,8 +52,8 @@ namespace wdb { namespace entities {
 
         std::string get_class(){ return class_; }
     protected:
-        std::string path_;
         std::string class_;
+        std::string path_;
         std::string description_;
         std::string algorithm_;
         std::string version_;
