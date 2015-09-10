@@ -6,19 +6,19 @@ BUILDPATH=${ORIGPATH}
 NTHREADS=""
 for i in "$@"
 do
-case $i in
-    -p=*|--prefix=*)
-    BUILDPATH="${i#*=}"
-    shift
-    ;;
-    -j=*|--nthreads=*)
-    NTHREADS="${i#*=}"
-    shift
-    ;;
-    *)
+    case $i in
+        -p=*|--prefix=*)
+            BUILDPATH="${i#*=}"
+            shift
+            ;;
+        -j=*|--nthreads=*)
+            NTHREADS="${i#*=}"
+            shift
+            ;;
+        *)
             # unknown option
-    ;;
-esac
+            ;;
+    esac
 done
 echo "Building to ${BUILDPATH}"
 
