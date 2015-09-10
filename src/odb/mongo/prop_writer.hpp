@@ -52,11 +52,8 @@ namespace wdb { namespace odb { namespace mongo {
         
         template<class... T>
         struct append_tuple_element<0, T...>{
-            sub_array a;
-            append_tuple_element(sub_array a) : a(a) {}
-            void operator()(const std::tuple<T...>& t){
-                a.append(std::get<0>(t));
-            }
+            append_tuple_element(sub_array) {}
+            void operator()(const std::tuple<T...>&){}
         };
         
         /// @todo(slava) rewrite tuple serialization once compiler supports std::integer_sequence
