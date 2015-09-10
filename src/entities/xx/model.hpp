@@ -18,27 +18,10 @@ class parameters;
 namespace wdb { namespace entities { namespace xx {
 
     class model : public entities::model {
-        using index_type = int;
-        using edge = std::tuple<double, index_type, index_type, index_type>; ///< weight, node1, node2, color
-        
-        bool is_valid(const edge& e){
-            const index_type nope = index_type(-1);
-            return     std::get<1>(e) != std::get<2>(e) 
-                    && std::get<1>(e) != nope 
-                    && std::get<2>(e) != nope;
-        }
-        
-        edge make_edge(const std::string& s){
-            edge ret{0.0, -1, -1, -1};
-            std::istringstream is(s);
-            is >> std::get<1>(ret) >> std::get<2>(ret) >> std::get<0>(ret);
-            is >> std::get<3>(ret);
-            return ret;
-        }
-        
-        typedef int64_t spin_type;
-        typedef std::pair<std::vector<spin_type>, double> bond_type;
     public:
+        using index_type = int;
+        using bond_type = std::tuple<double, index_type, index_type, index_type>; ///< weight, node1, node2, color
+
         model(std::ifstream& in, optional<int> parent, optional<parameters> params)
             : entities::model(typename entities::info<ptype::xx>(), in, parent, params), N_(0)
         {
@@ -84,11 +67,28 @@ namespace wdb { namespace entities { namespace xx {
             return bonds_.size();
         }
 
-        const std::vector<edge>& get_bonds() const { return bonds_; }
+        const std::vector<bond_type>& get_bonds() const { return bonds_; }
 
-    private:
-        std::vector<edge> bonds_;  ///< edges
-        index_type N_;                   ///< number of nodes
+    private: // data
+        std::vector<bond_type> bonds_;  ///< edges
+        index_type N_;                  ///< number of nodes
+        
+    private: // helpers
+
+        bool is_valid(const bond_type& e){
+            const index_type nope = index_type(-1);
+            return     std::get<1>(e) != std::get<2>(e) 
+                    && std::get<1>(e) != nope 
+                    && std::get<2>(e) != nope;
+        }
+        
+        bond_type make_edge(const std::string& s){
+            bond_type ret{0.0, -1, -1, -1};
+            std::istringstream is(s);
+            is >> std::get<1>(ret) >> std::get<2>(ret) >> std::get<0>(ret);
+            is >> std::get<3>(ret);
+            return ret;
+        }
     };
 
 } } }
