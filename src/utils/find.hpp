@@ -21,11 +21,23 @@ namespace wdb {
          return -1;
     }
 
-    template<typename T, unsigned I, unsigned... Is>
-    constexpr int find_type_many(redi::index_tuple<I, Is...>){
+    //-----
+
+    // template<typename T, unsigned I, unsigned... Is>
+    // constexpr int find_type_many(redi::index_tuple<I, Is...>){
+    //      typedef typename wdb::entities::factory::associated_tuple< (wdb::entities::ptype)(sizeof...(Is)) >::triplet tuple_type;
+    //      return (find_type<T,tuple_type>() != -1 ? find_type<T,tuple_type>() : find_type_many<T>(redi::index_tuple<Is...>()));
+    // }
+
+    //TODO: fix this maybe
+
+    template<typename T, unsigned I0, unsigned I1, unsigned... Is>
+    constexpr int find_type_many(redi::index_tuple<I0, I1, Is...>){
          typedef typename wdb::entities::factory::associated_tuple< (wdb::entities::ptype)(sizeof...(Is)) >::triplet tuple_type;
          return (find_type<T,tuple_type>() != -1 ? find_type<T,tuple_type>() : find_type_many<T>(redi::index_tuple<Is...>()));
     }
+
+    //-----    
 
     template<int Offset>
     struct checked_get { static constexpr int value = Offset; };

@@ -117,10 +117,21 @@ namespace wdb { namespace odb { namespace mongo {
             return detail::checked_get<T>(v, std::get<I>(args));
         }
 
-        template<typename T, typename... Args, unsigned I, unsigned... Is>
-        static optional<T> read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I, Is...>){
-            return read<T>( detail::checked_get<object_view>(v, std::get<I>(args)), args, redi::index_tuple<Is...>() );
+        //-----
+
+        // template<typename T, typename... Args, unsigned I, unsigned... Is>
+        // static optional<T> read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I, Is...>){
+        //     return read<T>( detail::checked_get<object_view>(v, std::get<I>(args)), args, redi::index_tuple<Is...>() );
+        // }
+
+        //TODO: fix this maybe
+
+        template<typename T, typename... Args, unsigned I0, unsigned I1, unsigned... Is>
+        static optional<T> read(const object_view& v, const std::tuple<Args...>& args, redi::index_tuple<I0, I1, Is...>){
+            return read<T>( detail::checked_get<object_view>(v, std::get<I0>(args)), args, redi::index_tuple<I1,Is...>() );
         }
+
+        //-----
 
         template<typename T, typename... Args>
         static optional<T> read(const iobject& obj, const std::tuple<Args...>& args){
