@@ -64,9 +64,15 @@ namespace wdb { namespace entities { namespace xx {
         std::vector<std::vector<index_type>> get_loops(){
             return loops_;
         }
+        
+        void set_energies(std::vector<double> energies){
+            energies_ = std::move(energies);
+        }
+
     private:
         std::vector<std::vector<index_type>> loops_;
         std::vector<double> costs_;
+        std::vector<double> energies_;
     };
 
 } } }
