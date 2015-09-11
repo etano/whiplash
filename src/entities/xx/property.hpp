@@ -66,7 +66,9 @@ namespace wdb { namespace entities { namespace xx {
         }
         
         void set_energies(std::vector<double> energies){
-            energies_ = std::move(energies);
+            //energies_ = std::move(energies);
+            if(!energies.empty()) // only the last one
+                energies_.push_back(energies.back());
         }
 
     private:
