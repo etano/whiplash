@@ -53,10 +53,8 @@ namespace wdb { namespace entities { namespace xx {
         virtual void serialize_cfg(odb::iobject& cfg) override {
             if(loops_.size()) writer::prop("loops", loops_) >> cfg;
             if (status_ == status::UNDEFINED){
-                writer::prop("costs", std::numeric_limits<double>::quiet_NaN()) >> cfg;
                 writer::prop("energies", std::numeric_limits<double>::quiet_NaN()) >> cfg;
             } else if (status_ == status::DEFINED){
-                writer::prop("costs", costs_) >> cfg;
                 writer::prop("energies", energies_) >> cfg;
             } else {
                 throw std::runtime_error("Error: Property neither UNDEFINED nor DEFINED!\n");
@@ -73,7 +71,6 @@ namespace wdb { namespace entities { namespace xx {
 
     private:
         std::vector<std::vector<index_type>> loops_;
-        std::vector<double> costs_;
         std::vector<double> energies_;
     };
 
