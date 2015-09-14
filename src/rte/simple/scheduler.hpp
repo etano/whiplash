@@ -39,14 +39,14 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         virtual void expand() override {
-            pid = fork();
+            pid = fork(); // FIXME: This does not account for number of cores on machine (will keep spawning for number of unresolved properties)
             if(pid < 0) logger->error("Could not create a process");
             if(pid > 0){
                 logger->notice("Expanded the number of workers");
                 children.push_back(pid);
                 return;
             }
-            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE);
+            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes
             throw std::runtime_error("execvp error"); // unreachable
         }
 
