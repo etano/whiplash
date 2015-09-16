@@ -1,4 +1,5 @@
 import sys,os
+import time
 
 # Make WhiplashDB instance
 wdb_home = os.environ.get('WDB_HOME')
@@ -28,21 +29,38 @@ print executable_id
 # Models
 print 'Committing models'
 model = {'class':prob_class,'owner':owner}
-paths = []
-for i_prob in range(n_probs):
-    paths.append(wdb_home+'/src/tests/108problem.lat')
+paths = [wdb_home+'/src/tests/108ising.lat']
+#paths = []
+#for i_prob in range(n_probs):
+#    paths.append(wdb_home+'/src/tests/108ising.lat')
 model_ids = wdb.CommitModels(model, paths)
 print model_ids
 
 # Properties
 print 'Committing properties'
-property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':n_sweeps,'T_0':T_0,'T_1':T_1}
-property_ids = wdb.CommitProperties(property, model_ids, n_reps)
-print property_ids
+for ns in [1,10,100,1000,10000]:
+    for seed in range(10):
+        property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':ns,'T_0':T_0,'T_1':T_1,'seed':seed}
+        property_ids = wdb.CommitProperties(property, model_ids, n_reps)
+        print ns,seed,property_ids
+
+wdb.Query({'class':prob_class},['cfg','costs'])
+
+time.sleep(3)
 
 # Query
-print 'Querying'
 filter = {'class':prob_class}
 target = ['cfg','costs']
-results = [x for x in wdb.Query(filter,target)]
-print results
+results = wdb.Query(filter,target)
+
+count = 0 
+for res in results:
+    if "Unresolved" in res:
+        count += 1
+    else:
+        print res
+
+print "Unresolved:",count 
+
+#results = [x for x in wdb.Query(filter,target)]
+#print results
