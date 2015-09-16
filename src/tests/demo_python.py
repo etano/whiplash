@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import sys,os
 import time
 
@@ -38,29 +39,34 @@ print model_ids
 
 # Properties
 print 'Committing properties'
-for ns in [1,10,100,1000,10000]:
-    for seed in range(10):
+for ns in [10,100,1000,10000]:
+    for seed in range(1):
         property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':ns,'T_0':T_0,'T_1':T_1,'seed':seed}
         property_ids = wdb.CommitProperties(property, model_ids, n_reps)
         print ns,seed,property_ids
 
-wdb.Query({'class':prob_class},['cfg','costs'])
-
-time.sleep(3)
+time.sleep(10)
 
 # Query
 filter = {'class':prob_class}
 target = ['cfg','costs']
 results = wdb.Query(filter,target)
 
-count = 0 
+energies = []
+
+count = 0
 for res in results:
     if "Unresolved" in res:
         count += 1
     else:
-        print res
+        energies.append(float(res))
 
-print "Unresolved:",count 
+print "Resolved:",len(results)-count
+print "Unresolved:",count
+print 'energies:',energies
 
-#results = [x for x in wdb.Query(filter,target)]
-#print results
+#Plotting
+if len(energies) > 1:
+    plt.hist(energies,20,histtype='bar',color=['crimson'])
+    plt.savefig('tmp.pdf',dpi=600)
+    plt.show()
