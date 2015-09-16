@@ -14,4 +14,4 @@
 	url = git@gitlab.phys.ethz.ch:ebrown/spin_glass_solver.git
 [submodule "src/apps/XXcode"]
 	path = src/apps/XXcode
-	url = git@gitlab.phys.ethz.ch:gmazzola/XXcode.git
+	url = git@gitlab.phys.ethz.ch:simulational_physics/XXcode.git

@@ -44,5 +44,5 @@ print property_ids
 print 'Querying'
 filter = {'class':prob_class}
 target = ['cfg','costs']
-results = [float(x) for x in wdb.Query(filter,target)]
+results = [x for x in wdb.Query(filter,target)]
 print results
