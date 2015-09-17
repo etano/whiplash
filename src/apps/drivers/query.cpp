@@ -26,15 +26,18 @@ int main(int argc, char* argv[]){
                 framework::writer::prop(param.first, ival) >> filter;
             else
                 framework::writer::prop(param.first, val) >> filter;
-        }else
+        }
+        else
             framework::writer::prop(param.first, param.second) >> filter;
     }
 
     // Query and print results
     for(const auto& results : deployment.query( filter )){
-        if(wdb::entities::property::is_undefined(*results)) std::cout << "Unresolved property\n";
-        else for(const auto result : framework::reader::read<framework::reader::array_type>(*results, target).unwrap())
-            std::cout << framework::reader::read<double>(result) << std::endl;
+        if(wdb::entities::property::is_undefined(*results))
+            std::cout << "Unresolved property\n";
+        else
+            for(const auto result : framework::reader::read<framework::reader::array_type>(*results, target).unwrap())
+                std::cout << framework::reader::read<double>(result) << std::endl;
     }
 
     return 0;

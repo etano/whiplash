@@ -53,7 +53,7 @@ if [ -d .git ]; then
 
     # Compile whiplashdb
     cd src
-    make -j${NTHREADS}
+    make -j${NTHREADS} && make install
     cd ../
 fi
 
