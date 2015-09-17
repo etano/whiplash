@@ -15,6 +15,7 @@
 [submodule "src/apps/XXcode"]
 	path = src/apps/XXcode
 	url = git@gitlab.phys.ethz.ch:simulational_physics/XXcode.git
+[submodule "src/apps/unitary_evolution"]
 	path = src/apps/unitary_evolution
 	url = git@gitlab.phys.ethz.ch:simulational_physics/unitary_evolution.git
 
