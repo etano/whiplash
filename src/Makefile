@@ -31,7 +31,7 @@ clean:
 	-rm -f tests/*.test
 	-rm -f ../bin/*.driver
 
-install: all
+install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp apps/*.app $(DESTDIR)$(PREFIX)/bin
 	cp apps/drivers/*.driver $(DESTDIR)$(PREFIX)/bin
