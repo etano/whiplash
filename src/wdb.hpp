@@ -39,6 +39,7 @@
 #include "entities/generic.hpp"
 #include "entities/ising.hpp"
 #include "entities/xx.hpp"
+#include "entities/uevol.hpp"
 #include "entities/sat.hpp"
 #include "entities/tsp.hpp"
 #include "entities/factory.hpp"

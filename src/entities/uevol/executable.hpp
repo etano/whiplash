@@ -7,7 +7,7 @@
 
 class parameters;
 
-namespace wdb { namespace entities { namespace ising {
+namespace wdb { namespace entities { namespace uevol {
 
     class executable : public entities::executable {
     public:

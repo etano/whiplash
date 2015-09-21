@@ -3,12 +3,14 @@
 
 #include <entities/generic/property.hpp>
 
-namespace wdb { namespace entities { namespace ising {
+namespace wdb { namespace entities { namespace uevol {
+    
     class property : public entities::property {
         property(const odb::iobject& o)
             : entities::property(o)
         {}
-    };
+        
+    }; // class property
     
 } } }
 

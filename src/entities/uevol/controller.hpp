@@ -3,7 +3,7 @@
 
 #include <entities/generic/controller.hpp>
 
-namespace wdb { namespace entities { namespace ising {
+namespace wdb { namespace entities { namespace uevol {
     class controller : public entities::controller{
     public:
         ~controller() override {}
