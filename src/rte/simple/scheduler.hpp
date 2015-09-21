@@ -18,8 +18,6 @@ namespace wdb { namespace rte { namespace simple {
             logger = new logger_type();
 
             if((sid = setsid()) < 0) logger->error("Could not create process group\n");
-            close(STDIN_FILENO); close(STDOUT_FILENO); close(STDERR_FILENO);
-
             logger->notice("Successfully started daemon\n");
         }
 
