@@ -8,6 +8,7 @@ namespace wdb { namespace entities {
         class executable;
         class controller;
     }
+
     template<>
     struct info<ptype::uevol> {
         typedef uevol::model associated_model_type;
