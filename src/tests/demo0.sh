@@ -16,4 +16,4 @@ sleep 3;
 echo 'Querying properties again...'
 $1 ./drivers/query.driver -class ising -target cfg,costs
 echo 'Killing the daemon...'
-killall -q scheduler.driver;
+killall scheduler.driver;
