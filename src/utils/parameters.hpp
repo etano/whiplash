@@ -40,8 +40,8 @@ namespace wdb {
             bool have_key = false;
             std::string key;
             for(int i = 1; i < argc; ++i){
-                if(argv[i][0] == '-'){
-                    if(!have_key) have_key = true;
+                if(argv[i][0] == '-' && !have_key){
+                    have_key = true;
                     key = argv[i] + 1;
                 }else if(have_key){
                     this->c_[key] = std::string(argv[i]);
