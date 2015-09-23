@@ -16,9 +16,8 @@ namespace {
 using hamiltonian_type = wdb::entities::uevol::model;
 using property_type = wdb::entities::uevol::property;
 
-class aqc{
-    public:
-    
+struct aqc{
+
     aqc( unsigned N                 ///< number of sites
        , const std::vector<hamiltonian_type::bond_type>& bonds  ///< [(bond, site1, site2), ] system config
        , double Ttot                ///< time to simulate
@@ -36,10 +35,10 @@ class aqc{
         std::set<qsit::site_t> site_counter;
         
         for(auto bond : bonds){
-            Jz_.push_back(std::get<0>(bond));
-            edges.push_back(std::make_pair(std::get<1>(bond), std::get<2>(bond)));
+            Jz_.push_back(std::get<2>(bond));
+            edges.push_back(std::make_pair(std::get<0>(bond), std::get<1>(bond)));
+            site_counter.insert(std::get<0>(bond));
             site_counter.insert(std::get<1>(bond));
-            site_counter.insert(std::get<2>(bond));
         }
 
         std::copy(site_counter.begin(), site_counter.end(), std::back_inserter(sites));
@@ -48,15 +47,18 @@ class aqc{
     using wf_t = qsit::wf_t;
     using config_t = qsit::config_t;
     
-    void run() {
+    /// @return energy of the latest configuration (psi_out_)
+    double run() {
         double Einit = energy(psi_in_);
         for (unsigned steps = 0; steps < Ttot_/tau_;++steps ) {
             step(a_);
             a_ += tau_/Ttot_;
-            std::cout << energy(psi_out_) << "\n";
+//            std::cout << energy(psi_out_) << "\n";
         }
-        double Efinal = energy(psi_in_);
-        std::cout << "Einit,Efinal:\n" << Einit << "," << Efinal<< std::endl;
+        double Efinal = energy(psi_out_);
+        
+        return Efinal;
+//        std::cout << "Einit,Efinal:\n" << Einit << "," << Efinal<< std::endl;
     }
     
     void step(double a){
@@ -129,7 +131,7 @@ class aqc{
         return szszenergy(psi) + sxenergy(psi);
     }
     
-private: // data
+// data
     unsigned N_;
     double Ttot_;
     double tau_;
@@ -161,18 +163,14 @@ int main(int /*argc*/, char *argv[])
     std::vector<hamiltonian_type::bond_type> bonds = H.get_bonds();
     const unsigned N = count_edges(bonds);
     
-    double Ttot = P.get_param<double>("Ttot"); // 500;
-    std::cout << "Ttot = " << Ttot << std::endl;
-    
-    unsigned nsteps = P.get_param<unsigned>("nsweeps"); // 400;
-    std::cout << "nsweeps = " << nsteps << std::endl;
-
     double hx = P.get_param<double>("hx");     // -1;
-    std::cout << "hx " << hx << std::endl;
-        
+    double Ttot = P.get_param<double>("Ttot"); // 500;
+    unsigned nsteps = P.get_param<unsigned>("nsweeps"); // 400;
+
     //perform the annealing
     aqc a(N, bonds, Ttot, nsteps, hx);
-    a.run();
+    double energy = a.run();
+    P.set_cfg(energy);
 
     return 0;
 }

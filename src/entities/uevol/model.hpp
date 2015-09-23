@@ -13,11 +13,11 @@ namespace wdb { namespace entities { namespace uevol {
     class model : public entities::model{
     public:
         using index_type = int;
-        using bond_type = std::tuple<double, index_type, index_type>; ///< weight, node1, node2
+        using bond_type = std::tuple<index_type, index_type, double>; ///< weight, node1, node2
         
         /// initialize model from filestream and optional parameters
         model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : entities::model(typename entities::info<ptype::ising>(), in, parent, params)
+            : entities::model(typename entities::info<ptype::uevol>(), in, parent, params)
         {
             for(std::string l; getline(in, l);){
                 if(l.find(' ') == std::string::npos || l.find('#') != std::string::npos){
@@ -28,7 +28,7 @@ namespace wdb { namespace entities { namespace uevol {
 
             N_ = 0;
             for(const auto& e : bonds_){
-                N_ = std::max(N_, std::max(std::get<1>(e), std::get<2>(e)));
+                N_ = std::max(N_, std::max(std::get<0>(e), std::get<1>(e)));
             }
         }
         
@@ -38,9 +38,9 @@ namespace wdb { namespace entities { namespace uevol {
         {
             for(auto& e : reader::read<reader::array_type>(o, "cfg", "bonds").unwrap()){
                 auto edge_data = reader::read<reader::array_type>(e);
-                bonds_.emplace_back(std::make_tuple( reader::read<double>(edge_data[0])
-                                                   , reader::read<index_type>(edge_data[1])
-                                                   , reader::read<index_type>(edge_data[2])));
+                bonds_.emplace_back(std::make_tuple( reader::read<double>(edge_data[2])
+                                                   , reader::read<index_type>(edge_data[0])
+                                                   , reader::read<index_type>(edge_data[1])));
             }
             N_ = reader::read<index_type>(o, "cfg", "n_spins");
         }
@@ -70,13 +70,13 @@ namespace wdb { namespace entities { namespace uevol {
 
         bool is_valid(const bond_type& e){
             const index_type nope = index_type(-1);
-            return     std::get<1>(e) != std::get<2>(e) 
+            return     std::get<1>(e) != std::get<0>(e) 
                     && std::get<1>(e) != nope 
-                    && std::get<2>(e) != nope;
+                    && std::get<0>(e) != nope;
         }
         
         bond_type make_edge(const std::string& s){
-            bond_type ret{0.0, -1, -1};
+            bond_type ret{-1, -1, 0.0};
             std::istringstream is(s);
             is >> std::get<0>(ret) >> std::get<1>(ret) >> std::get<2>(ret);
             return ret;
