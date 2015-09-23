@@ -63,12 +63,11 @@ namespace wdb { namespace deployment {
         return properties.find_one_and_update(old_status, new_status);
     }
 
-    std::shared_ptr<odb::iobject> cwave::job_pool::process(odb::iobject& orig){
+    void cwave::job_pool::process(odb::iobject& orig){
         int id = reader::read<int>(orig, "_id");
         object filter, new_status;
         writer::prop("_id", id) >> filter;
         writer::prop("status", (int)entities::property::status::PROCESSING) >> new_status;
-        return properties.find_one_and_update(filter, new_status);
     }
 
     void cwave::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
