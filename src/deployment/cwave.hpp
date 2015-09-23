@@ -4,7 +4,7 @@
 namespace wdb { namespace deployment {
 
     cwave::cwave()
-      : db( "localhost:27017" ),
+      : db( "cwave.ethz.ch:27017" ),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
