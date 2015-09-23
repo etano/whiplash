@@ -21,7 +21,7 @@ namespace wdb { namespace rte { namespace slurm {
             //for(;;){
                 //query_jobs();
                 for(int i = 0; i < controllers.size(); i++){
-                    focus(i);
+                    focus(i); // FIXME: This should be called segue
                     // request workload
                     // child->resolve();
                     // check if segues

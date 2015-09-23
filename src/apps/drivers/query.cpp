@@ -1,9 +1,8 @@
 #include "wdb.hpp"
-using framework = wdb::deployment::cwave;
 
 int main(int argc, char* argv[]){
     // Initialize database and deployment
-    framework deployment;
+    framework deployment(DBHOST);
 
     // Parse arguments
     framework::params_type params(argc,argv);

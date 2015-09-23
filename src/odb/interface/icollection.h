@@ -12,6 +12,7 @@ namespace wdb { namespace odb {
         virtual std::shared_ptr<iobject> create() = 0;
         virtual std::shared_ptr<iobject> find(int id) = 0;
         virtual std::vector<std::shared_ptr<iobject>> find_like(iobject& o) = 0;
+        virtual std::shared_ptr<iobject> find_one_and_update(iobject& filter, iobject& mod) = 0;
         virtual void print_object(int id) = 0;
         virtual int insert(iobject& o, const isignature& s) = 0;
         virtual std::vector<int> insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner) = 0;

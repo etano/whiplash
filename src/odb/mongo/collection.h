@@ -12,6 +12,7 @@ namespace wdb { namespace odb { namespace mongo {
         virtual std::shared_ptr<iobject> create() override;
         virtual std::shared_ptr<iobject> find(int id) override;
         virtual std::vector<std::shared_ptr<iobject>> find_like(iobject& o) override;
+        virtual std::shared_ptr<iobject> find_one_and_update(iobject& filter, iobject& mod) override;
         virtual void print_object(int id) override;
         virtual int insert(iobject& o, const isignature& s) override;
         virtual std::vector<int> insert_many(std::vector<std::shared_ptr<iobject>>& os, iobjectdb& db, std::string collection, std::string owner) override;
