@@ -20,11 +20,13 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         virtual void yield() override {
-            for(int i = 0; i < controllers.size(); i++){
-                segue(i);
-                auto obj = pool.pull();
-                if(obj)
-                    delegate->resolve(*obj, pool);
+            while(true){
+                for(int j=0; j<controllers.size(); j++){
+                    segue(j);
+                    auto obj = pool.pull(); // FIXME: Not sure that controller segues make sense with the pool this way
+                    if(obj)
+                        delegate->resolve(*obj, pool);
+                }
             }
         }
 
@@ -41,8 +43,8 @@ namespace wdb { namespace rte { namespace simple {
         void segue(int c){
             this->delegate = controllers[c].first;
             this->segues = controllers[c].second;
-            printf("Controller %d: ", c); for(auto& s : controllers[c].second) printf("%d ", s);
-            printf("\n");
+            //printf("Controller %d: ", c); for(auto& s : controllers[c].second) printf("%d ", s);
+            //printf("\n");
         }
 
         void print_segues() const {

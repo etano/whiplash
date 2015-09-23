@@ -28,12 +28,8 @@ class UpdatePlot(object):
         # Query things and update plot
         results = wdb.Query(filter,target)
         energies = []
-        count = 0
         for res in results:
-            if "Unresolved" in res:
-                count += 1
-            else:
-                energies.append(float(res))
+            energies.append(float(res))
         if len(energies) > 0:
             hist,bin_edges = np.histogram(energies,self.n_bin)
             bin_centers = [(bin_edges[i]+bin_edges[i+1]/2.) for i in range(self.n_bin)]
@@ -52,8 +48,8 @@ wdb = whiplashdb.wdb(wdb_home)
 prob_class = 'ising'
 owner = 'ebrown'
 n_probs = 1
-n_reps = 10
-n_sweeps = [500000]
+n_reps = 10000
+n_sweeps = [100]
 
 # Executable
 print 'Committing executables'
@@ -78,7 +74,7 @@ for n_sweep in n_sweeps:
     print property_ids
 
 # Form query
-filter = {'class':prob_class}
+filter = {'class':prob_class,'status':3}
 target = ['cfg','costs']
 
 # Query and update plot continuously
@@ -86,6 +82,5 @@ fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 n_props = n_probs*n_reps*len(n_sweeps)
 up = UpdatePlot(ax, wdb, filter, target, 10)
-anim = FuncAnimation(fig, up, frames=np.arange(10000), init_func=up.init, interval=100, blit=False)
+anim = FuncAnimation(fig, up, frames=10000, init_func=up.init, interval=100, blit=False)
 plt.show()
-
