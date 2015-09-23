@@ -68,6 +68,7 @@ namespace wdb { namespace deployment {
         object filter, new_status;
         writer::prop("_id", id) >> filter;
         writer::prop("status", (int)entities::property::status::PROCESSING) >> new_status;
+        properties.find_one_and_update(filter, new_status);
     }
 
     void cwave::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
