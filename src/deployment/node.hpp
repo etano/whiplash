@@ -63,21 +63,21 @@ namespace wdb { namespace deployment {
         return properties.find_one_and_update(old_status, new_status);
     }
 
-    void node::job_pool::process(odb::iobject& orig){
-        int id = reader::read<int>(orig, "_id");
+    void node::job_pool::process(odb::iobject& old_obj){
+        int id = reader::read<int>(old_obj, "_id");
         object filter, new_status;
         writer::prop("_id", id) >> filter;
         writer::prop("status", (int)entities::property::status::PROCESSING) >> new_status;
-        properties.find_one_and_update(filter, new_status);
+        auto new_obj = properties.find_one_and_update(filter, new_status);
     }
 
-    void node::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
+    void node::job_pool::push(odb::iobject& old_obj, rte::icacheable& mod){
         auto record = properties.create(); // FIXME: What is the point of this? Should it be done everywhere?
         auto cfg = properties.create();
         auto& p = static_cast<entities::property&>(mod);
         p.serialize_cfg(*cfg);
         p.serialize(*record, *cfg);
-        properties.replace(orig, *record);
+        properties.replace(old_obj, *record);
     }
 
 } }

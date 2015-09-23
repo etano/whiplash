@@ -52,8 +52,8 @@ wdb = whiplashdb.wdb(wdb_home)
 prob_class = 'ising'
 owner = 'ebrown'
 n_probs = 1
-n_reps = 10
-n_sweeps = [500000]
+n_reps = 10000
+n_sweeps = [100]
 
 # Executable
 print 'Committing executables'
@@ -86,6 +86,6 @@ fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 n_props = n_probs*n_reps*len(n_sweeps)
 up = UpdatePlot(ax, wdb, filter, target, 10)
-anim = FuncAnimation(fig, up, frames=np.arange(10000), init_func=up.init, interval=100, blit=False)
+anim = FuncAnimation(fig, up, frames=np.arange(n_props), init_func=up.init, interval=10, blit=False)
 plt.show()
 

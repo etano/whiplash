@@ -24,9 +24,9 @@ namespace wdb { namespace rte { namespace simple {
         void yield(){
             for(;;){
                 if(pool.size()){
-                    if(children.size()<get_max_cores()) this->expand(); // FIXME: This does not account for number of cores on machine (will keep spawning for number of unresolved properties)
+                    if(children.size()<get_max_cores()) this->expand();
                 }else{
-                    if(children.size())  this->shrink();
+                    if(children.size()) this->shrink();
                 }
                 sleep(1);
             }
@@ -37,7 +37,7 @@ namespace wdb { namespace rte { namespace simple {
         }
 
         unsigned get_max_cores() {
-            return std::thread::hardware_concurrency();
+            return 1;//std::thread::hardware_concurrency(); // FIXME: Should be specified somehow better
         }
 
         virtual void expand() override {
