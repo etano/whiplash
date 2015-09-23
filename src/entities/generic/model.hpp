@@ -1,11 +1,6 @@
 #ifndef WDB_ENTITIES_GENERIC_MODEL_HPP
 #define WDB_ENTITIES_GENERIC_MODEL_HPP
 
-#include <rte/interface/icacheable.h>
-#include <odb/interface/iobject.h>
-#include <utils/optional.hpp>
-#include <utils/parameters.hpp>
-
 #include <fstream>
 
 namespace wdb { namespace entities {
