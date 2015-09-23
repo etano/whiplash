@@ -1,9 +1,9 @@
-#ifndef WDB_DEPLOYMENT_CWAVE_H
-#define WDB_DEPLOYMENT_CWAVE_H
+#ifndef WDB_DEPLOYMENT_NODE_H
+#define WDB_DEPLOYMENT_NODE_H
 
 namespace wdb { namespace deployment {
 
-    class cwave : public basic<cwave> {
+    class node : public basic<node> {
     public:
         typedef wdb::odb::mongo::object object;
         using reader = wdb::odb::mongo::prop_reader;
@@ -24,7 +24,7 @@ namespace wdb { namespace deployment {
             odb::icollection& properties;
         };
 
-        cwave();
+        node(const std::string host);
 
         virtual odb::icollection& get_models() override;
         virtual odb::icollection& get_properties() override;

@@ -1,10 +1,10 @@
-#ifndef WDB_DEPLOYMENT_CWAVE_HPP
-#define WDB_DEPLOYMENT_CWAVE_HPP
+#ifndef WDB_DEPLOYMENT_NODE_HPP
+#define WDB_DEPLOYMENT_NODE_HPP
 
 namespace wdb { namespace deployment {
 
-    cwave::cwave()
-      : db( "cwave.ethz.ch:27017" ),
+    node::node(const std::string host)
+      : db(host),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
@@ -16,34 +16,34 @@ namespace wdb { namespace deployment {
         entities::factory::init<e::executable>(executables);
     }
 
-    odb::icollection& cwave::get_models(){
+    odb::icollection& node::get_models(){
         return models;
     }
 
-    odb::icollection& cwave::get_properties(){
+    odb::icollection& node::get_properties(){
         return properties;
     }
 
-    odb::icollection& cwave::get_executables(){
+    odb::icollection& node::get_executables(){
         return executables;
     }
 
-    odb::iobjectdb& cwave::get_db(){
+    odb::iobjectdb& node::get_db(){
         return db;
     }
 
-    rte::ipool& cwave::get_pool(){
+    rte::ipool& node::get_pool(){
         return pool;
     }
 
-    rte::ipool& cwave::get_worker_pool(){
+    rte::ipool& node::get_worker_pool(){
         return worker_pool;
     }
 
-    cwave::job_pool::job_pool(odb::icollection& p)
+    node::job_pool::job_pool(odb::icollection& p)
         : properties(p) { }
 
-    size_t cwave::job_pool::size(){
+    size_t node::job_pool::size(){
         // TODO: Optimize this (possible with $or filter)
         object undefined_filter, pulled_filter, processing_filter;
         size_t tot = 0;
@@ -56,14 +56,14 @@ namespace wdb { namespace deployment {
         return tot;
     }
 
-    std::shared_ptr<odb::iobject> cwave::job_pool::pull(){
+    std::shared_ptr<odb::iobject> node::job_pool::pull(){
         object old_status, new_status;
         writer::prop("status", (int)entities::property::status::UNDEFINED) >> old_status;
         writer::prop("status", (int)entities::property::status::PULLED) >> new_status;
         return properties.find_one_and_update(old_status, new_status);
     }
 
-    void cwave::job_pool::process(odb::iobject& orig){
+    void node::job_pool::process(odb::iobject& orig){
         int id = reader::read<int>(orig, "_id");
         object filter, new_status;
         writer::prop("_id", id) >> filter;
@@ -71,7 +71,7 @@ namespace wdb { namespace deployment {
         properties.find_one_and_update(filter, new_status);
     }
 
-    void cwave::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
+    void node::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
         auto record = properties.create(); // FIXME: What is the point of this? Should it be done everywhere?
         auto cfg = properties.create();
         auto& p = static_cast<entities::property&>(mod);

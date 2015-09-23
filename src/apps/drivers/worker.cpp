@@ -1,8 +1,7 @@
 #include "wdb.hpp"
-using framework = wdb::deployment::cwave;
 
 int main(int argc, char* argv[]){
-    framework f;
+    framework f(DBHOST);
     framework::root_controller root(f.get_worker_pool());
 
     auto ising_controller = wdb::entities::factory::make<framework::e::controller>("ising");

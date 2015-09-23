@@ -47,9 +47,12 @@
 
 #include "deployment/basic.h"
 #include "deployment/basic.hpp"
-
-#include "deployment/cwave.h"
-#include "deployment/cwave.hpp"
+#include "deployment/node.h"
+#include "deployment/node.hpp"
 
 #include "utils/find.hpp"
+
+using framework = wdb::deployment::node;
+#define DBHOST "cwave.ethz.ch:27017"
+
 #endif
