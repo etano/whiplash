@@ -21,8 +21,8 @@ namespace wdb { namespace rte { namespace simple {
 
         virtual void yield() override {
             while(true){
-                for(int i = 0; i < controllers.size(); i++){
-                    segue(i);
+                for(int j=0; j<controllers.size(); j++){
+                    segue(j);
                     auto obj = pool.pull(); // FIXME: Not sure that controller segues make sense with the pool this way
                     if(obj)
                         delegate->resolve(*obj, pool);

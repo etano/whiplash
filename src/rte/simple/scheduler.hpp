@@ -54,7 +54,7 @@ namespace wdb { namespace rte { namespace simple {
 
         virtual void shrink() override {
             if(children.size()){
-                kill(children.back(), SIGKILL);
+                kill(children.back(), SIGKILL); // FIXME: How do we know this child is ok to die?
                 children.pop_back();
                 logger->notice("Shrank the number of workers");
             }
