@@ -1,5 +1,6 @@
 #ifndef WDB_UTILS_OPTIONAL_HPP
 #define WDB_UTILS_OPTIONAL_HPP
+
 #include <utility>
 #include <functional>
 #include <type_traits>

@@ -44,10 +44,7 @@ namespace wdb { namespace odb { namespace mongo {
         object update;
         prop_writer::prop("$set", mod) >> update;
         auto obj = coll.find_one_and_update(static_cast<odb::mongo::object&>(filter).w.builder,static_cast<odb::mongo::object&>(update).w.builder);
-        if(obj)
-            return std::make_shared<object>(*obj);
-        else
-            return NULL;
+        return obj ? std::make_shared<object>(*obj) : NULL;
     }
 
     int collection::insert(iobject& o, const isignature& s){

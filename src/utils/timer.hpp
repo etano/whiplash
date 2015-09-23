@@ -10,6 +10,9 @@ namespace wdb {
     public:
         timer(std::string name): val(0.0), name(name), count(0){}
        ~timer(){}
+        void report(){
+            std::cerr << name << " " << val << ", count : " << count << "\n";
+        }
         void begin(){
             this->t0 = std::chrono::system_clock::now();
         }

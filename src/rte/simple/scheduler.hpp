@@ -24,7 +24,7 @@ namespace wdb { namespace rte { namespace simple {
         void yield(){
             for(;;){
                 if(pool.size()){
-                    if(children.size()<get_max_cores()) this->expand();
+                    if(children.size() < get_max_cores()) this->expand();
                 }else{
                     if(children.size()) this->shrink();
                 }
