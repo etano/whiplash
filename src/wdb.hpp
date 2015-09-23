@@ -22,6 +22,7 @@
 #include <syslog.h>
 #include <signal.h>
 #include <algorithm>
+#include <thread>
 // }}}
 
 #include "utils/timer.hpp"

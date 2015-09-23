@@ -23,21 +23,23 @@ namespace wdb { namespace entities {
             auto m = factory::make<etype::model>(p->get_model());
             auto x = factory::make<etype::executable>(p->get_executable());
 
-            if(!p->is_undefined()) throw std::runtime_error("Error: property is already defined");
-            p->set_status(property::status::PROCESSING);
+            if(!p->is_defined() and !p->is_processing()){
+                p->set_status(property::status::PROCESSING);
+                pool.process(obj);
 
-            push<model>(*m, argc, argv);
-            push<property>(*p, argc, argv);
+                push<model>(*m, argc, argv);
+                push<property>(*p, argc, argv);
 
-            wdb::timer wt("walltime"); wt.begin();
-            (*x)(argc, argv);
-            free(argv);
-            wt.end();
+                wdb::timer wt("walltime"); wt.begin();
+                (*x)(argc, argv);
+                free(argv);
+                wt.end();
 
-            p->set_status(property::status::DEFINED);
-            p->set_walltime(wt.get_time());
+                p->set_status(property::status::DEFINED);
+                p->set_walltime(wt.get_time());
 
-            pool.push(obj, *p);
+                pool.push(obj, *p);
+            }
         }
 
         virtual void prepare_for_segue(icontroller_delegate& dest) override {

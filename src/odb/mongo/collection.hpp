@@ -22,22 +22,32 @@ namespace wdb { namespace odb { namespace mongo {
     }
 
     std::shared_ptr<iobject> collection::create(){
-        return std::shared_ptr<iobject>(new object());
+        return std::make_shared<object>();
     }
 
     std::shared_ptr<iobject> collection::find(int id){
         bsoncxx::builder::stream::document filter;
         filter << "_id" << id;
-        return std::shared_ptr<iobject>(new object( *coll.find_one(filter) ));
+        return std::make_shared<object>(*coll.find_one(filter));
     }
 
     std::vector<std::shared_ptr<iobject>> collection::find_like(iobject& o){
         auto cursor = coll.find(static_cast<odb::mongo::object&>(o).w.builder);
         std::vector<std::shared_ptr<iobject>> docs;
         for(auto doc : cursor){
-            docs.emplace_back(std::shared_ptr<iobject>(new object(doc)));
+            docs.emplace_back(std::make_shared<object>(doc));
         }
         return docs;
+    }
+
+    std::shared_ptr<iobject> collection::find_one_and_update(iobject& filter, iobject& mod){
+        object update;
+        prop_writer::prop("$set", mod) >> update;
+        auto obj = coll.find_one_and_update(static_cast<odb::mongo::object&>(filter).w.builder,static_cast<odb::mongo::object&>(update).w.builder);
+        if(obj)
+            return std::make_shared<object>(*obj);
+        else
+            return NULL;
     }
 
     int collection::insert(iobject& o, const isignature& s){

@@ -14,7 +14,7 @@ namespace wdb { namespace rte { namespace simple {
             if(pid < 0) exit(EXIT_FAILURE);
             if(pid > 0) exit(EXIT_SUCCESS);
             umask(0);
-            
+
             logger = new logger_type();
 
             if((sid = setsid()) < 0) logger->error("Could not create process group\n");
@@ -24,7 +24,7 @@ namespace wdb { namespace rte { namespace simple {
         void yield(){
             for(;;){
                 if(pool.size()){
-                    if(!children.size()) this->expand();
+                    if(children.size()<get_max_cores()) this->expand(); // FIXME: This does not account for number of cores on machine (will keep spawning for number of unresolved properties)
                 }else{
                     if(children.size())  this->shrink();
                 }
@@ -36,15 +36,19 @@ namespace wdb { namespace rte { namespace simple {
             delete logger;
         }
 
+        unsigned get_max_cores() {
+            return std::thread::hardware_concurrency();
+        }
+
         virtual void expand() override {
-            pid = fork(); // FIXME: This does not account for number of cores on machine (will keep spawning for number of unresolved properties)
+            pid = fork();
             if(pid < 0) logger->error("Could not create a process");
             if(pid > 0){
                 logger->notice("Expanded the number of workers");
                 children.push_back(pid);
                 return;
             }
-            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes
+            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes, maybe fixed
             throw std::runtime_error("execvp error"); // unreachable
         }
 

@@ -21,8 +21,9 @@ namespace wdb { namespace rte { namespace simple {
 
         virtual void yield() override {
             for(int i = 0; i < controllers.size(); i++){
-                segue(i); // FIXME: This is called 'focus' in slurm implementation
-                for(auto& obj : pool.pull())
+                segue(i);
+                auto obj = pool.pull();
+                if(obj)
                     delegate->resolve(*obj, pool);
             }
         }

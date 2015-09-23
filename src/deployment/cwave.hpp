@@ -4,7 +4,7 @@
 namespace wdb { namespace deployment {
 
     cwave::cwave()
-      : db( "cwave.ethz.ch:27017" ),
+      : db( "localhost:27017" ),
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
@@ -44,17 +44,35 @@ namespace wdb { namespace deployment {
         : properties(p) { }
 
     size_t cwave::job_pool::size(){
-        return pull().size(); // TODO: optimize me
+        // TODO: Optimize this (possible with $or filter)
+        object undefined_filter, pulled_filter, processing_filter;
+        size_t tot = 0;
+        writer::prop("status", (int)entities::property::status::UNDEFINED) >> undefined_filter;
+        tot += properties.find_like(undefined_filter).size();
+        writer::prop("status", (int)entities::property::status::PULLED) >> pulled_filter;
+        tot += properties.find_like(pulled_filter).size();
+        writer::prop("status", (int)entities::property::status::PROCESSING) >> processing_filter;
+        tot += properties.find_like(processing_filter).size();
+        return tot;
     }
 
-    std::vector<std::shared_ptr<odb::iobject>> cwave::job_pool::pull(){
-        object filter;
-        writer::prop("status", (int)entities::property::status::UNDEFINED) >> filter;
-        return properties.find_like(filter);
+    std::shared_ptr<odb::iobject> cwave::job_pool::pull(){
+        object old_status, new_status;
+        writer::prop("status", (int)entities::property::status::UNDEFINED) >> old_status;
+        writer::prop("status", (int)entities::property::status::PULLED) >> new_status;
+        return properties.find_one_and_update(old_status, new_status);
+    }
+
+    std::shared_ptr<odb::iobject> cwave::job_pool::process(odb::iobject& orig){
+        int id = reader::read<int>(orig, "_id");
+        object filter, new_status;
+        writer::prop("_id", id) >> filter;
+        writer::prop("status", (int)entities::property::status::PROCESSING) >> new_status;
+        return properties.find_one_and_update(filter, new_status);
     }
 
     void cwave::job_pool::push(odb::iobject& orig, rte::icacheable& mod){
-        auto record = properties.create();
+        auto record = properties.create(); // FIXME: What is the point of this? Should it be done everywhere?
         auto cfg = properties.create();
         auto& p = static_cast<entities::property&>(mod);
         p.serialize_cfg(*cfg);

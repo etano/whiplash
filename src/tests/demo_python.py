@@ -1,8 +1,48 @@
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import sys,os
 import time
+import numpy as np
 
-# Make WhiplashDB instance
+class UpdatePlot(object):
+    def __init__(self, ax, wdb, filter, target, n_bin):
+        self.success = 0
+        self.line, = ax.plot([], [], 'k-')
+        self.ax = ax
+        self.n_bin = n_bin
+
+        # Set up plot parameters
+        self.ax.grid(True)
+
+    def init(self):
+        self.success = 0
+        self.line.set_data([], [])
+        return self.line,
+
+    def __call__(self, i):
+        # This way the plot can continuously run and we just keep
+        # watching new realizations of the process
+        if i == 0:
+            return self.init()
+
+        # Query things and update plot
+        results = wdb.Query(filter,target)
+        energies = []
+        count = 0
+        for res in results:
+            if "Unresolved" in res:
+                count += 1
+            else:
+                energies.append(float(res))
+        if len(energies) > 0:
+            hist,bin_edges = np.histogram(energies,self.n_bin)
+            bin_centers = [(bin_edges[i]+bin_edges[i+1]/2.) for i in range(self.n_bin)]
+            self.line.set_data(bin_centers, hist)
+            self.ax.set_xlim(min(bin_centers),max(bin_centers))
+            self.ax.set_ylim(min(hist),max(hist))
+        return self.line,
+
+# Make WhiplashDB in_sweepstance
 wdb_home = os.environ.get('WDB_HOME')
 sys.path.append(wdb_home+'/lib/python')
 import whiplashdb
@@ -11,62 +51,41 @@ wdb = whiplashdb.wdb(wdb_home)
 # Settings
 prob_class = 'ising'
 owner = 'ebrown'
-n_probs = 10
-n_reps = 1
-n_sweeps = 100
-schedule = 'linear'
-T_0 = 10.0
-T_1 = 1e-8
-lattice_type = 'square'
-coupling_type = 'gaussian'
-executable_path = wdb_home+'/bin/test.app'
+n_probs = 1
+n_reps = 10
+n_sweeps = [500000]
 
 # Executable
 print 'Committing executables'
-executable = {'class':prob_class,'owner':owner,'description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':schedule,'path':executable_path}
+executable = {'class':prob_class,'owner':owner,'description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':wdb_home+'/bin/test.app'}
 executable_id = wdb.CommitExecutable(executable)
 print executable_id
 
 # Models
 print 'Committing models'
-model = {'class':prob_class,'owner':owner}
-paths = [wdb_home+'/src/tests/108ising.lat']
-#paths = []
-#for i_prob in range(n_probs):
-#    paths.append(wdb_home+'/src/tests/108ising.lat')
+model = {'class':prob_class,'owner':owner,'lattice_type':'random','coupling_type':'gaussian'}
+paths = []
+for i_prob in range(n_probs):
+    paths.append(wdb_home+'/src/tests/108ising.lat') # Normally would randomly generate these
 model_ids = wdb.CommitModels(model, paths)
 print model_ids
 
 # Properties
 print 'Committing properties'
-for ns in [10,100,1000,10000]:
-    for seed in range(1):
-        property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':ns,'T_0':T_0,'T_1':T_1,'seed':seed}
-        property_ids = wdb.CommitProperties(property, model_ids, n_reps)
-        print ns,seed,property_ids
+for n_sweep in n_sweeps:
+    property = {'class':prob_class,'owner':owner,'executable':executable_id,'n_sweeps':n_sweep,'T_0':10.0,'T_1':1e-8}
+    property_ids = wdb.CommitProperties(property, model_ids, n_reps)
+    print property_ids
 
-time.sleep(10)
-
-# Query
+# Form query
 filter = {'class':prob_class}
 target = ['cfg','costs']
-results = wdb.Query(filter,target)
 
-energies = []
+# Query and update plot continuously
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+n_props = n_probs*n_reps*len(n_sweeps)
+up = UpdatePlot(ax, wdb, filter, target, 10)
+anim = FuncAnimation(fig, up, frames=np.arange(10000), init_func=up.init, interval=100, blit=False)
+plt.show()
 
-count = 0
-for res in results:
-    if "Unresolved" in res:
-        count += 1
-    else:
-        energies.append(float(res))
-
-print "Resolved:",len(results)-count
-print "Unresolved:",count
-print 'energies:',energies
-
-#Plotting
-if len(energies) > 1:
-    plt.hist(energies,20,histtype='bar',color=['crimson'])
-    plt.savefig('tmp.pdf',dpi=600)
-    plt.show()

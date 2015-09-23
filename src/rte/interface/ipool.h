@@ -7,7 +7,8 @@ namespace wdb { namespace rte {
     public:
         virtual ~ipool(){}
         virtual size_t size() = 0;
-        virtual std::vector<std::shared_ptr<odb::iobject>> pull() = 0;
+        virtual std::shared_ptr<odb::iobject> pull() = 0;
+        virtual std::shared_ptr<odb::iobject> process(odb::iobject& orig) = 0;
         virtual void push(odb::iobject& orig, rte::icacheable& mod) = 0;
     };
 

@@ -5,7 +5,7 @@ namespace wdb { namespace entities {
 
     class property : public wdb::rte::icacheable {
     public:
-        enum class status { UNDEFINED, PROCESSING, DEFINED };
+        enum class status { UNDEFINED, PULLED, PROCESSING, DEFINED };
 
         property(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
@@ -86,6 +86,8 @@ namespace wdb { namespace entities {
         double get_walltime(){ return walltime_; }
         int get_seed(){ return seed_; }
         bool is_defined(){ return status_ == status::DEFINED; }
+        bool is_pulled(){ return status_ == status::PULLED; }
+        bool is_processing(){ return status_ == status::PROCESSING; }
         bool is_undefined(){ return status_ == status::UNDEFINED; }
         static bool is_undefined(const odb::iobject& o){
             return status::UNDEFINED == (optional<status>)reader::read<int>(o, "status");
