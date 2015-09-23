@@ -1,9 +1,10 @@
 
 #include <time_evolution.hpp>
 
+//#include <entities/uevol/model.hpp>
+//#include <entities/uevol/property.hpp>
+//#include <utils/find.hpp>
 #include "wdb.hpp"
-#include <entities/uevol/model.hpp>
-#include <entities/uevol/property.hpp>
 
 #include <complex>
 #include <vector>
@@ -18,9 +19,8 @@ using property_type = wdb::entities::uevol::property;
 class aqc{
     public:
     
-    //Constructor: set up the system
     aqc( unsigned N                 ///< number of sites
-       , std::vector<hamiltonian_type::bond_type> bonds  ///< [(bond, site1, site2), ] system config
+       , const std::vector<hamiltonian_type::bond_type>& bonds  ///< [(bond, site1, site2), ] system config
        , double Ttot                ///< time to simulate
        , unsigned nsteps            ///< steps to make
        , double hx                  ///< field magnitude in x-direction
@@ -71,7 +71,7 @@ class aqc{
         //step szsz: pass the whole edge set
         using std::swap;
         qsit::time_evolution::szsz_step(psi_in_.begin(), psi_in_.end(), psi_out_.begin(), edges.begin(),edges.end(),new_J.begin(),tau_);
-        swap(psi_out_,psi_in_);
+        swap(psi_out_, psi_in_);
         
         //step sx: pass each site separately, then swap and repeat
         for (size_t i = 0; i < sites.size();++i) {
@@ -106,7 +106,6 @@ class aqc{
         return energy.real();
     }
     
-    
     double sxenergy(const wf_t& psi) const {
         //compute H|psi> = sum_i sigma_x^i |psi>
         qsit::wf_t Hpsi(psi.size(),0);
@@ -134,7 +133,7 @@ private: // data
     unsigned N_;
     double Ttot_;
     double tau_;
-    double a_;               ///<  adiabatic param
+    double a_;               ///< adiabatic param
     std::vector<double> hx_; ///< field in x-direction
     std::vector<double> Jz_; ///< ising coupling
     wf_t psi_out_;
@@ -142,21 +141,37 @@ private: // data
     std::vector<qsit::edge_t> edges;
     std::vector<qsit::site_t> sites;
 };
+
+/// count the number of distinct edges in 
+size_t count_edges(const std::vector<hamiltonian_type::bond_type>& bonds){
+    std::set<hamiltonian_type::index_type> site_counter;
+    for(auto& bond : bonds){
+        site_counter.insert(std::get<1>(bond));
+        site_counter.insert(std::get<2>(bond));
+    }
+    return site_counter.size();
+}
 }
 
-
-int main(int argc, char *argv[])
+int main(int /*argc*/, char *argv[])
 {
     hamiltonian_type& H = wdb::find<hamiltonian_type>(argv);
     property_type& P = wdb::find<property_type>(argv);
-      
-    unsigned N = 9;
-    double hx = -1;
-    double Ttot = 500;
-    unsigned nsteps = 400;
+    
+    std::vector<hamiltonian_type::bond_type> bonds = H.get_bonds();
+    const unsigned N = count_edges(bonds);
+    
+    double Ttot = P.get_param<double>("Ttot"); // 500;
+    std::cout << "Ttot = " << Ttot << std::endl;
+    
+    unsigned nsteps = P.get_param<unsigned>("nsweeps"); // 400;
+    std::cout << "nsweeps = " << nsteps << std::endl;
 
+    double hx = P.get_param<double>("hx");     // -1;
+    std::cout << "hx " << hx << std::endl;
+        
     //perform the annealing
-    aqc a(N, H.get_bonds(), Ttot, nsteps, hx);
+    aqc a(N, bonds, Ttot, nsteps, hx);
     a.run();
 
     return 0;
