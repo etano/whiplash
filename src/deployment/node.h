@@ -5,7 +5,7 @@ namespace wdb { namespace deployment {
 
     class node : public basic<node> {
     public:
-        typedef wdb::odb::mongo::object object;
+        using object = wdb::odb::mongo::object;
         using reader = wdb::odb::mongo::prop_reader;
         using writer = wdb::odb::mongo::prop_writer;
         using signature = wdb::odb::mongo::signature;

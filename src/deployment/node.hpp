@@ -72,12 +72,11 @@ namespace wdb { namespace deployment {
     }
 
     void node::job_pool::push(odb::iobject& old_obj, rte::icacheable& mod){
-        auto record = properties.create(); // FIXME: What is the point of this? Should it be done everywhere?
-        auto cfg = properties.create();
+        object record, cfg;
         auto& p = static_cast<entities::property&>(mod);
-        p.serialize_cfg(*cfg);
-        p.serialize(*record, *cfg);
-        properties.replace(old_obj, *record);
+        p.serialize_cfg(cfg);
+        p.serialize(record, cfg);
+        properties.replace(old_obj, record);
     }
 
 } }
