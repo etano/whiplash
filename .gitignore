@@ -5,6 +5,11 @@ share/
 src/apps/*.app
 src/tests/*.test
 src/apps/drivers/*.driver
+doc/html
 *.swp
 *.swo
 *.pyc
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+
