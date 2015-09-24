@@ -1,6 +1,8 @@
 #ifndef WDB_UTILS_PARAMETERS_HPP
 #define WDB_UTILS_PARAMETERS_HPP
 
+#include <unordered_map>
+#include <string>
 
 namespace std {
     std::string to_string(const std::string& val){ return val; }

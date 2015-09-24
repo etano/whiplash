@@ -1,8 +1,8 @@
 
 #include <time_evolution.hpp>
 
-//#include <entities/uevol/model.hpp>
-//#include <entities/uevol/property.hpp>
+//#include <entities/ising/model.hpp>
+//#include <entities/ising/property.hpp>
 //#include <utils/find.hpp>
 #include "wdb.hpp"
 
@@ -13,13 +13,13 @@
 
 namespace {
 
-using hamiltonian_type = wdb::entities::uevol::model;
-using property_type = wdb::entities::uevol::property;
+using model_type = wdb::entities::ising::model;
+using property_type = wdb::entities::ising::property;
 
 struct aqc{
 
     aqc( unsigned N                 ///< number of sites
-       , const std::vector<hamiltonian_type::bond_type>& bonds  ///< [(bond, site1, site2), ] system config
+       , const std::vector<model_type::edge_type>& bonds  ///< system config
        , double Ttot                ///< time to simulate
        , unsigned nsteps            ///< steps to make
        , double hx                  ///< field magnitude in x-direction
@@ -30,15 +30,19 @@ struct aqc{
         , a_(0.)
         , hx_(std::vector<double>(N,hx))
         , psi_out_(1<<N)
-        , psi_in_(1<<N,1./std::sqrt(1<<N)) //initial groundstate wf of transv. field
+        , psi_in_(1<<N, 1./std::sqrt(1<<N)) //initial groundstate wf of transv. field
     {
         std::set<qsit::site_t> site_counter;
         
         for(auto bond : bonds){
-            Jz_.push_back(std::get<2>(bond));
-            edges.push_back(std::make_pair(std::get<0>(bond), std::get<1>(bond)));
-            site_counter.insert(std::get<0>(bond));
-            site_counter.insert(std::get<1>(bond));
+            Jz_.push_back(bond.second);
+            if(bond.first.size() != 2){
+                throw std::runtime_error("unitary evolution solver only supports 2-node edges"
+                                         ", found " + std::to_string(bond.first.size()) + ".");
+            }
+            edges.push_back(std::make_pair(bond.first[0], bond.first[1]));
+            site_counter.insert(bond.first[0]);
+            site_counter.insert(bond.first[1]);
         }
 
         std::copy(site_counter.begin(), site_counter.end(), std::back_inserter(sites));
@@ -47,18 +51,19 @@ struct aqc{
     using wf_t = qsit::wf_t;
     using config_t = qsit::config_t;
     
-    /// @return energy of the latest configuration (psi_out_)
-    double run() {
-        double Einit = energy(psi_in_);
-        for (unsigned steps = 0; steps < Ttot_/tau_;++steps ) {
+    std::vector<double> run() {
+        const unsigned n_steps = Ttot_/tau_;
+        std::vector<double> energies;
+        energies.reserve(n_steps + 1);
+        for(unsigned steps = 0; steps < n_steps; ++steps ) {
+            energies.push_back(energy(psi_in_));
             step(a_);
             a_ += tau_/Ttot_;
-//            std::cout << energy(psi_out_) << "\n";
         }
-        double Efinal = energy(psi_out_);
+
+        energies.push_back(energy(psi_out_));
         
-        return Efinal;
-//        std::cout << "Einit,Efinal:\n" << Einit << "," << Efinal<< std::endl;
+        return energies;
     }
     
     void step(double a){
@@ -130,8 +135,8 @@ struct aqc{
     double energy(const wf_t& psi) const { // E = <psi|H|psi>
         return szszenergy(psi) + sxenergy(psi);
     }
-    
-// data
+
+private: // data
     unsigned N_;
     double Ttot_;
     double tau_;
@@ -144,33 +149,25 @@ struct aqc{
     std::vector<qsit::site_t> sites;
 };
 
-/// count the number of distinct edges in 
-size_t count_edges(const std::vector<hamiltonian_type::bond_type>& bonds){
-    std::set<hamiltonian_type::index_type> site_counter;
-    for(auto& bond : bonds){
-        site_counter.insert(std::get<1>(bond));
-        site_counter.insert(std::get<2>(bond));
-    }
-    return site_counter.size();
-}
 }
 
 int main(int /*argc*/, char *argv[])
 {
-    hamiltonian_type& H = wdb::find<hamiltonian_type>(argv);
+    model_type& H = wdb::find<model_type>(argv);
     property_type& P = wdb::find<property_type>(argv);
     
-    std::vector<hamiltonian_type::bond_type> bonds = H.get_bonds();
-    const unsigned N = count_edges(bonds);
+    auto& edges = H.get_edges();
+    const unsigned N = H.num_nodes();
     
     double hx = P.get_param<double>("hx");     // -1;
     double Ttot = P.get_param<double>("Ttot"); // 500;
     unsigned nsteps = P.get_param<unsigned>("nsweeps"); // 400;
-
+    double hx = P.get_param<double>("hx");     // -1;
+        
     //perform the annealing
-    aqc a(N, bonds, Ttot, nsteps, hx);
-    double energy = a.run();
-    P.set_cfg(energy);
+    aqc a(N, edges, Ttot, nsteps, hx);
+    auto energies = a.run();
+    P.set_cfg(std::vector<std::vector<int>>(), energies);
 
     return 0;
 }
