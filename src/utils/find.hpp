@@ -1,5 +1,6 @@
 #ifndef WDB_UTILS_FIND_HPP
 #define WDB_UTILS_FIND_HPP
+
 #include <type_traits>
 #include <tuple>
 

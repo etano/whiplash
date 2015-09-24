@@ -1,42 +1,4 @@
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import sys,os
-import time
-import numpy as np
-
-class UpdatePlot(object):
-    def __init__(self, ax, wdb, filter, target, n_bin):
-        self.success = 0
-        self.line, = ax.plot([], [], 'k-')
-        self.ax = ax
-        self.n_bin = n_bin
-
-        # Set up plot parameters
-        self.ax.grid(True)
-
-    def init(self):
-        self.success = 0
-        self.line.set_data([], [])
-        return self.line,
-
-    def __call__(self, i):
-        # This way the plot can continuously run and we just keep
-        # watching new realizations of the process
-        if i == 0:
-            return self.init()
-
-        # Query things and update plot
-        results = wdb.Query(filter,target)
-        energies = []
-        for res in results:
-            energies.append(float(res))
-        if len(energies) > 0:
-            hist,bin_edges = np.histogram(energies,self.n_bin)
-            bin_centers = [(bin_edges[i]+bin_edges[i+1]/2.) for i in range(self.n_bin)]
-            self.line.set_data(bin_centers, hist)
-            self.ax.set_xlim(min(bin_centers),max(bin_centers))
-            self.ax.set_ylim(min(hist),max(hist))
-        return self.line,
 
 # Make WhiplashDB in_sweepstance
 wdb_home = os.environ.get('WDB_HOME')
@@ -49,7 +11,7 @@ prob_class = 'ising'
 owner = 'ebrown'
 n_probs = 1
 n_reps = 10000
-n_sweeps = [100]
+n_sweeps = [10]
 
 # Executable
 print 'Committing executables'
@@ -74,13 +36,8 @@ for n_sweep in n_sweeps:
     print property_ids
 
 # Form query
-filter = {'class':prob_class,'status':3}
+filter = {'class':prob_class}
 target = ['cfg','costs']
 
 # Query and update plot continuously
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-n_props = n_probs*n_reps*len(n_sweeps)
-up = UpdatePlot(ax, wdb, filter, target, 10)
-anim = FuncAnimation(fig, up, frames=10000, init_func=up.init, interval=100, blit=False)
-plt.show()
+wdb.RealTimeHist(filter, target)

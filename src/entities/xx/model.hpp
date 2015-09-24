@@ -1,10 +1,6 @@
 #ifndef WDB_ENTITIES_XX_MODEL_HPP
 #define WDB_ENTITIES_XX_MODEL_HPP
 
-#include <odb/interface/iobject.h>
-#include <entities/generic/model.hpp>
-#include <utils/optional.hpp>
-
 #include <cassert>
 #include <iosfwd>
 #include <map>

@@ -1,6 +1,9 @@
 #ifndef WDB_ENTITIES_XX_HPP
 #define WDB_ENTITIES_XX_HPP
 
+#include <odb/interface/iobject.h>
+#include <entities/generic.hpp>
+
 namespace wdb { namespace entities {
     namespace xx {
         class model;

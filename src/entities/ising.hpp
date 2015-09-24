@@ -1,6 +1,8 @@
 #ifndef WDB_ENTITIES_ISING_HPP
 #define WDB_ENTITIES_ISING_HPP
 
+#include <entities/generic.hpp>
+
 namespace wdb { namespace entities { 
     namespace ising {
         class model;
