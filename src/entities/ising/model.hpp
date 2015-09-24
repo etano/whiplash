@@ -1,17 +1,20 @@
 #ifndef WDB_ENTITIES_ISING_MODEL_HPP
 #define WDB_ENTITIES_ISING_MODEL_HPP
 
+#include <entities/generic/model.hpp>
+
 namespace wdb { namespace entities { namespace ising {
 
     class model : public entities::model {
-        typedef int64_t spin_type;
-        typedef std::pair<std::vector<spin_type>, double> edge_type;
-        typedef std::vector<spin_type> node_type;
     public:
+        using index_type = int64_t;                 ///< label the nodes
+        using edge_type = std::pair<std::vector<index_type>, double>; ///< (nodes in the edge (>= 2), coupling value
+        using node_type = std::vector<index_type>;  ///< lists of connecting edges for each node
+
         model(std::ifstream& in, optional<int> parent, optional<parameters> params)
             : entities::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
         {
-            std::map<std::string,spin_type> index;
+            std::map<std::string,index_type> index;
             while(in){
                 std::string input_str;
                 if(!std::getline(in,input_str)) break;
@@ -21,19 +24,20 @@ namespace wdb { namespace entities { namespace ising {
                     std::vector<std::string> input;
                     while(tmp0){
                         std::string s;
-                        if(!std::getline(tmp0, s, ' ')) break;
+                        if(!std::getline(tmp0, s, ' '))
+                            break;
                         input.push_back(s);
                     }
 
                     double val(std::stod(input[input.size()-1]));
 
-                    std::vector<spin_type> inds;
+                    std::vector<index_type> inds;
                     for(int i = 0; i < input.size()-1; ++i){
                         const std::string site(input[i]);
                         if(index.find(site) == index.end()) index[site] = N_++;
                         inds.push_back(index[site]);
                     }
-                    std::sort(inds.begin(), inds.end(), std::less<spin_type>());
+                    std::sort(inds.begin(), inds.end());
                     edges_.push_back(std::make_pair(inds, val));
                 }
             }
@@ -44,10 +48,10 @@ namespace wdb { namespace entities { namespace ising {
             : entities::model(o), N_(0)
         {
             for(auto e : reader::read<reader::array_type>(o, "cfg", "edges").unwrap()){
-                std::vector<spin_type> inds;
+                std::vector<index_type> inds;
                 auto sub_array = reader::read<reader::array_type>(e);
                 for(const auto a : reader::read<reader::array_type>(sub_array[0])){
-                    spin_type a_ = reader::read<spin_type>(a);
+                    index_type a_ = reader::read<index_type>(a);
                     inds.push_back(a_);
                 }
 
