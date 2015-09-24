@@ -12,17 +12,17 @@ namespace wdb { namespace rte {
             dlclose(handle);
         }
         virtual void operator()(int argc, char** argv) override {
-            typedef int (*fptr_t)(int,char**);
+            using fptr_t = int(*)(int,char**);
             ((fptr_t)fptr)(argc, argv);
         }
         virtual bool preload(int argc, char** argv) override {
             if(!fptr_preload) return false;
-            typedef void (*fptr_t)(int,char**);
+            using fptr_t = void (*)(int,char**);
             ((fptr_t)fptr_preload)(argc, argv);
             return true;
         }
         virtual void operator()() override {
-            typedef int (*fptr_t)();
+            using fptr_t = int (*)();
             ((fptr_t)fptr)();
         }
         void open(std::string path){

@@ -26,8 +26,8 @@ class UpdatePlot(object):
         # Set up plot parameters
         self.ax.cla()
         self.ax.grid(True)
-        #self.ax.set_xlim(-115,-35)
-        #self.ax.set_ylim(0,1250)
+        self.ax.set_xlim(-115,0)
+        self.ax.set_ylim(0,900)
 
         # This way the plot can continuously run and we just keep
         # watching new realizations of the process
@@ -53,16 +53,17 @@ class UpdatePlot(object):
                 if hist[i] != 0:
                     xs.append(bin_edges[i]+bin_edges[i+1]/2.)
                     ys.append(hist[i])
-            self.ax.set_xlim(min(xs),max(xs))
-            self.ax.set_ylim(min(ys),max(ys))
+            #self.ax.set_xlim(min(xs),max(xs))
+            #self.ax.set_ylim(min(ys),max(ys))
             self.line.set_data(xs,ys)
             self.ax.fill_between(xs,0,ys,alpha=0.6,facecolor='crimson')
         return self.line,
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,wdb_home):
+    def __init__(self,wdb_home,server):
         self.wdb_home = wdb_home
+        self.server = server
 
     def FormArgs(self,path,entity):
         args = [path]
@@ -101,7 +102,7 @@ class wdb:
         return self.Execute(args)
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
-        client = MongoClient()
+        client = MongoClient(self.server)
         properties = client['wdb']['properties']
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
