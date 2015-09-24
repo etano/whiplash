@@ -23,9 +23,12 @@ done
 echo "Building to ${BUILDPATH}"
 
 if [ -d .git ]; then
-    # Export PKG_CONFIG_PATH and LD_LIBRARY_PATH
+
+    # Export PKG_CONFIG_PATH,LD_LIBRARY_PATH,WDB_HOME,PYTHONPATH
     export PKG_CONFIG_PATH=${PKG_CONFIG_PATH}:${BUILDPATH}/lib/pkgconfig
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${BUILDPATH}/lib
+    export WDB_HOME=${WDB_HOME}:${BUILDPATH}
+    export PYTHONPATH=${PYTHONPATH}:${BUILDPATH}/src/tests/apps/python
 
     # Get the submodules
     git submodule update --init --recursive
@@ -56,4 +59,3 @@ if [ -d .git ]; then
     make -j${NTHREADS} && make install
     cd ../
 fi
-
