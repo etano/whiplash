@@ -18,7 +18,6 @@ namespace wdb { namespace entities {
         tsp,
         xx,
         sat,
-        uevol,
         LENGTH // 4
     };
 
