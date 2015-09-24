@@ -15,6 +15,17 @@ cd XXcode && make -f Makefile.wdb clean && make -f Makefile.wdb -j && cd ../
 ## Annealing codes ##
 cd anc && make clean && make -j single && cd ../
 
+## unitary evolution
+cd unitary_evolution_wrap 
+if [ ! -d "build" ]; then
+  mkdir build
+else
+  rm -rf build
+  mkdir build
+fi
+cd build/ && cmake .. && make -j && make install
+cd ../../
+
 ## Spin glass solver ##
 cd spin_glass_solver
 if [ ! -d "build" ]; then

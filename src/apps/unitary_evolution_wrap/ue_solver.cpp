@@ -162,8 +162,7 @@ int main(int /*argc*/, char *argv[])
     double hx = P.get_param<double>("hx");     // -1;
     double Ttot = P.get_param<double>("Ttot"); // 500;
     unsigned nsteps = P.get_param<unsigned>("nsweeps"); // 400;
-    double hx = P.get_param<double>("hx");     // -1;
-        
+
     //perform the annealing
     aqc a(N, edges, Ttot, nsteps, hx);
     auto energies = a.run();
