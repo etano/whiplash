@@ -1,11 +1,84 @@
+-------------
 WhiplashDB
--------------------
+-------------
+
+INTRO
+
+WhiplashDB is a framework to run large numbers of simulations in a
+distributed environment. It aims to maximise efficiency, convenience
+and reproducibility by storing inputs and outputs of each simulation
+in a database, handling direct interaction with clusters and queing of
+jobs and providing a convenient interface to submit jobs and analyse
+output.
+
+Each job is composed of three components: a model, an executable and a
+property
+
+* model: a problem instance which serves as an input to an
+  executeble.
+
+* executable: the location of an executable binary.
+
+* property: job description pass on to the executable, including input
+  parameters, specification of the model, etc. When a job succesfully
+  finishes, it appends its output to the property which called it.
+
+QUICK INSTALL
+
+Run the autogen.sh script from the whiplash root directory.
 
 INSTALLING
 
-RUNNING
+WhiplashDB is split into two parts: client and server.
+
+SERVER
+
+The server should be running an instance of the MongoDB daemon which
+is using the database file. An installation of MongoDB
+(https://www.mongodb.org) is required on the server. The server should
+also be running an instance of the scheduler.
+
+CLIENT
+
+In addition to an installation of whiplashdb, the client needs a set
+of drivers to communicate with the server
+
+* libbson (https://github.com/mongodb/libbson)
+* mongo-c-driver (https://github.com/mongodb/mongo-c-driver)
+* mongo-cxx-driver (https://github.com/mongodb/mongo-cxx-driver)
 
 DRIVERS
 
+Interaction with the database is done through a set of drivers
+provided for convenience
+
+* commit_executable: commit an executable to the database
+
+* commit_model: commit a model to the database
+
+* commit_property: commit a property to the database
+
+* format_db: formats the current instance of the database on the
+  server
+
+* scheduler_driver: should be ran in the background on the server
+
 DEMOS
 
+A convenient way to communitate with the database is using python. A
+python demo can be found in $(whiplash_root)/src/tests/demo_python.py
+
+ALGORITHMS
+
+A number of algorithms are already implemented in whiplashDB. The
+algorithms can be found in $(whiplash_root)/src/apps
+
+* DT-SQA: discrete-time simulated quantum annealing code
+
+* anc: a set of optimised simulated annealing codes
+
+* unitary_evolution: unitary evolution code
+
+* spin_glass_solver: a general spin-glass solver
+
+* XXcode: quantum annealing code which includes XX couplings
