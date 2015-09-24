@@ -71,7 +71,9 @@ requirements of each.
 ## Demos
 
 A convenient way to communitate with the database is using python. A
-python demo can be found in $(whiplash_root)/src/tests/demo_python.py
+python demo can be found in
+$(whiplash_root)/src/tests/demo_python.py. The pymongo
+(https://api.mongodb.org/python/current/) python module is required.
 
 #### Loading models
 
