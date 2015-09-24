@@ -1,7 +1,31 @@
 WhiplashDB
 ==========
 
-The simulation framework is based upon MongoDB NoSQL database and includes a library of problem classes as well as job scheduling and statistical analysis interfaces. WhiplashDB is an executable database, meaning results to queries can be computed on the fly (see the [Querying](querying) section for more information).
+WhiplashDB is a framework to run large numbers of simulations in a
+distributed environment. It aims to maximise efficiency, convenience
+and reproducibility by storing inputs and outputs of each simulation
+in a database, handling direct interaction with clusters and queing of
+jobs, and providing a convenient interface to submit jobs and analyse
+output.
+
+The framework is based on the MongoDB NoSQL database and includes a
+library of problem classes as well as job scheduling and statistical
+analysis interfaces. WhiplashDB is an executable database, meaning
+results to queries can be computed on the fly (see the
+[Querying](querying) section for more information).
+
+Each job is composed of three components: a model, an executable and a
+property
+
+* model: a problem instance which serves as an input to an
+  executeble.
+
+* property: job description passed on to the executable, including
+  input parameters, specification of the model, etc. When a job
+  succesfully finishes, it appends its output to the property with
+  which it was called.
+
+* executable: the binary executed by the job.
 
 ## Setup
 
@@ -13,24 +37,45 @@ Currently installation is as simple as
     cd whiplashdb
     source autogen.sh
 
-This will download, compile, and install libbson, mongoc, libbson++, and mongoc++.
+This will download, compile, and install libbson, mongoc, libbsonxx,
+and mongocxx.
 
 To build all currently integrated solvers do
 
     cd src/apps
     source build_apps.sh
 
+The server should in addition be running an instance of the MongoDB
+daemon which is using the database file. MongoDB can be obtained at
+https://www.mongodb.org
+
 ### Deployment
 
-Current deployment is limited to the Mönch cluster located at monch.cscs.ch.
+Current deployment is limited to the Mönch cluster located at
+monch.cscs.ch.
 
-Future deployment types will include completely local, dockerized, and remote clusters.
+Future deployment types will include completely local, dockerized, and
+remote clusters.
+
+An instance of the database and the scheduler should be running on the
+server. The scheduler can be started by calling
+./bin/drivers/scheduler.driver
 
 ## Populating the framework
 
-Currently all models, executables, and properties are loaded into WhiplashDB through our CLI. All drivers for the CLI are located in the src/drivers directory. See below for details for the specific requirements of each.
+Currently all models, executables, and properties are loaded into
+WhiplashDB through our CLI. All drivers for the CLI are located in the
+bin/drivers directory. See below for details for the specific
+requirements of each.
+
+## Demos
+
+A convenient way to communitate with the database is using python. A
+python demo can be found in $(whiplash_root)/src/tests/demo_python.py
 
 #### Loading models
+
+Driver: commit_model.driver
 
 Required arguments:
 
@@ -45,9 +90,12 @@ Optional arguments:
 
 Example:
 
-    ./drivers/commit_model.driver -file apps/108problem.lat -class ising -owner akosenko
+    ./commit_model.driver -file apps/108problem.lat -class
+    ising -owner akosenko -parent_id 8 -type quantum_speedup
 
 #### Loading executables
+
+Driver: commit_executable.driver
 
 Required arguments:
 
@@ -65,9 +113,14 @@ Optional arguments:
 
 Example:
 
-    ./drivers/commit_executable.driver -file apps/test.app -class ising -owner akosenko -description "This solver simply chooses random configurations and returns the lowest energy found" -algorithm "random" -version "1.0" -build "O3"
+    ./commit_executable.driver -file apps/test.app -class
+    ising -owner akosenko -description "This solver simply chooses
+    random configurations and returns the lowest energy found"
+    -algorithm "random" -version "1.0" -build "O3" -purpose "testing"
 
 #### Loading properties
+
+Driver: commit_property.driver
 
 Required arguments:
 
@@ -82,11 +135,25 @@ Optional arguments:
 
 Example:
 
-    ./drivers/commit_property.driver -class ising -model 0 -executable 0 -owner akosenko -Nr 7
+    ./commit_property.driver -class ising -owner akosenko -model 0
+    -executable 0 -Nr 7
+
+#### Format the current instance of the database
+
+Driver: format_db.driver
+
+Required argument: None
+
+Optional argument: None
+
+Example:
+
+    ./format_db.driver
 
 ## Querying
 
-On the surface, querying an executable database appears similar as querying a normal database. Here's an example in C++:
+On the surface, querying an executable database appears similar to
+querying a normal database. Here's an example in C++:
 
     #include "wdb.hpp"
     using wdb::odb::mongo::objectdb;
@@ -108,9 +175,16 @@ On the surface, querying an executable database appears similar as querying a no
         return 0;
     }
 
-Notice we first create a filter on which to query, here all properties with class "ising". Next we define which target we would like to return, here "cost". Finally, we print out the results. Clearly one does the same with a normal database.
+Notice we first create a filter on which to query, here all properties
+with class "ising". Next we define which target we would like to
+return, here "cost". Finally, we print out the results. Clearly one
+does the same with a normal database.
 
-The difference lies in the query function itself. If WhiplashDB finds that the "cost" of any property of class "ising" is not yet computed, it will automatically know how to compute it. It does so by using the property's linked executable to operate on the property's linked model.
+The difference lies in the query function itself. If WhiplashDB finds
+that the "cost" of any property of class "ising" is not yet computed,
+it will automatically know how to compute it. It does so by using the
+property's linked executable to operate on the property's linked
+model.
 
 ## Database schema
 
@@ -299,3 +373,18 @@ Example of Weighted Partial Max-SAT formula:
 #### Executable configuration parameters
 
 - schedule : annealing schedule ("linear", "inverse", "quadratic", or "custom")
+
+ALGORITHMS
+
+A number of algorithms are already implemented in whiplashDB. The
+algorithms can be found in $(whiplash_root)/src/apps
+
+* DT-SQA: discrete-time simulated quantum annealing code
+
+* anc: a set of optimised simulated annealing codes
+
+* unitary_evolution: unitary evolution code
+
+* spin_glass_solver: a general spin-glass solver
+
+* XXcode: quantum annealing code which includes XX couplings
