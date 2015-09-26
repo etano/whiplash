@@ -1,4 +1,38 @@
 FROM gcc:4.9
-COPY src /usr/src/wdb/src
-WORKDIR /usr/src/wdb/src
-RUN make
+COPY depends /usr/src/wdb/depends
+
+# CMake
+
+WORKDIR /usr/src/wdb/depends/
+RUN         curl -O https://cmake.org/files/v3.3/cmake-3.3.2.tar.gz \
+                && tar -xvf cmake-3.3.2.tar.gz
+
+WORKDIR cmake-3.3.2
+RUN     ./bootstrap \
+            && make \
+            && make install
+
+# Mongo C-driver
+
+WORKDIR /usr/src/wdb/depends/mongo-c-driver
+RUN ./autogen.sh --prefix=/usr/lib/mongo/c && cd src/libbson && NOCONFIGURE=1 ./autogen.sh && cd ../../ && make && make install
+
+# Mongo CXX-driver
+
+ENV PKG_CONFIG_PATH /usr/lib/mongo/cxx/lib/pkgconfig:/usr/lib/mongo/c/lib/pkgconfig:$PKG_CONFIG_PATH
+ENV LD_LIBRARY_PATH /usr/lib/mongo/cxx/lib:/usr/lib/mongo/c/lib:$LD_LIBRARY_PATH
+
+WORKDIR /usr/src/wdb/depends/mongo-cxx-driver/build
+RUN  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/lib/mongo/cxx .. \
+     && make \
+     && make install
+
+# Fortran compiler
+
+RUN apt-get update
+RUN apt-get install -y gfortran
+
+# Reseting directory
+
+WORKDIR /usr/src/wdb/
+
