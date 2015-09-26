@@ -1,0 +1,5 @@
+FROM wdb:1.0
+
+COPY src/apps /opt/wdb
+WORKDIR /opt/wdb
+CMD ["./drivers/scheduler.driver"]
