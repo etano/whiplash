@@ -19,3 +19,9 @@
 	path = src/apps/unitary_evolution
 	url = git@gitlab.phys.ethz.ch:simulational_physics/unitary_evolution.git
 
+[submodule "docker/dependencies/mongo-c-driver"]
+	path = docker/dependencies/mongo-c-driver
+	url = https://github.com/mongodb/mongo-c-driver
+[submodule "docker/dependencies/mongo-cxx-driver"]
+	path = docker/dependencies/mongo-cxx-driver
+	url = https://github.com/mongodb/mongo-cxx-driver
