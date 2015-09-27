@@ -1,4 +1,5 @@
 FROM gcc:4.9
+MAINTAINER Alex Kosenkov <kosenkov@itp.phys.ethz.ch>
 COPY depends /usr/src/wdb/depends
 
 # CMake

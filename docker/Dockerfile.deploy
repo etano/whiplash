@@ -1,4 +1,4 @@
-FROM wdb:1.0
+FROM whiplash/rte-local:build
 
 COPY src/apps /opt/wdb
 WORKDIR /opt/wdb
