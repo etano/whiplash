@@ -5,7 +5,7 @@ wdb_home = os.environ.get('WDB_HOME')
 sys.path.append(wdb_home+'lib/python')
 import whiplashdb
 #wdb = whiplashdb.wdb(wdb_home,"cwave.ethz.ch:27017")
-wdb = whiplashdb.wdb(wdb_home,"whiplash-dev.ethz.ch:27017")
+wdb = whiplashdb.wdb(wdb_home,"whiplash.ethz.ch:27017")
 
 # Settings
 prob_class = 'ising'
