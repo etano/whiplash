@@ -1,5 +1,5 @@
 FROM whiplash/rte-local:build
 
-COPY src/apps /opt/wdb
-WORKDIR /opt/wdb
-CMD ["./drivers/scheduler.driver"]
+COPY src/apps /opt/wdb/apps
+COPY src/tests /opt/wdb/tests
+WORKDIR /opt/wdb/tests

@@ -10,5 +10,5 @@ alias mongo="docker run -it --link wdb-odb:mongo --rm mongo sh -c 'exec mongo \"
 docker run -d -P --name wdb-www --link wdb-odb:mongo whiplash/www:experimental
 
 
-# WDB-RTE-CONTAINER : runs scheduler + workers
-docker run -it -P --name wdb-rte --link wdb-odb:mongo --rm whiplash/rte-local:build
+# WDB-RTE-CONTAINER : runs scheduler
+docker run -d -P --name wdb-rte --link wdb-odb:mongo whiplash/rte-local:deploy sh -c "./drivers/scheduler.driver"
