@@ -53,6 +53,7 @@
 
 using framework = wdb::deployment::node;
 //#define DBHOST "cwave.ethz.ch:27017"
-#define DBHOST "whiplash-dev.ethz.ch:27017"
+//#define DBHOST "whiplash-dev.ethz.ch:27017"
+#define DBHOST "127.0.0.1:27017"
 
 #endif
