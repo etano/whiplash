@@ -4,7 +4,8 @@ import sys,os
 wdb_home = os.environ.get('WDB_HOME')
 sys.path.append(wdb_home+'lib/python')
 import whiplashdb
-wdb = whiplashdb.wdb(wdb_home,"cwave.ethz.ch:27017")
+#wdb = whiplashdb.wdb(wdb_home,"cwave.ethz.ch:27017")
+wdb = whiplashdb.wdb(wdb_home,"whiplash-dev.ethz.ch:27017")
 
 # Settings
 prob_class = 'ising'
@@ -14,9 +15,8 @@ n_sweeps = [10]
 
 # Models
 print 'Committing models'
-model = {'class':prob_class,'owner':owner,'lattice_type':'random','coupling_type':'gaussian'}
-path = wdb_home+'src/tests/108ising.lat'
-model_ids = wdb.CommitModel(model, path)
+model = {'class':prob_class,'owner':owner,'lattice_type':'random','coupling_type':'gaussian','path':wdb_home+'/src/tests/108ising.lat'}
+model_ids = wdb.CommitModel(model)
 print model_ids
 
 executable_id = 0
