@@ -22,6 +22,14 @@ do
 done
 echo "Building to ${BUILDPATH}"
 
+NTHREADS=1
+if [ $(uname -s) == "Linux" ]
+then
+    NTHREADS=$(nproc)
+else
+    NTHREADS=$(sysctl -n hw.ncpu)
+fi
+
 if [ -d .git ]; then
 
     # Export PKG_CONFIG_PATH,LD_LIBRARY_PATH,WDB_HOME,PYTHONPATH

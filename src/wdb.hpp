@@ -52,7 +52,7 @@
 #include "utils/find.hpp"
 
 using framework = wdb::deployment::node;
-#define DBHOST "cwave.ethz.ch:27017"
-//#define DBHOST "whiplash-dev.ethz.ch:27017"
+//#define DBHOST "cwave.ethz.ch:27017"
+#define DBHOST "whiplash-dev.ethz.ch:27017"
 
 #endif
