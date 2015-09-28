@@ -11,4 +11,4 @@ docker run -d -P --name wdb-www --link wdb-odb:mongo whiplash/www:experimental
 
 
 # WDB-RTE-CONTAINER : runs scheduler
-docker run -d -P --name wdb-rte --link wdb-odb:mongo whiplash/rte-local:deploy sh -c "./drivers/scheduler.driver"
+docker run -d -P --name wdb-rte --link wdb-odb:mongo whiplash/rte-local:deploy sh -c "./drivers/scheduler.driver -dbhost \$MONGO_PORT_27017_TCP_ADDR:\$MONGO_PORT_27017_TCP_PORT"

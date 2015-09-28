@@ -1,7 +1,13 @@
 #include "wdb.hpp"
 
 int main(int argc, char* argv[]){
-    framework f(DBHOST);
+
+    // Parse arguments
+    framework::params_type params(argc,argv);
+
+    // Instantiate framework
+    framework f(params.pop<std::string>("dbhost"));
+
     framework::root_controller root(f.get_worker_pool());
 
     auto controller = wdb::entities::factory::make<framework::e::controller>("generic");

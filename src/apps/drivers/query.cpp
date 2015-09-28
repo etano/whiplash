@@ -1,11 +1,12 @@
 #include "wdb.hpp"
 
 int main(int argc, char* argv[]){
-    // Initialize database and deployment
-    framework deployment(DBHOST);
 
     // Parse arguments
     framework::params_type params(argc,argv);
+
+    // Instantiate framework
+    framework f(params.pop<std::string>("dbhost"));
 
     // Required arguments
     std::vector<std::string> target = params.pop<std::vector<std::string>>("target");
@@ -31,7 +32,7 @@ int main(int argc, char* argv[]){
     }
 
     // Query and print results
-    for(const auto& results : deployment.query( filter )){
+    for(const auto& results : f.query( filter )){
         if(wdb::entities::property::is_undefined(*results))
             std::cout << "Unresolved property\n";
         else
