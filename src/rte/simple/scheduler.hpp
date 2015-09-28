@@ -10,14 +10,15 @@ namespace wdb { namespace rte { namespace simple {
         typedef wdb::syslog logger_type;
 
         scheduler(ipool& p) : pool(p) {
+            #ifdef WDB_NO_DOCKER
             pid = fork();
             if(pid < 0) exit(EXIT_FAILURE);
             if(pid > 0) exit(EXIT_SUCCESS);
             umask(0);
+            if((sid = setsid()) < 0) logger->error("Could not create process group\n");
+            #endif
 
             logger = new logger_type();
-
-            if((sid = setsid()) < 0) logger->error("Could not create process group\n");
             logger->notice("Successfully started daemon\n");
         }
 
