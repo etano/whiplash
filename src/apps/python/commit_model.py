@@ -1,4 +1,4 @@
-import sys,json,pymongo,time
+import sys,pymongo,json,time
 
 if len(sys.argv) == 1:
     print 'Please enter model file'
@@ -12,9 +12,7 @@ for field in required_fields:
         print 'Please add property:',field
         sys.exit(0)
 
-client = pymongo.MongoClient("whiplash.ethz.ch:27017")
-db = client['wdb']
-models = db['models']
+models = pymongo.MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
 
 _id = models.find().count()
 

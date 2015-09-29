@@ -7,9 +7,6 @@ for i in range(1,len(sys.argv)):
         which[arg.lstrip('-')] = sys.argv[i+1]
         i += 1
 
-client = pymongo.MongoClient("whiplash.ethz.ch:27017")
-db = client['wdb']
-models = db['models']
-
+models = pymongo.MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
 for model in models.find(which):
     print model
