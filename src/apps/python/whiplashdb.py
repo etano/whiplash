@@ -61,14 +61,14 @@ class UpdatePlot(object):
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,wdb_home,server,use_cpp_drivers=false):
+    def __init__(self,wdb_home,server,use_cpp_drivers=False):
         self.wdb_home = wdb_home
         self.server = server
         self.use_cpp_drivers = use_cpp_drivers
         self.client = pymongo.MongoClient(self.server)
-        self.models = client['wdb']['models']
-        self.executables = client['wdb']['executables']
-        self.properties = client['wdb']['properties']
+        self.models = self.client['wdb']['models']
+        self.executables = self.client['wdb']['executables']
+        self.properties = self.client['wdb']['properties']
 
     def FormArgs(self,path,entity):
         args = [path]

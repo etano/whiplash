@@ -25,8 +25,6 @@ for field in required_fields:
 models = MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
 
 _id = models.find().count()
-#_id = int(sys.argv[2])
-#_id = a
 
 data['_id'] = _id
 data['timestamp'] = time()
