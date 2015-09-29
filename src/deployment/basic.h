@@ -30,7 +30,7 @@ namespace wdb { namespace deployment {
                               std::string description,                         // a description of what the executable does/is capable of
                               std::string algorithm,                           // the algorithm that is being executed
                               std::string version,                             // version of the executable
-                              std::string build_info,                          // specification of how executable was built
+                              std::string build,                          // specification of how executable was built
                               optional<params_type> params);                   // extra parameters object
 
         std::vector<int> insert_models(std::string problem_class,              // name of problem class (ex: "JobShop")

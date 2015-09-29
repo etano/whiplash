@@ -6,13 +6,13 @@ namespace wdb { namespace entities {
     class executable : public wdb::rte::icacheable {
     public:
         template<class I>
-        executable(I info, std::string path, std::string desc, std::string algo, std::string version, std::string build_info, optional<parameters> params){
+        executable(I info, std::string path, std::string desc, std::string algo, std::string version, std::string build, optional<parameters> params){
             class_ = I::name;
             path_ = path;
             description_ = desc;
             algorithm_ = algo;
             version_ = version;
-            build_info_ = build_info;
+            build_ = build;
             params_ = params;
             app_ = new rte::app(path_);
         }
@@ -23,7 +23,7 @@ namespace wdb { namespace entities {
             description_ = reader::read<std::string>(o, "description");
             algorithm_ = reader::read<std::string>(o, "algorithm");
             version_ = reader::read<std::string>(o, "version");
-            build_info_ = reader::read<std::string>(o, "build_info");
+            build_ = reader::read<std::string>(o, "build");
             params_ = reader::read<parameters>(o, "cfg");
             app_ = new rte::app(path_);
         }
@@ -44,7 +44,7 @@ namespace wdb { namespace entities {
             writer::prop("description", description_) >> record;
             writer::prop("algorithm", algorithm_) >> record;
             writer::prop("version", version_) >> record;
-            writer::prop("build_info", build_info_) >> record;
+            writer::prop("build", build_) >> record;
             if(params_)
                 if(params_.unwrap().get_container())
                     writer::prop("cfg", params_) >> record;
@@ -57,7 +57,7 @@ namespace wdb { namespace entities {
         std::string description_;
         std::string algorithm_;
         std::string version_;
-        std::string build_info_;
+        std::string build_;
         optional<parameters> params_;
         rte::iapp* app_;
     };

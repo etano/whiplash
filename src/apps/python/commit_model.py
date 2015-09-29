@@ -6,7 +6,14 @@ if len(sys.argv) == 1:
 
 data = json.load(open(sys.argv[1]))
 
-required_fields = ['class','owner']
+'''
+required_fields = {"ising":["n_spins","edges"],"sat":[...]}
+if ising -> n_spins, edges
+if sat -> n_variables, couplings
+if ... -> ...
+'''
+
+required_fields = ['class','owner','cfg']
 for field in required_fields:
     if field not in data:
         print 'Please add property:',field
