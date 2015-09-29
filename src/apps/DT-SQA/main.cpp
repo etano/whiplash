@@ -29,8 +29,8 @@ int main(int argc, char* argv[]){
 	cout << "starting...\n"; // todo: remove
 
 	// whiplashdb input
-	wdb::entities::ising::model& H = wdb::find<wdb::entities::ising::model>(argv);
-	wdb::entities::ising::property& P = wdb::find<wdb::entities::ising::property>(argv);
+	wdb::entities::ising::model& H = wdb::find<wdb::entities::ising::model>(argc, argv);
+	wdb::entities::ising::property& P = wdb::find<wdb::entities::ising::property>(argc, argv);
 
 	uint32_t seed = P.get_seed();
 	bool periodic = P.get_param<int>("periodic") or P.optional_set_param<int>("periodic",1);

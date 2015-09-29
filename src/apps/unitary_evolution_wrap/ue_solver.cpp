@@ -153,8 +153,8 @@ private: // data
 
 int main(int /*argc*/, char *argv[])
 {
-    model_type& H = wdb::find<model_type>(argv);
-    property_type& P = wdb::find<property_type>(argv);
+    model_type& H = wdb::find<model_type>(argc, argv);
+    property_type& P = wdb::find<property_type>(argc, argv);
     
     auto& edges = H.get_edges();
     const unsigned N = H.num_nodes();

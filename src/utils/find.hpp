@@ -35,7 +35,7 @@ namespace wdb {
     struct checked_get< -1 > { /* type not found */ };
 
     template<typename T>
-    T& find(char** argv){
+    T& find(int argc, char** argv){
         return *(T*)argv[ checked_get< find_type_many<T>(
                               redi::make_index_tuple<(int)wdb::entities::ptype::LENGTH>::type()
                           ) >::value + 1 ];
