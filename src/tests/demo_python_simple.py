@@ -9,7 +9,7 @@ sys.path.append(wdb_home+'lib/python')
 import whiplashdb
 from subprocess import Popen, PIPE
 import json
-wdb = whiplashdb.wdb(wdb_home,"localhost:27017")
+wdb = whiplashdb.wdb(wdb_home,"whiplash.ethz.ch:27017")
 
 # Fetch models
 print 'Querying for models'
@@ -40,7 +40,6 @@ for model_id in model_ids:
         f.write(json.dumps({'property':property,'model':model}))
 
         # Run solver
-        print executable['path'], input_path
         p = Popen([executable['path'],input_path],stdout=PIPE,stderr=PIPE,bufsize=1)
         (stdout, stderr) = p.communicate()
         properties.append(json.loads(stdout))
