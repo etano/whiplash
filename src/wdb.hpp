@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <algorithm>
 #include <thread>
+#include <set>
 // }}}
 
 #include "utils/timer.hpp"

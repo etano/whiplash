@@ -37,7 +37,9 @@ namespace wdb { namespace entities { namespace ising {
                         if(index.find(site) == index.end()) index[site] = N_++;
                         inds.push_back(index[site]);
                     }
-                    std::sort(inds.begin(), inds.end());
+                    // std::sort(inds.begin(), inds.end());
+                    const std::set<index_type> inds_set(inds.begin(),inds.end());
+                    inds.assign(inds_set.begin(),inds_set.end());
                     edges_.push_back(std::make_pair(inds, val));
                 }
             }
