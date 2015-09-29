@@ -2,7 +2,7 @@ from subprocess import Popen, PIPE
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
-from pymongo import MongoClient
+import sys,pymongo,json,time
 
 # Updating plot
 class UpdatePlot(object):
@@ -61,9 +61,14 @@ class UpdatePlot(object):
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,wdb_home,server):
+    def __init__(self,wdb_home,server,use_cpp_drivers=false):
         self.wdb_home = wdb_home
         self.server = server
+        self.use_cpp_drivers = use_cpp_drivers
+        self.client = pymongo.MongoClient(self.server)
+        self.models = client['wdb']['models']
+        self.executables = client['wdb']['executables']
+        self.properties = client['wdb']['properties']
 
     def FormArgs(self,path,entity):
         args = [path]
@@ -79,34 +84,106 @@ class wdb:
         return res
 
     def CommitExecutable(self,executable):
-        args = self.FormArgs(self.wdb_home+'/bin/commit_executable.driver',executable)
-        return self.Execute(args)[0]
+        if self.use_cpp_drivers:
+            args = self.FormArgs(self.wdb_home+'/bin/commit_executable.driver',executable)
+            return self.Execute(args)[0]
+        else:
+            required_fields = ['class','owner','path','description','algorithm','version','build']
+            for field in required_fields:
+                if field not in data:
+                    print 'Please add field:',field
+                    sys.exit(0)
+            _id = executables.find().count()
+            executable['_id'] = _id
+            executable['timestamp'] = time.time()
+            self.executables.insert_one(executable)
+            return _id
 
     def CommitModel(self,model):
-        args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
-        return self.Execute(args)[0]
+        if self.use_cpp_drivers:
+            args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
+            return self.Execute(args)[0]
+        else:
+            required_fields = ['class','owner','cfg']
+            for field in required_fields:
+                if field not in model:
+                    print 'Please add field:',field
+                    sys.exit(0)
+            _id = self.models.find().count()
+            model['_id'] = _id
+            model['timestamp'] = time.time()
+            self.models.insert_one(model)
+            return _id
 
-    def CommitModels(self,model,paths):
-        model['path'] = ','.join(paths)
-        args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
-        return self.Execute(args)
+    def CommitModels(self,models):
+        if self.use_cpp_drivers:
+            model['path'] = ','.join(paths)
+            args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
+            return self.Execute(args)
+        else:
+            required_fields = ['class','owner','cfg']
+            _ids = []
+            for model in models:
+                for field in required_fields:
+                    if field not in model:
+                        print 'Please add field:',field
+                        sys.exit(0)
+                _id = self.models.find().count()
+                _ids.append(id)
+                model['_id'] = _id
+                model['timestamp'] = time.time()
+            self.models.insert_many(models)
+            return _ids
 
     def CommitProperty(self,property):
-        args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',property)
-        return self.Execute(args)[0]
+        if self.use_cpp_drivers:
+            args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',property)
+            return self.Execute(args)[0]
+        else:
+            required_fields = ['class','owner','model_id','executable_id','cfg']
+            for field in required_fields:
+                if field not in property:
+                    print 'Please add field:',field
+                    sys.exit(0)
+            _id = self.properties.find().count()
+            property['status'] = 3 # FIXME: This should not be fixed in future versions
+            if 'seed' not in property:
+                property['seed'] = _id
+            if 'walltime' not in property:
+                property['walltime'] = -1
+            property['_id'] = _id
+            property['timestamp'] = time.time()
+            self.properties.insert_one(property)
+            return _id
 
-    def CommitProperties(self,property,model_ids,reps):
-        property['reps'] = reps
-        property['model'] = ','.join(model_ids)
-        args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',property)
-        return self.Execute(args)
+    def CommitProperties(self,properties):
+        if self.use_cpp_drivers:
+            properties['reps'] = reps
+            properties['model'] = ','.join(model_ids)
+            args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',properties)
+            return self.Execute(args)
+        else:
+            required_fields = ['class','owner','model_id','executable_id','cfg']
+            for property in properties:
+                for field in required_fields:
+                    if field not in property:
+                        print 'Please add field:',field
+                        sys.exit(0)
+                _id = self.properties.find().count()
+                property['status'] = 3 # FIXME: This should not be fixed in future versions
+                if 'seed' not in property:
+                    property['seed'] = _id
+                if 'walltime' not in property:
+                    property['walltime'] = -1
+                property['_id'] = _id
+                property['timestamp'] = time.time()
+            self.properties.insert_many(properties)
+            return _id
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
-        client = MongoClient(self.server)
-        properties = client['wdb']['properties']
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         filter['status'] = 3
-        up = UpdatePlot(ax, properties, filter, target, nbins)
+        up = UpdatePlot(ax, self.properties, filter, target, nbins)
         anim = FuncAnimation(fig, up, frames=frames, init_func=up.init, interval=interval, blit=False)
         plt.show()
