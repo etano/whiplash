@@ -11,8 +11,8 @@ int main(int argc, char* argv[]){
     // Required arguments
     std::string problem_class = params.pop<std::string>("class");
     std::string owner = params.pop<std::string>("owner");
-    std::vector<int> model_ids = params.pop<std::vector<int>>("model");
-    int executable_id = params.pop<int>("executable");
+    std::vector<int> model_ids = params.pop<std::vector<int>>("model_id");
+    int executable_id = params.pop<int>("executable_id");
 
     // Optional arguments
     int reps = params.pop<int>("reps") or 1;
