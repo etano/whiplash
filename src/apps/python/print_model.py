@@ -1,4 +1,4 @@
-import sys,pymongo
+import sys,pymongo,json
 
 which = {}
 for i in range(1,len(sys.argv)):
@@ -9,4 +9,4 @@ for i in range(1,len(sys.argv)):
 
 models = pymongo.MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
 for model in models.find(which):
-    print model
+    print json.dumps(model)

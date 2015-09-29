@@ -1,10 +1,7 @@
-import sys,pymongo,json,time
-
-if len(sys.argv) == 1:
-    print 'Please enter model file'
-    sys.exit(0)
-
-data = json.load(open(sys.argv[1]))
+import sys
+from pymongo import MongoClient
+from json import load
+from time import time
 
 '''
 required_fields = {"ising":["n_spins","edges"],"sat":[...]}
@@ -13,18 +10,26 @@ if sat -> n_variables, couplings
 if ... -> ...
 '''
 
+if len(sys.argv) == 1:
+    print 'Please enter model file'
+    sys.exit(0)
+
+data = load(open(sys.argv[1]))
+
 required_fields = ['class','owner','cfg']
 for field in required_fields:
     if field not in data:
         print 'Please add property:',field
         sys.exit(0)
 
-models = pymongo.MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
+models = MongoClient("whiplash.ethz.ch:27017")['wdb']['models']
 
 _id = models.find().count()
+#_id = int(sys.argv[2])
+#_id = a
 
 data['_id'] = _id
-data['timestamp'] = time.time()
+data['timestamp'] = time()
 
 models.insert_one(data)
 
