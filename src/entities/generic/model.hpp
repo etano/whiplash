@@ -17,7 +17,7 @@ namespace wdb { namespace entities {
         model(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
             parent_ = reader::read<int>(o, "parent");
-            params_ = reader::read<parameters>(o, std::tie("cfg", "params"));
+            params_ = reader::read<parameters>(o, "params");
         }
 
         virtual ~model() {};
@@ -30,7 +30,7 @@ namespace wdb { namespace entities {
                 writer::prop("parent", parent_) >> record;
             if (params_)
                 if (params_.unwrap().get_container())
-                    writer::prop("params", params_) >> cfg;
+                    writer::prop("params", params_) >> record;
             writer::prop("cfg", cfg) >> record;
         }
 
