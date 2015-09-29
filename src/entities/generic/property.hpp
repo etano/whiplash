@@ -14,7 +14,7 @@ namespace wdb { namespace entities {
             status_ = (optional<status>)reader::read<int>(o, "status");
             walltime_ = reader::read<double>(o, "walltime");
             seed_ = reader::read<int>(o, "seed");
-            params_ = reader::read<parameters>(o, std::tie("cfg", "params"));
+            params_ = reader::read<parameters>(o, "params");
         }
 
         void print_params(){
@@ -75,7 +75,7 @@ namespace wdb { namespace entities {
             writer::prop("seed", int(seed_)) >> record;
             if (params_)
                 if (params_.unwrap().get_container())
-                    writer::prop("params", params_) >> cfg;
+                    writer::prop("params", params_) >> record;
             writer::prop("cfg", cfg) >> record;
         }
 

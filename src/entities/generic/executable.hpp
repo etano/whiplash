@@ -24,7 +24,7 @@ namespace wdb { namespace entities {
             algorithm_ = reader::read<std::string>(o, "algorithm");
             version_ = reader::read<std::string>(o, "version");
             build_ = reader::read<std::string>(o, "build");
-            params_ = reader::read<parameters>(o, "cfg");
+            params_ = reader::read<parameters>(o, "params");
             app_ = new rte::app(path_);
         }
 
@@ -47,7 +47,7 @@ namespace wdb { namespace entities {
             writer::prop("build", build_) >> record;
             if(params_)
                 if(params_.unwrap().get_container())
-                    writer::prop("cfg", params_) >> record;
+                    writer::prop("params", params_) >> record;
         }
 
         std::string get_class(){ return class_; }
