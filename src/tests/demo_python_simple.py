@@ -1,5 +1,8 @@
 #
-# This demo script fetches models froms the database, registers a solver, form property requests, runs the solver on them locally, pushes back resolved properties, and finally plots a histogram of results
+# This demo script fetches models froms the database, registers a
+# solver, form property requests, runs the solver on them locally,
+# pushes back resolved properties, and finally plots a histogram of
+# results
 #
 
 # Make WhiplashDB instance
