@@ -90,10 +90,10 @@ class wdb:
         else:
             required_fields = ['class','owner','path','description','algorithm','version','build']
             for field in required_fields:
-                if field not in data:
+                if field not in executable:
                     print 'Please add field:',field
                     sys.exit(0)
-            _id = executables.find().count()
+            _id = self.executables.find().count()
             executable['_id'] = _id
             executable['timestamp'] = time.time()
             self.executables.insert_one(executable)
@@ -179,6 +179,33 @@ class wdb:
                 property['timestamp'] = time.time()
             self.properties.insert_many(properties)
             return _id
+
+    def Query(self,collection,filter):
+        ids = []
+        for res in collection.find(filter,{"_id":1}):
+            ids.append(res['_id'])
+        return ids
+
+    def QueryModels(self,filter):
+        return self.Query(self.models,filter)
+
+    def QueryExecutables(self,filter):
+        return self.Query(self.executables,filter)
+
+    def QueryProperties(self,filter):
+        return self.Query(self.properties,filter)
+
+    def Fetch(self,collection,id):
+        return collection.find_one({'_id':id})
+
+    def FetchModel(self,id):
+        return self.Fetch(self.models,id)
+
+    def FetchExecutable(self,id):
+        return self.Fetch(self.executables,id)
+
+    def FetchProperty(self,id):
+        return self.Fetch(self.properties,id)
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
