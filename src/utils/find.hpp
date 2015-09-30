@@ -4,6 +4,8 @@
 #include <type_traits>
 #include <tuple>
 
+#include <bsoncxx/json.hpp>
+
 namespace wdb {
 
     template<int N, int Limit>
@@ -36,6 +38,18 @@ namespace wdb {
 
     template<typename T>
     T& find(int argc, char** argv){
+        if(argc != -1){
+            if(argc < 2) throw std::runtime_error("Please supply the input config.");
+            std::ifstream in(argv[1]);
+            std::string str((std::istreambuf_iterator<char>(in)),
+                             std::istreambuf_iterator<char>());
+
+            //wdb::odb::mongo::objectodb::object config(bsoncxx::from_json(str));
+            //auto m = factory::make<etype::model>(reader::read<reader::object_view>(config, "model"));
+            throw std::runtime_error("Not ready yet.");
+            
+            in.close();
+        }
         return *(T*)argv[ checked_get< find_type_many<T>(
                               redi::make_index_tuple<(int)wdb::entities::ptype::LENGTH>::type()
                           ) >::value + 1 ];
