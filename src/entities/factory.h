@@ -75,7 +75,7 @@ namespace wdb { namespace entities {
         static bool is_offline(){
             return weak_instance<void>::w.offline.active;
         }
-    private:
+    public:
         std::vector<odb::icollection*> collections;
         template<class T> struct weak_instance {
             static factory w;

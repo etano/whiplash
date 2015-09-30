@@ -1,14 +1,11 @@
-from subprocess import Popen, PIPE
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import numpy as np
-import sys,pymongo,json,time
+import sys,os,pymongo,json,time
 import whiplot,problem_classes
+from subprocess import Popen, PIPE
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,wdb_home,server,use_cpp_drivers=False):
-        self.wdb_home = wdb_home
+    def __init__(self,server,use_cpp_drivers=False):
+        self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
         self.use_cpp_drivers = use_cpp_drivers
         self.client = pymongo.MongoClient(self.server)
@@ -21,6 +18,8 @@ class wdb:
         for (key,val) in entity.items():
             args.append('-'+key)
             args.append(str(val))
+        args.append('-dbhost')
+        args.append(self.server)
         return args
 
     def Execute(self,args):

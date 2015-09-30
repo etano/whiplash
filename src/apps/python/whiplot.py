@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from numpy import histogram
+
 class UpdatePlot(object):
     def __init__(self, ax, collection, filter, target, n_bin):
         self.success = 0
@@ -40,7 +44,7 @@ class UpdatePlot(object):
         for res in results:
             energies.append(float(res))
         if len(energies) > 0:
-            hist,bin_edges = np.histogram(energies,self.n_bin)
+            hist,bin_edges = histogram(energies,self.n_bin)
             xs,ys = [],[]
             for i in range(len(hist)):
                 if hist[i] != 0:

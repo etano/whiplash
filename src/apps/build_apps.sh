@@ -23,8 +23,8 @@ cd XXcode && make -f Makefile.wdb clean && make -f Makefile.wdb -j${NTHREADS} &&
 ## Annealing codes ##
 cd anc && make clean && make -j${NTHREADS} single && cd ../
 
-## unitary evolution
-cd unitary_evolution_wrap 
+## Unitary evolution
+cd unitary_evolution_wrap
 if [ ! -d "build" ]; then
   mkdir build
 else

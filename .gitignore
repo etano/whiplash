@@ -12,4 +12,4 @@ doc/html
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
-
+*.dSYM

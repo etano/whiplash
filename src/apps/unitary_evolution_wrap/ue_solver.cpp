@@ -151,7 +151,7 @@ private: // data
 
 }
 
-int main(int /*argc*/, char *argv[])
+int main(int argc, char *argv[])
 {
     model_type& H = wdb::find<model_type>(argc, argv);
     property_type& P = wdb::find<property_type>(argc, argv);
