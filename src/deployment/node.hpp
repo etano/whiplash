@@ -8,8 +8,8 @@ namespace wdb { namespace deployment {
         properties( db.provide_collection("properties") ),
         models( db.provide_collection("models") ),
         executables( db.provide_collection("executables") ),
-        pool( properties ),
-        worker_pool( properties )
+        pool( properties, host ),
+        worker_pool( properties, host )
     {
         entities::factory::init<e::property>(properties);
         entities::factory::init<e::model>(models);
@@ -40,8 +40,8 @@ namespace wdb { namespace deployment {
         return worker_pool;
     }
 
-    node::job_pool::job_pool(odb::icollection& p)
-        : properties(p) { }
+    node::job_pool::job_pool(odb::icollection& p, const std::string host)
+        : properties(p), host(host) { }
 
     size_t node::job_pool::size(){
         // TODO: Optimize this (possible with $or filter)
@@ -79,6 +79,9 @@ namespace wdb { namespace deployment {
         properties.replace(old_obj, record);
     }
 
+    const std::string& node::job_pool::get_host(){
+        return host;
+    }
 } }
 
 #endif

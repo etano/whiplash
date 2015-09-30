@@ -1,8 +1,6 @@
 #ifndef WDB_RTE_SIMPLE_SCHEDULER_HPP
 #define WDB_RTE_SIMPLE_SCHEDULER_HPP
 
-#define WORKER_BINARY "./apps/drivers/worker.driver"
-
 namespace wdb { namespace rte { namespace simple {
 
     class scheduler : public ischeduler {
@@ -49,7 +47,8 @@ namespace wdb { namespace rte { namespace simple {
                 children.push_back(pid);
                 return;
             }
-            if(execvp(WORKER_BINARY, NULL) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes, maybe fixed
+            char *const params[] = {"./apps/drivers/worker.driver","-dbhost",const_cast<char*>(pool.get_host().c_str()),NULL};
+            if(execvp("./apps/drivers/worker.driver", params) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes, maybe fixed
             throw std::runtime_error("execvp error"); // unreachable
         }
 

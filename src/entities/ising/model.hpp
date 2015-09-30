@@ -53,7 +53,7 @@ namespace wdb { namespace entities { namespace ising {
                 std::vector<index_type> inds;
                 auto sub_array = reader::read<reader::array_type>(e);
                 for(const auto a : reader::read<reader::array_type>(sub_array[0])){
-                    index_type a_ = reader::read<int>(a); // FIX ME: <index_type> doesn't work when json is read from a file
+                    index_type a_ = reader::read<index_type>(a); // FIXME: <index_type> doesn't work when json is read from a file
                     inds.push_back(a_);
                 }
 

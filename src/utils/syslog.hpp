@@ -1,6 +1,8 @@
 #ifndef WDB_UTILS_SYSLOG_HPP
 #define WDB_UTILS_SYSLOG_HPP
 
+#define WDB_SYSLOG_VERBOSE
+
 namespace wdb {
 
     class syslog {

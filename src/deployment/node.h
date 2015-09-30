@@ -15,13 +15,15 @@ namespace wdb { namespace deployment {
 
         class job_pool : public rte::ipool {
         public:
-            job_pool(odb::icollection& t);
+            job_pool(odb::icollection& t, const std::string host);
             virtual size_t size() override;
             virtual std::shared_ptr<odb::iobject> pull() override;
             virtual void process(odb::iobject& orig) override;
             virtual void push(odb::iobject& orig, rte::icacheable& mod) override;
+            virtual const std::string& get_host() override;
         private:
             odb::icollection& properties;
+            const std::string host;
         };
 
         node(const std::string host);

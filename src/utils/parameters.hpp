@@ -61,7 +61,10 @@ namespace wdb {
         template<typename T>
         optional<T> get(const std::string& key) const {
             auto iterator = c_.find(key);
-            if(iterator == c_.end()) return optional<T>();
+            if(iterator == c_.end()){
+                std::cerr << "WARNING: " << key << " not defined." << std::endl;
+                return optional<T>();
+            }
             return convert<T>::str_to_val(iterator->second);
         }
 
