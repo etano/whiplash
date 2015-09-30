@@ -22,7 +22,7 @@ print model_ids
 
 # Register solver
 print 'Registering solver'
-executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':wdb_home+'/bin/test.app'}
+executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':wdb_home+'/bin/test.shared'}
 executable_id = wdb.CommitExecutable(executable)
 print executable_id
 
