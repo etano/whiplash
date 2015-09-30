@@ -45,7 +45,7 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& model_id : model_ids)
             for(int i=0; i<reps; i++) {
-                std::shared_ptr<entities::property> p(entities::factory::make<e::property>(problem_class, model_id, executable_id, params, random_seed()));
+                std::shared_ptr<entities::property> p(entities::factory::make<e::property>(problem_class, owner, model_id, executable_id, params, random_seed()));
                 object_type serialized_cfg;
                 p->serialize_cfg(serialized_cfg);
                 records.emplace_back(std::make_shared<object_type>());

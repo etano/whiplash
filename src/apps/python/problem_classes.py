@@ -24,4 +24,3 @@ def DetectClass(X):
     else:
         print 'Problem class does not exist'
         sys.exit(0)
-        

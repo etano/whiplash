@@ -20,8 +20,8 @@ namespace wdb { namespace entities { namespace xx {
             }
         }
 
-        property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
-            : entities::property(typename entities::info<ptype::xx>(), model_id, executable_id, params, seed, s)
+        property(std::string owner, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
+            : entities::property(typename entities::info<ptype::xx>(), owner, model_id, executable_id, params, seed, s)
         {
             auto loops = this->get_param<std::string>("loops");
             if(loops){

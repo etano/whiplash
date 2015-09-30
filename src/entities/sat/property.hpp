@@ -9,8 +9,8 @@ namespace wdb { namespace entities { namespace sat {
             : entities::property(o)
         {}
 
-        property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
-            : entities::property(typename entities::info<ptype::sat>(), model_id, executable_id, params, seed, s)
+        property(std::string owner, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
+            : entities::property(typename entities::info<ptype::sat>(), owner, model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};

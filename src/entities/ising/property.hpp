@@ -10,8 +10,8 @@ namespace wdb { namespace entities { namespace ising {
             : entities::property(o)
         {}
 
-        property(int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
-            : entities::property(typename entities::info<ptype::ising>(), model_id, executable_id, params, seed, s)
+        property(std::string owner, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED)
+            : entities::property(typename entities::info<ptype::ising>(), owner, model_id, executable_id, params, seed, s)
         {}
 
         virtual ~property() override {};
@@ -46,13 +46,13 @@ namespace wdb { namespace entities { namespace ising {
             for (const auto& cost : costs)
                 costs_.push_back(cost);
 
-            if(factory::is_offline()) print();
+            if(factory::is_offline()){
+                odb::mongo::object obj_cfg;
+                serialize_cfg(obj_cfg);
+                print_json(obj_cfg);
+            }
         }
-        void print(){
-            for(const auto& cost : costs_)
-                std::cout << cost << " ";
-            std::cout << "\n";
-        }
+
     private:
         std::vector<std::vector<spin_type>> cfgs_;
         std::vector<double> costs_;

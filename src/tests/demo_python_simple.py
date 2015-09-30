@@ -1,18 +1,10 @@
-#
-# This demo script fetches models froms the database, registers a
-# solver, form property requests, runs the solver on them locally,
-# pushes back resolved properties, and finally plots a histogram of
-# results
-#
-
-# Make WhiplashDB instance
 import sys,os
-wdb_home = os.environ.get('WDB_HOME')
-sys.path.append(wdb_home+'lib/python')
-import whiplashdb
 from subprocess import Popen, PIPE
 import json
-wdb = whiplashdb.wdb(wdb_home,"whiplash.ethz.ch:27017")
+import whiplashdb
+
+# Make WhiplashDB instance
+wdb = whiplashdb.wdb("localhost:27017")
 
 # Fetch models
 print 'Querying for models'
@@ -22,7 +14,7 @@ print model_ids
 
 # Register solver
 print 'Registering solver'
-executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':wdb_home+'/bin/test.shared'}
+executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'../../bin/test.static'}
 executable_id = wdb.CommitExecutable(executable)
 print executable_id
 
@@ -30,10 +22,11 @@ print executable_id
 print 'Form property requests and solve them'
 properties = []
 for model_id in model_ids:
-    property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'n_sweeps':10,'T_0':10.0,'T_1':1e-8}
+    property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'},'status':3,'walltime':-1.0}
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
-    for i in range(10000):
+    for i in range(100):
+        property['seed'] = i
         # Packaged executables (SA, SQA, UE) take JSON input and give JSON output
         # though in general user is free to do this how they please
 
@@ -43,15 +36,16 @@ for model_id in model_ids:
         f.write(json.dumps({'property':property,'model':model}))
 
         # Run solver
-        p = Popen([executable['path'],input_path],stdout=PIPE,stderr=PIPE,bufsize=1)
-        (stdout, stderr) = p.communicate()
+        env = os.environ.copy()
+        p = Popen(['./apps/test.static','./apps/test.static.tmp.json'],stdout=PIPE,env=env)
+        (stdout,stderr) =  p.communicate()
         properties.append(json.loads(stdout))
 
 # Commit resolved properties
 property_ids = wdb.CommitProperties(properties)
 
 # Form query
-filter = {'class':prob_class}
+filter = {'class':'ising','owner':'ebrown'}
 target = ['cfg','costs']
 
 # Query and update plot continuously

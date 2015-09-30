@@ -9,6 +9,7 @@ namespace wdb { namespace entities {
 
         property(const odb::iobject& o){
             class_ = reader::read<std::string>(o, "class");
+            owner_ = reader::read<std::string>(o, "owner");
             model_ = reader::read<int>(o, "model_id");
             executable_ = reader::read<int>(o, "executable_id");
             status_ = (optional<status>)reader::read<int>(o, "status");
@@ -24,8 +25,15 @@ namespace wdb { namespace entities {
                         std::cout << p.first << " : " << p.second << std::endl;
         }
 
+        void print_json(odb::iobject& obj_cfg){ // FIXME: make generic from mongo
+            odb::mongo::object obj;
+            serialize(obj, obj_cfg);
+            std::cout << bsoncxx::to_json(obj.w.builder) << std::endl;
+        }
+
         void info(){
             std::cout << "Class: " << class_ << "\n";
+            std::cout << "Owner: " << owner_ << "\n";
             std::cout << "Model: " << model_ << "\n";
             std::cout << "Executable: " << executable_ << "\n";
             std::cout << "Status: " << int(status_) << "\n";
@@ -58,8 +66,8 @@ namespace wdb { namespace entities {
         }
 
         template<class I>
-        property(I info, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED, double t = -1)
-            : class_(I::name), model_(model_id), executable_(executable_id), params_(params), seed_(seed), status_(s), walltime_(t)
+        property(I info, std::string owner, int model_id, int executable_id, optional<parameters> params, int seed, status s = status::UNDEFINED, double t = -1)
+            : class_(I::name), owner_(owner), model_(model_id), executable_(executable_id), params_(params), seed_(seed), status_(s), walltime_(t)
         {}
 
         virtual ~property(){};
@@ -68,6 +76,7 @@ namespace wdb { namespace entities {
 
         void serialize(odb::iobject& record, odb::iobject& cfg){
             writer::prop("class", class_) >> record;
+            writer::prop("owner", owner_) >> record;
             writer::prop("model_id", model_) >> record;
             writer::prop("executable_id", executable_) >> record;
             writer::prop("status", int(status_)) >> record;
@@ -99,6 +108,7 @@ namespace wdb { namespace entities {
         int model_;
         int executable_;
         std::string class_;
+        std::string owner_;
         status status_;
         double walltime_;
         int seed_;

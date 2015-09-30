@@ -106,12 +106,20 @@ class wdb:
             print args
             return self.Execute(args)
         else:
+            count = self.properties.find().count()
             for property in properties:
                 for field in problem_classes.DetectClass(property).get_property_required():
-                    if field not in property:
+                    field = field.split('.')
+                    if field[0] not in property:
                         print 'Please add field:',field
                         sys.exit(0)
-                _id = self.properties.find().count()
+                    if len(field) > 1:
+                        for subfield in field[1:]:
+                            if subfield not in property[field[0]]:
+                                print 'Please add field:',field[0],subfield
+                                sys.exit(0)
+                _id = count
+                count += 1
                 property['status'] = 3 # FIXME: This should not be fixed in future versions
                 if 'seed' not in property:
                     property['seed'] = _id
