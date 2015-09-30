@@ -16,6 +16,7 @@ int main(int argc, char* argv[]){
     std::string algorithm = params.pop<std::string>("algorithm");
     std::string version = params.pop<std::string>("version");
     std::string build = params.pop<std::string>("build");
+    std::string name = params.pop<std::string>("name");
 
     // Optional arguments
 
@@ -23,7 +24,7 @@ int main(int argc, char* argv[]){
     // (whatever is left in params)
 
     // Insert
-    std::cout << f.insert_executable(problem_class,owner,path,description,algorithm,version,build,params) << std::endl;
+    std::cout << f.insert_executable(problem_class,owner,path,description,algorithm,version,build,name,params) << std::endl;
 
     return 0;
 }

@@ -55,10 +55,10 @@ namespace wdb { namespace deployment {
     }
 
     template<class D>
-    int basic<D>::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build, optional<params_type> params)
+    int basic<D>::insert_executable(std::string problem_class, std::string owner, std::string path, std::string description, std::string algorithm, std::string version, std::string build, std::string name,  optional<params_type> params)
     {
         std::vector<std::shared_ptr<odb::iobject>> records;
-        std::shared_ptr<entities::executable> x(entities::factory::make<e::executable>(problem_class, path, description, algorithm, version, build, params));
+        std::shared_ptr<entities::executable> x(entities::factory::make<e::executable>(problem_class, path, description, algorithm, version, build, name, params));
 
         object_type serialized_cfg;
         x->serialize_cfg(serialized_cfg);

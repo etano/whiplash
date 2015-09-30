@@ -5,8 +5,8 @@ namespace wdb { namespace entities { namespace ising {
 
     class executable : public entities::executable {
     public:
-        executable(std::string path, std::string desc, std::string algo, std::string version, std::string build, optional<parameters> params)
-            : entities::executable(typename entities::info<ptype::ising>(), path, desc, algo, version, build, params)
+        executable(std::string path, std::string desc, std::string algo, std::string version, std::string build, std::string name, optional<parameters> params)
+            : entities::executable(typename entities::info<ptype::ising>(), path, desc, algo, version, build, name, params)
         {}
 
         executable(const odb::iobject& o)

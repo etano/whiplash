@@ -6,13 +6,14 @@ namespace wdb { namespace entities {
     class executable : public wdb::rte::icacheable {
     public:
         template<class I>
-        executable(I info, std::string path, std::string desc, std::string algo, std::string version, std::string build, optional<parameters> params){
+        executable(I info, std::string path, std::string desc, std::string algo, std::string version, std::string build, std::string name, optional<parameters> params){
             class_ = I::name;
             path_ = path;
             description_ = desc;
             algorithm_ = algo;
             version_ = version;
             build_ = build;
+            name_ = name;
             params_ = params;
             app_ = new rte::app(path_);
         }
@@ -24,6 +25,7 @@ namespace wdb { namespace entities {
             algorithm_ = reader::read<std::string>(o, "algorithm");
             version_ = reader::read<std::string>(o, "version");
             build_ = reader::read<std::string>(o, "build");
+            name_ = reader::read<std::string>(o, "name");
             params_ = reader::read<parameters>(o, "params");
             app_ = new rte::app(path_);
         }
@@ -45,6 +47,7 @@ namespace wdb { namespace entities {
             writer::prop("algorithm", algorithm_) >> record;
             writer::prop("version", version_) >> record;
             writer::prop("build", build_) >> record;
+            writer::prop("name", name_) >> record;
             if(params_)
                 if(params_.unwrap().get_container())
                     writer::prop("params", params_) >> record;
@@ -58,6 +61,7 @@ namespace wdb { namespace entities {
         std::string algorithm_;
         std::string version_;
         std::string build_;
+        std::string name_;
         optional<parameters> params_;
         rte::iapp* app_;
     };
