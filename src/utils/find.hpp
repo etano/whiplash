@@ -38,18 +38,31 @@ namespace wdb {
 
     template<typename T>
     T& find(int argc, char** argv){
+        using reader = wdb::odb::mongo::prop_reader;
         if(argc != -1){
             if(argc < 2) throw std::runtime_error("Please supply the input config.");
-            std::ifstream in(argv[1]);
-            std::string str((std::istreambuf_iterator<char>(in)),
-                             std::istreambuf_iterator<char>());
+            auto& offline = entities::factory::weak_instance<void>::w.offline;
+            if(!offline.active){
+                std::ifstream in(argv[1]);
+                std::string str((std::istreambuf_iterator<char>(in)),
+                                 std::istreambuf_iterator<char>());
+                in.close();
+                
+                auto value = bsoncxx::from_json(str);
+                wdb::odb::mongo::object model_object(value->view()["model"].get_document());
+                wdb::odb::mongo::object property_object(value->view()["property"].get_document());
+                
+                offline.model = entities::factory::make<entities::etype::model>(model_object);
+                offline.property = entities::factory::make<entities::etype::property>(property_object);
 
-            //wdb::odb::mongo::objectodb::object config(bsoncxx::from_json(str));
-            //auto m = factory::make<etype::model>(reader::read<reader::object_view>(config, "model"));
-            throw std::runtime_error("Not ready yet.");
-            
-            in.close();
+                push<entities::model>(*offline.model, offline.argc, offline.argv);
+                push<entities::property>(*offline.property, offline.argc, offline.argv);
+
+                offline.active = true;
+            }
+            argv = offline.argv;
         }
+         
         return *(T*)argv[ checked_get< find_type_many<T>(
                               redi::make_index_tuple<(int)wdb::entities::ptype::LENGTH>::type()
                           ) >::value + 1 ];

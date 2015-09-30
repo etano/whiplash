@@ -45,6 +45,13 @@ namespace wdb { namespace entities { namespace ising {
             costs_.clear();
             for (const auto &cost : costs)
                 costs_.push_back(cost);
+
+            if(factory::is_offline()) print();
+        }
+        void print(){
+            for(const auto& cost : costs_)
+                std::cout << cost << " ";
+            std::cout << "\n";
         }
     private:
         std::vector<std::vector<spin_type>> cfgs_;
