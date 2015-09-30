@@ -31,14 +31,18 @@ namespace wdb { namespace entities {
 
     template<etype E>
     std::shared_ptr< factory::generic_entity<E> > factory::make(int id){
-        return make<E>(*factory::weak_instance<void>::w.collections[(int)E]->find(id));
+        return make<E>(*factory::weak_instance<void>::w.online.collections[(int)E]->find(id));
     }
 
     template<etype E>
     void factory::init(odb::icollection& c){
         int i = (int)E;
-        factory::weak_instance<void>::w.collections.resize(i+1);
-        factory::weak_instance<void>::w.collections[i] = &c;
+        factory::weak_instance<void>::w.online.collections.resize(i+1);
+        factory::weak_instance<void>::w.online.collections[i] = &c;
+    }
+
+    inline bool factory::is_offline(){
+        return factory::weak_instance<void>::w.offline.active;
     }
 
     std::unordered_map<std::string, ptype> factory::lookup_table {

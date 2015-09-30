@@ -62,21 +62,22 @@ namespace wdb { namespace entities {
         template<etype E>
         static void init(odb::icollection& c);
 
+        static bool is_offline();
+
         static std::unordered_map<std::string, ptype> lookup_table;
 
         struct offline_context {
             int argc = 0;
             char** argv = NULL;
-            bool active = false;
             std::shared_ptr< generic_entity<etype::model> > model;
             std::shared_ptr< generic_entity<etype::property> > property;
+            bool active = false;
         } offline;
 
-        static bool is_offline(){
-            return weak_instance<void>::w.offline.active;
-        }
+        struct online_context {
+            std::vector<odb::icollection*> collections;
+        } online;
     public:
-        std::vector<odb::icollection*> collections;
         template<class T> struct weak_instance {
             static factory w;
         };
