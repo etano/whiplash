@@ -43,20 +43,28 @@ link_directories(${MONGOCXX_LIBRARY_DIRS})
 #--------------------------------------------------
 include_directories($ENV{WDB_HOME}/src) # @todo(slava) replace by PROJECT_SOURCE_DIR
 link_libraries(dl)
-set(WDB_FLAGS "-w -Wfatal-errors -fPIC -shared")
+
+if(BUILD_STATIC)
+    set(WDB_FLAGS "-w -Wfatal-errors")
+    set(suffix "static")
+else()
+    set(WDB_FLAGS "-w -Wfatal-errors -fPIC -shared")
+    set(suffix "shared")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WDB_FLAGS}")
 
 #--------------------------------------------------
 # Exe
 #--------------------------------------------------
 include_directories(../unitary_evolution/src)
-add_executable(ue_solver ue_solver.cpp)
-target_link_libraries(ue_solver ${MONGOCXX_LIBRARIES})
+add_executable(ue_solver.${suffix} ue_solver.cpp)
+target_link_libraries(ue_solver.${suffix} ${MONGOCXX_LIBRARIES})
 
 #--------------------------------------------------
 # Install
 #--------------------------------------------------
-install(TARGETS ue_solver
+install(TARGETS ue_solver.${suffix}
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
