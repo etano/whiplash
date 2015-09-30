@@ -9,7 +9,7 @@ export HOST="cwave.ethz.ch:27017"
 #echo 'Committing model...'
 #$1 ./drivers/commit_model.driver -dbhost $HOST -path 10ue.lat -class ising -owner akosenko
 #echo 'Committing executable...'
-#$1 ./drivers/commit_executable.driver -dbhost $HOST -path apps/unitary_evolution_wrap/bin/ue_solver -class ising -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner akosenko
+#$1 ./drivers/commit_executable.driver -dbhost $HOST -path apps/unitary_evolution_wrap/bin/ue_solver -name ues -class ising -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner akosenko
 echo 'Committing property...'
 $1 ./drivers/commit_property.driver -dbhost $HOST -class ising -model_id 0 -executable_id 0 -owner akosenko -nsweeps 100 -hx "-1.0" -Ttot 500.0 -schedule "lin"
 #echo 'Bootstrapping the scheduler...'
