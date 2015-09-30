@@ -9,7 +9,7 @@ $1 ./drivers/commit_model.driver -dbhost $HOST -path 108ising.lat -class ising -
 echo 'Committing executable...'
 $1 ./drivers/commit_executable.driver -dbhost $HOST -path apps/anc/an_ss_rn_fi -class ising -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner ebrown
 echo 'Committing property...'
-$1 ./drivers/commit_property.driver -dbhost $HOST -class ising -model 0 -executable 0 -owner akosenko -nsweeps 100000 -b0 0.1 -b1 3.0 -schedule "lin"
+$1 ./drivers/commit_property.driver -dbhost $HOST -class ising -model_id 0 -executable_id 0 -owner akosenko -nsweeps 100000 -b0 0.1 -b1 3.0 -schedule "lin"
 echo 'Bootstrapping the scheduler...'
 ./drivers/scheduler.driver -dbhost $HOST
 echo 'Querying property...'

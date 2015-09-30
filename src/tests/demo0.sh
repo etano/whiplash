@@ -10,7 +10,7 @@ $1 ./drivers/commit_model.driver -dbhost $HOST -path 108ising.lat -class ising -
 echo 'Committing executable...'
 $1 ./drivers/commit_executable.driver -dbhost $HOST -path apps/test.app -class ising -description "desc" -algorithm "algo" -version "1.0" -build "O3" -owner akosenko
 echo 'Committing properties...'
-$1 ./drivers/commit_property.driver -dbhost $HOST -class ising -model 0 -executable 0 -owner akosenko -n_sweeps 10 -reps 10
+$1 ./drivers/commit_property.driver -dbhost $HOST -class ising -model_id 0 -executable_id 0 -owner akosenko -n_sweeps 10 -reps 10
 echo 'Querying properties...'
 $1 ./drivers/query.driver -dbhost $HOST -class ising -target cfg,costs
 #echo 'Bootstrapping the scheduler...'
