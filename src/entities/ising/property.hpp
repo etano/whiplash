@@ -36,14 +36,14 @@ namespace wdb { namespace entities { namespace ising {
         template<typename OtherSpinType, typename OtherValueType>
         void set_cfg(const std::vector<std::vector<OtherSpinType>>& cfgs, std::vector<OtherValueType> costs){
             cfgs_.clear();
-            for (const auto &cfg : cfgs){
+            for (const auto& cfg : cfgs){
                 std::vector<spin_type> cfg_;
-                for (const auto &spin : cfg)
+                for (const auto& spin : cfg)
                     cfg_.push_back(spin);
                 cfgs_.push_back(cfg_);
             }
             costs_.clear();
-            for (const auto &cost : costs)
+            for (const auto& cost : costs)
                 costs_.push_back(cost);
 
             if(factory::is_offline()) print();
