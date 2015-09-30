@@ -38,7 +38,6 @@ namespace wdb {
 
     template<typename T>
     T& find(int argc, char** argv){
-        using reader = wdb::odb::mongo::prop_reader;
         if(argc != -1){
             if(argc < 2) throw std::runtime_error("Please supply the input config.");
             auto& offline = entities::factory::weak_instance<void>::w.offline;
