@@ -31,7 +31,7 @@ namespace wdb { namespace entities {
                 push<property>(*p, argc, argv);
 
                 wdb::timer wt("walltime"); wt.begin();
-                (*x)(argc, argv);
+                (*x)(-1, argv);
                 free(argv);
                 wt.end();
 
