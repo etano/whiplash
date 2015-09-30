@@ -1,5 +1,6 @@
 import sys,os,pymongo,json,time
-import whiplot,problem_classes
+from whiplot import *
+import problem_classes
 from subprocess import Popen, PIPE
 
 # WhiplashDB class
@@ -97,11 +98,12 @@ class wdb:
             self.properties.insert_one(property)
             return _id
 
-    def CommitProperties(self,properties):
+    def CommitProperties(self,properties,model_ids=[],n_reps=1):
         if self.use_cpp_drivers:
-            properties['reps'] = reps
-            properties['model'] = ','.join(model_ids)
+            properties['reps'] = n_reps
+            properties['model_id'] = ','.join(model_ids)
             args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',properties)
+            print args
             return self.Execute(args)
         else:
             for property in properties:

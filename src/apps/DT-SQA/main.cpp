@@ -34,8 +34,8 @@ int main(int argc, char* argv[]){
 
 	uint32_t seed = P.get_seed();
 	bool periodic = P.get_param<int>("periodic") or P.optional_set_param<int>("periodic",1);
-	uint32_t nr_ts = P.get_param<uint32_t>("nslices");
-	uint64_t nr_MCS = P.get_param<uint64_t>("nsweeps");
+	uint32_t nr_ts = P.get_param<uint32_t>("n_slices");
+	uint64_t nr_MCS = P.get_param<uint64_t>("n_sweeps");
 	double g0 = P.get_param<double>("gamma_0");
 	double ge = P.get_param<double>("gamma_1");
 
