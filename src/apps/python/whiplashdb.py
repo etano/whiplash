@@ -10,6 +10,7 @@ class wdb:
         self.server = server
         self.use_cpp_drivers = use_cpp_drivers
         self.client = pymongo.MongoClient(self.server)
+        self.client.wdb.authenticate('zilia','zilia')
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -49,6 +50,7 @@ class wdb:
             args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
             return self.Execute(args)[0]
         else:
+            model = json.load(open(model['path'])) #TODO: do this for the rest
             for field in problem_classes.DetectClass(model).get_model_required():
                 if field not in model:
                     print 'Please add field:',field

@@ -3,13 +3,6 @@ from pymongo import MongoClient
 from json import load
 from time import time
 
-'''
-required_fields = {"ising":["n_spins","edges"],"sat":[...]}
-if ising -> n_spins, edges
-if sat -> n_variables, couplings
-if ... -> ...
-'''
-
 if len(sys.argv) == 1:
     print 'Please enter model file'
     sys.exit(0)
