@@ -4,49 +4,48 @@ List of the Whiplash prepackaged deployments
 - Remote.all: a fully remote deployment
 
           ----     -----     ----
-         | DB |   | www |   | RT |
+         | DB | - | www | - | RT |
           ----     -----     ----
        
               ... network ...
        
                      ^
-                   Client
+                 workstation
 
 - Local.all: a fully local deployment of the database
 
-     _______________________________
-    |                                |
-    |     ----     -----     ----    |
-    |    | DB |   | www |   | RT |   |
-    |     ----     -----     ----    |
-    |                                |
-     -- Client's Linux Workstation --
+      _______________________________
+     |                                |
+     |     ----     -----     ----    |
+     |    | DB | - | www | - | RT |   |
+     |     ----     -----     ----    |
+     |                                |
+      ----- offline workstation ------
 
 
 - Local.scheduler: a partial local deployment (scheduler is local)
 
-                                                 ____________
-          ----     -----                        |            | 
-         | DB |   | www |  << .. network .. <<  |    ----    | 
-          ----     -----                        |   | RT |   | 
-                                                |    ----    | 
-                                                |            | 
-                                                 -- Client --  
+                                            ____________
+                                           |            |
+         ----     -----                    |    ----    |
+        | DB | - | www |  << .network. <<  |   | RT |   |
+         ----     -----                    |    ----    |
+                                           |            |
+                                            --- node --- 
 
 
 - Manual.scheduler: an offline deployment (no scheduler being used at all)
 
-               ----     ----- 
-              | DB |   | www |
-               ----     ----- 
-       
+              ----     ----- 
+             | DB | - | www |
+              ----     ----- 
+
               ... network ...
-       
                      ^
-     _______________________________
-    |                                |
-    |          in >> binary >> out   |
-    |                                |
-    |                                |
-    |                                |
-     -- Client's Linux Workstation --
+             ... usb stick ...
+                     ^
+      _______________________________
+     |                                |
+     |  json.in >> binary >> json.out |
+     |                                |
+      ------ offline workstation -----
