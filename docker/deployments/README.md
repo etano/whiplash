@@ -1,7 +1,7 @@
 Whiplash prepackaged deployments
 --------------------------------------------
 
-- ./remote.all: a fully remote deployment
+- remote.all: a fully remote deployment
 
           ----     -----     ----
          | DB | ~ | www | ~ | RT |
@@ -12,7 +12,7 @@ Whiplash prepackaged deployments
                      ^
                 workstation
 
-- ./local.all: a fully local deployment
+- local.all: a fully local deployment
 
          --------------------------------
         |                                |
@@ -23,7 +23,7 @@ Whiplash prepackaged deployments
          ----- offline workstation ------
 
 
-- ./local.scheduler: a partial local deployment (local scheduler)
+- local.scheduler: a partial local deployment (local scheduler)
 
                                             ------------
                                            |            |
@@ -34,7 +34,7 @@ Whiplash prepackaged deployments
                                             --- node --- 
 
 
-- ./manual.scheduler: an offline deployment (no scheduler being used)
+- manual.scheduler: an offline deployment (no scheduler being used)
 
                 ----     ----- 
                | DB | ~ | www |
