@@ -3,14 +3,14 @@ Whiplash prepackaged deployments
 
 - remote.all: a fully remote deployment
 
-          ----     -----     ----
-         | DB | ~ | www | ~ | RT |
-          ----     -----     ----
+         ----     -----     ----
+        | DB | ~ | www | ~ | RT |
+         ----     -----     ----
        
-              ... network ...
+             ... network ...
        
-                     ^
-                workstation
+                    ^
+               workstation
 
 - local.all: a fully local deployment
 
