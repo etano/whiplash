@@ -8,8 +8,9 @@ class wdb:
     def __init__(self,server,user,password):
         self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
+        self.user = user
         self.client = pymongo.MongoClient(self.server)
-        self.client.wdb.authenticate(user,password)
+        self.client.wdb.authenticate(self.user,password)
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -26,8 +27,8 @@ class wdb:
                     sys.exit(0)
 
     def Sign(self,collection,object):
-        _id = collection.find().count()
-        object['_id'] = _id
+        object['owner'] = self.user
+        object['_id'] = collection.find().count()
         object['timestamp'] = time.time()
 
     def Verify(self,collection,object):

@@ -11,7 +11,7 @@ model_id = wdb.CommitModel('108ising.json')
 
 # Register solver
 print 'Registering solver'
-executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'./apps/test.static','name':'test'}
+executable = {'name':'test','class':'ising','description':'test','algorithm':'random','version':'1.0.0','build':'O3','path':'./apps/test.static'}
 executable_id = wdb.CommitExecutable(executable)
 
 # NOTE: Packaged executables (SA, SQA, UE) take JSON input and give JSON output though in general user is free to do this how they please
@@ -19,7 +19,7 @@ executable_id = wdb.CommitExecutable(executable)
 # Form property requests and resolve them on local solver, all asynchronously
 print 'Form property requests, resolve them, and push them to the database (ASYNCHRONOUS)'
 def Resolve(model_id,executable_id,n_reps):
-    property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'status':3,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}}
+    property = {'class':'ising','executable_id':executable_id,'model_id':model_id,'status':3,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}}
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
     for i in range(n_reps):
@@ -32,9 +32,8 @@ def Resolve(model_id,executable_id,n_reps):
         f.close()
 
         # Run solver
-        env = os.environ.copy()
-        p = Popen([executable['path'],f.name],stdout=PIPE,stderr=PIPE,env=env)
-        (stdout,stderr) =  p.communicate()
+        p = Popen([executable['path'],f.name],stdout=PIPE,stderr=PIPE,env=os.environ.copy())
+        (stdout,stderr) = p.communicate()
 
         # Commit back to database
         wdb.CommitProperty(json.loads(stdout))
