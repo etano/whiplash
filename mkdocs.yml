@@ -1,3 +1,10 @@
 site_name: WhiplashDB
+docs_dir: docs
+site_dir: www
 pages:
 - Home: index.md
+- Usage: usage.md
+- Schema: schema.md
+- Problem classes: problem_classes.md
+- Algorithms: algorithm_standards.md
+- Deployment: deployment.md
