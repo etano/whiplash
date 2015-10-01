@@ -1,18 +1,18 @@
-List of the Whiplash prepackaged deployments
+Whiplash prepackaged deployments
 --------------------------------------------
 
-- Remote.all: a fully remote deployment
+- remote.all: a fully remote deployment
 
-          ----     -----     ----
-         | DB | ~ | www | ~ | RT |
-          ----     -----     ----
+         ----     -----     ----
+        | DB | ~ | www | ~ | RT |
+         ----     -----     ----
        
-              ... network ...
+             ... network ...
        
-                     ^
-                 workstation
+                    ^
+               workstation
 
-- Local.all: a fully local deployment of the database
+- local.all: a fully local deployment
 
          --------------------------------
         |                                |
@@ -23,9 +23,9 @@ List of the Whiplash prepackaged deployments
          ----- offline workstation ------
 
 
-- Local.scheduler: a partial local deployment (scheduler is local)
+- local.scheduler: a partial local deployment (local scheduler)
 
-                                            ____________
+                                            ------------
                                            |            |
          ----     -----                    |    ----    |
         | DB | ~ | www |  << .network. <<  |   | RT |   |
@@ -34,7 +34,7 @@ List of the Whiplash prepackaged deployments
                                             --- node --- 
 
 
-- Manual.scheduler: an offline deployment (no scheduler being used at all)
+- manual.scheduler: an offline deployment (no scheduler being used)
 
                 ----     ----- 
                | DB | ~ | www |

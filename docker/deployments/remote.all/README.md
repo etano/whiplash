@@ -1,5 +1,15 @@
 Remote.all: a fully remote deployment
 ---------------------------------------------------
 
-    - No installation required: using whiplash.ethz.ch database
-      for data storage and processing (provided having an account)
+          ----     -----     ----
+         | DB | ~ | www | ~ | RT |
+          ----     -----     ----
+       
+              ... network ...
+       
+                     ^
+                workstation
+
+
+No installation required for this deployment. The remote (e.g. whiplash.ethz.ch)
+maintains the actual database and the run-time environment.
