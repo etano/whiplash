@@ -18,10 +18,10 @@ namespace wdb { namespace entities { namespace ising {
 
         virtual void serialize_cfg(odb::iobject& cfg) override {
             if (status_ == status::UNDEFINED){
-                writer::prop("cfgs", std::vector<std::vector<double>>(1,std::vector<double>(1, std::numeric_limits<double>::quiet_NaN()))) >> cfg;
+                writer::prop("spin_cfgs", std::vector<std::vector<double>>(1,std::vector<double>(1, std::numeric_limits<double>::quiet_NaN()))) >> cfg;
                 writer::prop("costs", std::numeric_limits<double>::quiet_NaN()) >> cfg;
             } else if (status_ == status::DEFINED){
-                writer::prop("cfgs", cfgs_) >> cfg;
+                writer::prop("spin_cfgs", spin_cfgs_) >> cfg;
                 writer::prop("costs", costs_) >> cfg;
             } else {
                 throw std::runtime_error("Error: Property neither UNDEFINED nor DEFINED!\n");
@@ -34,13 +34,13 @@ namespace wdb { namespace entities { namespace ising {
         }
 
         template<typename OtherSpinType, typename OtherValueType>
-        void set_cfg(const std::vector<std::vector<OtherSpinType>>& cfgs, std::vector<OtherValueType> costs){
-            cfgs_.clear();
-            for (const auto& cfg : cfgs){
-                std::vector<spin_type> cfg_;
-                for (const auto& spin : cfg)
-                    cfg_.push_back(spin);
-                cfgs_.push_back(cfg_);
+        void set_cfg(const std::vector<std::vector<OtherSpinType>>& spin_cfgs, std::vector<OtherValueType> costs){
+            spin_cfgs_.clear();
+            for (const auto& spin_cfg : spin_cfgs){
+                std::vector<spin_type> spin_cfg_;
+                for (const auto& spin : spin_cfg)
+                    spin_cfg_.push_back(spin);
+                spin_cfgs_.push_back(spin_cfg_);
             }
             costs_.clear();
             for (const auto& cost : costs)
@@ -54,7 +54,7 @@ namespace wdb { namespace entities { namespace ising {
         }
 
     private:
-        std::vector<std::vector<spin_type>> cfgs_;
+        std::vector<std::vector<spin_type>> spin_cfgs_;
         std::vector<double> costs_;
     };
 

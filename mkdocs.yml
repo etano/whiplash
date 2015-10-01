@@ -1,0 +1,10 @@
+site_name: WhiplashDB
+docs_dir: docs
+site_dir: www
+theme: flatly
+pages:
+- Home: index.md
+- Overview: overview.md
+- Deployment: deployment.md
+- Standards: standards.md
+- Usage: usage.md
