@@ -35,14 +35,14 @@ Currently installation is as simple as
 
     git clone git@gitlab.phys.ethz.ch:zintchenko/whiplashdb.git
     cd whiplashdb
-    source autogen.sh
+    source $(whiplash_root)/autogen.sh
 
 This will download, compile, and install libbson, mongoc, libbsonxx,
 and mongocxx.
 
 To build all currently integrated solvers do
 
-    cd src/apps
+    cd $(whiplash_root)/src/apps
     source build_apps.sh
 
 The server should in addition be running an instance of the MongoDB
@@ -59,13 +59,13 @@ remote clusters.
 
 An instance of the database and the scheduler should be running on the
 server. The scheduler can be started by calling
-./bin/drivers/scheduler.driver
+$(whiplash_root)/bin/scheduler.driver
 
 ## Populating the framework
 
 Currently all models, executables, and properties are loaded into
 WhiplashDB through our CLI. All drivers for the CLI are located in the
-bin/drivers directory. See below for details for the specific
+bin directory. See below for details for the specific
 requirements of each.
 
 ## Demos
@@ -92,7 +92,7 @@ Optional arguments:
 
 Example:
 
-    ./commit_model.driver -file apps/108problem.lat -class
+    $(whiplash_root)/bin/commit_model.driver -dbhost ${HOST} -file apps/108ising.lat -class
     ising -owner akosenko -parent_id 8 -type quantum_speedup
 
 #### Loading executables
@@ -115,7 +115,7 @@ Optional arguments:
 
 Example:
 
-    ./commit_executable.driver -file apps/test.app -class
+    $(whiplash_root)/bin/commit_executable.driver -dbhost ${HOST} -file $(whiplash_root)/bin/test.app -class
     ising -owner akosenko -description "This solver simply chooses
     random configurations and returns the lowest energy found"
     -algorithm "random" -version "1.0" -build "O3" -purpose "testing"
@@ -137,7 +137,7 @@ Optional arguments:
 
 Example:
 
-    ./commit_property.driver -class ising -owner akosenko -model 0
+    $(whiplash_root)/bin/commit_property.driver -dbhost ${HOST} -class ising -owner akosenko -model 0
     -executable 0 -Nr 7
 
 #### Format the current instance of the database
@@ -150,7 +150,7 @@ Optional argument: None
 
 Example:
 
-    ./format_db.driver
+    $(whiplash_root)/bin/format_db.driver -dbhost ${HOST}
 
 ## Querying
 
@@ -199,7 +199,7 @@ model.
 - parent_id : if model derived from another model in the database, the id of this parent model (default : "none")
 - cfg : 
     - params : user defined traits
-    - ... : problem specific traits (e.g. # spins, the Hamiltonian, etc. See [problem class standards](problem_class_standards))
+    - ... : problem specific traits (e.g. number of spins, the Hamiltonian, etc. See [problem class standards](problem_class_standards))
 
 ### Executables
 
@@ -376,7 +376,7 @@ Example of Weighted Partial Max-SAT formula:
 
 - schedule : annealing schedule ("linear", "inverse", "quadratic", or "custom")
 
-ALGORITHMS
+## Algorithms
 
 A number of algorithms are already implemented in whiplashDB. The
 algorithms can be found in $(whiplash_root)/src/apps
