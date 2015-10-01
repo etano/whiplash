@@ -1,42 +1,19 @@
-WhiplashDB
-==========
+# WhiplashDB
 
-WhiplashDB is a framework to run large numbers of simulations in a
-distributed environment. It aims to maximise efficiency, convenience
-and reproducibility by storing inputs and outputs of each simulation
-in a database, handling direct interaction with clusters and queing of
-jobs, and providing a convenient interface to submit jobs and analyse
-output.
+---
 
-The framework is based on the MongoDB NoSQL database and includes a
-library of problem classes as well as job scheduling and statistical
-analysis interfaces. WhiplashDB is an executable database, meaning
-results to queries can be computed on the fly (see the
-[Querying](#querying) section for more information).
+An extremely flexible, high throughput simulation framework built by researchers for researchers.
 
-Each job is composed of three components: a model, an executable and a
-property
+---
 
-* model: a problem instance which serves as an input to an
-  executeble.
+__Fast__.
 
-* property: job description passed on to the executable, including
-  input parameters, specification of the model, etc. When a job
-  succesfully finishes, it appends its output to the property with
-  which it was called.
+The core of [WhiplashDB](http://whiplash.ethz.ch) is written entirely in high-performance, templated C++. This allows scaling to billions of simulations with minimal overhead.
 
-* executable: the binary executed by the job.
+__Flexible__.
 
-## Deployments
+To facilitate easy of use for a variety of possible applications, [WhiplashDB](http://whiplash.ethz.ch) is built around a schemaless NoSQL database. This allows users to store arbitrary information with each simulation.
 
-Current deployment is limited to the Mönch cluster located at
-monch.cscs.ch.
+__Simple__.
 
-Future deployment types will include completely local, dockerized, and
-remote clusters.
-
-An instance of the database and the scheduler should be running on the
-server. The scheduler can be started by calling
-./bin/drivers/scheduler.driver
-
-
+[WhiplashDB](http://whiplash.ethz.ch) comes packaged with a slim, convenient interface, implemented as a Python module. Deployment is just as easy using the [Docker](http://docker.com) container system.
