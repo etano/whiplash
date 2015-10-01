@@ -6,9 +6,8 @@ import whiplashdb
 wdb = whiplashdb.wdb("localhost:27017","test","test")
 
 # Fetch models
-print 'Querying for model'
-model_filter = {'class':'ising','owner':'ebrown','params.lattice_type':'random','params.coupling_type':'gaussian'}
-model_id = wdb.QueryModels(model_filter)[0]
+print 'Commit model'
+model_id = wdb.CommitModel('108ising.json')
 
 # Register solver
 print 'Registering solver'
@@ -24,7 +23,6 @@ def Resolve(model_id,executable_id,n_reps):
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
     for i in range(n_reps):
-
         # Set unique seed
         property['seed'] = i
 
