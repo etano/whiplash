@@ -11,8 +11,8 @@ namespace wdb { namespace entities { namespace ising {
         using edge_type = std::pair<std::vector<index_type>, double>; ///< (nodes in the edge (>= 2), coupling value
         using node_type = std::vector<index_type>;  ///< lists of connecting edges for each node
 
-        model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : entities::model(typename entities::info<ptype::ising>(), in, parent, params), N_(0)
+        model(std::string owner, std::ifstream& in, optional<int> parent, optional<parameters> params)
+            : entities::model(typename entities::info<ptype::ising>(), owner, in, parent, params), N_(0)
         {
             std::map<std::string,index_type> index;
             while(in){

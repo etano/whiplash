@@ -1,7 +1,7 @@
 import whiplashdb
 
 # Make WhiplashDB in_sweepstance
-wdb = whiplashdb.wdb("localhost:27017",True)
+wdb = whiplashdb.wdb("localhost:27017")
 
 # Models
 print 'Committing models'

@@ -13,7 +13,11 @@ namespace wdb { namespace entities {
             model_ = reader::read<int>(o, "model_id");
             executable_ = reader::read<int>(o, "executable_id");
             status_ = (optional<status>)reader::read<int>(o, "status");
-            walltime_ = reader::read<double>(o, "walltime");
+            auto t = reader::read<double>(o, "walltime");
+            if(t)
+                walltime_ = t;
+            else
+                walltime_ = -1;
             seed_ = reader::read<int>(o, "seed");
             params_ = reader::read<parameters>(o, "params");
         }
@@ -89,6 +93,7 @@ namespace wdb { namespace entities {
         }
 
         std::string get_class(){ return class_; }
+        std::string get_owner(){ return owner_; }
         int get_model(){ return model_; }
         int get_executable(){ return executable_; }
         status get_status(){ return status_; }

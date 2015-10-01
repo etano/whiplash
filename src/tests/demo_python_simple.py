@@ -22,13 +22,15 @@ print executable_id
 print 'Form property requests and solve them'
 properties = []
 for model_id in model_ids:
-    property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'},'status':3,'walltime':-1.0}
+    property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'status':3,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}}
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
     for i in range(100):
-        property['seed'] = i
         # Packaged executables (SA, SQA, UE) take JSON input and give JSON output
         # though in general user is free to do this how they please
+
+        # Set unique seed
+        property['seed'] = i
 
         # Write JSON file
         input_path = executable['path']+'.tmp.json'

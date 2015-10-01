@@ -30,7 +30,7 @@ namespace wdb { namespace deployment {
         std::vector<std::shared_ptr<odb::iobject>> records;
         for(auto& path : paths){
             std::ifstream in(path);
-            std::shared_ptr<entities::model> m(entities::factory::make<e::model>(problem_class, in, parent_id, params));
+            std::shared_ptr<entities::model> m(entities::factory::make<e::model>(problem_class, owner, in, parent_id, params));
             in.close();
             object_type serialized_cfg;
             m->serialize_cfg(serialized_cfg);

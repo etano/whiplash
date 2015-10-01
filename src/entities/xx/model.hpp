@@ -18,8 +18,8 @@ namespace wdb { namespace entities { namespace xx {
         using index_type = int;
         using bond_type = std::tuple<double, index_type, index_type, index_type>; ///< weight, node1, node2, color
 
-        model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : entities::model(typename entities::info<ptype::xx>(), in, parent, params), N_(0)
+        model(std::string owner, std::ifstream& in, optional<int> parent, optional<parameters> params)
+            : entities::model(typename entities::info<ptype::xx>(), owner, in, parent, params), N_(0)
         {
             for(std::string l; getline(in, l);){
                 if(l.find(' ') == std::string::npos || l.find('#') != std::string::npos){

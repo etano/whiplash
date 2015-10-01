@@ -5,8 +5,8 @@ namespace wdb { namespace entities { namespace sat {
 
     class model : public entities::model {
     public:
-        model(std::ifstream& in, optional<int> parent, optional<parameters> params)
-            : entities::model(typename entities::info<ptype::sat>(), in, parent, params)
+        model(std::string owner, std::ifstream& in, optional<int> parent, optional<parameters> params)
+            : entities::model(typename entities::info<ptype::sat>(), owner, in, parent, params)
         {}
 
         model(const odb::iobject& o)

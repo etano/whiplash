@@ -65,7 +65,10 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<typename T>
         optional<T> checked_get(object_view doc, std::string field){
-            if(doc.find(field) == doc.end()) return optional<T>();
+            if(doc.find(field) == doc.end()){
+                std::cerr << "WARNING: " << field << " not defined." << std::endl;
+                return optional<T>();
+            }
             return get<T>(doc, field);
         }
 
