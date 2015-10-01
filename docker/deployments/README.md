@@ -4,7 +4,7 @@ List of the Whiplash prepackaged deployments
 - Remote.all: a fully remote deployment
 
           ----     -----     ----
-         | DB | - | www | - | RT |
+         | DB | ~ | www | ~ | RT |
           ----     -----     ----
        
               ... network ...
@@ -14,13 +14,13 @@ List of the Whiplash prepackaged deployments
 
 - Local.all: a fully local deployment of the database
 
-      --------------------------------
-     |                                |
-     |     ----     -----     ----    |
-     |    | DB | - | www | - | RT |   |
-     |     ----     -----     ----    |
-     |                                |
-      ----- offline workstation ------
+         --------------------------------
+        |                                |
+        |     ----     -----     ----    |
+        |    | DB | ~ | www | ~ | RT |   |
+        |     ----     -----     ----    |
+        |                                |
+         ----- offline workstation ------
 
 
 - Local.scheduler: a partial local deployment (scheduler is local)
@@ -28,7 +28,7 @@ List of the Whiplash prepackaged deployments
                                             ____________
                                            |            |
          ----     -----                    |    ----    |
-        | DB | - | www |  << .network. <<  |   | RT |   |
+        | DB | ~ | www |  << .network. <<  |   | RT |   |
          ----     -----                    |    ----    |
                                            |            |
                                             --- node --- 
@@ -36,17 +36,17 @@ List of the Whiplash prepackaged deployments
 
 - Manual.scheduler: an offline deployment (no scheduler being used at all)
 
-              ----     ----- 
-             | DB | - | www |
-              ----     ----- 
-
-              ... network ...
-                     ^
-             ... usb stick ...
-                     ^
-      --------------------------------
-     |                                |
-     |  json.in >> binary >> json.out |
-     |                                |
-      ------ offline workstation -----
+                ----     ----- 
+               | DB | ~ | www |
+                ----     ----- 
+        
+                ... network ...
+                       ^
+               ... usb stick ...
+                       ^
+         --------------------------------
+        |                                |
+        |  json.in >> binary >> json.out |
+        |                                |
+         ------ offline workstation -----
 
