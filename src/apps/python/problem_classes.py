@@ -2,9 +2,9 @@ import sys
 
 class ProblemClass:
     def __init__(self):
-        self.model_required = ['class','owner','cfg']
+        self.model_required = ['class','owner']
         self.executable_required = ['class','owner','path','description','algorithm','version','build','name']
-        self.property_required = ['class','owner','model_id','executable_id','cfg']
+        self.property_required = ['class','owner','model_id','executable_id','status']
     def get_model_required(self):
         return self.model_required
     def get_executable_required(self):
@@ -13,9 +13,6 @@ class ProblemClass:
         return self.property_required
 
 class Ising(ProblemClass):
-
-    #TODO: fix proper query of sub-fields, like n_spins and edges
-
     def get_model_required(self):
         return self.model_required + ['cfg.n_spins','cfg.edges']
     def get_property_required(self):

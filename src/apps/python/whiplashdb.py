@@ -5,138 +5,84 @@ from subprocess import Popen, PIPE
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,server,user,password,use_cpp_drivers=False):
+    def __init__(self,server,user,password):
         self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
-        self.use_cpp_drivers = use_cpp_drivers
+        self.user = user
         self.client = pymongo.MongoClient(self.server)
-        self.client.wdb.authenticate(user,password)
+        self.client.wdb.authenticate(self.user,password)
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
 
-    def FormArgs(self,path,entity):
-        args = [path]
-        for (key,val) in entity.items():
-            args.append('-'+key)
-            args.append(str(val))
-        args.append('-dbhost')
-        args.append(self.server)
-        return args
-
-    def Execute(self,args):
-        p = Popen(args,stdout=PIPE,stderr=PIPE,bufsize=1)
-        (stdout, stderr) = p.communicate()
-        res = [x for x in stdout.split('\n') if x]
-        return res
-
-    def CommitExecutable(self,executable):
-        if self.use_cpp_drivers:
-            args = self.FormArgs(self.wdb_home+'/bin/commit_executable.driver',executable)
-            return self.Execute(args)[0]
-        else:
-            for field in problem_classes.DetectClass(executable).get_executable_required():
-                if field not in executable:
-                    print 'Please add field:',field
+    def VerifyField(self,object,field):
+        field = field.split('.')
+        if field[0] not in object:
+            print 'Please add field:',field,' to object:',object
+            sys.exit(0)
+        if len(field) > 1:
+            for subfield in field[1:]:
+                if subfield not in object[field[0]]:
+                    print 'Please add field:',field[0],subfield,' to object:',object
                     sys.exit(0)
-            _id = self.executables.find().count()
-            executable['_id'] = _id
-            executable['timestamp'] = time.time()
-            self.executables.insert_one(executable)
-            return _id
 
-    def CommitModel(self,model):
-        if self.use_cpp_drivers:
-            args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
-            return self.Execute(args)[0]
-        else:
-            model = json.load(open(model['path'])) #TODO: do this for the rest
-            for field in problem_classes.DetectClass(model).get_model_required():
-                if field not in model:
-                    print 'Please add field:',field
-                    sys.exit(0)
-            _id = self.models.find().count()
-            model['_id'] = _id
-            model['timestamp'] = time.time()
-            self.models.insert_one(model)
-            return _id
+    def Sign(self,collection,object):
+        object['owner'] = self.user
+        object['_id'] = collection.find().count()
+        object['timestamp'] = time.time()
 
-    def CommitModels(self,models):
-        if self.use_cpp_drivers:
-            model['path'] = ','.join(paths)
-            args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
-            return self.Execute(args)
+    def Verify(self,collection,object):
+        if(collection == self.models):
+            for field in problem_classes.DetectClass(object).get_model_required():
+                self.VerifyField(object,field)
+        elif(collection == self.executables):
+            for field in problem_classes.DetectClass(object).get_executable_required():
+                self.VerifyField(object,field)
+        elif(collection == self.properties):
+            for field in problem_classes.DetectClass(object).get_property_required():
+                self.VerifyField(object,field)
         else:
-            _ids = []
-            for model in models:
-                for field in problem_classes.DetectClass(model).get_model_required():
-                    if field not in model:
-                        print 'Please add field:',field
-                        sys.exit(0)
-                _id = self.models.find().count()
-                _ids.append(id)
-                model['_id'] = _id
-                model['timestamp'] = time.time()
-            self.models.insert_many(models)
-            return _ids
+            print 'Unrecognized collection'
+            sys.exit(0)
 
-    def CommitProperty(self,property):
-        if self.use_cpp_drivers:
-            args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',property)
-            return self.Execute(args)[0]
-        else:
-            for field in problem_classes.DetectClass(property).get_property_required():
-                field = field.split('.')
-                if field[0] not in property:
-                    print 'Please add field:',field
-                    sys.exit(0)
-                if len(field) > 1:
-                    for subfield in field[1:]:
-                        if subfield not in property[field[0]]:
-                            print 'Please add field:',field[0],subfield
-                            sys.exit(0)
-            _id = self.properties.find().count()
-            property['status'] = 3 # FIXME: This should not be fixed in future versions
-            if 'seed' not in property:
-                property['seed'] = _id
-            if 'walltime' not in property:
-                property['walltime'] = -1
-            property['_id'] = _id
-            property['timestamp'] = time.time()
-            self.properties.insert_one(property)
-            return _id
+    def FormJson(self,collection,object):
+        if type(object) is str:
+            object = json.load(open(object))
+        self.Sign(collection,object)
+        self.Verify(collection,object)
+        return object
 
-    def CommitProperties(self,properties,model_ids=[],n_reps=1):
-        if self.use_cpp_drivers:
-            properties['reps'] = n_reps
-            properties['model_id'] = ','.join(model_ids)
-            args = self.FormArgs(self.wdb_home+'/bin/commit_property.driver',properties)
-            print args
-            return self.Execute(args)
-        else:
-            count = self.properties.find().count()
-            for property in properties:
-                for field in problem_classes.DetectClass(property).get_property_required():
-                    field = field.split('.')
-                    if field[0] not in property:
-                        print 'Please add field:',field
-                        sys.exit(0)
-                    if len(field) > 1:
-                        for subfield in field[1:]:
-                            if subfield not in property[field[0]]:
-                                print 'Please add field:',field[0],subfield
-                                sys.exit(0)
-                _id = count
-                count += 1
-                property['status'] = 3 # FIXME: This should not be fixed in future versions
-                if 'seed' not in property:
-                    property['seed'] = _id
-                if 'walltime' not in property:
-                    property['walltime'] = -1
-                property['_id'] = _id
-                property['timestamp'] = time.time()
-            self.properties.insert_many(properties)
-            return _id
+    def Commit(self,collection,object):
+        object = self.FormJson(collection,object)
+        collection.insert_one(object)
+        return object['_id']
+
+    def CommitMany(self,collection,objects):
+        _ids = []
+        for object in objects:
+            object = self.FormJson(collection,object)
+            object['_id'] = object['_id'] + len(_ids)
+            _ids.append(object['_id'])
+        collection.insert_many(objects)
+        return _ids
+
+    def CommitModel(self,object):
+        return self.Commit(self.models,object)
+
+    def CommitModels(self,objects):
+        return self.CommitMany(self.models,objects)
+
+    def CommitExecutable(self,object):
+        return self.Commit(self.executables,object)
+
+    def CommitExecutables(self,objects):
+        return self.CommitMany(self.executables,objects)
+
+    def CommitProperty(self,object):
+        return self.Commit(self.properties,object)
+
+    def CommitProperties(self,objects):
+        return self.CommitMany(self.properties,objects)
 
     def Query(self,collection,filter):
         ids = []
@@ -164,6 +110,9 @@ class wdb:
 
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
+
+    def FormProperty(self,model,executable,params):
+        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
