@@ -13,6 +13,9 @@ class ProblemClass:
         return self.property_required
 
 class Ising(ProblemClass):
+
+    #TODO: fix proper query of sub-fields, like n_spins and edges
+
     def get_model_required(self):
         return self.model_required + ['cfg.n_spins','cfg.edges']
     def get_property_required(self):

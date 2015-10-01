@@ -50,6 +50,7 @@ class wdb:
             args = self.FormArgs(self.wdb_home+'/bin/commit_model.driver',model)
             return self.Execute(args)[0]
         else:
+            model = json.load(open(model['path'])) #TODO: do this for the rest
             for field in problem_classes.DetectClass(model).get_model_required():
                 if field not in model:
                     print 'Please add field:',field
