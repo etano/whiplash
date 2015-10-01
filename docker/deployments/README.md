@@ -14,7 +14,7 @@ List of the Whiplash prepackaged deployments
 
 - Local.all: a fully local deployment of the database
 
-      _______________________________
+      --------------------------------
      |                                |
      |     ----     -----     ----    |
      |    | DB | - | www | - | RT |   |
@@ -44,8 +44,9 @@ List of the Whiplash prepackaged deployments
                      ^
              ... usb stick ...
                      ^
-      _______________________________
+      --------------------------------
      |                                |
      |  json.in >> binary >> json.out |
      |                                |
       ------ offline workstation -----
+
