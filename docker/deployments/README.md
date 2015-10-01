@@ -1,30 +1,52 @@
-List of the Whiplash DB deployment schemes:
+List of the Whiplash prepackaged deployments
+--------------------------------------------
+
+- Remote.all: a fully remote deployment
+
+          ----     -----     ----
+         | DB |   | www |   | RT |
+          ----     -----     ----
+       
+              ... network ...
+       
+                     ^
+                   Client
+
+- Local.all: a fully local deployment of the database
+
+     _______________________________
+    |                                |
+    |     ----     -----     ----    |
+    |    | DB |   | www |   | RT |   |
+    |     ----     -----     ----    |
+    |                                |
+     -- Client's Linux Workstation --
 
 
-Remote.all: a fully remote deployment
----------------------------------------------------
+- Local.scheduler: a partial local deployment (scheduler is local)
 
-    - No installation required: using whiplash.ethz.ch database
-      for data storage and processing (provided having an account)
+                                                 ____________
+          ----     -----                        |            | 
+         | DB |   | www |  << .. network .. <<  |    ----    | 
+          ----     -----                        |   | RT |   | 
+                                                |    ----    | 
+                                                |            | 
+                                                 -- Client --  
 
-Local.all: a fully local deployment of the database
----------------------------------------------------
 
-Installation includes the following containers:
+- Manual.scheduler: an offline deployment (no scheduler being used at all)
 
-    - the local Mongo database container
-    - the local web-server container with the web-interface
-    - the local run-time container with the whiplash scheduler
-
-Local.scheduler: a partial local deployment (scheduler is local)
----------------------------------------------------
-
-    - the database and web-interface are remote (i.e. whiplash.ethz.ch)
-    - the local run-time container with the whiplash scheduler
-
-Manual.scheduler: an offline deployment (no scheduler being used at all)
----------------------------------------------------
-
-    - binaries for manual execution
-    - a remote database should be populated manually
-
+               ----     ----- 
+              | DB |   | www |
+               ----     ----- 
+       
+              ... network ...
+       
+                     ^
+     _______________________________
+    |                                |
+    |          in >> binary >> out   |
+    |                                |
+    |                                |
+    |                                |
+     -- Client's Linux Workstation --
