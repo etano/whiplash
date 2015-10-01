@@ -48,8 +48,8 @@ class wdb:
     def FormJson(self,collection,object):
         if type(object) is str:
             object = json.load(open(object))
-        self.Verify(collection,object)
         self.Sign(collection,object)
+        self.Verify(collection,object)
         return object
 
     def Commit(self,collection,object):
@@ -60,9 +60,9 @@ class wdb:
     def CommitMany(self,collection,objects):
         _ids = []
         for object in objects:
-            object = FormJson(collection,object) + len(_ids)
-            object['_id'] = _id
-            _ids.append(_id)
+            object = self.FormJson(collection,object)
+            object['_id'] = object['_id'] + len(_ids)
+            _ids.append(object['_id'])
         collection.insert_many(objects)
         return _ids
 
@@ -110,6 +110,9 @@ class wdb:
 
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
+
+    def FormProperty(self,model,executable,params):
+        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
