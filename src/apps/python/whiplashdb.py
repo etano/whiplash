@@ -10,7 +10,7 @@ class wdb:
         self.server = server
         self.user = user
         self.client = pymongo.MongoClient(self.server)
-        self.client.wdb.authenticate(self.user,password)
+        #self.client.wdb.authenticate(self.user,password)
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -112,7 +112,7 @@ class wdb:
         return self.Fetch(self.properties,id)
 
     def FormProperty(self,model,executable,params):
-        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params}
+        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params,'cfg':{'cfgs':'NaN','costs':'NaN'}}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
