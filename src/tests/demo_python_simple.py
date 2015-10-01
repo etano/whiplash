@@ -1,54 +1,50 @@
-import sys,os
+import sys,os,json,tempfile,threading
 from subprocess import Popen, PIPE
-import json
 import whiplashdb
 
 # Make WhiplashDB instance
-wdb = whiplashdb.wdb("localhost:27017")
+wdb = whiplashdb.wdb("localhost:27017","test","test")
 
 # Fetch models
-print 'Querying for models'
+print 'Querying for model'
 model_filter = {'class':'ising','owner':'ebrown','params.lattice_type':'random','params.coupling_type':'gaussian'}
-model_ids = wdb.QueryModels(model_filter)
-print model_ids
+model_id = wdb.QueryModels(model_filter)[0]
 
 # Register solver
 print 'Registering solver'
-executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'../../bin/test.static'}
+executable = {'class':'ising','owner':'ebrown','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'./apps/test.static','name':'test'}
 executable_id = wdb.CommitExecutable(executable)
-print executable_id
 
-# Form property requests and solve them on local solver
-print 'Form property requests and solve them'
-properties = []
-for model_id in model_ids:
+# NOTE: Packaged executables (SA, SQA, UE) take JSON input and give JSON output though in general user is free to do this how they please
+
+# Form property requests and resolve them on local solver, all asynchronously
+print 'Form property requests, resolve them, and push them to the database (ASYNCHRONOUS)'
+def Resolve(model_id,executable_id,n_reps):
     property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'model_id':model_id,'status':3,'params':{'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}}
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
-    for i in range(100):
-        # Packaged executables (SA, SQA, UE) take JSON input and give JSON output
-        # though in general user is free to do this how they please
+    for i in range(n_reps):
 
         # Set unique seed
         property['seed'] = i
 
         # Write JSON file
-        input_path = executable['path']+'.tmp.json'
-        f = open(input_path,'w')
+        f = tempfile.NamedTemporaryFile(delete=False)
         f.write(json.dumps({'property':property,'model':model}))
+        f.close()
 
         # Run solver
         env = os.environ.copy()
-        p = Popen(['./apps/test.static','./apps/test.static.tmp.json'],stdout=PIPE,env=env)
+        p = Popen([executable['path'],f.name],stdout=PIPE,stderr=PIPE,env=env)
         (stdout,stderr) =  p.communicate()
-        properties.append(json.loads(stdout))
 
-# Commit resolved properties
-property_ids = wdb.CommitProperties(properties)
-
-# Form query
-filter = {'class':'ising','owner':'ebrown'}
-target = ['cfg','costs']
+        # Commit back to database
+        wdb.CommitProperty(json.loads(stdout))
+thr = threading.Thread(target=Resolve,args=(model_id,executable_id,1000),kwargs={})
+thr.start()
 
 # Query and update plot continuously
+print 'Query for resulting costs and plot'
+filter = {'class':'ising','owner':'ebrown'}
+target = ['cfg','costs']
 wdb.RealTimeHist(filter, target)

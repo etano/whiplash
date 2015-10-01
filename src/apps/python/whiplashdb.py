@@ -5,11 +5,12 @@ from subprocess import Popen, PIPE
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,server,use_cpp_drivers=False):
+    def __init__(self,server,user,password,use_cpp_drivers=False):
         self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
         self.use_cpp_drivers = use_cpp_drivers
         self.client = pymongo.MongoClient(self.server)
+        self.client.wdb.authenticate(user,password)
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -84,9 +85,15 @@ class wdb:
             return self.Execute(args)[0]
         else:
             for field in problem_classes.DetectClass(property).get_property_required():
-                if field not in property:
+                field = field.split('.')
+                if field[0] not in property:
                     print 'Please add field:',field
                     sys.exit(0)
+                if len(field) > 1:
+                    for subfield in field[1:]:
+                        if subfield not in property[field[0]]:
+                            print 'Please add field:',field[0],subfield
+                            sys.exit(0)
             _id = self.properties.find().count()
             property['status'] = 3 # FIXME: This should not be fixed in future versions
             if 'seed' not in property:

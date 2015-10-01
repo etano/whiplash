@@ -50,8 +50,14 @@ class UpdatePlot(object):
                 if hist[i] != 0:
                     xs.append(bin_edges[i]+bin_edges[i+1]/2.)
                     ys.append(hist[i])
-            self.ax.set_xlim(min(xs),max(xs))
-            self.ax.set_ylim(min(ys),max(ys))
+            if (min(xs) != max(xs)):
+                self.ax.set_xlim(min(xs),max(xs))
+            else:
+                self.ax.set_xlim(min(xs)-1,max(xs)+1)
+            if (min(ys) != max(ys)):
+                self.ax.set_ylim(min(ys),max(ys))
+            else:
+                self.ax.set_ylim(min(ys)-1,max(ys)+1)
             self.line.set_data(xs,ys)
             self.ax.fill_between(xs,0,ys,alpha=0.6,facecolor='crimson')
         return self.line,

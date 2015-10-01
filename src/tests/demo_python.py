@@ -1,7 +1,7 @@
 import whiplashdb
 
 # Make WhiplashDB in_sweepstance
-wdb = whiplashdb.wdb("localhost:27017")
+wdb = whiplashdb.wdb("localhost:27017","test","test")
 
 # Models
 print 'Committing models'
@@ -21,9 +21,7 @@ property = {'class':'ising','owner':'ebrown','executable_id':executable_id,'n_sw
 property_ids = wdb.CommitProperties(property, model_ids, n_reps=10000)
 print property_ids
 
-# Form query
+# Query and update plot continuously
 filter = {'class':'ising'}
 target = ['cfg','costs']
-
-# Query and update plot continuously
 wdb.RealTimeHist(filter, target)
