@@ -1,6 +1,6 @@
 site_name: WhiplashDB
 docs_dir: docs
-site_dir: www
+site_dir: www/docs
 theme: flatly
 pages:
 - Home: index.md
