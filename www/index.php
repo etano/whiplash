@@ -10,7 +10,11 @@
 </head> 
 <body>
     <section id="logo">Whiplash DB</section>
-    <section id="query">
+    <section id="upload">
+        <form id="upload" method="post">
+            <input type="file" class="file" name="myfile" id="myfile-input" onchange="upload();" />
+            <label for="myfile-input">Upload dataset</label>
+        </form>
     </section>
 </body>
 </html>
