@@ -4,5 +4,11 @@ RUN docker-php-ext-install mysql mysqli pdo pdo_mysql
 RUN apt-get update
 RUN apt-get install -y php5-dev php5-cli php-pear
 RUN pecl install mongo
+RUN apt-get install -y python-dev libyaml-dev python-pip
+RUN pip install mkdocs
 COPY www/config/php.ini /usr/local/etc/php/
+COPY docs /var/www/docs
+COPY mkdocs.yml /var/www/
+WORKDIR /var/www/
+RUN mkdocs build
 COPY www /var/www/html
