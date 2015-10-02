@@ -69,30 +69,131 @@ If committing many objects at once, it is best to use bulk write commands (speci
 
     property_ids = wdb.CommitProperties(properties)
 
-## Full example
+## Full examples
 
-Here we provide a full example demo script. It first commits a model and local executable to the framework. Then it locally forms the property json and passes it to the executable along with the model json. After 100 repetitions the resultant properties are commited back to the database.
+Here we provide a full example demo script for each possible deployment. For more information on setting up the various deploments, see [deployment](deployment).
 
-    import sys,os,json,tempfile,time
+### remote.all
+
+This script first commits a model to the remotely hosted framework. It then queries for an executable that already lives on the remote server. Next it commits many unresolved properties, which triggers the remote scheduler to distribute work. Finally we are able to plot results of a query in real-time since the jobs are being run asynchronously.
+
+    import whiplashdb
+    
+    # Connect to remote WhiplashDB instance
+    wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","user","password")
+    
+    # Committing model
+    model_id = wdb.CommitModel('108ising.json')
+    
+    # Query for executable
+    executable_filter = {'class':'ising','algorithm':'SA','name':'an_ss_ge_fi_vdeg'}
+    executable_id = wdb.QueryExecutables(executable_filter)[0]
+    
+    # Commit properties
+    params = {'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}
+    status = 0 # commit properites as unresolved
+    n_reps = 10000 # number of repetitions
+    properties = [wdb.FormProperty('ising',model_id,executable_id,status,params) for i in range(n_reps)]
+    wdb.CommitProperties(properties)
+    
+    # Scheduler is triggered remotely
+    
+    # Query and update plot continuously
+    filter = {'class':'ising'}
+    target = ['cfg','costs']
+    wdb.RealTimeHist(filter, target)
+
+### local.all
+
+This script first queries for models from the locally hosted framework. It then queries for an executable that already lives on the local server. Next it commits many unresolved properties, which triggers the local scheduler to distribute work. Finally we are able to plot results of a query in real-time since the jobs are being run asynchronously.
+
+    import whiplashdb
+    
+    # Connect to local WhiplashDB instance
+    wdb = whiplashdb.wdb("localhost:27017","user","password")
+    
+    # Query for models
+    model_filter = {'class':'ising','coupling_type':'gaussian'}
+    model_ids = wdb.QueryModels(model_filter)
+    
+    # Query for executable
+    executable_filter = {'class':'ising','algorithm':'SA','name':'an_ss_ge_fi_vdeg'}
+    executable_id = wdb.QueryExecutables(executable_filter)[0]
+    
+    # Commit properties
+    params = {'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}
+    status = 0 # commit properites as unresolved
+    properties = [wdb.FormProperty('ising',model_id,executable_id,status,params) for model_id in model_ids]
+    wdb.CommitProperties(properties)
+    
+    # Scheduler is triggered locally
+    
+    # Query and update plot continuously
+    filter = {'class':'ising'}
+    target = ['cfg','costs']
+    wdb.RealTimeHist(filter, target)
+
+NOTE: This assumes the local scheduler is already running.
+
+### local.scheduler
+
+This script first queries for models from the locally hosted framework. It then registers an executable that already lives on the local server. Next it commits many unresolved properties, which triggers the local scheduler to distribute work. Finally we are able to plot results of a query in real-time since the jobs are being run asynchronously.
+
+    import whiplashdb
+    
+    # Connect to remote WhiplashDB instance
+    wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","user","password")
+    
+    # Query for models
+    model_filter = {'class':'ising','coupling_type':'gaussian'}
+    model_ids = wdb.QueryModels(model_filter)
+    
+    # Commit executable
+    executable = {'class':'ising','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'./apps/test.static','name':'test'}
+    executable_id = wdb.CommitExecutable(executable)
+    
+    # Commit properties
+    params = {'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}
+    status = 0 # commit properites as unresolved
+    properties = [wdb.FormProperty('ising',model_id,executable_id,status,params) for model_id in model_ids]
+    wdb.CommitProperties(properties)
+    
+    # Scheduler is triggered locally
+    
+    # Query and update plot continuously
+    filter = {'class':'ising'}
+    target = ['cfg','costs']
+    wdb.RealTimeHist(filter, target)
+
+NOTE: This assumes the local scheduler is already running.
+
+### manual.scheduler
+
+This script first commits a model and local executable to the remote framework. Then it locally forms the property json and passes it to the executable along with the model json. After 100 repetitions the resultant properties are commited back to the database. Only afterwards, we can query and plot the results.
+
+    import os,json,tempfile,time
     from subprocess import Popen, PIPE
     import whiplashdb
     
     # Make WhiplashDB instance
-    wdb = whiplashdb.wdb("localhost:27017","test","test")
+    wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","test","test")
     
-    # Fetch models
+    # Commit model
     model_id = wdb.CommitModel('108ising.json')
     
-    # Register solver
+    # Commit executable
     executable = {'class':'ising','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'./apps/test.static','name':'test'}
     executable_id = wdb.CommitExecutable(executable)
     
-    # NOTE: Packaged executables (SA, SQA, UE) take JSON input and give JSON output though in general user is free to do this how they please
+    #
+    # NOTE: Packaged executables take JSON input and give JSON output though in general user is free to do this how they please
+    #
     # Form property requests and resolve them on local solver
     model = wdb.FetchModel(model_id)
     executable = wdb.FetchExecutable(executable_id)
     params = {'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8'}
-    property = wdb.FormProperty(model,executable,params)
+    status = 3 # start with status as resolved
+    property = wdb.FormProperty('ising',model_id,executable_id,status,params)
     properties = []
     for i in range(100):
          # Set unique seed
@@ -115,13 +216,15 @@ Here we provide a full example demo script. It first commits a model and local e
          # Append property
          properties.append(json.loads(stdout))
     
-    # Commit back to database
+    # Commit properties
     wdb.CommitProperties(properties)
     
     # Query and update plot continuously
     filter = {'class':'ising'}
     target = ['cfg','costs']
     wdb.RealTimeHist(filter, target)
+
+### Example model input
 
 This is the example model __108ising.json__:
 

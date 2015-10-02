@@ -111,8 +111,8 @@ class wdb:
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
 
-    def FormProperty(self,model,executable,params):
-        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params}
+    def FormProperty(self,class_name,model_id,executable_id,status,params):
+        return {'class':class_name,'owner':self.user,'executable_id':executable_id,'model_id':model_id,'status':status,'params':params}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
