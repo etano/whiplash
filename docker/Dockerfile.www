@@ -11,4 +11,4 @@ COPY docs /var/www/docs
 COPY mkdocs.yml /var/www/
 WORKDIR /var/www/
 RUN mkdocs build
-COPY www /var/www/html
+COPY www/html /var/www/html

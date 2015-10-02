@@ -5,12 +5,13 @@ from subprocess import Popen, PIPE
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,server,user,password):
+    def __init__(self,server,user="",password=""):
         self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
         self.user = user
         self.client = pymongo.MongoClient(self.server)
-        self.client.wdb.authenticate(self.user,password)
+        if user != "":
+            self.client.wdb.authenticate(self.user,password)
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -39,7 +40,7 @@ class wdb:
             for field in problem_classes.DetectClass(object).get_executable_required():
                 self.VerifyField(object,field)
         elif(collection == self.properties):
-            for field in problem_classes.DetectClass(object).get_property_required():
+            for field in problem_classes.DetectClass(object).get_property_required(object['status']):
                 self.VerifyField(object,field)
         else:
             print 'Unrecognized collection'
