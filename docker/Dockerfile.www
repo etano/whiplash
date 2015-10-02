@@ -7,8 +7,8 @@ RUN pecl install mongo
 RUN apt-get install -y python-dev libyaml-dev python-pip
 RUN pip install mkdocs
 COPY www/config/php.ini /usr/local/etc/php/
-COPY docs /var/www/docs
-COPY mkdocs.yml /var/www/
-WORKDIR /var/www/
+COPY docs /var/docs
+COPY mkdocs.yml /var/
+WORKDIR /var/
 RUN mkdocs build
 COPY www/html /var/www/html
