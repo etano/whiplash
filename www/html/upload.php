@@ -1,4 +1,9 @@
 <?php
+session_start();
+
+if($_SESSION["authorized"]!=TRUE){
+    die("not authorized");
+}
 $target_dir = "uploads/";
 $target_file = $target_dir . basename($_FILES["myfile"]["name"]);
 

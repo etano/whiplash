@@ -3,6 +3,39 @@ html, body {
     margin: 0;
     padding: 0;
 }
+section#login {
+    color: #999;
+    text-align: center;
+    font-size: 14px;
+    font-family: arial;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: purple;
+    width: 200px;
+    border-radius: 10px;
+    z-index: 100;
+    transition: all 1s;
+}
+section#login input {
+    color: #999;
+    background-color: transparent;
+    border: 1px solid white;
+    width: 180px;
+    text-align: left;
+}
+section#login .login-field {
+    color: #999;
+    width: 178px;
+    margin: 10px 10px;
+}
+section#login #login-submit {
+    color: #999;
+    width: 178px;
+    margin: 10px 10px;
+    padding: 0;
+}
 section#upload {
     color: rgb(200,200,200);
     text-align: center;
@@ -11,10 +44,11 @@ section#upload {
     position: absolute;
     top: 50%;
     left: 50%;
-    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
     background-color: #333;
     width: 200px;
     border-radius: 10px;
+    z-index: 0;
 }
 section#logo {
     display: block;
@@ -25,7 +59,7 @@ section#logo {
     padding-top: 20px;
     border-top: 1px solid rgb(100,220,255);
 }
-input {
+section#upload input {
     display: none;
 }
 label {

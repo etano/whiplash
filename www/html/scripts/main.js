@@ -21,6 +21,29 @@ function showProgress(){
     });
 }
 
+function login(){
+    var user = $("form#login > input#login-user").val();
+    var pass = $("form#login > input#login-pass").val();
+    $.ajax({
+        type: 'POST',
+        url: "login.php",
+        data: {"user":user,"pass":pass},
+        success: function(data){
+            if( $.trim(data) == "fail" ){
+                alert("user/pass not verified");
+            }else{
+                $("section#login").css("opacity",0);
+                $("section#login").css("z-index",0);
+                $("section#upload").css("z-index",100);
+           }
+        },
+        error: function(request, status, err) {
+            alert("err: "+err);
+        }
+    });
+   
+}
+
 function upload(){
     var filelist = $("form#upload").find("input.file")[0].files || []; if(filelist.length == 0) return;
     var formData = new FormData();
@@ -55,5 +78,6 @@ $(document).ready(function(){
     $(document).bind('ajaxStart', startProgress);
     $(document).bind('ajaxStop', stopProgress);
     $(document).on("click", "label", function(){ $(this).removeClass("complete"); $(this).removeClass("failed"); $(this).text("Upload dataset"); });
+    $(document).on("click", "input#login-submit", login);
 });
                                 

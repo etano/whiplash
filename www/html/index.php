@@ -10,6 +10,13 @@
 </head> 
 <body>
     <section id="logo">Whiplash DB</section>
+    <section id="login">
+        <form id="login" method="post">
+            <input type="field" class="login-field" name="user" id="login-user" value="user" />
+            <input type="field" class="login-field" name="pass" id="login-pass" value="password" />
+            <input type="button" class="button" name="submit" id="login-submit" value="login" />
+        </form>
+    </section>
     <section id="upload">
         <form id="upload" method="post">
             <input type="file" class="file" name="myfile" id="myfile-input" onchange="upload();" />
