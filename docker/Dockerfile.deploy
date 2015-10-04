@@ -6,3 +6,4 @@ RUN WDB_HOME=/opt/wdb make scheduler.driver worker.driver && make install
 WORKDIR /opt/wdb/src/apps
 RUN WDB_HOME=/opt/wdb sh build_apps.sh
 WORKDIR /opt/wdb
+RUN rm -rf src/
