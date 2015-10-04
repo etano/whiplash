@@ -26,7 +26,7 @@ cd ../
 
 ## Annealing codes ##
 cd anc
-make clean && make -j${NTHREADS} single && cp *.shared ${WDB_HOME}/bin/
+make clean && make single && cp *.shared ${WDB_HOME}/bin/
 cd ../
 
 ## Unitary evolution
