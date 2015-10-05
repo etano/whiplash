@@ -1,4 +1,4 @@
-Remote.all: a fully remote deployment
+Managed.all: a fully managed deployment
 ---------------------------------------------------
 
           ----     -----     ----
