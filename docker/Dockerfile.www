@@ -1,4 +1,14 @@
 FROM php:5.6-apache
 RUN a2enmod rewrite
 RUN docker-php-ext-install mysql mysqli pdo pdo_mysql
-COPY www /var/www/html
+RUN apt-get update
+RUN apt-get install -y php5-dev php5-cli php-pear
+RUN pecl install mongo
+RUN apt-get install -y python-dev libyaml-dev python-pip
+RUN pip install mkdocs
+COPY www/config/php.ini /usr/local/etc/php/
+COPY docs /var/docs
+COPY mkdocs.yml /var/
+WORKDIR /var/
+RUN mkdocs build
+COPY www/html /var/www/html

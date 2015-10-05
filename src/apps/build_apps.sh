@@ -15,23 +15,30 @@ else
 fi
 
 ## Discrete time SQA ##
-cd DT-SQA && make clean && make -j${NTHREADS} && cd ../
+cd DT-SQA
+make clean && make -j${NTHREADS} && cp dtsqa.shared ${WDB_HOME}/bin/
+cd ../
 
 ## XX solver ##
-cd XXcode && make -f Makefile.wdb clean && make -f Makefile.wdb -j${NTHREADS} && cd ../
+cd XXcode
+make -f Makefile.wdb clean && make -f Makefile.wdb -j${NTHREADS} && cp xx.app ${WDB_HOME}/bin/
+cd ../
 
 ## Annealing codes ##
-cd anc && make clean && make -j${NTHREADS} single && cd ../
+cd anc
+make clean && make single && cp *.shared ${WDB_HOME}/bin/
+cd ../
 
 ## Unitary evolution
-cd unitary_evolution_wrap
+cd unitary_evolution
 if [ ! -d "build" ]; then
   mkdir build
 else
   rm -rf build
   mkdir build
 fi
-cd build/ && cmake .. && make -j${NTHREADS} && make install
+cd build/
+cmake .. && make -j${NTHREADS} && make install && cp ../bin/ue_solver.shared ${WDB_HOME}/bin/
 cd ../../
 
 ## Spin glass solver ##
@@ -42,6 +49,6 @@ else
   rm -rf build
   mkdir build
 fi
-cd build/ && cmake .. && make -j${NTHREADS} && make install
+cd build/
+cmake .. && make -j${NTHREADS} && make install && cp ../bin/main ${WDB_HOME}/bin/spin_glass_solver
 cd ../../
-

@@ -48,7 +48,11 @@ namespace wdb { namespace rte { namespace simple {
                 return;
             }
             char *const params[] = {"./apps/drivers/worker.driver","-dbhost",const_cast<char*>(pool.get_host().c_str()),NULL};
-            if(execvp("./apps/drivers/worker.driver", params) < 0) exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes, maybe fixed
+            logger->notice(std::string("Running worker with dbhost "+pool.get_host()+"\n").c_str());
+            if(execvp("./apps/drivers/worker.driver", params) < 0){
+                logger->notice("ERROR: Worker died!\n");
+                exit(EXIT_FAILURE); // FIXME: Crashes scheduler when single job crashes, maybe fixed
+            }
             throw std::runtime_error("execvp error"); // unreachable
         }
 

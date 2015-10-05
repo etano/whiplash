@@ -4,7 +4,7 @@ class ProblemClass:
     def __init__(self):
         self.model_required = ['class','owner']
         self.executable_required = ['class','owner','path','description','algorithm','version','build','name']
-        self.property_required = ['class','owner','model_id','executable_id','status']
+        self.property_required = ['class','owner','model_id','executable_id','status','seed']
     def get_model_required(self):
         return self.model_required
     def get_executable_required(self):
@@ -15,8 +15,29 @@ class ProblemClass:
 class Ising(ProblemClass):
     def get_model_required(self):
         return self.model_required + ['cfg.n_spins','cfg.edges']
-    def get_property_required(self):
-        return self.property_required + ['cfg.costs','cfg.cfgs']
+    def get_property_required(self,status):
+        if status == 3:
+            return self.property_required + ['cfg.costs','cfg.spin_cfgs']
+        else:
+            return self.property_required
+
+class SAT(ProblemClass):
+    def get_model_required(self):
+        return self.model_required + ['cfg.n_variables','cfg.n_clauses','cfg.clauses']
+    def get_property_required(self,status):
+        if status == 3:
+            return self.property_required + ['cfg.costs','cfg.variable_cfgs','cfg.sats']
+        else:
+            return self.property_required
+
+class TSP(ProblemClass):
+    def get_model_required(self):
+        return self.model_required + ['cfg.n_cities','cfg.coordinates']
+    def get_property_required(self,status):
+        if status == 3:
+            return self.property_required + ['cfg.costs','cfg.route_cfgs']
+        else:
+            return self.property_required
 
 def DetectClass(X):
     if X['class'] == 'ising':

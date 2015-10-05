@@ -3,7 +3,7 @@ from subprocess import Popen, PIPE
 import whiplashdb
 
 # Make WhiplashDB instance
-wdb = whiplashdb.wdb("localhost:27017","test","test")
+wdb = whiplashdb.wdb("localhost:27017")
 
 # Fetch models
 model_id = wdb.CommitModel('108ising.json')

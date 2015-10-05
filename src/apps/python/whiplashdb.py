@@ -5,12 +5,19 @@ from subprocess import Popen, PIPE
 
 # WhiplashDB class
 class wdb:
-    def __init__(self,server,user,password):
+    def __init__(self,server,user="",password=""):
         self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
         self.user = user
         self.client = pymongo.MongoClient(self.server)
-        #self.client.wdb.authenticate(self.user,password)
+        if user != "":
+            self.client.wdb.authenticate(self.user,password)
+        if not ('wdb' in self.client.database_names()): # Initialize the database
+            db = self.client['wdb']
+            db.create_collection('models')
+            db.create_collection('executables')
+            db.create_collection('properties')
+            db.create_collection('counters')
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -39,7 +46,7 @@ class wdb:
             for field in problem_classes.DetectClass(object).get_executable_required():
                 self.VerifyField(object,field)
         elif(collection == self.properties):
-            for field in problem_classes.DetectClass(object).get_property_required():
+            for field in problem_classes.DetectClass(object).get_property_required(object['status']):
                 self.VerifyField(object,field)
         else:
             print 'Unrecognized collection'
@@ -111,8 +118,8 @@ class wdb:
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
 
-    def FormProperty(self,model,executable,params):
-        return {'class':model['class'],'owner':self.user,'executable_id':executable['_id'],'model_id':model['_id'],'status':3,'params':params,'cfg':{'cfgs':'NaN','costs':'NaN'}}
+    def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
+        return {'class':class_name,'owner':self.user,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()
