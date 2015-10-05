@@ -1,4 +1,4 @@
-Local.all: a fully local deployment of the database
+Unmanaged.all: a fully unmanaged deployment of the database
 ---------------------------------------------------
 
          --------------------------------
@@ -7,7 +7,7 @@ Local.all: a fully local deployment of the database
         |    | DB | ~ | www | ~ | RT |   |
         |     ----     -----     ----    |
         |                                |
-         ----- offline workstation ------
+         ----- unmanaged environment ----
 
 
 Deployment includes the local Mongo database container,  the local web-server container with the web-interface and the local run-time container with the whiplash scheduler for computational processing.

@@ -1,4 +1,4 @@
-Local.scheduler: a partial local deployment (scheduler is local)
+Unmanaged.scheduler: a partial unmanaged deployment (scheduler is local)
 ---------------------------------------------------
 
                                             ------------

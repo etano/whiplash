@@ -1,7 +1,7 @@
 Whiplash prepackaged deployments
 --------------------------------------------
 
-- remote.all: a fully remote deployment
+- managed.all: a fully managed deployment
 
          ----     -----     ----
         | DB | ~ | www | ~ | RT |
@@ -12,7 +12,7 @@ Whiplash prepackaged deployments
                     ^
                workstation
 
-- local.all: a fully local deployment
+- unmanaged.all: a fully unmanaged deployment
 
          --------------------------------
         |                                |
@@ -20,10 +20,10 @@ Whiplash prepackaged deployments
         |    | DB | ~ | www | ~ | RT |   |
         |     ----     -----     ----    |
         |                                |
-         ----- offline workstation ------
+         ----- unmanaged environment ----
 
 
-- local.scheduler: a partial local deployment (local scheduler)
+- unmanaged.scheduler: a partial unmanaged deployment (local scheduler)
 
                                             ------------
                                            |            |
