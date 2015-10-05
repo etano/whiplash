@@ -12,6 +12,12 @@ class wdb:
         self.client = pymongo.MongoClient(self.server)
         if user != "":
             self.client.wdb.authenticate(self.user,password)
+        if not ('wdb' in self.client.database_names()): # Initialize the database
+            db = self.client['wdb']
+            db.create_collection('models')
+            db.create_collection('executables')
+            db.create_collection('properties')
+            db.create_collection('counters')
         self.models = self.client['wdb']['models']
         self.executables = self.client['wdb']['executables']
         self.properties = self.client['wdb']['properties']
@@ -112,8 +118,8 @@ class wdb:
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
 
-    def FormProperty(self,class_name,model_id,executable_id,status,params):
-        return {'class':class_name,'owner':self.user,'executable_id':executable_id,'model_id':model_id,'status':status,'params':params}
+    def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
+        return {'class':class_name,'owner':self.user,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
 
     def RealTimeHist(self,filter,target,nbins=1000,frames=10000,interval=100):
         fig = plt.figure()

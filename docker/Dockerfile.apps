@@ -1,0 +1,9 @@
+FROM whiplash/rte-local:deploy
+
+COPY src /opt/wdb/src
+WORKDIR /opt/wdb/src/apps
+RUN mkdir -p /opt/wdb/bin
+RUN WDB_HOME=/opt/wdb sh build_apps.sh
+RUN cp commit_apps.sh /opt/wdb/
+WORKDIR /opt/wdb
+RUN rm -rf src/

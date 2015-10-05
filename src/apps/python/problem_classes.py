@@ -4,7 +4,7 @@ class ProblemClass:
     def __init__(self):
         self.model_required = ['class','owner']
         self.executable_required = ['class','owner','path','description','algorithm','version','build','name']
-        self.property_required = ['class','owner','model_id','executable_id','status']
+        self.property_required = ['class','owner','model_id','executable_id','status','seed']
     def get_model_required(self):
         return self.model_required
     def get_executable_required(self):
