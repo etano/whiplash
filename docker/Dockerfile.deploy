@@ -2,8 +2,6 @@ FROM whiplash/rte-local:build
 
 COPY src /opt/wdb/src
 WORKDIR /opt/wdb/src
-RUN WDB_HOME=/opt/wdb make scheduler.driver worker.driver && make install
-WORKDIR /opt/wdb/src/apps
-RUN WDB_HOME=/opt/wdb sh build_apps.sh
+RUN WDB_HOME=/opt/wdb make -j4 && make install
 WORKDIR /opt/wdb
 RUN rm -rf src/

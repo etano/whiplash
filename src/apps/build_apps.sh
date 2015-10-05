@@ -30,7 +30,7 @@ make clean && make single && cp *.shared ${WDB_HOME}/bin/
 cd ../
 
 ## Unitary evolution
-cd unitary_evolution_wrap
+cd unitary_evolution
 if [ ! -d "build" ]; then
   mkdir build
 else
