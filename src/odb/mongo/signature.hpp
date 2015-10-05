@@ -6,7 +6,7 @@ namespace wdb { namespace odb { namespace mongo {
     signature::signature(iobject& record){
         this->id_ = prop_reader::read<int>(record, "_id");
         this->owner_ = prop_reader::read<std::string>(record, "owner");
-        this->timestamp_ = prop_reader::read<int>(record, "timestamp");
+        this->timestamp_ = prop_reader::read<double>(record, "timestamp"); // FIXME: probably OK, but python time.time() is a floating point number
     }
 
     signature::signature(iobjectdb& db, std::string collection, std::string owner, int timestamp) 

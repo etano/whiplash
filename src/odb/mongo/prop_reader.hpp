@@ -79,12 +79,20 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<>
         int get<int>(element e){
-            return (int)e.get_int32();
+            try{ // FIXME: HACK!
+                return (int)e.get_int32();
+            }catch(std::exception& exc){
+                return (int)e.get_int64();
+            }
         }
 
         template<>
         int64_t get<int64_t>(element e){
-            return (int64_t)e.get_int64();
+            try{ // FIXME: HACK!
+                return (int64_t)e.get_int64();
+            }catch(std::exception& exc){
+                return (int64_t)e.get_int32();
+            }
         }
 
         template<>

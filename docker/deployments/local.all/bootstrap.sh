@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Mongo
-docker run --name wdb-odb -v /data/db:/data/db -p localhost:27017:localhost:27017 -d mongo:latest
+docker run --name wdb-odb -p 27017:27017 -d mongo:latest
 alias mongo="docker run -it --link wdb-odb:mongo --rm mongo sh -c 'exec mongo \"\$MONGO_PORT_27017_TCP_ADDR:\$MONGO_PORT_27017_TCP_PORT\"'"
 
 # Format database
