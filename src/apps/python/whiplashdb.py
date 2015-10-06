@@ -91,6 +91,16 @@ class wdb:
     def CommitProperties(self,objects):
         return self.CommitMany(self.properties,objects)
 
+    def ResolveProperties(self,properties,fraction):
+        #TODO: if more efficient, fetch by unique tag for a given set
+        #of jobs rather than array of ids
+        property_ids = self.CommitProperties(properties)
+        while True:
+            properties = self.properties.find({'_id': { '$in': property_ids },'status':3})
+            if properties.count() > fraction*len(property_ids): break
+            
+        return properties
+
     def Query(self,collection,filter):
         ids = []
         for res in collection.find(filter,{"_id":1}):
@@ -117,6 +127,9 @@ class wdb:
 
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
+
+    def DeleteProperties(self,ids):
+        return self.properties.delete_many({'_id': { '$in': ids }})
 
     def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
         return {'class':class_name,'owner':self.user,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
