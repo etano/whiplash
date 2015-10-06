@@ -1,5 +1,4 @@
-WhiplashDB
-==========
+Whiplash
+========
 
-Please visit [WhiplashDB](http://whiplash.ethz.ch) for documentation.
-
+Please visit [whiplash.ethz.ch](http://whiplash.ethz.ch) for documentation.
