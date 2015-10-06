@@ -1,10 +1,10 @@
 # Usage
 
-Below we provide some basic instructions on how to interact with the [WhiplashDB](http://whiplash.ethz.ch) framework. Please note, however, that specific usage instructions can depend on the type of the deployment used.
+Below we provide some basic instructions on how to interact with the [Whiplash](http://whiplash.ethz.ch) framework. Please note, however, that specific usage instructions can depend on the type of the deployment used.
 
-Most interaction with [WhiplashDB](http://whiplash.ethz.ch) will be through the provided Python module. Since currently we rely on [MongoDB](http://mongodb.org), the [PyMongo](https://api.mongodb.org/python/current/) python module is required.
+Most interaction with [Whiplash](http://whiplash.ethz.ch) will be through the provided Python module. Since currently we rely on [MongoDB](http://mongodb.org), the [PyMongo](https://api.mongodb.org/python/current/) python module is required.
 
-To connect to an instance of [WhiplashDB](http://whiplash.ethz.ch), simply do the following:
+To connect to an instance of [Whiplash](http://whiplash.ethz.ch), simply do the following:
 
     import whiplashdb
     wdb = whiplashdb.wdb("localhost:27017","user","pass")
@@ -13,7 +13,7 @@ In this example, `localhost:27017` is the address of the framework, `user` is a 
 
 ## Querying
 
-Querying is just as intuitive as it is to query a normal [MongoDB](http://mongodb.org) database. In fact it's currently exactly the same with the caveat that we purposefully abstract away the collection specification in order to impose the [WhiplashDB](http://whiplash.ethz.ch) schema.
+Querying is just as intuitive as it is to query a normal [MongoDB](http://mongodb.org) database. In fact it's currently exactly the same with the caveat that we purposefully abstract away the collection specification in order to impose the [Whiplash](http://whiplash.ethz.ch) schema.
 
 ### Models
 
@@ -79,7 +79,7 @@ This script first commits a model to the remotely hosted framework. It then quer
 
     import whiplashdb
     
-    # Connect to remote WhiplashDB instance
+    # Connect to remote Whiplash instance
     wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","user","password")
     
     # Committing model
@@ -109,7 +109,7 @@ This script first queries for models from the locally hosted framework. It then 
 
     import whiplashdb
     
-    # Connect to local WhiplashDB instance
+    # Connect to local Whiplash instance
     wdb = whiplashdb.wdb("localhost:27017","user","password")
     
     # Query for models
@@ -141,7 +141,7 @@ This script first queries for models from the locally hosted framework. It then 
 
     import whiplashdb
     
-    # Connect to remote WhiplashDB instance
+    # Connect to remote Whiplash instance
     wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","user","password")
     
     # Query for models
@@ -175,7 +175,7 @@ This script first commits a model and local executable to the remote framework. 
     from subprocess import Popen, PIPE
     import whiplashdb
     
-    # Make WhiplashDB instance
+    # Make Whiplash instance
     wdb = whiplashdb.wdb("whiplash.ethz.ch:27017","test","test")
     
     # Commit model
