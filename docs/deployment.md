@@ -8,7 +8,7 @@ No installation required for this deployment. The remote (e.g. whiplash.ethz.ch)
 
 ![ill.managed.all](ill.managed.all.png)
 
-The end user need only install the [WhiplashDB](http://whiplash.ethz.ch) python module to be able to commit models, properties, and executables to our remotely hosted framework.
+The end user need only install the [Whiplash](http://whiplash.ethz.ch) python module to be able to commit models, properties, and executables to our remotely hosted framework.
 
 ## unmanaged.all : fully unmanaged deployment
 
@@ -16,7 +16,7 @@ This deployment includes the Mongo database container, the web-server container 
 
 ![ill.unmanaged.all](ill.unmanaged.all.png)
 
-With the __unmanaged.all__ deployment, the user has access to the full [WhiplashDB](http://whiplash.ethz.ch) solution, even though it is disconnected from the rest of the world.
+With the __unmanaged.all__ deployment, the user has access to the full [Whiplash](http://whiplash.ethz.ch) solution, even though it is disconnected from the rest of the world.
 
 ## unmanaged.scheduler : partial unmanaged deployment
 
@@ -26,7 +26,7 @@ This deployment includes the local run-time container with the whiplash schedule
 
 ## manual.scheduler : offline deployment
 
-This deployment contains the binaries for manual execution. Instead of the automatic execution (e.g. as in __unmanaged.all__) here the user is responsible to give the right input in json format. The output of the solver needs to then be converted back to json format and can then be manually put into the database afterward with the [WhiplashDB](http://whiplash.ethz.ch) Python module.
+This deployment contains the binaries for manual execution. Instead of the automatic execution (e.g. as in __unmanaged.all__) here the user is responsible to give the right input in json format. The output of the solver needs to then be converted back to json format and can then be manually put into the database afterward with the [Whiplash](http://whiplash.ethz.ch) Python module.
 
 ![ill.manual.scheduler](ill.manual.scheduler.png)
 

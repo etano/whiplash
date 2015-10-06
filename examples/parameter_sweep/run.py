@@ -1,7 +1,7 @@
-'''Parameter sweep using WhiplashDB. Sweep is done along a grid over
-specified range of number of sweeps, beta0, beta1 and initial seeds in
-simulated annealing. Each set of parameters is ran in parallel as a
-separate job.
+'''Parameter sweep using WhiplashDB. The parameter sweep is done along
+a grid over specified range of number of sweeps, beta0, beta1 and
+initial seeds in simulated annealing. Each set of parameters is ran in
+parallel as a separate job.
 
 '''
 
@@ -33,3 +33,5 @@ for ns in n_sweeps:
 
 #commit all properties
 wdb.CommitProperties(properties)
+
+#results can later be collected when all jobs are finished

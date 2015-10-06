@@ -1,4 +1,4 @@
-site_name: WhiplashDB
+site_name: Whiplash
 docs_dir: docs
 site_dir: www/html/docs
 theme: flatly
@@ -9,3 +9,5 @@ pages:
 - Standards: standards.md
 - Usage: usage.md
 - Snapshot: snapshot.md
+- Examples: examples.md
+
