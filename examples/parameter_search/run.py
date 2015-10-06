@@ -11,7 +11,7 @@ parameters in as few queries to the cost function as possible.
 
 '''
 
-import subprocess,json,whiplashdb,math,random,sys
+import subprocess,json,whiplashdb,math,random
 
 #start whiplashdb client
 wdb = whiplashdb.wdb("localhost:27017")
@@ -19,13 +19,17 @@ wdb = whiplashdb.wdb("localhost:27017")
 #commit model 
 model_id = wdb.CommitModel('src/tests/108ising.json')
 
+#ground state of the model
 cost_opt = -165
 
 #commit executable
 executable_id = wdb.CommitExecutable({'class':'ising','description':'foo','algorithm':'SA','version':'bar','build':'O3','schedule':'linear','path':'./apps/spin_glass_solver/bin/main','name':'test'})
 
-n_reps = 1000 #number of repetitions
-p_chance = 0.99 #chance of finding optimal config
+#number of repetitions
+n_reps = 1000 
+
+#chance of finding optimal config
+p_chance = 0.99 
 
 #cost function for our search. here the expected number of sweeps to
 #obtain optimal configurationwith probability p_chance.
@@ -35,7 +39,7 @@ def func(x):
     params = {'n_sweeps':x[0],'b0':x[1],'b1':x[2]}
 
     #form property
-    properties = [wdb.FormProperty('ising',model_id,executable_id,0,random.random(),params) for i in range(n_reps)]
+    properties = [wdb.FormProperty('ising',model_id,executable_id,0,random.randint(0,1<<32),params) for i in range(n_reps)]
 
     #commit properties and wait for at least 99% of them to be resolved
     properties = wdb.ResolveProperties(properties,0.99)
@@ -61,11 +65,18 @@ data = {}
 
 #value ranges for where to search for parameters. here we have 3
 data['limits'] = []
-data['limits'].append([0.0,10.0]) #beta0
-data['limits'].append([0.0,10.0]) #beta1
-data['limits'].append([0,10000]) #sweeps
 
-data['var'] = 0.01 #noise
+#beta0 range
+data['limits'].append([0.0,10.0]) 
+
+#beta1 range
+data['limits'].append([0.0,10.0]) 
+
+#number of sweeps range
+data['limits'].append([0,10000]) 
+
+#noise
+data['var'] = 0.01 
 
 data['points'] = []
 
