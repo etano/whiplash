@@ -53,7 +53,7 @@ json.dump(data, open('experiment.json','w'))
 
 for i in range(10):
 
-    cmd = 'docker exec -it moe sh -c \"cd whiplashdb && python test.py\"'
+    cmd = 'docker exec -it moe sh -c \"cd whiplashdb && python next_point.py\"'
     x = json.loads(subprocess.check_output(cmd, shell=True))
 
     C = func(x)
