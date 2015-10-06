@@ -41,8 +41,11 @@ def func(x):
     #form property
     properties = [wdb.FormProperty('ising',model_id,executable_id,0,random.randint(0,1<<32),params) for i in range(n_reps)]
 
+    #commit properties
+    property_ids = wdb.CommitProperties(properties)
+
     #commit properties and wait for at least 99% of them to be resolved
-    properties = wdb.ResolveProperties(properties,0.99)
+    properties = wdb.HoldUntilResolved(property_ids,0.99)
 
     #calculate number of times a configuration of the optimal cost was found
     num_success = 0
@@ -51,7 +54,7 @@ def func(x):
             num_success += 1
 
     #delete properties which are no longer needed
-    #wdb.DeleteProperties(properties)
+    wdb.DeleteProperties(property_ids)
         
     #success probability
     p_success = float(num_success) / len(property_ids)

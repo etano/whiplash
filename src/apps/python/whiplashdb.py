@@ -91,14 +91,12 @@ class wdb:
     def CommitProperties(self,objects):
         return self.CommitMany(self.properties,objects)
 
-    def ResolveProperties(self,properties,fraction):
+    def HoldUntilResolved(self,property_ids,fraction):
         #TODO: if more efficient, fetch by unique tag for a given set
         #of jobs rather than array of ids
-        property_ids = self.CommitProperties(properties)
         while True:
             properties = self.properties.find({'_id': { '$in': property_ids },'status':3})
             if properties.count() > fraction*len(property_ids): break
-            
         return properties
 
     def Query(self,collection,filter):
