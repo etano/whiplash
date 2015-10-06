@@ -4,7 +4,7 @@
 namespace wdb { namespace entities { namespace ising {
 
     class property : public entities::property {
-        typedef int64_t spin_type;
+        using spin_type = int64_t;
     public:
         property(const odb::iobject& o)
             : entities::property(o)
@@ -47,7 +47,7 @@ namespace wdb { namespace entities { namespace ising {
                 costs_.push_back(cost);
 
             if(factory::is_offline()){
-                odb::mongo::object obj_cfg;
+                odb::mongo::object obj_cfg; // FIXME: abstract away mongo
                 serialize_cfg(obj_cfg);
                 print_json(obj_cfg);
             }
