@@ -1,5 +1,5 @@
 html, body {
-    background-color: black;
+    background-color: white;
     margin: 0;
     padding: 0;
 }
@@ -50,14 +50,22 @@ section#upload {
     border-radius: 10px;
     z-index: 0;
 }
-section#logo {
+section#middle {
     display: block;
-    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+section#logo {
+    color: black;
     font-family: verdana;
-    font-size: 11px;
-    padding-left: 20px;
-    padding-top: 20px;
-    border-top: 1px solid rgb(100,220,255);
+    font-size: 25px;
+}
+section#soon {
+    color: black;
+    font-family: verdana;
+    font-size: 20px;
 }
 section#upload input {
     display: none;
