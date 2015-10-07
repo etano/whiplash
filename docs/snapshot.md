@@ -1,6 +1,6 @@
 # Snapshot
 
-Below we provide a snapshot of what is currently in the hosted [WhiplashDB](http://whiplash.ethz.ch) database.
+Below we provide a snapshot of what is currently in the hosted [Whiplash](http://whiplash.ethz.ch) database.
 
 ## Models
 

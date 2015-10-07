@@ -11,4 +11,4 @@ docker run -d -P --name wdb-rte-format --link wdb-odb:mongo whiplash/rte-local:d
 docker run -it -P --name wdb-apps --link wdb-odb:mongo whiplash/apps sh -c "sh commit_apps.sh \$MONGO_PORT_27017_TCP_ADDR:\$MONGO_PORT_27017_TCP_PORT"
 
 # Run-time
-docker run -d -P --name wdb-rte-scheduler --link wdb-odb:mongo whiplash/rte-local:deploy sh -c "./bin/scheduler.driver -dbhost \$MONGO_PORT_27017_TCP_ADDR:\$MONGO_PORT_27017_TCP_PORT"
+docker run -d -P --name wdb-rte-scheduler --link wdb-odb:mongo whiplash/apps sh -c "./bin/scheduler.driver -dbhost \$MONGO_PORT_27017_TCP_ADDR:\$MONGO_PORT_27017_TCP_PORT"

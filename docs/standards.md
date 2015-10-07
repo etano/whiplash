@@ -1,6 +1,6 @@
 # Standards
 
-Below we list all required fields for [WhiplashDB](http://whiplash.ethz.ch) data objects.
+Below we list all required fields for [Whiplash](http://whiplash.ethz.ch) data objects.
 
 ## Common standards
 
