@@ -14,3 +14,6 @@ CMakeFiles
 cmake_install.cmake
 *.dSYM
 doc/build
+src/apps/*.shared
+src/apps/*.static
+
