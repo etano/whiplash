@@ -2,9 +2,10 @@ bin/
 include/
 lib/
 share/
-src/apps/*.app
 src/tests/*.test
-src/apps/drivers/*.driver
+src/tests/*.shared
+src/tests/*.static
+src/drivers/*.driver
 doc/html
 *.swp
 *.swo
