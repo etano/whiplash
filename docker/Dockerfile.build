@@ -16,7 +16,9 @@ RUN     ./bootstrap \
 # Mongo C-driver
 
 WORKDIR /usr/src/wdb/depends/mongo-c-driver
-RUN ./autogen.sh --prefix=/usr/lib/mongo/c && cd src/libbson && NOCONFIGURE=1 ./autogen.sh && cd ../../ && make && make install
+RUN ./autogen.sh --prefix=/usr/lib/mongo/c
+RUN cd src/libbson && NOCONFIGURE=1 ./autogen.sh
+RUN cd ../../ && make && make install
 
 # Mongo CXX-driver
 

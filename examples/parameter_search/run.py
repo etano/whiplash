@@ -31,9 +31,9 @@ n_reps = 1000
 #chance of finding optimal config
 p_chance = 0.99 
 
-#cost function for our search. here the expected number of sweeps to
-#obtain optimal configurationwith probability p_chance.
-def func(x):
+#cost function for our search. Here the expected number of sweeps to
+#obtain optimal configuration with probability p_chance.
+def cost(x):
 
     #simulation parameters
     params = {'n_sweeps':x[0],'b0':x[1],'b1':x[2]}
@@ -60,13 +60,11 @@ def func(x):
     p_success = float(num_success) / len(property_ids)
 
     #expected number of sweeps to obtain optimal configuration with probability p_success
-    complexity = x[0]*math.log(1.0-p_chance)/math.log(1.0-p_success) #n_sweeps * expected number of repetitions
-
-    return complexity
+    return x[0]*math.log(1.0-p_chance)/math.log(1.0-p_success)
 
 data = {}
 
-#value ranges for where to search for parameters. here we have 3
+#value ranges for where to search for parameters. Here we have three
 data['limits'] = []
 
 #beta0 range
@@ -81,25 +79,23 @@ data['limits'].append([0,10000])
 #noise
 data['var'] = 0.01 
 
-data['points'] = []
-
 #first sample point
 x0 = [5.0,0.1,1000]
-data['points'].append([x0,func(x0)])
+data['points'] = [[x0,cost(x0)]]
 
 json.dump(data, open('experiment.json','w'))
 
 num_samples = 100
 
-#sample num_samples points, expecting each point to be a better guess
-#at the optimum that the others
+#sample points, expecting each point to be a better guess at the
+#optimum that the others
 for i in range(num_samples):
 
     #communicate with the MOE optimisation library through subprocess
     cmd = 'docker exec -it moe sh -c \"cd whiplashdb && python next_point.py\"'
 
     x = json.loads(subprocess.check_output(cmd, shell=True))
-    C = func(x)
+    C = cost(x)
 
     print i,x,C
 

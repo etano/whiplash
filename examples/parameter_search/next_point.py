@@ -1,11 +1,11 @@
-'''Hyperparameter optimisation routing using the MOE library developed
-model from which the next most likely sample point is inferredby Yelp
-Research. The current sample points are fitted with a Gaussian Process
-model from which the next most likely sample point is inferred.
+'''Hyperparameter optimisation using the MOE library developed by Yelp
+Research. At its core it uses a Gaussian Process model to fit points
+and infer the next most likely sample point.  
 
-should be ran in a docker VM inside the MOE container. pull latest
-version of the MOE container and run the MOE container while mapping
-the whiplashdb directory into the container. like so
+This script should be ran from the MOE container inside a docker
+VM. We therefore pull latest version of the MOE container and run the
+MOE container while mapping the whiplashdb directory into the
+container.
 
 docker pull yelpmoe/latest 
 docker run -d --name moe -v ${WDB_HOME}:/home/app/MOE/whiplashdb yelpmoe/latest
