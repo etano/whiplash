@@ -1,7 +1,7 @@
-import whiplashdb
+import whiplash
 
-# Connect to local WhiplashDB instance
-wdb = whiplashdb.wdb("localhost:27017")
+# Connect to local Whiplash instance
+wdb = whiplash.wdb("localhost:27017")
 
 # Query for models
 model_filter = {'class':'ising','params.coupling_type':'gaussian','params.lattice':'random'}

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys,time
-import whiplashdb
+import whiplash
 
 print 'Connecting to whiplash'
-wdb = whiplashdb.wdb(sys.argv[1])
+wdb = whiplash.wdb(sys.argv[1])
 
 print 'Commiting a model'
 model_id = wdb.CommitModel('108ising.json')

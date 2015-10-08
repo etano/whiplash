@@ -1,4 +1,4 @@
-'''Parameter search using WhiplashDB. The search itself is done
+'''Parameter search using Whiplash. The search itself is done
 sequentially. However, each call to the cost function is very
 expensive. Here the cost is the expected complexity of finding the
 most optimal configuration for a model. This is computed by running
@@ -11,10 +11,10 @@ parameters in as few queries to the cost function as possible.
 
 '''
 
-import subprocess,json,whiplashdb,math,random
+import subprocess,json,whiplash,math,random
 
-#start whiplashdb client
-wdb = whiplashdb.wdb("localhost:27017")
+#start whiplash client
+wdb = whiplash.wdb("localhost:27017")
 
 #commit model 
 model_id = wdb.CommitModel('src/tests/108ising.json')
@@ -92,7 +92,7 @@ num_samples = 100
 for i in range(num_samples):
 
     #communicate with the MOE optimisation library through subprocess
-    cmd = 'docker exec -it moe sh -c \"cd whiplashdb && python next_point.py\"'
+    cmd = 'docker exec -it moe sh -c \"cd whiplash && python next_point.py\"'
 
     x = json.loads(subprocess.check_output(cmd, shell=True))
     C = cost(x)

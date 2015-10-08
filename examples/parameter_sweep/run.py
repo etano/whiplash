@@ -1,15 +1,15 @@
-'''Parameter sweep using WhiplashDB. The parameter sweep is done along
+'''Parameter sweep using Whiplash. The parameter sweep is done along
 a grid over specified range of number of sweeps, beta0, beta1 and
 initial seeds in simulated annealing. Each set of parameters is ran in
 parallel as a separate job.
 
 '''
 
-import whiplashdb
+import whiplash
 import numpy as np
 
-#start whiplashdb client
-wdb = whiplashdb.wdb("localhost:27017")
+#start whiplash client
+wdb = whiplash.wdb("localhost:27017")
 
 #commit model 
 model_id = wdb.CommitModel('src/tests/108ising.json')

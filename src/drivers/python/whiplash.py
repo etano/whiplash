@@ -3,7 +3,7 @@ from whiplot import *
 import problem_classes
 from subprocess import Popen, PIPE
 
-# WhiplashDB class
+# Whiplash class
 class wdb:
     def __init__(self,server,user="",password=""):
         self.wdb_home = os.environ.get('WDB_HOME')

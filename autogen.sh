@@ -62,7 +62,7 @@ if [ -d .git ]; then
         cd ../../../
     fi
 
-    # Compile whiplashdb
+    # Compile whiplash
     cd src
     make -j${NTHREADS} && make install
     cd ../
