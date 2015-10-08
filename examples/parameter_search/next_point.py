@@ -4,11 +4,11 @@ and infer the next most likely sample point.
 
 This script should be ran from the MOE container inside a docker
 VM. We therefore pull latest version of the MOE container and run the
-MOE container while mapping the whiplashdb directory into the
+MOE container while mapping the whiplash directory into the
 container.
 
 docker pull yelpmoe/latest 
-docker run -d --name moe -v ${WDB_HOME}:/home/app/MOE/whiplashdb yelpmoe/latest
+docker run -d --name moe -v ${WDB_HOME}:/home/app/MOE/whiplash yelpmoe/latest
 
 '''
 
