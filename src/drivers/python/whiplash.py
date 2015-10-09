@@ -6,7 +6,6 @@ from subprocess import Popen, PIPE
 # Whiplash class
 class wdb:
     def __init__(self,server,user="",password=""):
-        self.wdb_home = os.environ.get('WDB_HOME')
         self.server = server
         self.user = user
         self.client = pymongo.MongoClient(self.server)
