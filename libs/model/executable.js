@@ -5,7 +5,7 @@ var Schema = mongoose.Schema;
 var Executable = new Schema({
     class: { type: String, required: true },
     name: { type: String, required: true },
-    owner: { type: String, required: true },
+    owner: { type: Schema.Types.ObjectId, required: true },
     description: { type: String, required: true},
     algorithm: { type: String, required: true},
     version: { type: String, required: true},
