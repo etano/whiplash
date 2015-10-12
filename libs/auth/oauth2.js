@@ -8,9 +8,9 @@ var config = require(libs + 'config');
 var log = require(libs + 'log')(module);
 
 var db = require(libs + 'db/mongoose');
-var User = require(libs + 'model/user');
-var AccessToken = require(libs + 'model/accessToken');
-var RefreshToken = require(libs + 'model/refreshToken');
+var User = require(libs + 'schemas/user');
+var AccessToken = require(libs + 'schemas/accessToken');
+var RefreshToken = require(libs + 'schemas/refreshToken');
 
 // create OAuth 2.0 server
 var aserver = oauth2orize.createServer();

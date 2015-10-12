@@ -4,7 +4,7 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
-var Executable = require(libs + 'model/executable');
+var Executable = require(libs + 'schemas/executable');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.save(Executable,req,res);

@@ -1,4 +1,6 @@
 var mongoose = require('mongoose');
+// TODO: add inherited types
+//var extend = require('mongoose-schema-extend');
 var Schema = mongoose.Schema;
 
 // Model

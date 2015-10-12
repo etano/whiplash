@@ -7,10 +7,10 @@ var libs = process.cwd() + '/libs/';
 
 var config = require(libs + 'config');
 
-var User = require(libs + 'model/user');
-var Client = require(libs + 'model/client');
-var AccessToken = require(libs + 'model/accessToken');
-var RefreshToken = require(libs + 'model/refreshToken');
+var User = require(libs + 'schemas/user');
+var Client = require(libs + 'schemas/client');
+var AccessToken = require(libs + 'schemas/accessToken');
+var RefreshToken = require(libs + 'schemas/refreshToken');
 
 passport.use(new BasicStrategy(
     function(username, password, done) {

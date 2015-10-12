@@ -4,7 +4,7 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
-var Property = require(libs + 'model/property');
+var Property = require(libs + 'schemas/property');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.save(Property,req,res);
