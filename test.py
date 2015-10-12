@@ -8,8 +8,3 @@ resp = conn.getresponse()
 print resp.status, resp.reason
 print resp.read()
 conn.close()
-conn = httplib.HTTPConnection('localhost',1337)
-resp = conn.getresponse()
-print resp.status, resp.reason
-print resp.read()
-conn.close()
