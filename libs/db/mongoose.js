@@ -5,7 +5,11 @@ var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var config = require(libs + 'config');
 
-mongoose.connect(config.get('mongoose:uri'));
+var options = {
+    user: config.get('mongoose:username'),
+    pass: config.get('mongoose:password')
+};
+mongoose.connect(config.get('mongoose:uri'),options);
 
 var db = mongoose.connection;
 

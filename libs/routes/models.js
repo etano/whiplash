@@ -10,6 +10,10 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     common.save(Model,req,res);
 });
 
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find(Model,req,res);
+});
+
 router.get('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.findById(Model,req,res);
 });

@@ -4,15 +4,20 @@ var log = require(libs + 'log')(module);
 module.exports = {
 
     save: function(ObjType,req,res) {
-        // TODO: Bulk inserts
-        var obj = new ObjType(req.body);
-        obj.owner = req.user;
-        obj.save(function (err) {
+        // TODO: Bulk inserts with validation for performance.
+        for(var i=0; i<req.body.length; i++) {
+            req.body[i].owner = req.user._id;
+        }
+        ObjType.create(req.body, function(err,objs) {
             if (!err) {
-                log.info("New object created with id: %s", obj.id);
+                log.info("%s new objects created", String(objs.length));
+                var ids = [];
+                for(var i=0; i<objs.length; i++) {
+                    ids.push(objs[i]["_id"]);
+                }
                 return res.json({
                     status: 'OK',
-                    obj: obj
+                    ids: ids
                 });
             } else {
                 if(err.name === 'ValidationError') {

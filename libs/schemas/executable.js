@@ -10,6 +10,7 @@ var Executable = new Schema({
     algorithm: { type: String, required: true},
     version: { type: String, required: true},
     build: { type: String, required: true},
+    path: { type: String, required: true},
     cfg: { type: Schema.Types.Mixed, default: ""},
     timestamp: { type: Date, default: Date.now }
 });
