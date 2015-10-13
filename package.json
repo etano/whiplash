@@ -42,6 +42,5 @@
         },
         "browser" : true,
         "node": true
-    },
-    "license": "MIT"
+    }
 }
