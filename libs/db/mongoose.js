@@ -6,10 +6,10 @@ var log = require(libs + 'log')(module);
 var config = require(libs + 'config');
 
 var options = {
-    user: config.get('mongoose:username'),
-    pass: config.get('mongoose:password')
+    user: process.env.MONGO_READWRITEUSER_USERNAME,
+    pass: process.env.MONGO_READWRITEUSER_PASSWORD
 };
-mongoose.connect(config.get('mongoose:uri'),options);
+mongoose.connect(process.env.MONGO_URI,options);
 
 var db = mongoose.connection;
 

@@ -2,10 +2,5 @@
     "port": 1337,
     "security": {
         "tokenLife" : 604800
-    },
-    "mongoose": {
-        "uri": "mongodb://localhost/wdb",
-        "username": "readWriteUser",
-        "password": "haYrv{Ak9UJiaDsqVTe7rLJTc"
     }
 }
