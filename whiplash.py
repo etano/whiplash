@@ -5,41 +5,85 @@ class wdb:
     def __init__(self,server,port,access_token=""):
         self.server = server
         self.port = port
-        self.access_token = access_token
-        if self.access_token == "":
-            print 'Please input proper access token'
-            sys.exit()
-        else:
-            status, reason, res = self.Request("GET","/api",json.dumps({"foo":"bar"}))
-            if status != 200:
-                sys.exit()
         self.models = "models"
         self.executables = "executables"
         self.properties = "properties"
 
+        self.SetToken(access_token)
+        self.CheckToken()
+
+    def CheckToken(self):
+        status, reason, res = self.Request("GET","/api",json.dumps({"foo":"bar"}))
+        if status != 200:
+            if 'Unauthorized' in reason:
+                print 'Token not valid. Please create one.'
+                self.CreateToken()
+            else:
+                sys.exit()
+
+    def CreateToken(self):
+        username = raw_input("username: ")
+        password = raw_input("password: ")
+        client_id = raw_input("client ID: ")
+        client_secret = raw_input("client secret: ")
+
+        self.headers = {"Content-type": "application/json", "Accept": "*/*"}
+        status, reason, res = self.Request("POST","/api/oauth/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
+        if status != 200:
+            if ('Unauthorized' in reason) or ('Forbidden' in reason):
+                print 'Invalid login credentials. Please go to http://whiplash.ethz.ch to verify your account.'
+            sys.exit()
+        else:
+            res = json.loads(res)
+            print "New tokens grant for", res["expires_in"], "seconds. Please save them."
+            print "access token:", res["access_token"]
+            print "refresh token:", res["refresh_token"]
+            self.SetToken(res["access_token"])
+
     def Request(self,protocol,uri,payload):
         conn = httplib.HTTPConnection(self.server,self.port)
-        headers = {"Content-type": "application/json", "Accept": "*/*", "Authorization":"Bearer "+self.access_token}
-        conn.request(protocol,uri,payload,headers)
+        conn.request(protocol,uri,payload,self.headers)
         res = conn.getresponse()
         if res.status != 200:
             print res.status, res.reason
-        return res.status, res.reason, json.loads(res.read())
+        return res.status, res.reason, res.read()
+
+    def SetToken(self,access_token):
+        self.access_token = access_token
+        self.headers = {"Content-type": "application/json", "Accept": "*/*", "Authorization":"Bearer "+self.access_token}
+
+    def RefreshToken(self,refresh_token):
+        client_id = raw_input("client ID: ")
+        client_secret = raw_input("client secret: ")
+
+        self.headers = {"Content-type": "application/json", "Accept": "*/*"}
+        status, reason, res = self.Request("POST","/api/oauth/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
+        if status != 200:
+            if ('Unauthorized' in reason) or ('Forbidden' in reason):
+                print 'Invalid refresh token. Please login to get new tokens.'
+                self.CreateToken()
+            sys.exit()
+        else:
+            res = json.loads(res)
+            print "New tokens grant for", res["expires_in"], "seconds. Please save them."
+            print "access token:", res["access_token"]
+            print "refresh token:", res["refresh_token"]
+            self.SetToken(res["access_token"])
 
     def InsertMany(self,collection,objects):
         status, reason, res = self.Request("POST","/api/"+collection,json.dumps(objects))
-        return res["ids"]
+        return json.loads(res)["ids"]
 
     def InsertOne(self,collection,object):
         return self.InsertMany(collection,[object])[0]
 
     def DeleteMany(self,collection,objects):
         status, reason, res = self.Request("DELETE","/api/"+collection,json.dumps(objects))
-        return res
+        return json.loads(res)
 
     def Find(self,collection,filter):
         status, reason, res = self.Request("GET","/api/"+collection,json.dumps(filter))
-        return res["objs"]
+        return json.loads(res)["objs"]
 
     def FormJson(self,collection,object):
         if type(object) is str:
