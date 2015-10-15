@@ -33,9 +33,9 @@ fi
 if [ -d .git ]; then
 
     # Export PKG_CONFIG_PATH,LD_LIBRARY_PATH,WDB_HOME,PYTHONPATH
+    export WDB_HOME=${BUILDPATH}
     export PKG_CONFIG_PATH=${BUILDPATH}/lib/pkgconfig:${PKG_CONFIG_PATH}
     export LD_LIBRARY_PATH=${BUILDPATH}/lib:${LD_LIBRARY_PATH}
-    export WDB_HOME=${ORIGPATH}
     export PYTHONPATH=${BUILDPATH}/lib/python:${PYTHONPATH}
 
     # Get the submodules
