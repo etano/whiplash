@@ -12,7 +12,8 @@ var Executable = new Schema({
     build: { type: String, required: true},
     path: { type: String, required: true},
     cfg: { type: Schema.Types.Mixed, default: ""},
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
+    _id: { type: Number }
 });
 
 module.exports = mongoose.model('Executable', Executable);

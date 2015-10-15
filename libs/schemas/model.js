@@ -9,7 +9,8 @@ var Model = new Schema({
     owner: { type: String, required: true },
     description: { type: String, default: "" },
     cfg: { type: Schema.Types.Mixed, required: true },
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
+    _id: { type: Number }
 });
 
 module.exports = mongoose.model('Model', Model);
