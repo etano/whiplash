@@ -38,5 +38,5 @@ install:
 	cp -rf tests/*.static $(DESTDIR)/bin
 	cp drivers/*.driver $(DESTDIR)/bin
 	cp tests/*.test $(DESTDIR)/bin
-	mkdir -p $(DESTDIR)/include
-	cp -rf src/* $(DESTDIR)/include
+	mkdir -p $(DESTDIR)/include/whiplash
+	find . -type f -name "*.h*" -exec cp --parents {} $(DESTDIR)/include/whiplash \;
