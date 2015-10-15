@@ -5,8 +5,10 @@ module.exports = {
 
     save: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
+        var n_doc = ObjType.count();
         for(var i=0; i<req.body.length; i++) {
             req.body[i].owner = req.user._id;
+            req.body[i]._id = n_doc+i;
         }
         ObjType.create(req.body, function(err,objs) {
             if (!err) {
