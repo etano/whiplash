@@ -5,32 +5,34 @@ module.exports = {
 
     save: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
-        var n_doc = ObjType.count();
-        for(var i=0; i<req.body.length; i++) {
-            req.body[i].owner = req.user._id;
-            req.body[i]._id = n_doc+i;
-        }
-        ObjType.create(req.body, function(err,objs) {
-            if (!err) {
-                log.info("%s new objects created", String(objs.length));
-                var ids = [];
-                for(var i=0; i<objs.length; i++) {
-                    ids.push(objs[i]["_id"]);
-                }
-                return res.json({
-                    status: 'OK',
-                    ids: ids
-                });
-            } else {
-                if(err.name === 'ValidationError') {
-                    res.statusCode = 400;
-                    res.json({ error: err.toString() });
-                } else {
-                    res.statusCode = 500;
-                    res.json({ error: 'Server error' });
-                }
-                log.error('Internal error(%d): %s', res.statusCode, err.message);
+        ObjType.count({}, function(err,count) {
+            for(var i=0; i<req.body.length; i++) {
+                req.body[i].owner = req.user._id;
+                req.body[i]._id = count+i;
             }
+            console.log("done");
+            ObjType.create(req.body, function(err,objs) {
+                if (!err) {
+                    log.info("%s new objects created", String(objs.length));
+                    var ids = [];
+                    for(var i=0; i<objs.length; i++) {
+                        ids.push(objs[i]["_id"]);
+                    }
+                    return res.json({
+                        status: 'OK',
+                        ids: ids
+                    });
+                } else {
+                    if(err.name === 'ValidationError') {
+                        res.statusCode = 400;
+                        res.json({ error: err.toString() });
+                    } else {
+                        res.statusCode = 500;
+                        res.json({ error: 'Server error' });
+                    }
+                    log.error('Internal error(%d): %s', res.statusCode, err.message);
+                }
+            });
         });
     },
 
