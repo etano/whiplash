@@ -97,7 +97,11 @@ namespace wdb { namespace odb { namespace mongo {
 
         template<>
         double get<double>(element e){
-            return (double)e.get_double();
+            try{ // FIXME: HACK, but probably OK!
+                return (double)e.get_double();
+            }catch(std::exception& exc){
+                return get<int64_t>(e);
+            }
         }
 
         template<>
