@@ -19,9 +19,9 @@ namespace wdb { namespace entities {
     constexpr char info<ptype::sat>::name[];
 } }
 
-#include "entities/sat/model.hpp"
-#include "entities/sat/property.hpp"
-#include "entities/sat/executable.hpp"
-#include "entities/sat/controller.hpp"
+#include "sat/model.hpp"
+#include "sat/property.hpp"
+#include "sat/executable.hpp"
+#include "sat/controller.hpp"
 
 #endif

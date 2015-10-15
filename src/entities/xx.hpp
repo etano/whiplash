@@ -1,8 +1,8 @@
 #ifndef WDB_ENTITIES_XX_HPP
 #define WDB_ENTITIES_XX_HPP
 
-#include <odb/interface/iobject.h>
-#include <entities/generic.hpp>
+#include "../odb/interface/iobject.h"
+#include "generic.hpp"
 
 namespace wdb { namespace entities {
     namespace xx {
@@ -22,9 +22,9 @@ namespace wdb { namespace entities {
     constexpr char info<ptype::xx>::name[];
 } }
 
-#include "entities/xx/model.hpp"
-#include "entities/xx/property.hpp"
-#include "entities/xx/executable.hpp"
-#include "entities/xx/controller.hpp"
+#include "xx/model.hpp"
+#include "xx/property.hpp"
+#include "xx/executable.hpp"
+#include "xx/controller.hpp"
 
 #endif

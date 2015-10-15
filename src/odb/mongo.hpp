@@ -13,14 +13,14 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/json.hpp>
 
-#include "odb/mongo/object.h"
-#include "odb/mongo/collection.h"
-#include "odb/mongo/signature.h"
-#include "odb/mongo/objectdb.h"
-#include "odb/mongo/prop_reader.hpp"
-#include "odb/mongo/prop_writer.hpp"
-#include "odb/mongo/collection.hpp"
-#include "odb/mongo/signature.hpp"
-#include "odb/mongo/objectdb.hpp"
+#include "mongo/object.h"
+#include "mongo/collection.h"
+#include "mongo/signature.h"
+#include "mongo/objectdb.h"
+#include "mongo/prop_reader.hpp"
+#include "mongo/prop_writer.hpp"
+#include "mongo/collection.hpp"
+#include "mongo/signature.hpp"
+#include "mongo/objectdb.hpp"
 
 #endif

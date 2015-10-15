@@ -1,7 +1,7 @@
 #ifndef WDB_ENTITIES_ISING_HPP
 #define WDB_ENTITIES_ISING_HPP
 
-#include <entities/generic.hpp>
+#include "generic.hpp"
 
 namespace wdb { namespace entities { 
     namespace ising {
@@ -21,9 +21,9 @@ namespace wdb { namespace entities {
     constexpr char info<ptype::ising>::name[];
 } }
 
-#include "entities/ising/model.hpp"
-#include "entities/ising/property.hpp"
-#include "entities/ising/executable.hpp"
-#include "entities/ising/controller.hpp"
+#include "ising/model.hpp"
+#include "ising/property.hpp"
+#include "ising/executable.hpp"
+#include "ising/controller.hpp"
 
 #endif

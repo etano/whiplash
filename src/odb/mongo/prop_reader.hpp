@@ -1,7 +1,7 @@
 #ifndef WDB_ODB_MONGO_PROP_READER_HPP
 #define WDB_ODB_MONGO_PROP_READER_HPP
 
-#include "utils/index_tuple.h"
+#include "../../utils/index_tuple.h"
 
 namespace wdb { namespace odb { namespace mongo {
 

@@ -1,7 +1,7 @@
 #ifndef WDB_ENTITIES_ISING_MODEL_HPP
 #define WDB_ENTITIES_ISING_MODEL_HPP
 
-#include <entities/generic/model.hpp>
+#include "../generic/model.hpp"
 
 namespace wdb { namespace entities { namespace ising {
 
