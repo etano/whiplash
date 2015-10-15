@@ -7,7 +7,6 @@ CXXFLAGS?= -std=c++11 -O0 -Wall -pedantic -g -w -Wfatal-errors -I. -ldl `pkg-con
 APPS = test_app.shared test_app.static
 DRIVERS = worker.driver scheduler.driver format_db.driver
 TESTS = fetch.test optional.test
-PREFIX = ..
 
 all: $(APPS) $(DRIVERS) $(TESTS)
 
@@ -34,10 +33,10 @@ clean:
 	-rm -f ../bin/*
 
 install:
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -rf tests/*.shared $(DESTDIR)$(PREFIX)/bin
-	cp -rf tests/*.static $(DESTDIR)$(PREFIX)/bin
-	cp drivers/*.driver $(DESTDIR)$(PREFIX)/bin
-	cp tests/*.test $(DESTDIR)$(PREFIX)/bin
-	mkdir -p $(DESTDIR)$(PREFIX)/lib/python
-	cp drivers/python/*.py $(DESTDIR)$(PREFIX)/lib/python
+	mkdir -p $(DESTDIR)/bin
+	cp -rf tests/*.shared $(DESTDIR)/bin
+	cp -rf tests/*.static $(DESTDIR)/bin
+	cp drivers/*.driver $(DESTDIR)/bin
+	cp tests/*.test $(DESTDIR)/bin
+	mkdir -p $(DESTDIR)/include
+	cp -rf src/* $(DESTDIR)/include

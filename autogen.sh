@@ -35,8 +35,8 @@ if [ -d .git ]; then
     # Export PKG_CONFIG_PATH,LD_LIBRARY_PATH,WDB_HOME,PYTHONPATH
     export PKG_CONFIG_PATH=${BUILDPATH}/lib/pkgconfig:${PKG_CONFIG_PATH}
     export LD_LIBRARY_PATH=${BUILDPATH}/lib:${LD_LIBRARY_PATH}
-    export WDB_HOME=${BUILDPATH}
-    export PYTHONPATH=${BUILDPATH}/src/tests/apps/python:${PYTHONPATH}
+    export WDB_HOME=${ORIGPATH}
+    export PYTHONPATH=${BUILDPATH}/lib/python:${PYTHONPATH}
 
     # Get the submodules
     git submodule update --init --recursive
@@ -64,6 +64,6 @@ if [ -d .git ]; then
 
     # Compile whiplash
     cd src
-    make -j${NTHREADS} && make install
+    make -j${NTHREADS} && DESTDIR=${BUILDPATH} make install
     cd ../
 fi
