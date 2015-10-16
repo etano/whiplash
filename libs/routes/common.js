@@ -37,7 +37,7 @@ module.exports = {
     },
 
     find: function(ObjType,req,res) {
-        ObjType.find(req.body, function (err, objs) {
+        ObjType.find(req.params, function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
