@@ -1,0 +1,14 @@
+site_name: Whiplash
+docs_dir: docs
+site_dir: /src/libs/public/docs
+theme: flatly
+pages:
+- Home: index.md
+- Overview: overview.md
+- Deployment: deployment.md
+- Standards: standards.md
+- Usage:
+    - basic_usage.md
+    - deployment_examples.md
+    - application_examples.md
+- Snapshot: snapshot.md
