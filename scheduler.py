@@ -25,6 +25,8 @@ def resolve_property(wdb,pid,unresolved):
         timeout = prop['timeout']
 
         try:
+            wdb.UpdatePropertyStatus(prop['_id'],2)
+
             t0 = time.time()
             sp.call(command.split(' ')+[file_name],timeout=timeout)
             t1 = time.time()
@@ -36,10 +38,13 @@ def resolve_property(wdb,pid,unresolved):
             with open(file_name, 'r') as propfile:
                 prop['result'] = json.load(propfile)
 
+            prop['status'] = 4
+
             print('worker',str(pid),'commiting property:',prop['_id'],'walltime:',elapsed)
             wdb.CommitResolvedProperty(prop)
 
         except sp.TimeoutExpired:
+            wdb.UpdatePropertyStatus(prop['_id'],3)
             print('time expired for property',prop['_id'],'on worker',str(pid))
 
         os.remove(file_name)
@@ -55,27 +60,27 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dbhost',dest='dbhost',required=True,type=str)
     parser.add_argument('--port',dest='port',required=True,type=str)
+    parser.add_argument('--token',dest='token',required=True,type=str)
     args = parser.parse_args()
 
-    access_token = "f93190bbde7e67ec38dc4658859faefffd04345d6604f3d162e18250b7f995cb"
+    #with daemon.DaemonContext(stdout=open('scheduler_' + str(int(time.time())) + '.log', 'w+')):
+    wdb = whiplash.wdb(args.dbhost,args.port,args.token)
 
-    with daemon.DaemonContext(stdout=open('scheduler_' + str(int(time.time())) + '.log', 'w+')):
-        wdb = whiplash.wdb(args.dbhost,args.port,access_token)
+    context = mp.get_context('fork')
+    unresolved = context.Queue()
 
-        context = mp.get_context('fork')
-        unresolved = context.Queue()
+    print('starting workers')
+    for pid in range(num_cpus-1):
+        p = context.Process(target=resolve_property, args=(wdb,pid,unresolved,))
+        p.start()
 
-        print('starting workers')
-        for pid in range(num_cpus-1):
-            p = context.Process(target=resolve_property, args=(wdb,pid,unresolved,))
-            p.start()
-
-        print('starting queries')
-        while True:
-            prop = wdb.GetUnresolvedProperty(compute=True)
-            if prop != {}:
-                print('unresolved property:',prop['_id'])
-                unresolved.put(prop)
-            else:
-                print('all properties are currently resolved')
-            time.sleep(0.1)
+    print('starting queries')
+    while True:
+        prop = wdb.GetUnresolvedProperty()
+        wdb.UpdatePropertyStatus(prop['_id'],1)
+        if prop != {}:
+            print('unresolved property:',prop['_id'])
+            unresolved.put(prop)
+        else:
+            print('all properties are currently resolved')
+        time.sleep(0.1)
