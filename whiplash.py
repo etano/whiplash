@@ -1,4 +1,4 @@
-import sys, httplib, json
+import sys, http.client, json
 
 # Whiplash class
 class wdb:
@@ -16,7 +16,7 @@ class wdb:
         status, reason, res = self.Request("GET","/api",json.dumps({"foo":"bar"}))
         if status != 200:
             if 'Unauthorized' in reason:
-                print 'Token not valid. Please create one.'
+                print('Token not valid. Please create one.')
                 self.CreateToken()
             else:
                 sys.exit()
@@ -31,21 +31,21 @@ class wdb:
         status, reason, res = self.Request("POST","/api/oauth/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
-                print 'Invalid login credentials. Please go to http://whiplash.ethz.ch to verify your account.'
+                print('Invalid login credentials. Please go to http://whiplash.ethz.ch to verify your account.')
             sys.exit()
         else:
-            res = json.loads(res)
-            print "New tokens grant for", res["expires_in"], "seconds. Please save them."
-            print "access token:", res["access_token"]
-            print "refresh token:", res["refresh_token"]
+            res = json.loads(res.decode('utf-8'))
+            print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
+            print("access token:", res["access_token"])
+            print("refresh token:", res["refresh_token"])
             self.SetToken(res["access_token"])
 
     def Request(self,protocol,uri,payload):
-        conn = httplib.HTTPConnection(self.server,self.port)
+        conn = http.client.HTTPConnection(self.server,self.port)
         conn.request(protocol,uri,payload,self.headers)
         res = conn.getresponse()
         if res.status != 200:
-            print res.status, res.reason
+            print(res.status, res.reason)
         return res.status, res.reason, res.read()
 
     def SetToken(self,access_token):
@@ -60,30 +60,34 @@ class wdb:
         status, reason, res = self.Request("POST","/api/oauth/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
-                print 'Invalid refresh token. Please login to get new tokens.'
+                print('Invalid refresh token. Please login to get new tokens.')
                 self.CreateToken()
             sys.exit()
         else:
-            res = json.loads(res)
-            print "New tokens grant for", res["expires_in"], "seconds. Please save them."
-            print "access token:", res["access_token"]
-            print "refresh token:", res["refresh_token"]
+            res = json.loads(res.decode('utf-8'))
+            print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
+            print("access token:", res["access_token"])
+            print("refresh token:", res["refresh_token"])
             self.SetToken(res["access_token"])
 
     def InsertMany(self,collection,objects):
         status, reason, res = self.Request("POST","/api/"+collection,json.dumps(objects))
-        return json.loads(res)["ids"]
+        return json.loads(res.decode('utf-8'))["ids"]
 
     def InsertOne(self,collection,object):
         return self.InsertMany(collection,[object])[0]
 
     def DeleteMany(self,collection,objects):
         status, reason, res = self.Request("DELETE","/api/"+collection,json.dumps(objects))
-        return json.loads(res)
+        return json.loads(res.decode('utf-8'))
 
     def Find(self,collection,filter):
         status, reason, res = self.Request("GET","/api/"+collection,json.dumps(filter))
-        return json.loads(res)["objs"]
+        return json.loads(res.decode('utf-8'))["objs"]
+
+    def FindById(self,collection,id):
+        status, reason, res = self.Request("GET","/api/"+collection+"/"+str(id),{})
+        return json.loads(res.decode('utf-8'))["obj"]
 
     def FormJson(self,collection,object):
         if type(object) is str:
@@ -141,7 +145,7 @@ class wdb:
         return self.Query(self.properties,filter)
 
     def Fetch(self,collection,id):
-        return self.FindOne(collection,{'_id':id})
+        return self.FindById(collection,id)
 
     def FetchModel(self,id):
         return self.Fetch(self.models,id)
@@ -157,3 +161,17 @@ class wdb:
 
     def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
         return {'class':class_name,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
+
+    #TODO: findOneAndUpdate, findOne, findByIdAndUpdate
+
+    def GetUnresolvedProperty(self):
+        #TODO: return an unresolved property
+        pass
+
+    def CommitResolvedProperty(self,object):
+        #TODO: replace property with resolved one
+        pass
+
+    def UpdatePropertyStatus(self,id,status):
+        #TODO: update status of property
+        pass

@@ -2,7 +2,7 @@
 
 import multiprocessing as mp
 import subprocess as sp
-import whiplash_v3 as whiplash
+import whiplash as whiplash
 import time,json,os,argparse,daemon,sys
 
 def resolve_property(wdb,pid,unresolved):
