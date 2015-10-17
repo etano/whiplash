@@ -1,0 +1,1 @@
+{ "_id" : 0, "timeout" : 2.0, "class" : "ising", "owner" : "561d29a26394fc7f473d455a", "model_id" : 0, "executable_id" : 7, "status" : 1, "walltime" : 0.000844666, "seed" : 0, "params" : { "n_sweeps" : "10", "T_1" : "1.e-8", "T_0" : "10.0" }, "result" : "None", "timestamp" : 1836523758, "owner" : "561d29a26394fc7f473d455a" }
