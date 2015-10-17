@@ -166,7 +166,7 @@ class wdb:
 
     def GetUnresolvedProperty(self):
         #TODO: return an unresolved property
-        with open('/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/property.json', 'r') as infile: return json.load(infile)
+        pass
 
     def CommitResolvedProperty(self,object):
         #TODO: replace property with resolved one
