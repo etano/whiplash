@@ -25,8 +25,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride());
 app.use(passport.initialize());
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/', api);
 app.use('/api', api);
 app.use('/api/users', users);
 app.use('/api/models', models);
