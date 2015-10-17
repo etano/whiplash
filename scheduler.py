@@ -25,12 +25,18 @@ def resolve_property(wdb,pid,unresolved):
         timeout = prop['timeout']
 
         try:
+            t0 = time.time()
             sp.call(command.split(' ')+[file_name],timeout=timeout)
+            t1 = time.time()
+
+            elapsed = t1-t0
+
+            prop['walltime'] = elapsed
 
             with open(file_name, 'r') as propfile:
                 prop['result'] = json.load(propfile)
 
-            print('worker',str(pid),'commiting property:',prop['_id'])
+            print('worker',str(pid),'commiting property:',prop['_id'],'walltime:',elapsed)
             wdb.CommitResolvedProperty(prop)
 
         except sp.TimeoutExpired:
