@@ -85,6 +85,10 @@ class wdb:
         status, reason, res = self.Request("GET","/api/"+collection,json.dumps(filter))
         return json.loads(res.decode('utf-8'))["objs"]
 
+    def FindById(self,collection,id):
+        status, reason, res = self.Request("GET","/api/"+collection+"/"+str(id),{})
+        return json.loads(res.decode('utf-8'))["obj"]
+
     def FormJson(self,collection,object):
         if type(object) is str:
             object = json.load(open(object))
@@ -141,7 +145,7 @@ class wdb:
         return self.Query(self.properties,filter)
 
     def Fetch(self,collection,id):
-        return self.FindOne(collection,{'_id':id})
+        return self.FindById(collection,id)
 
     def FetchModel(self,id):
         return self.Fetch(self.models,id)
@@ -152,22 +156,22 @@ class wdb:
     def FetchProperty(self,id):
         return self.Fetch(self.properties,id)
 
-    #######
-
-    def GetUnresolvedProperty(self,compute=True):
-        #TODO: return unresolved property and if compute change its
-        #status to processing
-        prop = {'key':3,'command':'python client.py','timeout':2.0,'status':2}
-        return prop
-
-    def CommitResolvedProperty(self,object):
-        #TODO: add result to property
-        print(object)
-
-    #######
-
     def DeleteProperties(self,ids):
         return self.DeleteMany(self.properties,{'_id': { '$in': ids }})
 
     def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
         return {'class':class_name,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
+
+    #TODO: findOneAndUpdate, findOne, findByIdAndUpdate
+
+    def GetUnresolvedProperty(self):
+        #TODO: return an unresolved property
+        with open('/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/property.json', 'r') as infile: return json.load(infile)
+
+    def CommitResolvedProperty(self,object):
+        #TODO: replace property with resolved one
+        pass
+
+    def UpdatePropertyStatus(self,id,status):
+        #TODO: update status of property
+        pass

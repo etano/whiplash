@@ -63,24 +63,24 @@ if __name__ == '__main__':
     parser.add_argument('--token',dest='token',required=True,type=str)
     args = parser.parse_args()
 
-    #with daemon.DaemonContext(stdout=open('scheduler_' + str(int(time.time())) + '.log', 'w+')):
-    wdb = whiplash.wdb(args.dbhost,args.port,args.token)
+    with daemon.DaemonContext(stdout=open('scheduler_' + str(int(time.time())) + '.log', 'w+')):
+        wdb = whiplash.wdb(args.dbhost,args.port,args.token)
 
-    context = mp.get_context('fork')
-    unresolved = context.Queue()
+        context = mp.get_context('fork')
+        unresolved = context.Queue()
 
-    print('starting workers')
-    for pid in range(num_cpus-1):
-        p = context.Process(target=resolve_property, args=(wdb,pid,unresolved,))
-        p.start()
+        print('starting workers')
+        for pid in range(num_cpus-1):
+            p = context.Process(target=resolve_property, args=(wdb,pid,unresolved,))
+            p.start()
 
-    print('starting queries')
-    while True:
-        prop = wdb.GetUnresolvedProperty()
-        wdb.UpdatePropertyStatus(prop['_id'],1)
-        if prop != {}:
-            print('unresolved property:',prop['_id'])
-            unresolved.put(prop)
-        else:
-            print('all properties are currently resolved')
-        time.sleep(0.1)
+        print('starting queries')
+        while True:
+            prop = wdb.GetUnresolvedProperty()
+            wdb.UpdatePropertyStatus(prop['_id'],1)
+            if prop != {}:
+                print('unresolved property:',prop['_id'])
+                unresolved.put(prop)
+            else:
+                print('all properties are currently resolved')
+            time.sleep(0.1)
