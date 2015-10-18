@@ -89,6 +89,10 @@ class wdb:
         status, reason, res = self.Request("GET","/api/"+collection+"/"+str(id),{})
         return json.loads(res.decode('utf-8'))["obj"]
 
+    def UpdateById(self,collection,id,object):
+        status, reason, res = self.Request("PUT","/api/"+collection+"/"+str(id),json.dumps(object))
+        return json.loads(res.decode('utf-8'))
+
     def FormJson(self,collection,object):
         if type(object) is str:
             object = json.load(open(object))
@@ -162,16 +166,15 @@ class wdb:
     def FormProperty(self,class_name,model_id,executable_id,status,seed,params):
         return {'class':class_name,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
 
-    #TODO: findOneAndUpdate, findOne, findByIdAndUpdate
-
     def GetUnresolvedProperty(self):
-        #TODO: return an unresolved property
+        #TODO: return an unresolved property. findOne
         pass
 
     def CommitResolvedProperty(self,object):
-        #TODO: replace property with resolved one
+        #TODO: update resolved property. object contains replacement
+        #fields. findByIdAndUpdate
         pass
 
     def UpdatePropertyStatus(self,id,status):
-        #TODO: update status of property
+        #TODO: update status of property. findByIdAndUpdate
         pass
