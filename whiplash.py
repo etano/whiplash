@@ -1,4 +1,6 @@
-import sys, http.client, json
+import sys, json
+if sys.version_info[0] < 3: import httplib
+else: import http.client as httplib    
 
 # Whiplash class
 class wdb:
@@ -41,7 +43,7 @@ class wdb:
             self.SetToken(res["access_token"])
 
     def Request(self,protocol,uri,payload):
-        conn = http.client.HTTPConnection(self.server,self.port)
+        conn = httplib.HTTPConnection(self.server,self.port)
         conn.request(protocol,uri,payload,self.headers)
         res = conn.getresponse()
         if res.status != 200:
