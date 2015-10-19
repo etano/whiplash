@@ -6,8 +6,8 @@ var log = require(libs + 'log')(module);
 var config = require(libs + 'config');
 
 var options = {
-    user: process.env.MONGO_READWRITEUSER_USERNAME,
-    pass: process.env.MONGO_READWRITEUSER_PASSWORD
+    user: process.env.MONGO_API_USERNAME,
+    pass: process.env.MONGO_API_PASSWORD
 };
 mongoose.connect(process.env.MONGO_URI,options);
 
