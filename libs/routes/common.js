@@ -84,7 +84,7 @@ module.exports = {
         });
     },
 
-    updateById: function(ObjType,req,res,new_obj) {
+    updateById: function(ObjType,req,res) {
         ObjType.findById(req.params.id, function (err, obj) {
             // Check exists
             if(!obj) {
@@ -101,7 +101,7 @@ module.exports = {
             // Update
             if (!err) {
                 // TODO: optimize this
-                obj = new_obj;
+                obj = req.body;
                 this.save(obj,res);
                 return res.json({ status: 'OK' });
             } else {
