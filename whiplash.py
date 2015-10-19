@@ -91,8 +91,16 @@ class wdb:
         status, reason, res = self.Request("GET","/api/"+collection+"/"+str(id),{})
         return json.loads(res.decode('utf-8'))["obj"]
 
+    def FindByIdAndUpdate(self,collection,id,object):
+        status, reason, res = self.Request("PUT","/api/"+collection+"/FindByIdAndUpdate/"+str(id),json.dumps(object))
+        return json.loads(res.decode('utf-8'))["obj"]
+
+    def FindOneAndUpdate(self,collection,object):
+        status, reason, res = self.Request("PUT","/api/"+collection+"/FindOneAndUpdate",json.dumps(object))
+        return json.loads(res.decode('utf-8'))["obj"]
+
     def UpdateById(self,collection,id,object):
-        status, reason, res = self.Request("PUT","/api/"+collection+"/"+str(id),json.dumps(object))
+        status, reason, res = self.Request("PUT","/api/"+collection+"/Update/"+str(id),json.dumps(object))
         return json.loads(res.decode('utf-8'))
 
     def FormJson(self,collection,object):
@@ -169,14 +177,10 @@ class wdb:
         return {'class':class_name,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
 
     def GetUnresolvedProperty(self):
-        #TODO: return an unresolved property. findOne
-        pass
+        return self.FindOneAndUpdate(self.properties,{'filter':{'status':0},'update':{'status':1}})
 
     def CommitResolvedProperty(self,object):
-        #TODO: update resolved property. object contains replacement
-        #fields. findByIdAndUpdate
-        pass
+        return self.UpdateById(self.properties,object["_id"],object)
 
     def UpdatePropertyStatus(self,id,status):
-        #TODO: update status of property. findByIdAndUpdate
-        pass
+        return self.UpdateById(self.properties,id,{'status':status})
