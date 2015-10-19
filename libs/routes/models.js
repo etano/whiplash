@@ -6,23 +6,31 @@ var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
 var Model = require(libs + 'schemas/model');
 
-router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.save(Model,req,res);
+router.post('/commit/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.commit(Model,req,res);
 });
 
-router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find(Model,req,res);
+router.get('/query/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query(Model,req,res);
 });
 
-router.get('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.findById(Model,req,res);
+router.get('/query/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.queryById(Model,req,res);
 });
 
-router.put('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/update/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.findOneAndUpdate(Model,req,res);
+});
+
+router.put('/update/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.updateById(Model,req,res);
 });
 
-router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.delete('/delete/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.delete(Model,req,res);
+});
+
+router.delete('/delete/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.deleteById(Model,req,res);
 });
 

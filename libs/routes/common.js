@@ -3,7 +3,7 @@ var log = require(libs + 'log')(module);
 
 module.exports = {
 
-    save: function(ObjType,req,res) {
+    commit: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
         ObjType.count({}, function(err,count) {
             for(var i=0; i<req.body.length; i++) {
@@ -36,7 +36,7 @@ module.exports = {
         });
     },
 
-    find: function(ObjType,req,res) {
+    query: function(ObjType,req,res) {
         ObjType.find(req.body, function (err, objs) {
             // Check exists
             if(!objs) {
@@ -60,7 +60,7 @@ module.exports = {
         });
     },
 
-    findById: function(ObjType,req,res) {
+    queryById: function(ObjType,req,res) {
         ObjType.findById(req.params.id, function (err, obj) {
             // Check exists
             if(!obj) {
@@ -71,6 +71,29 @@ module.exports = {
             // TODO: Check to make sure user has READ permissions
 
             // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    obj: obj
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    findOneAndUpdate: function(ObjType,req,res) {
+        req.body.filter.owner = req.user;
+        ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
+            // Check exists
+            if(!obj) {
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+
+            // Update
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -103,11 +126,42 @@ module.exports = {
                 // TODO: optimize this
                 obj = req.body;
                 this.save(obj,res);
-                return res.json({ status: 'OK' });
+                return res.json({
+                    status: 'OK',
+                    obj: obj
+                });
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
                 return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    delete: function(ObjType,req,res) {
+        ObjType.find(req.body, function (err, objs) {
+            for(var i=0; i<objs.length; i++) {
+                // Check exists
+                if(!objs[i]) {
+                    res.statusCode = 404;
+                    return res.json({ error: 'Not found' });
+                }
+
+                // Check to make sure user has WRITE permissions
+                if(!req.user.equals(objs[i].owner)) {
+                    log.error('Unauthorized delete attempt of object %s by user %s', req.params.id,String(req.user));
+                    return res.json({ error: 'Unauthorized delete' });
+                }
+
+                // Delete
+                if (!err) {
+                    objs[i].remove();
+                    return res.json({ status: 'OK' });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
             }
         });
     },
