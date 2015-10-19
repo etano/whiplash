@@ -9,8 +9,8 @@ def resolve_property(wdb,pid,unresolved):
     while True:
         prop = unresolved.get()
 
-        executable = wdb.FetchExecutable(prop['executable_id'])
-        model = wdb.FetchModel(prop['model_id'])
+        executable = wdb.executables.query_by_id(prop['executable_id'])
+        model = wdb.models.query_by_id(prop['model_id'])
 
         print('worker',str(pid),'staring property:',prop['_id'])
 
@@ -24,7 +24,7 @@ def resolve_property(wdb,pid,unresolved):
         timeout = prop['timeout']
 
         try:
-            wdb.UpdatePropertyStatus(prop['_id'],2)
+            wdb.properties.update_status(prop['_id'],2)
 
             t0 = time.time()
             sp.call(command.split(' ')+[file_name],timeout=timeout)
@@ -40,10 +40,10 @@ def resolve_property(wdb,pid,unresolved):
             prop['status'] = 4
 
             print('worker',str(pid),'commiting property:',prop['_id'],'walltime:',elapsed)
-            wdb.CommitResolvedProperty(prop)
+            wdb.properties.commit_resolved(prop)
 
         except sp.TimeoutExpired:
-            wdb.UpdatePropertyStatus(prop['_id'],3)
+            wdb.properties.update_status(prop['_id'],3)
             print('time expired for property',prop['_id'],'on worker',str(pid))
 
         os.remove(file_name)
@@ -75,8 +75,8 @@ if __name__ == '__main__':
 
         print('starting queries')
         while True:
-            prop = wdb.GetUnresolvedProperty()
-            wdb.UpdatePropertyStatus(prop['_id'],1)
+            prop = wdb.properties.get_unresolved()
+            wdb.properties.update_status(prop['_id'],1)
             if prop != {}:
                 print('unresolved property:',prop['_id'])
                 unresolved.put(prop)

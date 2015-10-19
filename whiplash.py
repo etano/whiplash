@@ -113,10 +113,8 @@ class wdb:
             return json.loads(res.decode('utf-8'))["obj"]
 
         def query_for_ids(self,filter):
-            ids = []
-            for res in self.query(filter):
-                ids.append(res['_id'])
-            return ids
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(filter))
+            return json.loads(res.decode('utf-8'))["ids"]
 
         #
         # Update
@@ -157,9 +155,6 @@ class wdb:
                 properties = self.query(self.properties,{'_id': { '$in': property_ids },'status':3})
                 if properties.count() > fraction*len(property_ids): break
             return properties
-
-        def form(self,class_name,model_id,executable_id,status,seed,params):
-            return {'class':class_name,'executable_id':executable_id,'model_id':model_id,'status':status,'seed':seed,'params':params}
 
         def get_unresolved(self):
             return self.find_one_and_update({'status':0},{'status':1})
