@@ -15,7 +15,7 @@ router.get('/query/', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(Property,req,res);
+    common.count(Executable,req,res);
 });
 
 router.get('/query_for_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -41,4 +41,5 @@ router.delete('/delete/', passport.authenticate('bearer', { session: false }), f
 router.delete('/delete/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.deleteById(Executable,req,res);
 });
+
 module.exports = router;

@@ -15,7 +15,7 @@ router.get('/query/', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(Property,req,res);
+    common.count(Model,req,res);
 });
 
 router.get('/query_for_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {

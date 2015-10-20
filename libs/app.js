@@ -10,13 +10,13 @@ require(libs + 'auth/auth');
 
 var config = require('./config');
 var log = require('./log')(module);
-var oauth2 = require('./auth/oauth2');
 
 var api = require('./routes/api');
 var users = require('./routes/users');
 var models = require('./routes/models');
 var executables = require('./routes/executables');
 var properties = require('./routes/properties');
+var oauth2 = require('./auth/oauth2');
 
 var app = express();
 
@@ -29,9 +29,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use('/api', api);
 app.use('/api/users', users);
+
 app.use('/api/models', models);
 app.use('/api/executables', executables);
 app.use('/api/properties', properties);
+
 app.use('/api/oauth/token', oauth2.token);
 
 // catch 404 and forward to error handler
