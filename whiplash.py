@@ -94,54 +94,55 @@ class wdb:
         # Commit
         #
 
-        def commit(self,objects):
-            if not isinstance(objects, list):
-                objects = [objects]
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/commit/",json.dumps(objects))
+        def commit(self,objs):
+            if not isinstance(objs, list):
+                objs = [objs]
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/commit/",json.dumps(objs))
             return json.loads(res.decode('utf-8'))["ids"]
 
         #
         # Query
         #
 
-        def query(self,filter):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/",json.dumps(filter))
+        def query(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["objs"]
 
-        def query_by_id(self,id):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(id),{})
+        def query_by_id(self,ID):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(ID),{})
             return json.loads(res.decode('utf-8'))["obj"]
 
-        def query_for_ids(self,filter):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(filter))
+        def query_for_ids(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["ids"]
 
         #
         # Update
         #
 
-        def find_one_and_update(self,filter,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':filter,'update':object}))
+        def find_one_and_update(self,fltr,update):
+
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["obj"]
 
-        def update_by_id(self,id,object):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(id),json.dumps(object))
+        def update_by_id(self,ID,update):
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
             return json.loads(res.decode('utf-8'))["obj"]
 
         #
         # Delete
         #
 
-        def delete(self,filter):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/",json.dumps(filter))
+        def delete(self,fltr):
+            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))
 
-        def delete_by_id(self,id):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/"+str(id),{})
+        def delete_by_id(self,ID):
+            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/"+str(ID),{})
             return json.loads(res.decode('utf-8'))
 
-        def delete_by_ids(self,ids):
-            return self.delete({'_id': { '$in': ids }})
+        def delete_by_ids(self,IDs):
+            return self.delete({'_id': { '$in': IDs }})
 
     #
     # Special helper functions, only for properties
@@ -159,8 +160,8 @@ class wdb:
         def get_unresolved(self):
             return self.find_one_and_update({'status':0},{'status':1})
 
-        def commit_resolved(self,object):
-            return self.update_by_id(object["_id"],object)
+        def commit_resolved(self,obj):
+            return self.update_by_id(obj["_id"],obj)
 
-        def update_status(self,id,status):
-            return self.update_by_id(id,{'status':status})
+        def update_status(self,ID,status):
+            return self.update_by_id(ID,{'status':status})
