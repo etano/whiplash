@@ -121,7 +121,6 @@ class wdb:
         #
 
         def find_one_and_update(self,fltr,update):
-
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["obj"]
 
@@ -165,3 +164,7 @@ class wdb:
 
         def update_status(self,ID,status):
             return self.update_by_id(ID,{'status':status})
+
+        def get_num_unresolved(self):
+            #TODO: implement this
+            return 1
