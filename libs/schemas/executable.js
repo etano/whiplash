@@ -11,7 +11,6 @@ var Executable = new Schema({
     version: { type: String, required: true},
     build: { type: String, required: true},
     path: { type: String, required: true},
-    cfg: { type: Schema.Types.Mixed, default: ""},
     timestamp: { type: Date, default: Date.now },
     _id: { type: Number }
 });

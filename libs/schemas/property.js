@@ -10,6 +10,7 @@ var Property = new Schema({
     result: { type: Schema.Types.Mixed, default: "" },
     params: { type: Schema.Types.Mixed, default: "" },
     timestamp: { type: Date, default: Date.now },
+    timeout: { type: Number, required: true, default: 120 },
     _id: { type: Number }
 });
 
