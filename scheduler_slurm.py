@@ -18,7 +18,7 @@ def run(args):
         num_pending = sp.check_output("squeue -u whiplash | grep \"PD\" | wc -l", shell=True)
         if num_unresolved > 0 and num_pending == 0:
             print('there are unresolved properties')
-            sp.call("sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.cpu_time),shell=True)
+            sp.call("sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit),shell=True)
             job_number += 1
         time.sleep(120)
     
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
-    parser.add_argument('--cpu_time',dest='cpu_time',required=False,type=int,default=1)
+    parser.add_argument('--time_limit',dest='time_limit',required=False,type=int,default=1)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
