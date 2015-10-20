@@ -51,7 +51,9 @@ def resolve_property(wdb,pid,unresolved):
 def run(args):
     wdb = whiplash.wdb(args.dbhost,args.port,args.token)
 
-    num_cpus = min(args.num_cpus,mp.cpu_count())
+    num_cpus = mp.cpu_count()
+    if args.num_cpus != None:
+        num_cpus = min(args.num_cpus,num_cpus)
     assert num_cpus > 1
 
     context = mp.get_context('fork')
@@ -80,14 +82,14 @@ if __name__ == '__main__':
     parser.add_argument('--dbhost',dest='dbhost',required=True,type=str)
     parser.add_argument('--port',dest='port',required=True,type=str)
     parser.add_argument('--token',dest='token',required=True,type=str)
-    parser.add_argument('--daemonise',dest='daemonise',required=False,type=bool,default=True)
-    parser.add_argument('--exit_on_resolved',dest='exit_on_resolved',required=False,type=bool,default=False)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_' + str(int(time.time())) + '.log')
+    parser.add_argument('--exit_on_resolved',dest='exit_on_resolved',required=False,default=False,action='store_true')
+    parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     if args.daemonise:
-        with daemon.DaemonContext(stdout=open(log_file, 'w+')):
+        with daemon.DaemonContext(stdout=open(args.log_file, 'w+')):
             run(args)
     else:
         run(args)
