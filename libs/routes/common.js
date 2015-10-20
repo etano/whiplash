@@ -59,6 +59,25 @@ module.exports = {
         });
     },
 
+    count: function(ObjType,req,res) {
+        ObjType.count(req.body, function (err, count) {
+
+            // TODO: Check to make sure user has READ permissions
+
+            // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    count: count
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },    
+
     queryForIds: function(ObjType,req,res) {
         ObjType.find(req.body, '_id', function (err, objs) {
             // Check exists
