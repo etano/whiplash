@@ -23,6 +23,6 @@ echo "#SBATCH --time=${cpu_time}:00:00" >> $run_file
 echo "#SBATCH --nodes=1" >> $run_file
 echo "#SBATCH --exclusive" >> $run_file
 echo "#SBATCH --ntasks=1" >> $run_file
-echo "srun python scheduler.py --wdb_info ${wdb_info}" >> $run_file
+echo "srun python scheduler_local.py --wdb_info ${wdb_info}" >> $run_file
 
 sbatch $run_file
