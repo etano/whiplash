@@ -1,9 +1,13 @@
 import sys, json
+
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
 
+try: input = raw_input
+except NameError: pass
+
 #
-# Whiplash class
+    # Whiplash class
 #
 class wdb:
     def __init__(self,server,port,access_token=""):
@@ -46,10 +50,10 @@ class wdb:
                 sys.exit()
 
     def create_token(self):
-        username = raw_input("username: ")
-        password = raw_input("password: ")
-        client_id = raw_input("client ID: ")
-        client_secret = raw_input("client secret: ")
+        username = input("username: ")
+        password = input("password: ")
+        client_id = input("client ID: ")
+        client_secret = input("client secret: ")
 
         self.headers = {"Content-type": "application/json", "Accept": "*/*"}
         status, reason, res = self.request("POST","/api/oauth/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
@@ -65,8 +69,8 @@ class wdb:
             self.set_token(res["access_token"])
 
     def refresh_token(self,refresh_token):
-        client_id = raw_input("client ID: ")
-        client_secret = raw_input("client secret: ")
+        client_id = input("client ID: ")
+        client_secret = input("client secret: ")
 
         self.headers = {"Content-type": "application/json", "Accept": "*/*"}
         status, reason, res = self.request("POST","/api/oauth/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
