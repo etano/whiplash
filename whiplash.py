@@ -120,6 +120,10 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["ids"]
 
+        def count(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
+            return json.loads(res.decode('utf-8'))["count"]
+
         #
         # Update
         #
@@ -170,5 +174,4 @@ class wdb:
             return self.update_by_id(ID,{'status':status})
 
         def get_num_unresolved(self):
-            #TODO: implement this
-            return 1
+            return self.count({'status':0})
