@@ -1,5 +1,21 @@
 #!/usr/bin/env python3.4
 
+#TODO: batch request for unresolved properties by scheduler from
+#DB. when all properties in queue are resolved, scheduler empties the
+#completed queue and requests new unresolved properties.
+
+#TODO: request work according to how much the node can handle in the
+#time limit of the scheduler. work_time = num_cpus *
+#tasks_time. dispatch work according to time limits by adding the
+#largest job which fits until no more space
+
+#TODO: time limit on scheduler. close to time limit scheduler does not
+#request any more from DB and cleans up completed queue.
+
+#TODO: regular refresh of properties which never finished
+
+#TODO: each interval scheduler commits completed work to DB
+
 import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
@@ -84,6 +100,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
+    parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)    
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--exit_on_resolved',dest='exit_on_resolved',required=False,default=False,action='store_true')
