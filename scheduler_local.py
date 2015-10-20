@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.4
 
 import multiprocessing as mp
 import subprocess as sp
@@ -49,7 +49,12 @@ def resolve_property(wdb,pid,unresolved):
         os.remove(file_name)
 
 def run(args):
-    wdb = whiplash.wdb(args.dbhost,args.port,args.token)
+
+    with open(args.wdb_info, 'r') as infile:
+        wdb_info = json.load(infile)
+
+    print('connecting to wdb')
+    wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -67,7 +72,6 @@ def run(args):
     print('starting queries')
     while True:
         prop = wdb.properties.get_unresolved()
-        wdb.properties.update_status(prop['_id'],1)
         if prop != {}:
             print('unresolved property:',prop['_id'])
             unresolved.put(prop)
@@ -79,11 +83,9 @@ def run(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dbhost',dest='dbhost',required=True,type=str)
-    parser.add_argument('--port',dest='port',required=True,type=str)
-    parser.add_argument('--token',dest='token',required=True,type=str)
+    parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
-    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_' + str(int(time.time())) + '.log')
+    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--exit_on_resolved',dest='exit_on_resolved',required=False,default=False,action='store_true')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
@@ -93,4 +95,3 @@ if __name__ == '__main__':
             run(args)
     else:
         run(args)
-
