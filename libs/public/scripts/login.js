@@ -1,4 +1,7 @@
-var www_server = window.location.host;
+function redirect(path){
+    var www_server = window.location.host;
+    window.location.href = "http://"+www_server+path;
+}
 
 function login(){
     var user = $("section#login > input.login").val();
@@ -121,7 +124,7 @@ function viewEaster(){
 }
 
 function viewDocs(){
-    window.location.href = www_server+"/docs";
+    redirect("/docs");
 }
 
 $(document).ready(function(){
