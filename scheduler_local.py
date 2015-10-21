@@ -47,11 +47,11 @@ def worker(pid,args):
     with open(args.wdb_info, 'r') as infile:
         wdb_info = json.load(infile)
 
-    #wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
-    print('worker',str(pid),'connected to wdb')
+    wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
+    print('worker',str(pid),'connected to wdb') 
 
     while t_start < args.time_limit:
-        unresolved = [] #wdb.properties.get_unresolved_batch(args.time_limit-t_start)
+        unresolved = wdb.properties.get_unresolved_batch(args.time_limit-t_start)
         if len(unresolved) > 0:
             resolved = []
             for obj in unresolved:

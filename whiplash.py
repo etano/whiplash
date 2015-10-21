@@ -116,6 +116,11 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(ID),{})
             return json.loads(res.decode('utf-8'))["obj"]
 
+        def query_by_ids(self,ids):
+            #TODO
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(ids))
+            return json.loads(res.decode('utf-8'))["objs"]
+
         def query_for_ids(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["ids"]
@@ -135,6 +140,11 @@ class wdb:
         def update_by_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
             return json.loads(res.decode('utf-8'))["obj"]
+
+        def update_batch(self,updates):
+            #TODO
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update_batch/",json.dumps(updates))
+            return json.loads(res.decode('utf-8'))["objs"]
 
         #
         # Delete
@@ -177,14 +187,24 @@ class wdb:
             return self.count({'status':0})
 
         def get_unresolved_batch(self,time_limit):
-            #TODO: return work which fits into time limit
 
-            #prop = wdb.properties.get_unresolved()
-            #model = wdb.models.query_by_id(prop['model_id'])
-            #executable = wdb.executables.query_by_id(prop['executable_id'])
-            #obj = {'property':prop,'model':model,'executable':executable}
-            return {}
+            #TODO
+            status, reason, res = self.db.request("PUT","/api/properties/fetch_time_batch/",json.dumps({'time_limit':time_limit}))
+            properties = json.loads(res.decode('utf-8'))["objs"]
+
+            model_ids = []
+            executable_ids = []
+            for prop in properties:
+                model_ids.append(prop['model_id'])
+                executable_ids.append(prop['executable_id'])
+
+            models = self.query_by_ids(model_ids)
+            executables = self.query_by_ids(model_ids)
+
+            objs = []
+            for i in range(len(properties)):
+                objs.append({'property':properties[i],'model':models[i],'executable':executables[i]})
+            return objs
 
         def commit_resolved_batch(self,props):
-            #TODO: commit batch of resolved properties. replace all by id
-            pass
+            self.update_batch(props)
