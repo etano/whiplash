@@ -4,42 +4,46 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
-var Executable = require(libs + 'schemas/executable');
+var Object = require(libs + 'schemas/executable');
 
 router.post('/commit/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(Executable,req,res);
+    common.commit(Object,req,res);
 });
 
 router.get('/query/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(Executable,req,res);
+    common.query(Object,req,res);
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(Executable,req,res);
+    common.count(Object,req,res);
 });
 
 router.get('/query_for_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.queryForIds(Executable,req,res);
+    common.queryForIds(Object,req,res);
+});
+
+router.get('/query_by_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.queryByIds(Object,req,res);
 });
 
 router.get('/query/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.queryById(Executable,req,res);
+    common.queryById(Object,req,res);
 });
 
 router.put('/update/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.findOneAndUpdate(Executable,req,res);
+    common.findOneAndUpdate(Object,req,res);
 });
 
 router.put('/update/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.updateById(Executable,req,res);
+    common.updateById(Object,req,res);
 });
 
 router.delete('/delete/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(Executable,req,res);
+    common.delete(Object,req,res);
 });
 
 router.delete('/delete/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.deleteById(Executable,req,res);
+    common.deleteById(Object,req,res);
 });
 
 module.exports = router;
