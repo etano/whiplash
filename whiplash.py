@@ -56,7 +56,7 @@ class wdb:
         client_secret = input("client secret: ")
 
         self.headers = {"Content-type": "application/json", "Accept": "*/*"}
-        status, reason, res = self.request("POST","/api/oauth/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
+        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
                 print('Invalid login credentials. Please go to http://whiplash.ethz.ch to verify your account.')
@@ -73,7 +73,7 @@ class wdb:
         client_secret = input("client secret: ")
 
         self.headers = {"Content-type": "application/json", "Accept": "*/*"}
-        status, reason, res = self.request("POST","/api/oauth/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
+        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
                 print('Invalid refresh token. Please login to get new tokens.')
