@@ -32,6 +32,7 @@ module.exports = {
                     log.error('Internal error(%d): %s', res.statusCode, err.message);
                 }
             });
+
         });
     },
 
@@ -178,8 +179,16 @@ module.exports = {
     },
 
     updateById: function(ObjType,req,res) {
-        req.body.filter = {_id: req.params.id};
-        this.findOneAndUpdate(ObjType,req,res);
+        var filter = {"_id": req.params.id};
+        ObjType.update(filter, req.body.update, function (err, raw) {
+            if (!err) {
+                return res.json({status: 'OK'});
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
     },
 
     delete: function(ObjType,req,res) {
