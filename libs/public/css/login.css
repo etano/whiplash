@@ -96,7 +96,18 @@ section#menu div {
     margin-left: 50px;
     font-size: 13px;
 }
-section#login, section#register, section#forgot {
+section#menu div#logout, section#info {
+    display: none;
+}
+section#info {
+    left: 150%;
+}
+section#info div {
+    position: absolute;
+    font-size: 12px;
+    font-family: arial;
+}
+section#login, section#register, section#forgot, section#info {
     position: absolute;
     display: block;
     top: 50%;

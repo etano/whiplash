@@ -17,39 +17,29 @@ var webAuth = function(req, res, next){
 }
 
 router.post('/', webAuth, 
-    function(req, res, next){
+    function(req, res){
         var user = new User({ username: req.body.username, password: req.body.password });
         user.save(function(err, user){
             if(!err){
                 log.info("New user: %s", user.username);
-                next();
-            } else {
-                res.send("Bof"); log.error(err);
-            }
-        });
-    }, 
-    function(req, res){
-        var client = new Client({ name: req.body.cname, clientId: req.body.cid, clientSecret: req.body.secret });
-        client.save(function(err, client){
-            if(!err){
-                log.info("New client: %s", client.clientId);
-                res.send("Ok");
-            }else {
-                res.send("Bof"); log.error(err);
+                res.send("OK");
+            }else{
+                log.error(err);
+                res.send("Bof");
             }
         });
     }
 );
 
-router.get('/query/:id', webAuth, function(req, res) {
+router.get('/:id', webAuth, function(req, res) {
     common.queryById(User, req, res);
 });
 
-router.put('/update/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.updateById(User, req, res);
 });
 
-router.delete('/delete/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.deleteById(User, req, res);
 });
 
