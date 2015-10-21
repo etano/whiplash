@@ -5,10 +5,6 @@ set -e
 trap 'previous_command=$this_command; this_command=$BASH_COMMAND' DEBUG
 trap 'echo "exit $? : $previous_command"' EXIT
 
-# kill and remove containers
-docker stop wdb-api-test; docker rm wdb-api-test;
-docker stop wdb-odb-test; docker rm wdb-odb-test;
-
 # build wdb-odb
 docker build -t whiplash/odb -f Dockerfile.odb .
 
