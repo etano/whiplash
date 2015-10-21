@@ -12,6 +12,7 @@ var config = require('./config');
 var log = require('./log')(module);
 
 var api = require('./routes/api');
+var www = require('./routes/www');
 var users = require('./routes/users');
 var models = require('./routes/models');
 var executables = require('./routes/executables');
@@ -25,8 +26,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride());
 app.use(passport.initialize());
-app.use(express.static(path.join(__dirname, "public")));
 
+app.use('/', www);
 app.use('/api', api);
 app.use('/api/users', users);
 

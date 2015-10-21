@@ -1,3 +1,5 @@
+var access_token;
+
 function redirect(path){
     var www_server = window.location.host;
     window.location.href = "http://"+www_server+path;
@@ -136,4 +138,6 @@ $(document).ready(function(){
     $(document).on("click", "section#login input.submit", login);
     $(document).on("click", "section#register input.submit", register);
     $(document).on("click", "section#forgot input.submit", forgot);
+
+    access_token = getCookie("access_token");
 });
