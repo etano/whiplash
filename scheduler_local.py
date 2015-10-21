@@ -48,18 +48,23 @@ def worker(pid,args):
         wdb_info = json.load(infile)
 
     wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
-    print('worker',str(pid),'connected to wdb') 
+    print('worker',str(pid),'connected to wdb')
 
-    while t_start < args.time_limit:
-        unresolved = wdb.properties.get_unresolved_batch(args.time_limit-t_start)
-        if len(unresolved) > 0:
-            resolved = []
-            for obj in unresolved:
-                resolved.append(resolve_object(obj))
-            wdb.properties.commit_resolved_batch(resolved)
+    while True:
+        time_left = args.time_limit - (time.time()-t_start)
+        work_time = int(time_left*float(args.alpha)/100)
+        if work_time > 0:
+            unresolved = wdb.properties.get_unresolved_batch(work_time)
+            if len(unresolved) > 0:
+                resolved = []
+                for obj in unresolved:
+                    resolved.append(resolve_object(obj))
+                wdb.properties.commit_resolved_batch(resolved)
+            else:
+                print('all properties are currently resolved')
+            time.sleep(1)
         else:
-            print('all properties are currently resolved')
-        time.sleep(1)
+            break
             
 def run(args):
 
@@ -81,6 +86,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)
+    parser.add_argument('--alpha',dest='alpha',required=True,type=int)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')

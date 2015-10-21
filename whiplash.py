@@ -117,7 +117,6 @@ class wdb:
             return json.loads(res.decode('utf-8'))["obj"]
 
         def query_by_ids(self,ids):
-            #TODO
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(ids))
             return json.loads(res.decode('utf-8'))["objs"]
 
