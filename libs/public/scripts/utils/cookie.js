@@ -8,3 +8,18 @@ function getCookie(cname){
     }
     return "";
 }
+
+function setCookie(cname, cvalue, expires) {
+    if(expires){
+        var d = new Date();
+        d.setTime(d.getTime() + expires*1000);
+        var expires_utc = d.toUTCString();
+        document.cookie = cname + "=" + cvalue + "; expires=" + expires_utc;
+    }else{
+        document.cookie = cname + "=" + cvalue;
+    }
+}
+
+function removeCookie(cname) {
+    document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+}

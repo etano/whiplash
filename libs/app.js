@@ -30,12 +30,11 @@ app.use(passport.initialize());
 app.use('/', www);
 app.use('/api', api);
 app.use('/api/users', users);
-
+app.use('/api/users/token', oauth2.token);
 app.use('/api/models', models);
 app.use('/api/executables', executables);
 app.use('/api/properties', properties);
 
-app.use('/api/oauth/token', oauth2.token);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next){

@@ -1,8 +1,14 @@
 var access_token;
+var session_token;
 
 function redirect(path){
     var www_server = window.location.host;
     window.location.href = "http://"+www_server+path;
+}
+
+function logout(){
+    removeCookie("session_token");
+    redirect("/");
 }
 
 function login(){
@@ -12,20 +18,25 @@ function login(){
 
     $.ajax({
         type: 'POST',
-        url: "/auth",
-        data: { "user": user, "pass": pass, "keep": keep },
+        url: "/api/users/token",
+        data: { "username"      : user, 
+                "password"      : pass,
+                "grant_type"    : "password",
+                "client_id"     : "www-browser",
+                "client_secret" : "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba"
+              },
         success: function(data){
-            if($.trim(data) == "fail"){
+            if(data.error){
                 inputFailFeedback($("section#login"));
             }else{
-                $("section#login").css("left", "-100%");
-                setTimeout(function(){
-                    window.location.replace(www_server);
-                }, 150);
+                session_token = data.access_token;
+                if(keep) setCookie("session_token", session_token, data.expires_in);
+                else setCookie("session_token", session_token);
+                viewMain();
             }
         },
         error: function(request, status, err){
-            alert("Error: "+err);
+            inputFailFeedback($("section#login"));
         }
     });
 }
@@ -61,13 +72,14 @@ function register(){
 
     $.ajax({
         type: 'POST',
-        url: "/register",
-        data: { "user": user, "pass": pass },
+        url: "/api/users",
+        data: { "username": user, "password": pass, "access_token": access_token },
         success: function(data){
-            if($.trim(data) == "fail"){
+            if($.trim(data) != "OK"){
                 inputFailFeedback($("section#register"));
             }else{
-                inputSuccessFeedback($("section#register"));
+                viewLogin();
+                //inputSuccessFeedback($("section#register")); // no email for now
             }
         },
         error: function(request, status, err){
@@ -81,11 +93,11 @@ function forgot(){
     var pass = $("section#forgot > input.passwd").val();
 
     $.ajax({
-        type: 'POST',
-        url: "/forgot",
+        type: 'PUT',
+        url: "/api/users/"+user,
         data: { "user": user, "pass": pass },
         success: function(data){
-            if($.trim(data) == "fail"){
+            if($.trim(data) != "OK"){
                 inputFailFeedback($("section#forgot"));
             }else{
                 inputSuccessFeedback($("section#forgot"));
@@ -95,6 +107,18 @@ function forgot(){
             alert("Error: "+err);
         }
     });
+}
+
+function viewLogin(){
+    if($("section#login").position().left > 0) return;
+
+    $("section#register, section#forgot, div#confirm").css("left", "-50%");
+    $("section#login").addClass('notransition');
+    $("section#login").css("left", "150%");
+    setTimeout(function(){
+        $("section#login").removeClass('notransition');
+        $("section#login").css("left", "50%");
+    }, 50);
 }
 
 function viewRegister(){
@@ -129,15 +153,28 @@ function viewDocs(){
     redirect("/docs");
 }
 
+function viewMain(){
+    $("section#login").css("left", "-50%");
+    $("section#menu > div#logout").css("display", "inline-block");
+    $("section#menu > div#forgot").css("display", "none");
+    $("section#menu > div#apply").css("display", "none");
+    
+    $("section#info").css("left", "50%");
+    $("section#info").html("<div>Session token: " + session_token + "</div>");
+}
+
 $(document).ready(function(){
     $(document).on("click", "section#login div#keep", viewEaster);
     $(document).on("click", "section#menu div#apply", viewRegister);
     $(document).on("click", "section#menu div#forgot", viewForgot);
     $(document).on("click", "section#menu div#docs", viewDocs);
+    $(document).on("click", "section#menu div#logout", logout);
 
     $(document).on("click", "section#login input.submit", login);
     $(document).on("click", "section#register input.submit", register);
     $(document).on("click", "section#forgot input.submit", forgot);
 
     access_token = getCookie("access_token");
+    session_token = getCookie("session_token");
+    if(session_token) setTimeout(function(){ viewMain(); }, 1000);
 });
