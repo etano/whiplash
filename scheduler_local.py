@@ -52,9 +52,8 @@ def worker(pid,args):
 
     while True:
         time_left = args.time_limit - (time.time()-t_start)
-        work_time = int(time_left*float(args.alpha)/100)
-        if work_time > 0:
-            unresolved = wdb.properties.get_unresolved_batch(work_time)
+        if time_left > 0:
+            unresolved = wdb.properties.get_unresolved_batch(min(time_left,args.time_window))
             if len(unresolved) > 0:
                 resolved = []
                 for obj in unresolved:
@@ -86,7 +85,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)
-    parser.add_argument('--alpha',dest='alpha',required=True,type=int)
+    parser.add_argument('--time_window',dest='time_window',required=True,type=int)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
