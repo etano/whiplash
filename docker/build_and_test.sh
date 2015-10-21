@@ -5,6 +5,10 @@ set -e
 trap 'previous_command=$this_command; this_command=$BASH_COMMAND' DEBUG
 trap 'echo "exit $? : $previous_command"' EXIT
 
+# kill and remove containers
+docker stop wdb-api-test; docker rm wdb-api-test;
+docker stop wdb-odb-test; docker rm wdb-odb-test;
+
 # build wdb-odb
 docker build -t whiplash/odb -f Dockerfile.odb .
 
@@ -31,6 +35,10 @@ echo $?
 # create token
 http POST http://192.168.99.100:1337/api/users/token grant_type=password client_id=www-browser client_secret=fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba username=www password=7cJgeAkHdw{oktPNYdgYE3nJ
 echo $?
+
+# push containers
+docker push whiplash/odb
+docker push whiplash/api
 
 # kill and remove containers
 docker stop wdb-api-test; docker rm wdb-api-test;
