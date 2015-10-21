@@ -36,6 +36,25 @@ module.exports = {
         });
     },
 
+    count: function(ObjType,req,res) {
+        ObjType.count(req.body, function (err, count) {
+
+            // TODO: Check to make sure user has READ permissions
+
+            // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    count: count
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
     query: function(ObjType,req,res) {
         ObjType.find(req.body, function (err, objs) {
             // Check exists
@@ -59,25 +78,6 @@ module.exports = {
             }
         });
     },
-
-    count: function(ObjType,req,res) {
-        ObjType.count(req.body, function (err, count) {
-
-            // TODO: Check to make sure user has READ permissions
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    count: count
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },    
 
     queryForIds: function(ObjType,req,res) {
         ObjType.find(req.body, '_id', function (err, objs) {
@@ -192,57 +192,22 @@ module.exports = {
     },
 
     delete: function(ObjType,req,res) {
-        ObjType.find(req.body, function (err, objs) {
-            for(var i=0; i<objs.length; i++) {
-                // Check exists
-                if(!objs[i]) {
-                    res.statusCode = 404;
-                    return res.json({ error: 'Not found' });
-                }
-
-                // Check to make sure user has WRITE permissions
-                if(!req.user.equals(objs[i].owner)) {
-                    log.error('Unauthorized delete attempt of object %s by user %s', req.params.id,String(req.user));
-                    return res.json({ error: 'Unauthorized delete' });
-                }
-
-                // Delete
-                if (!err) {
-                    objs[i].remove();
-                    return res.json({ status: 'OK' });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
-                }
-            }
-        });
-    },
-
-    deleteById: function(ObjType,req,res) {
-        ObjType.findById(req.params.id, function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Check to make sure user has WRITE permissions
-            if(!req.user.equals(obj.owner)) {
-                log.error('Unauthorized delete attempt of object %s by user %s', req.params.id,String(req.user));
-                return res.json({ error: 'Unauthorized delete' });
-            }
-
-            // Delete
+        var filter = req.body;
+        filter.owner = req.user;
+        ObjType.remove(filter, function (err, raw) {
             if (!err) {
-                obj.remove();
-                return res.json({ status: 'OK' });
+                return res.json({status: 'OK'});
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
                 return res.json({ error: 'Server error' });
             }
         });
-    }
+    },    
+
+    deleteById: function(ObjType,req,res) {
+        req.body = {"_id": req.params.id};
+        this.delete(ObjType,req,res);
+    },
 
 };
