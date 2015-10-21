@@ -9,8 +9,6 @@ trap 'echo "exit $? : $previous_command" | mail -s "whiplash-api merge into mast
 # BUILD
 #
 
-cat intentional_error
-
 docker build -t whiplash/odb -f Dockerfile.odb .
 docker build -t whiplash/api -f Dockerfile.api ..
 
