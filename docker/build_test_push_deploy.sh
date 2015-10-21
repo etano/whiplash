@@ -9,10 +9,10 @@ trap './cleanup.sh; echo "exit $? : $previous_command" | mail -s "whiplash-api m
 # BUILD
 #
 
+cat intentional_error
+
 docker build -t whiplash/odb -f Dockerfile.odb .
 docker build -t whiplash/api -f Dockerfile.api ..
-
-cat intentional_error
 
 #
 # TEST
