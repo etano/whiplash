@@ -22,3 +22,6 @@ docker run -it --link wdb-odb-test:mongo -e "MONGO_API_USERNAME=api" -e "MONGO_A
 # push containers
 docker push whiplash/odb
 docker push whiplash/api
+
+# deploy
+./deploy.sh
