@@ -1,7 +1,9 @@
 #!/bin/bash
 
+# testing flags
 set -e
-trap 'echo "exit $? due to $previous_command"' EXIT
+trap 'previous_command=$this_command; this_command=$BASH_COMMAND' DEBUG
+trap 'echo "exit $? : $previous_command"' EXIT
 
 # build wdb-odb
 docker build -t whiplash/odb -f Dockerfile.odb .
@@ -9,8 +11,6 @@ docker build -t whiplash/odb -f Dockerfile.odb .
 # start wdb-odb-test
 docker run --name wdb-odb-test -d whiplash/odb --auth
 echo $?
-
-cat asdfasdfasdf
 
 # build wdb-api
 docker build -t whiplash/api -f Dockerfile.api ..
