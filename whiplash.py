@@ -138,7 +138,7 @@ class wdb:
 
         def update_by_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return json.loads(res.decode('utf-8'))
 
         def update_batch(self,updates):
             #TODO
@@ -178,9 +178,6 @@ class wdb:
 
         def commit_resolved(self,obj):
             return self.update_by_id(obj["_id"],obj)
-
-        def update_status(self,ID,status):
-            return self.update_by_id(ID,{'status':status})
 
         def get_num_unresolved(self):
             return self.count({'status':0})
