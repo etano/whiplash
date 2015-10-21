@@ -177,11 +177,13 @@ class wdb:
         def get_num_unresolved(self):
             return self.count({'status':0})
 
-        def get_unresolved_batch(self,time_limit):
-
+        def fetch_time_batch(self,time_limit):
             #TODO
             status, reason, res = self.db.request("PUT","/api/properties/fetch_time_batch/",json.dumps({'time_limit':time_limit}))
-            properties = json.loads(res.decode('utf-8'))["objs"]
+            return json.loads(res.decode('utf-8'))["objs"]
+
+        def get_unresolved_batch(self,time_limit):
+            properties = self.fetch_time_batch(time_limit)
 
             model_ids = []
             executable_ids = []
