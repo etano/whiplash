@@ -58,7 +58,7 @@ router.put('/fetch_time_batch/', passport.authenticate('bearer', { session: fals
     while(time < time_limit){
 
         var update = {"status":1}
-        var filter = {"owner":req.user,"status":0,"timeout":{"$lt":time_limit-time}};
+        var filter = {"status":0,"timeout":{$lt:time_limit-time}};
         Property.findOneAndUpdate(filter, update, {new: true}, function (err, obj) {
             if(!obj)
                 break;
