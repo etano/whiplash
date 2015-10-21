@@ -1,12 +1,16 @@
 #!/bin/bash
 
+set -e
+trap 'echo "exit $? due to $previous_command"' EXIT
+
 # build wdb-odb
 docker build -t whiplash/odb -f Dockerfile.odb .
-echo $?
 
 # start wdb-odb-test
 docker run --name wdb-odb-test -d whiplash/odb --auth
 echo $?
+
+cat asdfasdfasdf
 
 # build wdb-api
 docker build -t whiplash/api -f Dockerfile.api ..
