@@ -3,7 +3,7 @@
 # testing flags
 set -e
 trap 'previous_command=$this_command; this_command=$BASH_COMMAND' DEBUG
-trap 'echo "exit $? : $previous_command" | mail -s "whiplash-api merge into master deployment" "ebrown@itp.phys.ethz.ch && ./cleanup.sh;"' EXIT
+trap '(echo "exit $? : $previous_command" | mail -s "whiplash-api merge into master deployment" "ebrown@itp.phys.ethz.ch) && ./cleanup.sh;"' EXIT
 
 #
 # BUILD
