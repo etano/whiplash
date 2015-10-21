@@ -175,3 +175,16 @@ class wdb:
 
         def get_num_unresolved(self):
             return self.count({'status':0})
+
+        def get_unresolved_batch(self,time_limit):
+            #TODO: return work which fits into time limit
+
+            #prop = wdb.properties.get_unresolved()
+            #model = wdb.models.query_by_id(prop['model_id'])
+            #executable = wdb.executables.query_by_id(prop['executable_id'])
+            #obj = {'property':prop,'model':model,'executable':executable}
+            return {}
+
+        def commit_resolved_batch(self,props):
+            #TODO: commit batch of resolved properties. replace all by id
+            pass
