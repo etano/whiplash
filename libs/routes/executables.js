@@ -22,6 +22,10 @@ router.get('/query_for_ids/', passport.authenticate('bearer', { session: false }
     common.queryForIds(Executable,req,res);
 });
 
+router.get('/query_by_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.queryByIds(Executable,req,res);
+});
+
 router.get('/query/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.queryById(Executable,req,res);
 });

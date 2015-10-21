@@ -130,6 +130,30 @@ module.exports = {
         });
     },
 
+    queryByIds: function(ObjType,req,res) {
+        ObjType.find({"_id":{$in:req.body.ids}}, function (err, objs) {
+            // Check exists
+            if(!objs) {
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+
+            // TODO: Check to make sure user has READ permissions
+
+            // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    objs: objs
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },    
+
     findOneAndUpdate: function(ObjType,req,res) {
         req.body.filter.owner = req.user;
         ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
