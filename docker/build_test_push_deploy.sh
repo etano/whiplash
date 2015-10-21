@@ -12,6 +12,8 @@ trap './cleanup.sh; mail -s "exit $? : $previous_command" "ebrown@itp.phys.ethz.
 docker build -t whiplash/odb -f Dockerfile.odb .
 docker build -t whiplash/api -f Dockerfile.api ..
 
+cat intentional_error
+
 #
 # TEST
 #
