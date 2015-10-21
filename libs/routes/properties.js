@@ -48,38 +48,39 @@ router.delete('/delete/:id', passport.authenticate('bearer', { session: false })
     common.deleteById(Property,req,res);
 });
 
-router.put('/fetch_time_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
+//TODO
+// router.put('/fetch_time_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
-    var time_limit = req.body.time_limit
+//     var time_limit = req.body.time_limit
 
-    var time = 0
-    objs = {}
+//     var time = 0
+//     objs = {}
 
-    while(time < time_limit){
+//     while(time < time_limit){
 
-        var update = {"status":1}
-        var filter = {"status":0,"timeout":{$lt:time_limit-time}};
-        Property.findOneAndUpdate(filter, update, {new: true}, function (err, obj) {
-            if(!obj)
-                break;
+//         var update = {"status":1}
+//         var filter = {"status":0,"timeout":{$lt:time_limit-time}};
+//         Property.findOneAndUpdate(filter, update, {new: true}, function (err, obj) {
+//             if(!obj)
+//                 break;
 
-            if (!err){
-                objs.push(obj);
-                time += obj['timeout']
-            }
-            else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+//             if (!err){
+//                 objs.push(obj);
+//                 time += obj['timeout']
+//             }
+//             else {
+//                 res.statusCode = 500;
+//                 log.error('Internal error(%d): %s',res.statusCode,err.message);
+//                 return res.json({ error: 'Server error' });
+//             }
+//         });
 
-    }
+//     }
 
-    return res.json({
-        status: 'OK',
-        objs: objs
-    });    
-});
+//     return res.json({
+//         status: 'OK',
+//         objs: objs
+//     });    
+// });
 
 module.exports = router;

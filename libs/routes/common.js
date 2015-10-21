@@ -156,7 +156,7 @@ module.exports = {
     },    
 
     findOneAndUpdate: function(ObjType,req,res) {
-        req.body.filter.owner = req.user;
+        req.body.filter.owner = req.user._id;
         ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
             // Check exists
             if(!obj) {
@@ -179,7 +179,7 @@ module.exports = {
     },
 
     updateById: function(ObjType,req,res) {
-        var filter = {"_id": req.params.id,"owner":req.user};
+        var filter = {"_id": req.params.id,"owner":req.user._id};
         ObjType.update(filter, req.body.update, function (err, raw) {
             if (!err) {
                 return res.json({status: 'OK'});
@@ -193,7 +193,7 @@ module.exports = {
 
     delete: function(ObjType,req,res) {
         var filter = req.body;
-        filter.owner = req.user;
+        filter.owner = req.user._id;
         ObjType.remove(filter, function (err, raw) {
             if (!err) {
                 return res.json({status: 'OK'});
