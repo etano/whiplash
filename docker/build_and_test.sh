@@ -20,3 +20,7 @@ docker run -it --link wdb-odb-test:mongo -e "MONGO_API_USERNAME=api" -e "MONGO_A
 
 # create token
 http POST http://192.168.99.100:1337/api/users/token grant_type=password client_id=www-browser client_secret=fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba username=www password=7cJgeAkHdw{oktPNYdgYE3nJ
+
+# kill and remove containers
+docker stop wdb-api-test; docker rm wdb-api-test;
+docker stop wdb-odb-test; docker rm wdb-odb-test;
