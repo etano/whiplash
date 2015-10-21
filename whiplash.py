@@ -116,8 +116,8 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(ID),{})
             return json.loads(res.decode('utf-8'))["obj"]
 
-        def query_by_ids(self,ids):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(ids))
+        def query_by_ids(self,IDs):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(IDs))
             return json.loads(res.decode('utf-8'))["objs"]
 
         def query_for_ids(self,fltr):
@@ -139,11 +139,6 @@ class wdb:
         def update_by_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
             return json.loads(res.decode('utf-8'))
-
-        def update_batch(self,updates):
-            #TODO
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update_batch/",json.dumps(updates))
-            return json.loads(res.decode('utf-8'))["objs"]
 
         #
         # Delete
@@ -203,4 +198,8 @@ class wdb:
             return objs
 
         def commit_resolved_batch(self,props):
-            self.update_batch(props)
+            IDs = []
+            for prop in props:
+                IDs.append(prop["_id"])
+            self.delete_by_ids(IDS)
+            self.commit(props)
