@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, time
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -131,6 +131,10 @@ class wdb:
         # Update
         #
 
+        def update(self,fltr,update):
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':fltr,'update':update}))
+            return json.loads(res.decode('utf-8'))
+
         def find_one_and_update(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/find_one_and_update/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["obj"]
@@ -205,6 +209,5 @@ class wdb:
             self.commit(props)
 
         def refresh_properties(self):
-            #TODO: refresh all expired properties
-            pass
+            self.update({'status':1,'consume_by':{'$lt':time.time()}},{'status':0})
         
