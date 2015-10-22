@@ -26,4 +26,3 @@ print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"statu
 #prop_ids = wdb.properties.query_for_ids({"status":"unresolved"})
 #print prop_ids
 #print wdb.properties.count({"status":"unresolved"})
-
