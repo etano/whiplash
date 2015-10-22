@@ -108,36 +108,35 @@ class wdb:
         # Query
         #
 
+        def count(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
+            return json.loads(res.decode('utf-8'))["count"]
+
         def query(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
-
-        def query_by_id(self,ID):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["obj"]
-
-        def query_by_ids(self,IDs):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(IDs))
             return json.loads(res.decode('utf-8'))["objs"]
 
         def query_for_ids(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["ids"]
 
-        def count(self,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+        def query_by_id(self,ID):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_id/"+str(ID),{})
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        def query_by_ids(self,IDs):
+            return self.query({'_id': { '$in': IDs }})
 
         #
         # Update
         #
 
         def find_one_and_update(self,fltr,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':fltr,'update':update}))
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/find_one_and_update/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["obj"]
 
         def update_by_id(self,ID,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update_by_id/"+str(ID),json.dumps(update))
             return json.loads(res.decode('utf-8'))
 
         #
@@ -149,7 +148,7 @@ class wdb:
             return json.loads(res.decode('utf-8'))
 
         def delete_by_id(self,ID):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/"+str(ID),{})
+            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete_by_id/"+str(ID),{})
             return json.loads(res.decode('utf-8'))
 
         def delete_by_ids(self,IDs):
