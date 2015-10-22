@@ -11,6 +11,7 @@ var Property = new Schema({
     params: { type: Schema.Types.Mixed, default: "" },
     timestamp: { type: Date, default: Date.now },
     timeout: { type: Number, required: true, default: 120 },
+    consume_by: { type: Date }
     _id: { type: Number }
 });
 
