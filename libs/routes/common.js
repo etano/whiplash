@@ -3,6 +3,10 @@ var log = require(libs + 'log')(module);
 
 module.exports = {
 
+    //
+    // Commit
+    //
+
     commit: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
         ObjType.count({}, function(err,count) {
@@ -35,6 +39,10 @@ module.exports = {
 
         });
     },
+
+    //
+    // Query
+    //
 
     count: function(ObjType,req,res) {
         ObjType.count(req.body, function (err, count) {
@@ -79,7 +87,7 @@ module.exports = {
         });
     },
 
-    queryForIds: function(ObjType,req,res) {
+    query_for_ids: function(ObjType,req,res) {
         ObjType.find(req.body, '_id', function (err, objs) {
             // Check exists
             if(!objs) {
@@ -107,7 +115,7 @@ module.exports = {
         });
     },
 
-    queryById: function(ObjType,req,res) {
+    query_by_id: function(ObjType,req,res) {
         ObjType.findById(req.params.id, function (err, obj) {
             // Check exists
             if(!obj) {
@@ -131,31 +139,11 @@ module.exports = {
         });
     },
 
-    queryByIds: function(ObjType,req,res) {
-        ObjType.find({"_id":{$in:req.body.ids}}, function (err, objs) {
-            // Check exists
-            if(!objs) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
+    //
+    // Update
+    //
 
-            // TODO: Check to make sure user has READ permissions
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    objs: objs
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },    
-
-    findOneAndUpdate: function(ObjType,req,res) {
+    find_one_and_update: function(ObjType,req,res) {
         req.body.filter.owner = req.user._id;
         ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
             // Check exists
@@ -178,7 +166,7 @@ module.exports = {
         });
     },
 
-    updateById: function(ObjType,req,res) {
+    update_by_id: function(ObjType,req,res) {
         var filter = {"_id": req.params.id,"owner":req.user._id};
         ObjType.update(filter, req.body.update, function (err, raw) {
             if (!err) {
@@ -190,6 +178,10 @@ module.exports = {
             }
         });
     },
+
+    //
+    // Delete
+    //
 
     delete: function(ObjType,req,res) {
         var filter = req.body;
@@ -205,7 +197,7 @@ module.exports = {
         });
     },    
 
-    deleteById: function(ObjType,req,res) {
+    delete_by_id: function(ObjType,req,res) {
         req.body = {"_id": req.params.id};
         this.delete(ObjType,req,res);
     },
