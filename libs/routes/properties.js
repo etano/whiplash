@@ -46,40 +46,37 @@ router.delete('/delete/:id', passport.authenticate('bearer', { session: false })
     common.deleteById(Object,req,res);
 });
 
-//TODO
 var log = require(libs + 'log')(module);
 
 router.put('/fetch_work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
-    var time_limit = req.body.time_limit;
-    var time = 0;
-    var properties = {};
+    //TODO: make this more advanced at some point
 
-    var update = {"status":1}
-    var filter = {"status":0,"timeout":{$lt:time_limit-time}};
+    var num_jobs = 100;
+
+    var time_limit = req.body.time_limit;
+    //var time = 0;
+
+    var update = {"status":1,"consume_by":Date.now + (time_limit-time)}
+    //var filter = {"status":0,"timeout":{$lt:(time_limit-time)}};
+    var filter = {"status":0,"timeout":{$lt:time_limit}};
     Object.find(filter, update, {new: true}, function (err, objs) {
 
-        while(time < time_limit){
-
-            if(!obj)
-                break;
-
-            if (!err){
-                objs.push(obj);
-                time += obj['timeout']
-            }
-            else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
+        if (!err){
+            return res.json({
+                status: 'OK',
+                objs: objs
+            });    
         }
-    }).limit();
+        else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
 
-    return res.json({
-        status: 'OK',
-        objs: objs
-    });    
+    }).limit(num_jobs);//.sort({"timeout":-1});
+
+    //time += obj['timeout'];
 });
 
 module.exports = router;
