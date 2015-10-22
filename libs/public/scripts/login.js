@@ -1,5 +1,9 @@
 var access_token;
 var session_token;
+var refresh_token;
+
+var www_client_id = "www-browser";
+var www_client_secret = "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba";
 
 function redirect(path){
     var www_server = window.location.host;
@@ -8,6 +12,7 @@ function redirect(path){
 
 function logout(){
     removeCookie("session_token");
+    removeCookie("refresh_token");
     redirect("/");
 }
 
@@ -19,19 +24,25 @@ function login(){
     $.ajax({
         type: 'POST',
         url: "/api/users/token",
-        data: { "username"      : user, 
+        data: { "grant_type"    : "password",
+                "username"      : user,
                 "password"      : pass,
-                "grant_type"    : "password",
-                "client_id"     : "www-browser",
-                "client_secret" : "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba"
+                "client_id"     : www_client_id,
+                "client_secret" : www_client_secret
               },
         success: function(data){
             if(data.error){
                 inputFailFeedback($("section#login"));
             }else{
                 session_token = data.access_token;
-                if(keep) setCookie("session_token", session_token, data.expires_in);
-                else setCookie("session_token", session_token);
+                refresh_token = data.refresh_token;
+                if(keep){
+                    setCookie("session_token", session_token, data.expires_in);
+                    setCookie("refresh_token", refresh_token, data.expires_in);
+                }else{
+                    setCookie("session_token", session_token);
+                    setCookie("refresh_token", refresh_token);
+                }
                 viewMain();
             }
         },
@@ -158,9 +169,57 @@ function viewMain(){
     $("section#menu > div#logout").css("display", "inline-block");
     $("section#menu > div#forgot").css("display", "none");
     $("section#menu > div#apply").css("display", "none");
-    
     $("section#info").css("left", "50%");
-    $("section#info").html("<div>Session token: " + session_token + "</div>");
+    
+    $("section#info").html("<div id='token-table'></div>");
+    $("section#info > div#token-table").append("<div class='header'>"+
+                                                   "<div class='type'>Type</div>" +
+                                                   "<div class='client_id'> Client Id </div>" +
+                                                   "<div class='client_secret'> Client Secret </div>" +
+                                                   "<div class='refresh_value'> Refresh Token </div>" + 
+                                                   "<div class='session_value'> Session Token </div>" + 
+                                               "</div>");
+    $("section#info > div#token-table").append("<div class='token'>"+
+                                                   "<div class='type'>www</div>" +
+                                                   "<div class='client_id'>" + www_client_id + "</div>" +
+                                                   "<div class='client_secret'>" + www_client_secret + "</div>" +
+                                                   "<div class='refresh_value'>" + refresh_token + "</div>" + 
+                                                   "<div class='session_value'>" + session_token + "</div>" + 
+                                                   "<action class='refresh'>↻</action>" +
+                                               "</div>");
+}
+
+function refreshToken(){
+    var token = $(this).parent();
+    var client_id = token.find("div.client_id").text();
+    var client_secret = token.find("div.client_secret").text();
+    var refresh_value = token.find("div.refresh_value").text();
+
+    $.ajax({
+        type: 'POST',
+        url: "/api/users/token",
+        data: { "grant_type"    : "refresh_token",
+                "client_id"     : client_id,
+                "client_secret" : client_secret,
+                "refresh_token" : refresh_value
+              },
+        success: function(data){
+            if(data.error){
+                alert(data.error);
+            }else{
+                session_token = data.access_token;
+                refresh_token = data.refresh_token;
+                setCookie("session_token", session_token, data.expires_in);
+                setCookie("refresh_token", refresh_token, data.expires_in);
+
+                token.find("div.refresh_value").text(refresh_token);
+                token.find("div.session_value").text(session_token);
+            }
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
 }
 
 $(document).ready(function(){
@@ -174,7 +233,20 @@ $(document).ready(function(){
     $(document).on("click", "section#register input.submit", register);
     $(document).on("click", "section#forgot input.submit", forgot);
 
+    $(document).on("click", "action.refresh", refreshToken);
+
+    $(document).on("click", "section#info > div#token-table > div.token > div", function(){
+        var input = $(this);
+        var value = input.text();
+        CopyToClipboard(value);
+        input.text("Copied");
+        setTimeout(function(){
+            input.text(value);
+        }, 500);
+    });
+
     access_token = getCookie("access_token");
     session_token = getCookie("session_token");
+    refresh_token = getCookie("refresh_token");
     if(session_token) setTimeout(function(){ viewMain(); }, 1000);
 });
