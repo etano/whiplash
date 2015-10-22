@@ -7,13 +7,16 @@ try: input = raw_input
 except NameError: pass
 
 #
-    # Whiplash class
+# Whiplash class
 #
 class wdb:
-    def __init__(self,server,port,access_token=""):
+    def __init__(self,server,port,access_token="",username="",password="",client_id="",client_secret=""):
         self.server = server
         self.port = port
-        self.set_token(access_token)
+        if access_token == "":
+            self.create_token(username,password,client_id,client_secret)
+        else:
+            self.set_token(access_token)
         self.check_token()
 
         self.models = self.collection(self,"models")
@@ -45,22 +48,24 @@ class wdb:
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
-                self.create_token()
-            else:
-                sys.exit()
+            sys.exit(1)
 
-    def create_token(self):
-        username = input("username: ")
-        password = input("password: ")
-        client_id = input("client ID: ")
-        client_secret = input("client secret: ")
+    def create_token(self,username="",password="",client_id="",client_secret=""):
+        if username == "":
+            username = input("username: ")
+        if password == "":
+            password = input("password: ")
+        if client_id == "":
+            client_id = input("client ID: ")
+        if client_secret == "":
+            client_secret = input("client secret: ")
 
         self.headers = {"Content-type": "application/json", "Accept": "*/*"}
         status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
-                print('Invalid login credentials. Please go to http://whiplash.ethz.ch to verify your account.')
-            sys.exit()
+                print('Invalid login credentials. Please verify your account.')
+            sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
             print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
@@ -76,9 +81,8 @@ class wdb:
         status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
-                print('Invalid refresh token. Please login to get new tokens.')
-                self.create_token()
-            sys.exit()
+                print('Invalid refresh token. Please create new tokens.')
+            sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
             print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
