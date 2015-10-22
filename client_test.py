@@ -2,7 +2,7 @@
 import json
 import whiplash
 
-wdb = whiplash.wdb("whiplash.ethz.ch","1337","dc1373b7b0b4099c88937e2e0ed3ba87908588d675e9f28f87ae2ba83733d344")
+wdb = whiplash.wdb("whiplash.ethz.ch","80","dc1373b7b0b4099c88937e2e0ed3ba87908588d675e9f28f87ae2ba83733d344")
 
 app = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/client"}
 #executable_ids = wdb.executables.commit(app)
@@ -14,12 +14,10 @@ model = {"class":"testing","description":"sleep model","body":"empty"}
 model_id = wdb.models.query_for_ids({"class":"testing"})[0]
 print model_id
 
-print wdb.models.query_by_ids([model_id])
-
 #prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"}}
 #for i in range(1000): wdb.properties.commit(prop)
 #wdb.properties.delete({})
-#print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
 #for i in range(100):
 #    print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
 #    wdb.properties.get_unresolved()

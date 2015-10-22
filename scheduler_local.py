@@ -86,6 +86,8 @@ def run(args):
 
     time.sleep(args.time_limit)
 
+#TODO: possibly check daemonisation
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
