@@ -180,7 +180,7 @@ module.exports = {
 
     update_by_id: function(ObjType,req,res) {
         var filter = {"_id": req.params.id,"owner":req.user._id};
-        ObjType.update(filter, req.body.update, function (err, raw) {
+        ObjType.update(filter, req.body, function (err, raw) {
             if (!err) {
                 return res.json({status: 'OK'});
             } else {
