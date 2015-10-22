@@ -77,10 +77,12 @@ router.put('/fetch_work_batch/', passport.authenticate('bearer', { session: fals
     var time_limit = req.body.time_limit;
     //var time = 0;
 
-    //var update = {"status":1,"consume_by":Date.now + (time_limit-time)}
-    var update = {"status":1,"consume_by":Date.now + time_limit}
-    //var filter = {"status":0,"timeout":{$lt:(time_limit-time)}};
-    var filter = {"status":0,"timeout":{$lt:time_limit}};
+    //var filter = {"status":"unresolved","timeout":{$lt:(time_limit-time)}};
+    var filter = {"status":"unresolved","timeout":{$lt:time_limit}};
+
+    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)}
+    var update = {"status":"pulled","consume_by":Date.now + time_limit}
+
     Object.find(filter, update, {new: true}, function (err, objs) {
 
         if (!err){
