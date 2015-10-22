@@ -2,7 +2,7 @@
 import json
 import whiplash
 
-wdb = whiplash.wdb("whiplash.ethz.ch","1337","dc1373b7b0b4099c88937e2e0ed3ba87908588d675e9f28f87ae2ba83733d344")
+wdb = whiplash.wdb("whiplash.ethz.ch","80","dc1373b7b0b4099c88937e2e0ed3ba87908588d675e9f28f87ae2ba83733d344")
 
 app = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/client"}
 #executable_ids = wdb.executables.commit(app)
@@ -28,4 +28,3 @@ print wdb.models.query_by_ids([model_id])
 #prop_ids = wdb.properties.query_for_ids({"status":"unresolved"})
 #print prop_ids
 #print wdb.properties.count({"status":"unresolved"})
-
