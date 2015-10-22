@@ -4,7 +4,7 @@ import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
-def resolve_object(obj):
+def resolve_object(pid,obj):
     prop = obj['property']
     ID = prop['_id']
 
@@ -21,7 +21,7 @@ def resolve_object(obj):
     t0 = time.time()
 
     try:
-        sp.call(path + [file_name],timeout=timeout)
+        sp.call([path,file_name],timeout=timeout)
         prop['status'] = "resolved"
     except sp.TimeoutExpired:
         prop['status'] = "oot"
@@ -43,6 +43,8 @@ def resolve_object(obj):
 def worker(pid,args):
     print('worker',str(pid),'active')
 
+    batch = False #WARNING: no batch
+
     t_start = time.time()
 
     with open(args.wdb_info, 'r') as infile:
@@ -54,14 +56,15 @@ def worker(pid,args):
     while True:
         time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            unresolved = wdb.properties.get_unresolved_batch(min(time_left(),args.time_window))
+            unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=batch)
             if len(unresolved) > 0:
+                print('worker',str(pid),'fetched',len(unresolved),'properties with',time_left(),'seconds of work left')
                 resolved = []
                 for obj in unresolved:
                     if time_left() > obj['property']['timeout']:
-                        resolved.append(resolve_object(obj))
+                        resolved.append(resolve_object(pid,obj))
                     else: break
-                wdb.properties.commit_resolved_batch(resolved)
+                wdb.properties.commit_resolved(resolved,batch=batch)
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
@@ -73,15 +76,15 @@ def run(args):
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
         num_cpus = min(args.num_cpus,num_cpus)
-    assert num_cpus > 1
+    assert num_cpus > 0
 
     print('starting workers')
     context = mp.get_context('fork')
-    for pid in range(num_cpus-1):
+    for pid in range(num_cpus):
         context.Process(target=worker, args=(pid,args,)).start()
         time.sleep(5)
 
-    while True: pass
+    time.sleep(args.time_limit)
 
 if __name__ == '__main__':
 
