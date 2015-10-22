@@ -38,3 +38,9 @@ docker push whiplash/api
 set +e
 trap - DEBUG
 trap - EXIT
+
+#
+# DEPLOY
+#
+
+./deploy.sh 2
