@@ -22,11 +22,6 @@ docker build -t whiplash/api -f Dockerfile.api ..
 # cleanup
 ./cleanup.sh
 
-# turn off testing
-set +e
-trap - DEBUG
-trap - EXIT
-
 #
 # PUSH
 #
@@ -34,9 +29,7 @@ trap - EXIT
 docker push whiplash/odb
 docker push whiplash/api
 
-#
-# DEPLOY
-#
-
-# deploy
-./deploy.sh
+# turn off testing
+set +e
+trap - DEBUG
+trap - EXIT
