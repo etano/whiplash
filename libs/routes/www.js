@@ -16,6 +16,7 @@ client.save(function(err, client){ if(!err) log.info("www client: %s", client.cl
 
 router.use('/css', express.static( www + "/css" ));
 router.use('/scripts', express.static( www + "/scripts" ));
+router.use('/docs', express.static( www + "/docs" ));
 
 router.get('/', function (req, res){
     res.setHeader('Content-Type', 'text/html');
