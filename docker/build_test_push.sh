@@ -21,9 +21,7 @@ docker build -t whiplash/api -f Dockerfile.api ..
 
 # tests
 git clone git@gitlab.phys.ethz.ch:whiplash/whiplash-python.git
-cd whiplash-python
-./tests.py 192.168.99.100 7357 www 7cJgeAkHdw{oktPNYdgYE3nJ 32489 ha87hjlAWidwrxv435est
-cd ../
+PYTHONPATH=$PWD/whiplash-python:$PYTHONPATH ./whiplash-python/tests.py 192.168.99.100 7357 www 7cJgeAkHdw{oktPNYdgYE3nJ 32489 ha87hjlAWidwrxv435est
 rm -rf whiplash-python
 
 # cleanup
