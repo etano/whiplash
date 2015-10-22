@@ -1,1 +1,0 @@
-{ "_id" : 2, "name" : "an_ms_r1_nf", "algorithm" : "SA", "version" : "1.0.0", "build" : "O3", "path" : "./client", "class" : "ising", "description" : "Multi-spin code for range-1 interactions without magnetic field (approach one)", "owner" : "561d29a26394fc7f473d455a", "timestamp" : "2015-10-15T15:11:33.717Z", "cfg" : "", "__v" : 0 }

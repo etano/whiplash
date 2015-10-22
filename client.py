@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import json,sys,time
 
 file_name = sys.argv[1]

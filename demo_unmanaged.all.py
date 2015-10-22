@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import whiplash
 
 # Connect to local Whiplash instance
