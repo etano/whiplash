@@ -18,30 +18,26 @@ def resolve_object(obj):
     path = obj['executable']['path']
     timeout = prop['timeout']
 
+    t0 = time.time()
+
     try:
-        t0 = time.time()
         sp.call(path + [file_name],timeout=timeout)
-        t1 = time.time()
-
-        elapsed = t1-t0
-
-        prop['walltime'] = elapsed
-
-        with open(file_name, 'r') as propfile:
-            prop['result'] = json.load(propfile)
-
-        prop['status'] = "resolved"
-        print('worker',str(pid),'resolved property',ID,'with walltime',elapsed)
+        prop['status'] = "resolved"        
     except sp.TimeoutExpired:
-        prop['walltime'] = timeout
-
-        with open(file_name, 'r') as propfile:
-            prop['result'] = json.load(propfile)
-
         prop['status'] = "timeout"
-        print('time expired for property',prop['_id'],'on worker',str(pid))
+
+    t1 = time.time()
+
+    elapsed = t1-t0
+
+    prop['walltime'] = elapsed
+
+    with open(file_name, 'r') as propfile:
+        prop['result'] = json.load(propfile)
 
     os.remove(file_name)
+
+    print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return prop
 
 def worker(pid,args):
