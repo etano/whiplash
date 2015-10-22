@@ -46,41 +46,37 @@ router.delete('/delete/:id', passport.authenticate('bearer', { session: false })
     common.deleteById(Object,req,res);
 });
 
-//TODO
-// var log = require(libs + 'log')(module);
+var log = require(libs + 'log')(module);
 
-// router.put('/fetch_time_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/fetch_work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
-//     var time_limit = req.body.time_limit
+    //TODO: make this more advanced at some point
 
-//     var time = 0
-//     objs = {}
+    var num_jobs = 100;
 
-//     while(time < time_limit){
+    var time_limit = req.body.time_limit;
+    //var time = 0;
 
-//         var update = {"status":1}
-//         var filter = {"status":0,"timeout":{$lt:time_limit-time}};
-//         Object.findOneAndUpdate(filter, update, {new: true}, function (err, obj) {
-//             if(!obj)
-//                 break;
+    var update = {"status":1,"consume_by":Date.now + (time_limit-time)}
+    //var filter = {"status":0,"timeout":{$lt:(time_limit-time)}};
+    var filter = {"status":0,"timeout":{$lt:time_limit}};
+    Object.find(filter, update, {new: true}, function (err, objs) {
 
-//             if (!err){
-//                 objs.push(obj);
-//                 time += obj['timeout']
-//             }
-//             else {
-//                 res.statusCode = 500;
-//                 log.error('Internal error(%d): %s',res.statusCode,err.message);
-//                 return res.json({ error: 'Server error' });
-//             }
-//         });
+        if (!err){
+            return res.json({
+                status: 'OK',
+                objs: objs
+            });    
+        }
+        else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
 
-//     }
+    }).limit(num_jobs);//.sort({"timeout":-1});
 
-//     return res.json({
-//         status: 'OK',
-//         objs: objs
-//     });    
-// });
+    //time += obj['timeout'];
+});
 
 module.exports = router;
