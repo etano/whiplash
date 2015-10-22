@@ -204,7 +204,6 @@ section#info > div#token-table {
     position: absolute;
     font-size: 12px;
     font-family: arial;
-    background-color: white;
     padding-right: 4px;
     border: 1px solid #222;
     border-radius: 4px;
@@ -212,7 +211,6 @@ section#info > div#token-table {
 }
 section#info > div#token-table > div.header {
     position: relative;
-    background-color: white;
 }
 
 section#info > div#token-table > div.token {
