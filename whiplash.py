@@ -204,3 +204,8 @@ class wdb:
                 IDs.append(prop["_id"])
             self.delete_by_ids(IDS)
             self.commit(props)
+
+        def refresh_properties(self):
+            #TODO: refresh all expired properties
+            pass
+        

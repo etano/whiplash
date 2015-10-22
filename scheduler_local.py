@@ -30,10 +30,15 @@ def resolve_object(obj):
         with open(file_name, 'r') as propfile:
             prop['result'] = json.load(propfile)
 
-        prop['status'] = 4
+        prop['status'] = "resolved"
         print('worker',str(pid),'resolved property',ID,'with walltime',elapsed)
     except sp.TimeoutExpired:
-        prop['status'] = 3
+        prop['walltime'] = timeout
+
+        with open(file_name, 'r') as propfile:
+            prop['result'] = json.load(propfile)
+
+        prop['status'] = "timeout"
         print('time expired for property',prop['_id'],'on worker',str(pid))
 
     os.remove(file_name)
