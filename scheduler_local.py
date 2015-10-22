@@ -18,25 +18,26 @@ def resolve_object(obj):
     path = obj['executable']['path']
     timeout = prop['timeout']
 
+    t0 = time.time()
+
     try:
-        t0 = time.time()
         sp.call(path + [file_name],timeout=timeout)
-        t1 = time.time()
-
-        elapsed = t1-t0
-
-        prop['walltime'] = elapsed
-
-        with open(file_name, 'r') as propfile:
-            prop['result'] = json.load(propfile)
-
-        prop['status'] = 4
-        print('worker',str(pid),'resolved property',ID,'with walltime',elapsed)
+        prop['status'] = "resolved"
     except sp.TimeoutExpired:
-        prop['status'] = 3
-        print('time expired for property',prop['_id'],'on worker',str(pid))
+        prop['status'] = "oot"
+
+    t1 = time.time()
+
+    elapsed = t1-t0
+
+    prop['walltime'] = elapsed
+
+    with open(file_name, 'r') as propfile:
+        prop['result'] = json.load(propfile)
 
     os.remove(file_name)
+
+    print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return prop
 
 def worker(pid,args):
@@ -51,16 +52,18 @@ def worker(pid,args):
     print('worker',str(pid),'connected to wdb')
 
     while True:
-        time_left = args.time_limit - (time.time()-t_start)
-        if time_left > 0:
-            unresolved = wdb.properties.get_unresolved_batch(min(time_left,args.time_window))
+        time_left = lambda: args.time_limit - (time.time()-t_start)
+        if time_left() > 0:
+            unresolved = wdb.properties.get_unresolved_batch(min(time_left(),args.time_window))
             if len(unresolved) > 0:
                 resolved = []
                 for obj in unresolved:
-                    resolved.append(resolve_object(obj))
+                    if time_left() > obj['property']['timeout']:
+                        resolved.append(resolve_object(obj))
+                    else: break
                 wdb.properties.commit_resolved_batch(resolved)
             else:
-                print('all properties are currently resolved')
+                print('no properties currently unresolved')
             time.sleep(1)
         else:
             break

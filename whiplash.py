@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, time
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -108,36 +108,39 @@ class wdb:
         # Query
         #
 
+        def count(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
+            return json.loads(res.decode('utf-8'))["count"]
+
         def query(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
-
-        def query_by_id(self,ID):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["obj"]
-
-        def query_by_ids(self,IDs):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_ids/",json.dumps(IDs))
             return json.loads(res.decode('utf-8'))["objs"]
 
         def query_for_ids(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/query_for_ids/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["ids"]
 
-        def count(self,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+        def query_by_id(self,ID):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/query_by_id/"+str(ID),{})
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        def query_by_ids(self,IDs):
+            return self.query({'_id': { '$in': IDs }})
 
         #
         # Update
         #
 
-        def find_one_and_update(self,fltr,update):
+        def update(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/",json.dumps({'filter':fltr,'update':update}))
+            return json.loads(res.decode('utf-8'))
+
+        def find_one_and_update(self,fltr,update):
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/find_one_and_update/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["obj"]
 
         def update_by_id(self,ID,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update/"+str(ID),json.dumps(update))
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/update_by_id/"+str(ID),json.dumps(update))
             return json.loads(res.decode('utf-8'))
 
         #
@@ -149,7 +152,7 @@ class wdb:
             return json.loads(res.decode('utf-8'))
 
         def delete_by_id(self,ID):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete/"+str(ID),{})
+            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/delete_by_id/"+str(ID),{})
             return json.loads(res.decode('utf-8'))
 
         def delete_by_ids(self,IDs):
@@ -161,29 +164,26 @@ class wdb:
     class properties_collection(collection):
 
         def hold_until_resolved(self,property_ids,fraction):
-            #TODO: if more efficient, fetch by unique tag for a given set
-            #of jobs rather than array of ids
             while True:
-                properties = self.query(self.properties,{'_id': { '$in': property_ids },'status':3})
+                properties = self.query({'_id': { '$in': property_ids },'status':"resolved"})
                 if properties.count() > fraction*len(property_ids): break
             return properties
 
         def get_unresolved(self):
-            return self.find_one_and_update({'status':0},{'status':1})
+            return self.find_one_and_update({'status':"unresolved"},{'status':"pulled"})
 
         def commit_resolved(self,obj):
             return self.update_by_id(obj["_id"],obj)
 
         def get_num_unresolved(self):
-            return self.count({'status':0})
+            return self.count({'status':"unresolved"})
 
-        def fetch_time_batch(self,time_limit):
-            #TODO
-            status, reason, res = self.db.request("PUT","/api/properties/fetch_time_batch/",json.dumps({'time_limit':time_limit}))
+        def fetch_work_batch(self,time_limit):
+            status, reason, res = self.db.request("PUT","/api/properties/fetch_work_batch/",json.dumps({'time_limit':time_limit}))
             return json.loads(res.decode('utf-8'))["objs"]
 
         def get_unresolved_batch(self,time_limit):
-            properties = self.fetch_time_batch(time_limit)
+            properties = self.fetch_work_batch(time_limit)
 
             model_ids = []
             executable_ids = []
@@ -205,3 +205,7 @@ class wdb:
                 IDs.append(prop["_id"])
             self.delete_by_ids(IDS)
             self.commit(props)
+
+        def refresh_properties(self):
+            self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})
+        
