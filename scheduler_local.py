@@ -22,9 +22,9 @@ def resolve_object(obj):
 
     try:
         sp.call(path + [file_name],timeout=timeout)
-        prop['status'] = "resolved"        
+        prop['status'] = "resolved"
     except sp.TimeoutExpired:
-        prop['status'] = "timeout"
+        prop['status'] = "oot"
 
     t1 = time.time()
 
@@ -52,16 +52,18 @@ def worker(pid,args):
     print('worker',str(pid),'connected to wdb')
 
     while True:
-        time_left = args.time_limit - (time.time()-t_start)
-        if time_left > 0:
-            unresolved = wdb.properties.get_unresolved_batch(min(time_left,args.time_window))
+        time_left = lambda: args.time_limit - (time.time()-t_start)
+        if time_left() > 0:
+            unresolved = wdb.properties.get_unresolved_batch(min(time_left(),args.time_window))
             if len(unresolved) > 0:
                 resolved = []
                 for obj in unresolved:
-                    resolved.append(resolve_object(obj))
+                    if time_left() > obj['property']['timeout']:
+                        resolved.append(resolve_object(obj))
+                    else: break
                 wdb.properties.commit_resolved_batch(resolved)
             else:
-                print('all properties are currently resolved')
+                print('no properties currently unresolved')
             time.sleep(1)
         else:
             break
