@@ -99,14 +99,6 @@ section#menu div {
 section#menu div#logout, section#info {
     display: none;
 }
-section#info {
-    left: 150%;
-}
-section#info div {
-    position: absolute;
-    font-size: 12px;
-    font-family: arial;
-}
 section#login, section#register, section#forgot, section#info {
     position: absolute;
     display: block;
@@ -200,3 +192,64 @@ div#confirm {
     transition: left 500ms;
 }
 
+
+section#info {
+    left: -50%;
+    width: 66%;
+    border: 0;
+    max-width: none;
+}
+section#info > div#token-table {
+    display: block;
+    position: absolute;
+    font-size: 12px;
+    font-family: arial;
+    background-color: white;
+    padding-right: 4px;
+    border: 1px solid #222;
+    border-radius: 4px;
+    width: 100%;
+}
+section#info > div#token-table > div.header {
+    position: relative;
+    background-color: white;
+}
+
+section#info > div#token-table > div.token {
+    position: relative;
+}
+
+section#info > div#token-table > div.header > div {
+    display: inline-block;
+    width: 20%;
+    font-weight: bold;
+    font-size: 12px;
+    border-right: 1px solid #666;
+    text-indent: 5px;
+}
+
+section#info > div#token-table > div.token > div {
+    display: inline-block;
+    width: 20%;
+    border-right: 1px solid #666;
+    text-indent: 5px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+div.session_value {
+    border-right: 0 !important;
+}
+
+section#info > div#token-table > div.token > action.refresh {
+    position: absolute;
+    margin-top: -3px;
+    margin-left: 20px;
+    width: 10px;
+    font-weight: bold;
+    font-size: 18px;
+    -webkit-transform: rotate(50deg);
+    -moz-transform: rotate(50deg);
+    cursor: pointer;
+    border: 0;
+}
