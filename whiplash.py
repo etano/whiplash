@@ -125,6 +125,7 @@ class wdb:
             return json.loads(res.decode('utf-8'))["obj"]
 
         def query_by_ids(self,IDs):
+            #TODO: fix
             return self.query({'_id': { '$in': IDs }})
 
         #
@@ -169,12 +170,6 @@ class wdb:
                 if properties.count() > fraction*len(property_ids): break
             return properties
 
-        def get_unresolved(self):
-            return self.find_one_and_update({'status':"unresolved"},{'status':"pulled"})
-
-        def commit_resolved(self,obj):
-            return self.update_by_id(obj["_id"],obj)
-
         def get_num_unresolved(self):
             return self.count({'status':"unresolved"})
 
@@ -182,8 +177,12 @@ class wdb:
             status, reason, res = self.db.request("PUT","/api/properties/fetch_work_batch/",json.dumps({'time_limit':time_limit}))
             return json.loads(res.decode('utf-8'))["objs"]
 
-        def get_unresolved_batch(self,time_limit):
-            properties = self.fetch_work_batch(time_limit)
+        def get_unresolved(self,time_limit,batch=True):
+            if batch:
+                #TODO: fix
+                properties = self.fetch_work_batch(time_limit)
+            else:
+                properties = [self.find_one_and_update({'status':"unresolved"},{'status':"pulled"})]
 
             model_ids = []
             executable_ids = []
@@ -191,20 +190,24 @@ class wdb:
                 model_ids.append(prop['model_id'])
                 executable_ids.append(prop['executable_id'])
 
-            models = self.query_by_ids(model_ids)
-            executables = self.query_by_ids(model_ids)
+            models = self.db.models.query_by_ids(model_ids)
+            executables = self.db.executables.query_by_ids(executable_ids)
 
             objs = []
             for i in range(len(properties)):
                 objs.append({'property':properties[i],'model':models[i],'executable':executables[i]})
             return objs
 
-        def commit_resolved_batch(self,props):
-            IDs = []
-            for prop in props:
-                IDs.append(prop["_id"])
-            self.delete_by_ids(IDS)
-            self.commit(props)
+        def commit_resolved(self,props,batch=True):
+            if batch:
+                IDs = []
+                for prop in props:
+                    IDs.append(prop["_id"])
+                self.delete_by_ids(IDs)
+                self.commit(props)
+            else:
+                prop = props[0]
+                self.update_by_id(prop["_id"],prop)
 
         def refresh_properties(self):
             self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})

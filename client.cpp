@@ -6,14 +6,16 @@
 #include <fstream>
 #include <streambuf>
 #include <unistd.h>
+#include <cassert>
 
 int main(int argc, char* argv[])
 {
+    assert(argc > 1);
     const std::string file_name(argv[1]);
 
     std::cout << "client starting: " << file_name << std::endl;
 
-    usleep(0.5e06);
+    usleep(2.0e06);
 
     std::cout << "client done" << std::endl;
 
