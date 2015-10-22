@@ -38,6 +38,10 @@ router.get('/query_by_id/:id', passport.authenticate('bearer', { session: false 
 // Update
 //
 
+router.put('/update/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.update(Object,req,res);
+});
+
 router.put('/find_one_and_update/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.find_one_and_update(Object,req,res);
 });

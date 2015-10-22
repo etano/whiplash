@@ -143,6 +143,18 @@ module.exports = {
     // Update
     //
 
+    update: function(ObjType,req,res) {
+        ObjType.update(req.body.filter, req.body.update, function (err, raw) {
+            if (!err) {
+                return res.json({status: 'OK'});
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
     find_one_and_update: function(ObjType,req,res) {
         req.body.filter.owner = req.user._id;
         ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
