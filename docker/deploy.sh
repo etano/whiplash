@@ -6,7 +6,7 @@ docker run --name wdb-odb -v /data/db:/data/db -p 27017:27017 -d whiplash/odb --
 
 # restart apis
 n=${1:-1} # number of NodeJS instances
-for (( i=0; i<=$n; i++ ))
+for (( i=0; i<$n; i++ ))
 do
     p=$((1337+$i))
     docker stop wdb-api-$p; docker rm wdb-api-$p;
