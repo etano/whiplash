@@ -167,11 +167,12 @@ function viewDocs(){
 function viewMain(){
     $("section#login").css("left", "-50%");
     $("section#menu > div#logout").css("display", "inline-block");
+    $("section#menu > div#access").css("display", "inline-block");
     $("section#menu > div#forgot").css("display", "none");
     $("section#menu > div#apply").css("display", "none");
     $("section#info").css("left", "50%");
     
-    $("section#info").html("<div id='token-table'></div>");
+    $("section#info").html("<div id='token-table'></div><action id='create-client'>Create client</action>");
     $("section#info > div#token-table").append("<div class='header'>"+
                                                    "<div class='type'>Type</div>" +
                                                    "<div class='client_id'> Client Id </div>" +
@@ -222,11 +223,22 @@ function refreshToken(){
     });
 }
 
+function viewAccess(){
+}
+
+function viewCreateClientForm(){
+    $("section#create-client").css("display", "block");
+    $(document).one("click", "body", function(){
+        $("section#create-client").css("display", "none");
+    });
+}
+
 $(document).ready(function(){
     $(document).on("click", "section#login div#keep", viewEaster);
     $(document).on("click", "section#menu div#apply", viewRegister);
     $(document).on("click", "section#menu div#forgot", viewForgot);
     $(document).on("click", "section#menu div#docs", viewDocs);
+    $(document).on("click", "section#menu div#access", viewAccess);
     $(document).on("click", "section#menu div#logout", logout);
 
     $(document).on("click", "section#login input.submit", login);
@@ -234,6 +246,8 @@ $(document).ready(function(){
     $(document).on("click", "section#forgot input.submit", forgot);
 
     $(document).on("click", "action.refresh", refreshToken);
+    $(document).on("click", "action#create-client", viewCreateClientForm);
+    $(document).on("click", "section#create-client", function(e){ e.stopPropagation(); });
 
     $(document).on("click", "section#info > div#token-table > div.token > div", function(){
         var input = $(this);
