@@ -164,21 +164,19 @@ class wdb:
     class properties_collection(collection):
 
         def hold_until_resolved(self,property_ids,fraction):
-            #TODO: if more efficient, fetch by unique tag for a given set
-            #of jobs rather than array of ids
             while True:
-                properties = self.query(self.properties,{'_id': { '$in': property_ids },'status':3})
+                properties = self.query({'_id': { '$in': property_ids },'status':"resolved"})
                 if properties.count() > fraction*len(property_ids): break
             return properties
 
         def get_unresolved(self):
-            return self.find_one_and_update({'status':0},{'status':1})
+            return self.find_one_and_update({'status':"unresolved"},{'status':"pulled"})
 
         def commit_resolved(self,obj):
             return self.update_by_id(obj["_id"],obj)
 
         def get_num_unresolved(self):
-            return self.count({'status':0})
+            return self.count({'status':"unresolved"})
 
         def fetch_work_batch(self,time_limit):
             status, reason, res = self.db.request("PUT","/api/properties/fetch_work_batch/",json.dumps({'time_limit':time_limit}))
@@ -209,5 +207,5 @@ class wdb:
             self.commit(props)
 
         def refresh_properties(self):
-            self.update({'status':1,'consume_by':{'$lt':time.time()}},{'status':0})
+            self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})
         
