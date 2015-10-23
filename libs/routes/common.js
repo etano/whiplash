@@ -9,6 +9,10 @@ module.exports = {
 
     commit: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
+
+        //TODO: use native mongo ids. otherwise new commmits after
+        //deletes will not work
+
         ObjType.count({}, function(err,count) {
             for(var i=0; i<req.body.length; i++) {
                 req.body[i].owner = req.user._id;

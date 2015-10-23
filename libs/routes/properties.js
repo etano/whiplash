@@ -84,7 +84,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     //var filter = {"status":"unresolved","timeout":{$lt:(time_limit-time)}};
     var filter = {"status":"unresolved","timeout":{$lt:time_limit}};
 
-    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)}
+    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)};
     var update = {"status":"pulled","consume_by":Date.now + time_limit};
 
     ObjType.find(filter, update, {new: true}, function (err, objs) {
