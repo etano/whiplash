@@ -12,7 +12,7 @@ var Property = new Schema({
     timestamp: { type: Date, default: Date.now },
     timeout: { type: Number, required: true, default: 120 },
     consume_by: { type: Date },
-    _id: { type: Number }
+    //_id: { type: Number }
 });
 
 module.exports = mongoose.model('Property', Property);
