@@ -88,21 +88,43 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     //var update = {"status":"pulled","consume_by":Date.now + time_limit};
     var update = {"status":"pulled","consume_by":0}; //WARNING
 
-    ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
+    ObjType.find(filter, function (err, objs) {
+        // Check exists
+        if(!objs) {
+            res.statusCode = 404;
+            return res.json({ error: 'Not found' });
+        }
 
-        if (!err){
+        // TODO: Check to make sure user has READ permissions
+
+        // Return object
+        if (!err) {
             return res.json({
                 status: 'OK',
                 objs: objs
-            });    
-        }
-        else {
+            });
+        } else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
         }
-
     });
+
+    // ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
+
+    //     if (!err){
+    //         return res.json({
+    //             status: 'OK',
+    //             objs: objs
+    //         });    
+    //     }
+    //     else {
+    //         res.statusCode = 500;
+    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
+    //         return res.json({ error: 'Server error' });
+    //     }
+
+    // });
 
     //.sort({"timeout":-1});
 
