@@ -12,6 +12,19 @@ function redirect(path){
     window.location.href = prefix+www_server+path;
 }
 
+function transition(target, source){
+    target.addClass('notransition');
+    target.css("left", "150%");
+
+    source.css("left", "-100%");
+    target.css("display", "block");
+
+    setTimeout(function(){
+        target.removeClass('notransition');
+        target.css("left", "50%");
+    }, 50);
+}
+
 function inputFailFeedback(input){
     if(input.hasClass("fast-transition")) return;
     input.addClass("fast-transition");
@@ -277,27 +290,25 @@ function viewDocs(){
     redirect("/docs");
 }
 
+function viewStats(){
+    transition($("section#stats"), $("section#access"));
+    loadStats();
+}
 function viewMain(){
     $("section#login").css("left", "-50%");
     $("section#menu > div#logout").css("display", "inline-block");
     $("section#menu > div#access").css("display", "inline-block");
+    $("section#menu > div#stats").css("display", "inline-block");
     $("section#menu > div#forgot").css("display", "none");
     $("section#menu > div#apply").css("display", "none");
-    $("section#info").css("left", "50%");
+    $("section#access").css("left", "50%");
     
-    $("section#info").html("<div id='token-table'></div><action id='create-client'>Create client</action>");
-    $("section#info > div#token-table").append("<div class='header'>"+
-                                                   "<div class='type'>Type</div>" +
-                                                   "<div class='client_id'> Client Id </div>" +
-                                                   "<div class='client_secret'> Client Secret </div>" +
-                                                   "<div class='refresh_value'> Refresh Token </div>" + 
-                                                   "<div class='session_value'> Session Token </div>" + 
-                                               "</div>");
-    appendToken("www", www_client_id, www_client_secret, refresh_token, session_token);
-    fetchClients();
+    loadAccess();
 }
 
 function viewAccess(){
+    transition($("section#access"), $("section#stats"));
+    loadAccess();
 }
 
 function viewCreateClientForm(){
@@ -308,8 +319,37 @@ function viewCreateClientForm(){
     });
 }
 
+function loadStats(){
+    $("section#stats").html("<div id='info'></div>");
+    $.ajax({
+        type: 'GET',
+        url: "/api/properties/total_time",
+        data: { "access_token"  : session_token },
+        success: function(data){
+            var time = data.total_time;
+            $("section#stats div#info").html("Time for completion estimate: " + time);
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function loadAccess(){
+    $("section#access").html("<div id='token-table'></div><action id='create-client'>Create client</action>");
+    $("section#access > div#token-table").append("<div class='header'>"+
+                                                   "<div class='type'>Type</div>" +
+                                                   "<div class='client_id'> Client Id </div>" +
+                                                   "<div class='client_secret'> Client Secret </div>" +
+                                                   "<div class='refresh_value'> Refresh Token </div>" + 
+                                                   "<div class='session_value'> Session Token </div>" + 
+                                               "</div>");
+    appendToken("www", www_client_id, www_client_secret, refresh_token, session_token);
+    fetchClients();
+}
+
 function appendToken(client_name, client_id, client_secret, refresh, session){
-    $("section#info > div#token-table").append("<div class='token'>"+
+    $("section#access > div#token-table").append("<div class='token'>"+
                                                    "<div class='type'>" + client_name + "</div>" +
                                                    "<div class='client_id'>" + client_id + "</div>" +
                                                    "<div class='client_secret'>" + client_secret + "</div>" +
@@ -325,6 +365,7 @@ $(document).ready(function(){
     $(document).on("click", "section#menu div#forgot", viewForgot);
     $(document).on("click", "section#menu div#docs", viewDocs);
     $(document).on("click", "section#menu div#access", viewAccess);
+    $(document).on("click", "section#menu div#stats", viewStats);
     $(document).on("click", "section#menu div#logout", logout);
 
     $(document).on("click", "section#login input.submit", login);
@@ -336,7 +377,7 @@ $(document).ready(function(){
     $(document).on("click", "section#create-client", function(e){ e.stopPropagation(); });
     $(document).on("click", "section#create-client input.submit", createClient);
 
-    $(document).on("click", "section#info > div#token-table > div.token > div", function(){
+    $(document).on("click", "section#access > div#token-table > div.token > div", function(){
         var input = $(this);
         var value = input.text();
         CopyToClipboard(value);

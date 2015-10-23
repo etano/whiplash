@@ -107,11 +107,11 @@ section#menu div {
     font-size: 13px;
 }
 
-section#menu div#logout, section#menu div#access, section#info {
+section#menu div#logout, section#menu div#access, section#menu div#stats, section#access {
     display: none;
 }
 
-section#login, section#register, section#forgot, section#info {
+section#login, section#register, section#forgot, section#access, section#stats {
     position: absolute;
     display: block;
     top: 50%;
@@ -208,14 +208,27 @@ div#confirm {
     transition: left 500ms;
 }
 
-section#info {
+section#stats {
+    border: 0;
+}
+
+section#stats > div#info {
+    display: block;
+    font-size: 12px;
+    font-family: arial;
+    padding: 40px;
+    border: 1px solid #222;
+    border-radius: 4px;
+}
+
+section#access {
     left: -50%;
     width: 66%;
     border: 0;
     max-width: none;
 }
 
-section#info > div#token-table {
+section#access > div#token-table {
     display: block;
     font-size: 12px;
     font-family: arial;
@@ -225,15 +238,15 @@ section#info > div#token-table {
     width: 100%;
 }
 
-section#info > div#token-table > div.header {
+section#access > div#token-table > div.header {
     position: relative;
 }
 
-section#info > div#token-table > div.token {
+section#access > div#token-table > div.token {
     position: relative;
 }
 
-section#info > div#token-table > div.header > div {
+section#access > div#token-table > div.header > div {
     display: inline-block;
     width: 20%;
     font-weight: bold;
@@ -242,7 +255,7 @@ section#info > div#token-table > div.header > div {
     text-indent: 5px;
 }
 
-section#info > div#token-table > div.token > div {
+section#access > div#token-table > div.token > div {
     display: inline-block;
     width: 20%;
     border-right: 1px solid #666;
@@ -255,7 +268,7 @@ div.session_value {
     border-right: 0 !important;
 }
 
-section#info > div#token-table > div.token > action.refresh {
+section#access > div#token-table > div.token > action.refresh {
     position: absolute;
     margin-top: -3px;
     margin-left: 20px;
