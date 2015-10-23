@@ -18,7 +18,7 @@ def run(args):
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
         if num_unresolved > 0 and num_pending == 0:
             print('there are unresolved properties')
-            sp.call("ssh " + args.cluster + " \'sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window) + "\'",shell=True)
+            sp.call("ssh " + args.cluster + " \'cd /users/whiplash/whiplash/whiplash-python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window) + "\'",shell=True)
             job_number += 1
         time.sleep(120)
     

@@ -17,8 +17,8 @@ run_file="run.sbatch"
 echo "#!/bin/bash -l" >> $run_file
 
 echo "#SBATCH --job-name=${job_name}" >> $run_file
-echo "#SBATCH --output=${dir_log}/out.o" >> $run_file
-echo "#SBATCH --error=${dir_log}/out.e" >> $run_file
+echo "#SBATCH --output=${log_dir}/out.o" >> $run_file
+echo "#SBATCH --error=${log_dir}/out.e" >> $run_file
 echo "#SBATCH --partition=dphys_compute" >> $run_file
 echo "#SBATCH --time=${time_limit}:00:00" >> $run_file
 echo "#SBATCH --nodes=1" >> $run_file
