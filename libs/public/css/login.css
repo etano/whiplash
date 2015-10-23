@@ -219,6 +219,7 @@ section#stats > div#info {
     padding: 40px;
     border: 1px solid #222;
     border-radius: 4px;
+    text-align: center;
 }
 
 section#access {
