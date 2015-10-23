@@ -114,7 +114,7 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs),True)
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
             return json.loads(res.decode('utf-8'))["ids"]
 
         #
