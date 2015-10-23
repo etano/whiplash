@@ -7,9 +7,11 @@ html, body {
     /*background-image: url("https://assets.vg247.com/current//2014/03/LizMirror_WEB.jpg");*/
     height: 100%;
 }
+
 html {
     background-color: white;
 }
+
 screen {
     display: block;
     height: 100%;
@@ -17,18 +19,21 @@ screen {
     margin: 0;
     overflow: hidden;
 }
+
 section {
     display: block;
     font-size: 0;
     white-space: nowrap;
     transition: opacity 500ms;
 }
+
 div, input {
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     font-size: 13px;
     transition: color 500ms;
 }
+
 .notransition {
     -webkit-transition: none !important;
     -moz-transition: none !important;
@@ -36,9 +41,11 @@ div, input {
     -ms-transition: none !important;
     transition: none !important;
 }
+
 .fast-transition {
     transition: left 100ms !important;
 }
+
 div#title {
     display: block;
     position: absolute;
@@ -50,6 +57,7 @@ div#title {
     transition: opacity 500ms;
     opacity: 0.9;
 }
+
 div#title img {
     position: fixed;
     bottom: 30px;
@@ -58,6 +66,7 @@ div#title img {
     filter: invert(100%);
     -webkit-filter: invert(100%);
 }
+
 section#tagline {
     position: absolute;
     display: block;
@@ -77,6 +86,7 @@ section#tagline div {
     font-size: 15px;
     color: rgb(200,250,250);
 }
+
 section#menu {
     display: block;
     position: absolute;
@@ -96,9 +106,11 @@ section#menu div {
     margin-left: 50px;
     font-size: 13px;
 }
-section#menu div#logout, section#info {
+
+section#menu div#logout, section#menu div#access, section#info {
     display: none;
 }
+
 section#login, section#register, section#forgot, section#info {
     position: absolute;
     display: block;
@@ -113,7 +125,6 @@ section#login, section#register, section#forgot, section#info {
     background-color: white;
     border-top: 1px solid black;
     transition: left 500ms;
-    /*padding: 15px;*/
 }
 
 section#login {
@@ -139,6 +150,7 @@ input.login, input.passwd, input.submit {
     border-bottom: 1px solid black;
     width: 100%;
 }
+
 input.submit {
     -webkit-user-select: none;
     text-align: center;
@@ -150,18 +162,22 @@ input.submit {
     background-color: transparent;
     margin-bottom: 0px;
 }
+
 input::-webkit-input-placeholder {
     color: #CCC;
     opacity: 1;
 }
+
 input::-moz-placeholder {
     color: #CCC;
     opacity: 1;
 }
+
 input {
     color: black;
     transition: color 500ms;
 }
+
 div#keep {
     position: absolute;
     right: 2px;
@@ -192,27 +208,25 @@ div#confirm {
     transition: left 500ms;
 }
 
-
 section#info {
     left: -50%;
     width: 66%;
     border: 0;
     max-width: none;
 }
+
 section#info > div#token-table {
     display: block;
-    position: absolute;
     font-size: 12px;
     font-family: arial;
-    background-color: white;
     padding-right: 4px;
     border: 1px solid #222;
     border-radius: 4px;
     width: 100%;
 }
+
 section#info > div#token-table > div.header {
     position: relative;
-    background-color: white;
 }
 
 section#info > div#token-table > div.token {
@@ -251,5 +265,53 @@ section#info > div#token-table > div.token > action.refresh {
     -webkit-transform: rotate(50deg);
     -moz-transform: rotate(50deg);
     cursor: pointer;
+    border: 0;
+}
+
+action#create-client {
+    display: block;
+    position: absolute;
+    color: rgb(50,210,210);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    margin-top: 10px;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+section#create-client {
+    display: none;
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    background-color: white;
+    border-radius: 6px;
+    height: 170px;
+    width: 350px;
+    padding: 30px;
+    box-shadow: 0px 0px 105px black;
+}
+
+section#create-client label {
+    display: inline-block;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 13px;
+    width: 130px; 
+}
+
+section#create-client input {
+    display: inline;
+    margin-bottom: 10px;
+    width: 215px;
+    border: 0;
+    border-bottom: 1px solid #999;
+    outline: none;
+}
+
+section#create-client input.submit {
+    width: 100%;
+    padding-top: 30px;
     border: 0;
 }

@@ -14,6 +14,10 @@ var mongoose = require('mongoose'),
         clientSecret: {
             type: String,
             required: true
+        },
+        userId: {
+            type: String,
+            required: false
         }
     });
 

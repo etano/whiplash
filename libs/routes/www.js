@@ -16,11 +16,13 @@ client.save(function(err, client){ if(!err) log.info("www client: %s", client.cl
 
 router.use('/css', express.static( www + "/css" ));
 router.use('/scripts', express.static( www + "/scripts" ));
+router.use('/images', express.static( www + "/scripts" ));
 router.use('/docs', express.static( www + "/docs" ));
+router.use('/favicon.ico', express.static( www + '/images/favicon.ico'));
 
 router.get('/', function (req, res){
     res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Set-Cookie', 'access_token='+config.get('WebAccessToken'));
+    res.setHeader('Set-Cookie', 'server_token='+config.get('WebAccessToken'));
     res.send( cached_index );
 });
 
