@@ -180,18 +180,39 @@ class wdb:
             else:
                 properties = [self.update_one({'status':"unresolved"},{'status':"pulled"})]
 
+            ####
+
             model_ids = []
             executable_ids = []
             for prop in properties:
                 model_ids.append(prop['model_id'])
                 executable_ids.append(prop['executable_id'])
 
+            model_ids = list(set(model_ids))
+            executable_ids = list(set(executable_ids))
+
+            ####                
+
             models = self.db.models.query({'_id': { '$in': model_ids }})
             executables = self.db.executables.query({'_id': { '$in': executable_ids }})
 
+            ####            
+
             objs = []
-            for i in range(len(properties)):
-                objs.append({'property':properties[i],'model':models[i],'executable':executables[i]})
+            for prop in properties:
+                obj = {'property':prop,'model':'None','executable':'None'}
+                for model in models:
+                    if prop['model_id'] == model['_id']:
+                        obj['model'] = model
+                        break
+                for executable in executables:
+                    if prop['executable_id'] == executable['_id']:
+                        obj['executable'] = executable
+                        break                    
+                assert obj['model'] != 'None'
+                assert obj['executable'] != 'None'
+                objs.append(obj)
+
             return objs
 
         def commit_resolved(self,props,batch=True):

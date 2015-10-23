@@ -18,9 +18,12 @@ print model_id
 
 wdb.properties.delete({})
 prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
-for i in range(1000): wdb.properties.commit(prop)
+props = []
+for i in range(1000):
+    props.append(prop)
+wdb.properties.commit(props)
 print wdb.properties.count({"status":"unresolved"})
 
-#print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
-#print wdb.properties.fetch_work_batch(130)
-#print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+print wdb.properties.fetch_work_batch(130)
+print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
