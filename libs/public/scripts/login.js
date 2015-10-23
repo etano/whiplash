@@ -7,7 +7,9 @@ var www_client_secret = "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb
 
 function redirect(path){
     var www_server = window.location.host;
-    window.location.href = "http://"+www_server+path;
+    var prefix = "https://";
+    if(!location.port) prefix = "http://";
+    window.location.href = prefix+www_server+path;
 }
 
 function inputFailFeedback(input){
@@ -348,4 +350,7 @@ $(document).ready(function(){
     session_token = getCookie("session_token");
     refresh_token = getCookie("refresh_token");
     if(session_token) setTimeout(function(){ viewMain(); }, 1000);
+
+    if(location.href.indexOf("https://") == -1 && !location.port)
+        location.href = location.href.replace("http://", "https://"); 
 });
