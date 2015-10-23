@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import json,whiplash,sys
 
-with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
+with open('wdb_info.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
@@ -21,6 +21,6 @@ prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"Non
 for i in range(1000): wdb.properties.commit(prop)
 print wdb.properties.count({"status":"unresolved"})
 
-print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
-print wdb.properties.fetch_work_batch(130)
-print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+#print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+#print wdb.properties.fetch_work_batch(130)
+#print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
