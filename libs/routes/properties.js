@@ -76,7 +76,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 
     //TODO: make this more advanced at some point
 
-    var num_jobs = 100;
+    var num_jobs = 10;
 
     var time_limit = req.body.time_limit;
     //var time = 0;
@@ -88,26 +88,42 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     //var update = {"status":"pulled","consume_by":Date.now + time_limit};
     var update = {"status":"pulled","consume_by":0}; //WARNING
 
-    ObjType.find(filter, function (err, objs) {
-        // Check exists
-        if(!objs) {
-            res.statusCode = 404;
-            return res.json({ error: 'Not found' });
-        }
+    // ObjType.find(filter, function (err, objs) {
+    //     // Check exists
+    //     if(!objs) {
+    //         res.statusCode = 404;
+    //         return res.json({ error: 'Not found' });
+    //     }
 
-        // TODO: Check to make sure user has READ permissions
+    //     // TODO: Check to make sure user has READ permissions
 
-        // Return object
-        if (!err) {
+    //     // Return object
+    //     if (!err) {
+    //         return res.json({
+    //             status: 'OK',
+    //             objs: objs
+    //         });
+    //     } else {
+    //         res.statusCode = 500;
+    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
+    //         return res.json({ error: 'Server error' });
+    //     }
+    // });
+
+    ObjType.find(filter).limit(num_jobs).exec(function (err, objs) {
+
+        if (!err){
             return res.json({
                 status: 'OK',
                 objs: objs
-            });
-        } else {
+            });    
+        }
+        else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
         }
+
     });
 
     // ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
