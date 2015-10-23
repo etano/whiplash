@@ -13,6 +13,8 @@ function redirect(path){
 }
 
 function transition(target, source){
+    if(target.position().left > 0) return;
+
     target.addClass('notransition');
     target.css("left", "150%");
 

@@ -107,7 +107,7 @@ router.get('/total_time/', passport.authenticate('bearer', { session: false }), 
     ObjType.find(filter).select("timeout").exec(function(err, timeouts) {
         var total_time = 0;
         for(var i=0; i<timeouts.length; i++)
-            total_time += timeouts[i];
+            total_time += timeouts[i].timeout;
         if (!err) {
             return res.json({
                 status: 'OK',
