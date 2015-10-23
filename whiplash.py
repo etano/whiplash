@@ -28,11 +28,11 @@ class wdb:
     #
 
     def request(self,protocol,uri,payload):
-        conn = httplib.HTTPConnection(self.server,self.port)
+        conn = httplib.HTTPSConnection(self.server,self.port)
         conn.request(protocol,uri,payload,self.headers)
         res = conn.getresponse()
         if res.status != 200:
-            print(res.status, res.reason)
+            print(res.status, res.reason, res.read())
         return res.status, res.reason, res.read()
 
     #
