@@ -43,8 +43,6 @@ def resolve_object(pid,obj):
 def worker(pid,args):
     print('worker',str(pid),'active')
 
-    batch = False #WARNING: no batch
-
     t_start = time.time()
 
     with open(args.wdb_info, 'r') as infile:
