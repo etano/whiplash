@@ -102,4 +102,23 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+router.get('/total_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = {"status":"unresolved"};
+    ObjType.find(filter).select("timeout").exec(function(err, timeouts) {
+        var total_time = 0;
+        for(var i=0; i<timeouts.length; i++)
+            total_time += timeout[i];
+        if (!err) {
+            return res.json({
+                status: 'OK',
+                total_time: total_time
+            });
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
+    });
+});
+
 module.exports = router;
