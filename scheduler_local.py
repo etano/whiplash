@@ -8,7 +8,7 @@ def resolve_object(pid,obj):
     prop = obj['property']
     ID = prop['_id']
 
-    print('worker',str(pid),'staring property',ID)
+    print('worker',str(pid),'computing property',ID)
 
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
 
@@ -50,7 +50,7 @@ def worker(pid,args):
     with open(args.wdb_info, 'r') as infile:
         wdb_info = json.load(infile)
 
-    wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
+    wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
     print('worker',str(pid),'connected to wdb')
 
     while True:
@@ -65,6 +65,7 @@ def worker(pid,args):
                         resolved.append(resolve_object(pid,obj))
                     else: break
                 wdb.properties.commit_resolved(resolved,batch=batch)
+                print('worker',str(pid),'commited',len(resolved),'properties')
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.daemonise:
-        with daemon.DaemonContext(stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
             run(args)
     else:
         run(args)

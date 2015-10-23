@@ -9,7 +9,7 @@ def run(args):
         wdb_info = json.load(infile)
 
     print('connecting to wdb')
-    wdb = whiplash.wdb(wdb_info["host"],int(wdb_info["port"]),wdb_info["token"])
+    wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
     job_number = 0
 
