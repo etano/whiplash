@@ -8,7 +8,7 @@ def resolve_object(pid,obj):
     prop = obj['property']
     ID = prop['_id']
 
-    print('worker',str(pid),'staring property',ID)
+    print('worker',str(pid),'computing property',ID)
 
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
 
@@ -65,6 +65,7 @@ def worker(pid,args):
                         resolved.append(resolve_object(pid,obj))
                     else: break
                 wdb.properties.commit_resolved(resolved,batch=batch)
+                print('worker',str(pid),'commited',len(resolved),'properties')
             else:
                 print('no properties currently unresolved')
             time.sleep(1)

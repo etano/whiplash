@@ -197,7 +197,6 @@ class wdb:
 
         def commit_resolved(self,props,batch=True):
             if batch:
-                #TODO: single update request
                 IDs = []
                 for prop in props:
                     IDs.append(prop["_id"])
