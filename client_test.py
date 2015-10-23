@@ -18,23 +18,9 @@ print model_id
 
 wdb.properties.delete({})
 prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
-for i in range(100): wdb.properties.commit(prop)
+for i in range(1000): wdb.properties.commit(prop)
 print wdb.properties.count({"status":"unresolved"})
 
-props = wdb.properties.query({"status":"unresolved"})
-for prop in props: prop["status"] = "resolved"
-wdb.properties.commit_resolved(props,batch=True)
-print(wdb.properties.query({"status":"unresolved"}))
-
-# if True:
-#     wdb.properties.delete({})
-#     prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
-#     for i in range(1000): wdb.properties.commit(prop)
-# else:
-#     print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
-#     print wdb.properties.fetch_work_batch(130)
-#     print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
-
-#prop_ids = wdb.properties.query_for_ids({"status":"unresolved"})
-#print prop_ids
-
+print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})
+print wdb.properties.fetch_work_batch(130)
+print wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"})

@@ -176,7 +176,6 @@ class wdb:
 
         def get_unresolved(self,time_limit,batch=True):
             if batch:
-                #TODO: fix
                 properties = self.fetch_work_batch(time_limit)
             else:
                 properties = [self.update_one({'status':"unresolved"},{'status':"pulled"})]
