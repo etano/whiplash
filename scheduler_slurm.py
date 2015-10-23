@@ -33,9 +33,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.daemonise:
-        with daemon.DaemonContext(stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
             run(args)
     else:
         run(args)
-
-
