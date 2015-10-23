@@ -10,7 +10,7 @@ var common = require(libs + 'routes/common');
 var User = require(libs + 'schemas/user');
 
 var webAuth = function(req, res, next){
-    var token = req.body.access_token;
+    var token = req.body.server_token;
     if(token == config.get('WebAccessToken')) next();
     else res.send("Bof");
 }
