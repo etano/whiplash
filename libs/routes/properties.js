@@ -81,13 +81,13 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     var time_limit = req.body.time_limit;
     //var time = 0;
 
-    //var filter = {"status":"unresolved","timeout":{$lt:(time_limit-time)}};
-    var filter = {"status":"unresolved","timeout":{$lt:time_limit}};
+    //var filter = {"status":"unresolved","timeout":{"$lt":(time_limit-time)}};
+    var filter = {"status":"unresolved","timeout":{"$lt":time_limit}};
 
     //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)};
     var update = {"status":"pulled","consume_by":Date.now + time_limit};
 
-    ObjType.find(filter, update, {new: true}, function (err, objs) {
+    ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
 
         if (!err){
             return res.json({
@@ -101,7 +101,9 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             return res.json({ error: 'Server error' });
         }
 
-    }).limit(num_jobs);//.sort({"timeout":-1});
+    });
+
+    //.sort({"timeout":-1});
 
     //time += obj['timeout'];
 });
