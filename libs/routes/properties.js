@@ -85,8 +85,9 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     ObjType.find(filter).limit(num_properties).exec(function(err, objs) {
 
         var ids = [];
-        for(var i=0; i<objs.length; i++)
+        for(var i=0; i<objs.length; i++) {
             ids.push(objs[i]["_id"]);
+        }
 
         if (!err) {
             ObjType.update({'_id': {'$in': ids}}, update, {multi:true},function(err) {console.log("Done");});
@@ -104,10 +105,11 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 
 router.get('/total_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {"status":"unresolved"};
-    ObjType.find(filter).select("timeout").exec(function(err, timeouts) {
+    ObjType.find(filter, "timeout", function (err, timeouts) {
         var total_time = 0;
-        for(var i=0; i<timeouts.length; i++)
+        for(var i=0; i<timeouts.length; i++) {
             total_time += timeouts[i].timeout;
+        }
         if (!err) {
             return res.json({
                 status: 'OK',
