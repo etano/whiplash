@@ -176,7 +176,6 @@ class wdb:
 
         def get_unresolved(self,time_limit,batch=True):
             if batch:
-                #TODO: fix
                 properties = self.fetch_work_batch(time_limit)
             else:
                 properties = [self.update_one({'status':"unresolved"},{'status':"pulled"})]
@@ -203,8 +202,8 @@ class wdb:
                 self.delete({'_id': { '$in': IDs }})
                 self.commit(props)
             else:
-                prop = props[0]
-                self.update_id(prop["_id"],prop)
+                for prop in props:
+                    self.update_id(prop["_id"],prop)
 
         def refresh_properties(self):
             self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})

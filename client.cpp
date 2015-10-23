@@ -7,6 +7,7 @@
 #include <streambuf>
 #include <unistd.h>
 #include <cassert>
+#include <sys/time.h>
 
 int main(int argc, char* argv[])
 {
@@ -25,9 +26,13 @@ int main(int argc, char* argv[])
     rapidjson::Document doc;
     doc.Parse(json.c_str());
 
-    const char* result_str = "{\"number\":8}";
+    const char* result_str = "{\"time\":0}";
     rapidjson::Document result;
     result.Parse(result_str);
+
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    result["time"] = int(tim.tv_sec);
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
