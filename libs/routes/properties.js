@@ -4,62 +4,66 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
-var Object = require(libs + 'schemas/property');
+var ObjType = require(libs + 'schemas/property');
 
 //
 // Commit
 //
 
-router.post('/commit/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(Object,req,res);
+router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.commit(ObjType,req,res);
 });
 
 //
 // Query
 //
 
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query(ObjType,req,res);
+});
+
+router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_one(ObjType,req,res);
+});
+
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(Object,req,res);
+    common.query_count(ObjType,req,res);
 });
 
-router.get('/query/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(Object,req,res);
+router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_field_only(ObjType,req,res);
 });
 
-router.get('/query_for_ids/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_for_ids(Object,req,res);
-});
-
-router.get('/query_by_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_by_id(Object,req,res);
+router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_id(ObjType,req,res);
 });
 
 //
 // Update
 //
 
-router.put('/update/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update(Object,req,res);
+router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.update(ObjType,req,res);
 });
 
-router.put('/find_one_and_update/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_one_and_update(Object,req,res);
+router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.update_one(ObjType,req,res);
 });
 
-router.put('/update_by_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update_by_id(Object,req,res);
+router.put('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.update_id(ObjType,req,res);
 });
 
 //
 // Delete
 //
 
-router.delete('/delete/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(Object,req,res);
+router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.delete(ObjType,req,res);
 });
 
-router.delete('/delete_by_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete_by_id(Object,req,res);
+router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.delete_id(ObjType,req,res);
 });
 
 //
@@ -68,7 +72,7 @@ router.delete('/delete_by_id/:id', passport.authenticate('bearer', { session: fa
 
 var log = require(libs + 'log')(module);
 
-router.put('/fetch_work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
     //TODO: make this more advanced at some point
 
@@ -80,10 +84,10 @@ router.put('/fetch_work_batch/', passport.authenticate('bearer', { session: fals
     //var filter = {"status":"unresolved","timeout":{$lt:(time_limit-time)}};
     var filter = {"status":"unresolved","timeout":{$lt:time_limit}};
 
-    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)};
+    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)}
     var update = {"status":"pulled","consume_by":Date.now + time_limit};
 
-    Object.findAndUpdate(filter, update, {new: true}, function (err, objs) {
+    ObjType.find(filter, update, {new: true}, function (err, objs) {
 
         if (!err){
             return res.json({
