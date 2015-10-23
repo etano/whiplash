@@ -1,4 +1,4 @@
-import sys, json, time
+import sys, json, time, zlib
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -13,6 +13,7 @@ class wdb:
     def __init__(self,server,port,access_token="",username="",password="",client_id="",client_secret=""):
         self.server = server
         self.port = port
+        self.headers = {"Accept": "*/*"}
         if access_token == "":
             self.create_token(username,password,client_id,client_secret)
         else:
@@ -27,8 +28,12 @@ class wdb:
     # Request
     #
 
-    def request(self,protocol,uri,payload):
-
+    def request(self,protocol,uri,payload,zip=False):
+        if zip:
+            payload = zlib.compress(payload)
+            self.headers["Content-type"] = "gzip"
+        else:
+            self.headers["Content-type"] = "application/json"
         conn = httplib.HTTPSConnection(self.server,self.port)
         try:
             conn.request(protocol,uri,payload,self.headers)
@@ -46,7 +51,7 @@ class wdb:
 
     def set_token(self,access_token):
         self.access_token = access_token
-        self.headers = {"Content-type": "application/json", "Accept": "*/*", "Authorization":"Bearer "+self.access_token}
+        self.headers["Authorization"] = "Bearer "+self.access_token
 
     def check_token(self):
         status, reason, res = self.request("GET","/api",json.dumps({"foo":"bar"}))
@@ -65,7 +70,6 @@ class wdb:
         if client_secret == "":
             client_secret = input("client secret: ")
 
-        self.headers = {"Content-type": "application/json", "Accept": "*/*"}
         status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
@@ -82,7 +86,7 @@ class wdb:
         client_id = input("client ID: ")
         client_secret = input("client secret: ")
 
-        self.headers = {"Content-type": "application/json", "Accept": "*/*"}
+        self.headers.pop("Authorization")
         status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
@@ -110,7 +114,7 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs),True)
             return json.loads(res.decode('utf-8'))["ids"]
 
         #
@@ -168,12 +172,12 @@ class wdb:
 
         def hold_until_resolved(self,property_ids,fraction):
             while True:
-                properties = self.query({'_id': { '$in': property_ids },'status':"resolved"})
+                properties = self.query({'_id': { '$in': property_ids },'status':3})
                 if properties.count() > fraction*len(property_ids): break
             return properties
 
         def get_num_unresolved(self):
-            return self.count({'status':"unresolved"})
+            return self.count({'status':0})
 
         def fetch_work_batch(self,time_limit):
             status, reason, res = self.db.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
@@ -183,7 +187,7 @@ class wdb:
             if batch:
                 properties = self.fetch_work_batch(time_limit)
             else:
-                properties = [self.update_one({'status':"unresolved"},{'status':"pulled"})]
+                properties = [self.update_one({'status':0},{'status':1})]
 
             model_ids = []
             executable_ids = []
@@ -211,5 +215,5 @@ class wdb:
                     self.update_id(prop["_id"],prop)
 
         def refresh_properties(self):
-            self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})
+            self.update({'status':1,'consume_by':{'$lt':time.time()}},{'status':0})
 
