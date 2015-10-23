@@ -79,8 +79,8 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     var num_properties = 100;
     var time_limit = req.body.time_limit;
     var now = new Date();
-    var filter = {"status":"unresolved","timeout":{"$lt":time_limit}};
-    var update = {"status":"pulled","consume_by":now.getSeconds() + time_limit};
+    var filter = {"status":0,"timeout":{"$lt":time_limit}};
+    var update = {"status":1,"consume_by":now.getSeconds() + time_limit};
 
     ObjType.find(filter).limit(num_properties).exec(function(err, objs) {
 
@@ -104,7 +104,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 });
 
 router.get('/total_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {"status":"unresolved"};
+    var filter = {"status":0};
     ObjType.find(filter, "timeout", function (err, timeouts) {
         var total_time = 0;
         for(var i=0; i<timeouts.length; i++) {

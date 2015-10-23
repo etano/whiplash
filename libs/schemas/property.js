@@ -8,7 +8,7 @@ var Property = new Schema({
     model_id: { type: Schema.Types.ObjectId, required: true},
     //executable_id: { type: Number, required: true},
     executable_id: { type: Schema.Types.ObjectId, required: true},
-    status: { type: String, required: true, default: "unresolved"},
+    status: { type: Number, required: true, default: 0},
     result: { type: Schema.Types.Mixed, default: "" },
     params: { type: Schema.Types.Mixed, default: "" },
     timestamp: { type: Date, default: Date.now },
