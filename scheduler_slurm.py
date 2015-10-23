@@ -20,7 +20,7 @@ def run(args):
             print('there are unresolved properties')
             sp.call("ssh " + args.cluster + " \'cd /users/whiplash/whiplash/whiplash-python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window) + "\'",shell=True)
             job_number += 1
-        time.sleep(120)
+        time.sleep(5)
     
 if __name__ == '__main__':
 
