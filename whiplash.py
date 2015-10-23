@@ -196,19 +196,15 @@ class wdb:
             return objs
 
         def commit_resolved(self,props,batch=True):
-
-            #TODO: check if this works. ids should be assigned
-            #automatically
-
             if batch:
                 IDs = []
                 for prop in props:
                     IDs.append(prop["_id"])
-                self.commit(props)
                 self.delete({'_id': { '$in': IDs }})
+                self.commit(props)
             else:
-                prop = props[0]
-                self.update_id(prop["_id"],prop)
+                for prop in props:
+                    self.update_id(prop["_id"],prop)
 
         def refresh_properties(self):
             self.update({'status':"pulled",'consume_by':{'$lt':time.time()}},{'status':"unresolved"})
