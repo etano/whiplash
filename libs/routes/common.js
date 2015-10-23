@@ -9,10 +9,11 @@ module.exports = {
 
     commit: function(ObjType,req,res) {
         // TODO: Bulk inserts with validation for performance.
+
         ObjType.count({}, function(err,count) {
             for(var i=0; i<req.body.length; i++) {
                 req.body[i].owner = req.user._id;
-                req.body[i]._id = count+i;
+                //req.body[i]._id = count+i;
             }
             ObjType.create(req.body, function(err,objs) {
                 if (!err) {
