@@ -85,7 +85,8 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     var filter = {"status":"unresolved","timeout":{"$lt":time_limit}};
 
     //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)};
-    var update = {"status":"pulled","consume_by":Date.now + time_limit};
+    //var update = {"status":"pulled","consume_by":Date.now + time_limit};
+    var update = {"status":"pulled","consume_by":0}; //WARNING
 
     ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
 
