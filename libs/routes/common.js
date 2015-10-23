@@ -44,25 +44,6 @@ module.exports = {
     // Query
     //
 
-    count: function(ObjType,req,res) {
-        ObjType.count(req.body, function (err, count) {
-
-            // TODO: Check to make sure user has READ permissions
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    count: count
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },
-
     query: function(ObjType,req,res) {
         ObjType.find(req.body, function (err, objs) {
             // Check exists
@@ -87,25 +68,21 @@ module.exports = {
         });
     },
 
-    query_for_ids: function(ObjType,req,res) {
-        ObjType.find(req.body, '_id', function (err, objs) {
+    query_one: function(ObjType,req,res) {
+        ObjType.findOne(req.body, function (err, obj) {
             // Check exists
-            if(!objs) {
+            if(!obj) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
 
             // TODO: Check to make sure user has READ permissions
-            var ids = [];
-            for(var i=0; i<objs.length; i++) {
-                ids.push(objs[i]["_id"]);
-            }
 
             // Return object
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    ids: ids
+                    obj: obj
                 });
             } else {
                 res.statusCode = 500;
@@ -115,7 +92,54 @@ module.exports = {
         });
     },
 
-    query_by_id: function(ObjType,req,res) {
+    query_count: function(ObjType,req,res) {
+        ObjType.count(req.body, function (err, count) {
+
+            // TODO: Check to make sure user has READ permissions
+
+            // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    count: count
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    query_field_only: function(ObjType,req,res) {
+        ObjType.find(req.body, req.params.field, function (err, objs) {
+            // Check exists
+            if(!objs) {
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+
+            // TODO: Check to make sure user has READ permissions
+            var projection = [];
+            for(var i=0; i<objs.length; i++) {
+                projection.push(objs[i][req.params.field]);
+            }
+
+            // Return object
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    objs: projection
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    query_id: function(ObjType,req,res) {
         ObjType.findById(req.params.id, function (err, obj) {
             // Check exists
             if(!obj) {
@@ -155,7 +179,7 @@ module.exports = {
         });
     },
 
-    find_one_and_update: function(ObjType,req,res) {
+    update_one: function(ObjType,req,res) {
         req.body.filter.owner = req.user._id;
         ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
             // Check exists
@@ -178,7 +202,7 @@ module.exports = {
         });
     },
 
-    update_by_id: function(ObjType,req,res) {
+    update_id: function(ObjType,req,res) {
         var filter = {"_id": req.params.id,"owner":req.user._id};
         ObjType.update(filter, req.body, function (err, raw) {
             if (!err) {
@@ -207,9 +231,9 @@ module.exports = {
                 return res.json({ error: 'Server error' });
             }
         });
-    },    
+    },
 
-    delete_by_id: function(ObjType,req,res) {
+    delete_id: function(ObjType,req,res) {
         req.body = {"_id": req.params.id};
         this.delete(ObjType,req,res);
     },

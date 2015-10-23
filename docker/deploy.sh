@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # restart odb
+docker pull whiplash/odb:latest
 docker stop wdb-odb; docker rm wdb-odb;
 docker run --name wdb-odb -v /data/db:/data/db -p 27017:27017 -d whiplash/odb --auth
 
 # restart apis
+docker pull whiplash/api:latest
 n=${1:-1} # number of NodeJS instances
 for (( i=0; i<$n; i++ ))
 do
