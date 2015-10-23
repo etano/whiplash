@@ -7,12 +7,12 @@ wdb = whiplash.wdb("whiplash.ethz.ch","1337","1534d75d461100ab696aaac2e800d2ec7c
 
 # Query for models
 model_filter = {'class':'ising'}
-model_ids = wdb.models.query_for_ids(model_filter)
+model_ids = wdb.models.query_field_only('_id',model_filter)
 print model_ids
 
 # Query for executable
 executable_filter = {'class':'ising','algorithm':'SA','name':'an_ss_ge_fi_vdeg'}
-executable_id = wdb.executables.query_for_ids(executable_filter)[0]
+executable_id = wdb.executables.query_field_only('_id',executable_filter)[0]
 print executable_id
 
 # Commit properties
