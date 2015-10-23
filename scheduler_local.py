@@ -43,8 +43,6 @@ def resolve_object(pid,obj):
 def worker(pid,args):
     print('worker',str(pid),'active')
 
-    batch = False #WARNING: no batch
-
     t_start = time.time()
 
     with open(args.wdb_info, 'r') as infile:
@@ -56,7 +54,7 @@ def worker(pid,args):
     while True:
         time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=batch)
+            unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=True)
             if len(unresolved) > 0:
                 print('worker',str(pid),'fetched',len(unresolved),'properties with',time_left(),'seconds of work left')
                 resolved = []
@@ -64,7 +62,7 @@ def worker(pid,args):
                     if time_left() > obj['property']['timeout']:
                         resolved.append(resolve_object(pid,obj))
                     else: break
-                wdb.properties.commit_resolved(resolved,batch=batch)
+                wdb.properties.commit_resolved(resolved,batch=True)
                 print('worker',str(pid),'commited',len(resolved),'properties')
             else:
                 print('no properties currently unresolved')

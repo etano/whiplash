@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.4
 
-import whiplash,daemon,argparse,time,json
+import whiplash,daemon,argparse,time,json,sys,os
 import subprocess as sp
 
 def run(args):
@@ -15,12 +15,12 @@ def run(args):
 
     while True:
         num_unresolved = wdb.properties.get_num_unresolved()
-        num_pending = sp.check_output("squeue -u whiplash | grep \"PD\" | wc -l", shell=True)
+        num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
         if num_unresolved > 0 and num_pending == 0:
             print('there are unresolved properties')
-            sp.call("sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window),shell=True)
+            sp.call("ssh " + args.cluster + " \'cd /users/whiplash/whiplash/whiplash-python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window) + "\'",shell=True)
             job_number += 1
-        time.sleep(120)
+        time.sleep(5)
     
 if __name__ == '__main__':
 
@@ -28,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)
     parser.add_argument('--time_window',dest='time_window',required=True,type=int)
+    parser.add_argument('--cluster',dest='cluster',required=True,type=str)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
