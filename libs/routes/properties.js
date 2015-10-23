@@ -76,75 +76,30 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 
     //TODO: make this more advanced at some point
 
-    var num_jobs = 10;
-
+    var num_properties = 100;
     var time_limit = req.body.time_limit;
-    //var time = 0;
-
-    //var filter = {"status":"unresolved","timeout":{"$lt":(time_limit-time)}};
+    var now = new Date();
     var filter = {"status":"unresolved","timeout":{"$lt":time_limit}};
+    var update = {"status":"pulled","consume_by":now.getSeconds() + time_limit};
 
-    //var update = {"status":"pulled","consume_by":Date.now + (time_limit-time)};
-    //var update = {"status":"pulled","consume_by":Date.now + time_limit};
-    var update = {"status":"pulled","consume_by":0}; //WARNING
+    ObjType.find(filter).limit(num_properties).exec(function(err, objs) {
 
-    // ObjType.find(filter, function (err, objs) {
-    //     // Check exists
-    //     if(!objs) {
-    //         res.statusCode = 404;
-    //         return res.json({ error: 'Not found' });
-    //     }
+        var ids = [];
+        for(var i=0; i<objs.length; i++)
+            ids.push(objs[i]["_id"]);
 
-    //     // TODO: Check to make sure user has READ permissions
-
-    //     // Return object
-    //     if (!err) {
-    //         return res.json({
-    //             status: 'OK',
-    //             objs: objs
-    //         });
-    //     } else {
-    //         res.statusCode = 500;
-    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
-    //         return res.json({ error: 'Server error' });
-    //     }
-    // });
-
-    ObjType.find(filter).limit(num_jobs).exec(function (err, objs) {
-
-        if (!err){
+        if (!err) {
+            ObjType.update({'_id': {'$in': ids}}, update, {multi:true},function(err) {console.log("Done");});
             return res.json({
                 status: 'OK',
                 objs: objs
-            });    
-        }
-        else {
+            });
+        } else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
         }
-
     });
-
-    // ObjType.find(filter).limit(num_jobs).update(update).exec(function (err, objs) {
-
-    //     if (!err){
-    //         return res.json({
-    //             status: 'OK',
-    //             objs: objs
-    //         });    
-    //     }
-    //     else {
-    //         res.statusCode = 500;
-    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
-    //         return res.json({ error: 'Server error' });
-    //     }
-
-    // });
-
-    //.sort({"timeout":-1});
-
-    //time += obj['timeout'];
 });
 
 module.exports = router;
