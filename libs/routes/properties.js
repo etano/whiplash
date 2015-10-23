@@ -102,7 +102,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.get('/wall_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.get('/total_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {"status":"unresolved"};
     ObjType.find(filter).select("timeout").exec(function(err, timeouts) {
         var total_time = 0;
