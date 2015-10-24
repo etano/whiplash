@@ -25,7 +25,7 @@ for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
-print(wdb.properties.fetch_work_batch(130))
+print(wdb.properties.fetch_work_batch(850))
 wdb.properties.check_status()
 
 # Ts = []

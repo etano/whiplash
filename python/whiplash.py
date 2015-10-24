@@ -237,7 +237,8 @@ class wdb:
                     self.update_id(prop["_id"],prop)
 
         def refresh_properties(self):
-            self.update({'status':1,'consume_by':{'$lt':time.time()}},{'status':0})
+            #TODO: test this
+            self.update({'status':1,'resolve_by':{'$lt':time.time()}},{'status':0})
 
         def check_status(self):
             print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))

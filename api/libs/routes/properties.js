@@ -73,21 +73,21 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 var log = require(libs + 'log')(module);
 
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
-
-    //TODO: make this more advanced at some point
-
     var time_limit = req.body.time_limit;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    ObjType.find(filter).limit(100).exec(function(err, objs) {
-
+    ObjType.find(filter).limit(10).exec(function(err, objs) {
+        var time_left = time_limit;
         var ids = [];
         for(var i=0; i<objs.length; i++) {
-            ids.push(objs[i]["_id"]);
+            var timeout = objs[i]["timeout"];
+            if(timeout < time_left){
+                time_left -= timeout;
+                ids.push(objs[i]["_id"]);
+            }
         }
-
         if (!err) {
             var now = new Date();
-            var update = {"status":1,"consume_by":now.getSeconds() + time_limit};
+            var update = {"status":1,"resolve_by":now.getSeconds() + time_limit};
             ObjType.update({'_id': {'$in': ids}}, update, {multi:true},function(err) {console.log("Done");});
             return res.json({
                 status: 'OK',
