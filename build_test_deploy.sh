@@ -7,7 +7,7 @@ trap 'echo "exit $? : $previous_command" | mail -s "whiplash-api merge into mast
 
 # build
 docker-compose -f test.yml up --force-recreate -d
-sleep 5
+sleep 10
 
 # test
 PYTHONPATH=$PWD/python:$PYTHONPATH python ./python/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
