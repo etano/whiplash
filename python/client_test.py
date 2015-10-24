@@ -3,11 +3,11 @@
 import json,whiplash,sys,time,math
 #import matplotlib.pyplot as plt
 
-with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
+with open('wdb_info.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
-executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/client"}
+executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/sleeper"}
 wdb.executables.commit(executable)
 executable_id = wdb.executables.query_field_only('_id',{"class":"testing"})[0]
 print(executable_id)
@@ -26,13 +26,11 @@ for i in range(1000):
 wdb.properties.commit(props)
 wdb.properties.check_status()
 
-print(len(wdb.properties.get_unresolved(10)))
-
-time.sleep(6)
-
-wdb.properties.check_status()
-wdb.properties.refresh()
-wdb.properties.check_status()
+#print(len(wdb.properties.get_unresolved(10)))
+#time.sleep(6)
+#wdb.properties.check_status()
+#wdb.properties.refresh()
+#wdb.properties.check_status()
 
 # Ts = []
 # Ns = []
