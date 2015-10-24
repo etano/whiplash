@@ -1,0 +1,24 @@
+odb:
+    extends:
+        file: odb/docker-compose.yml
+        service: odb
+    volumes:
+        - /data/db:/data/db
+api_1:
+    extends:
+        file: api/docker-compose.yml
+        service: api
+    ports:
+        - 1337:1337
+    links:
+        - odb:mongo
+    command: sh -c "node bin/www"
+api_2:
+    extends:
+        file: api/docker-compose.yml
+        service: api
+    ports:
+        - 1338:1338
+    links:
+        - odb:mongo
+    command: sh -c "node bin/www"

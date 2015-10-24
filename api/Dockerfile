@@ -4,21 +4,21 @@ RUN apt-get install -y libkrb5-dev
 RUN apt-get install -y python-dev libyaml-dev python-pip
 RUN pip install mkdocs
 
-# building docs
-WORKDIR /tmp
-COPY docs /tmp/docs
-RUN mv docs/mkdocs.yml . && mkdocs build
+# workdir
+WORKDIR /src
 
 # building node
-WORKDIR /src
 COPY *.json /src/
-RUN cd /src; npm install
+RUN npm install
 
-# copy in node sources
+# copy in sources
 COPY bin /src/bin
 COPY logs /src/logs
 COPY libs /src/libs
+COPY docs /src/docs
 
-# finishing
-WORKDIR /
+# building docs
+RUN mv docs/mkdocs.yml . && mkdocs build
+
+# expose port
 EXPOSE 1337

@@ -1,0 +1,17 @@
+odb_dev:
+    extends:
+        file: odb/docker-compose.yml
+        service: odb
+    ports:
+        - 27017:27017
+api_dev:
+    extends:
+        file: api/docker-compose.yml
+        service: api
+    ports:
+        - 1337:1337
+    volumes:
+        - $WHIPLASH/api/libs:/src/libs
+    links:
+        - odb_dev:mongo
+    command: sh -c "node bin/createUser.js test test; node bin/createClient.js test test test; node bin/www"

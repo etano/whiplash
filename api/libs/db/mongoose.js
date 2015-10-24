@@ -9,7 +9,7 @@ var options = {
     user: process.env.MONGO_API_USERNAME,
     pass: process.env.MONGO_API_PASSWORD
 };
-mongoose.connect(process.env.MONGO_URI,options);
+mongoose.connect("mongodb://"+process.env.MONGO_PORT_27017_TCP_ADDR+":"+process.env.MONGO_PORT_27017_TCP_PORT+"/wdb",options);
 
 var db = mongoose.connection;
 

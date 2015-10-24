@@ -1,6 +1,6 @@
 .DS_Store
 .idea
-lib-cov
+api/lib-cov
 *.seed
 *.log
 *.csv
@@ -9,12 +9,12 @@ lib-cov
 *.pid
 *.gz
 
-pids
-logs
-results
-
-npm-debug.log
-node_modules
+api/pids
+api/logs
+api/results
+api/libs/public/docs
+api/npm-debug.log
+api/node_modules
 *.swp
 *.swo
 *.swn

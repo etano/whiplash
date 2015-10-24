@@ -1,0 +1,5 @@
+api:
+    build: .
+    environment:
+        MONGO_API_USERNAME: api
+        MONGO_API_PASSWORD: haYrv{Ak9UJiaDsqVTe7rLJTc

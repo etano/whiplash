@@ -1,0 +1,13 @@
+odb_test:
+    extends:
+        file: odb/docker-compose.yml
+        service: odb
+api_test:
+    extends:
+        file: api/docker-compose.yml
+        service: api
+    ports:
+        - 7357:1337
+    links:
+        - odb_test:mongo
+    command: sh -c "node bin/createUser.js test test; node bin/createClient.js test test test; node bin/www"
