@@ -7,7 +7,9 @@ with open('wdb_info.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
-executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/sleeper"}
+#path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper"
+path = "/users/whiplash/whiplash/whiplash/python/sleeper"
+executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
 wdb.executables.commit(executable)
 executable_id = wdb.executables.query_field_only('_id',{"class":"testing"})[0]
 print(executable_id)
@@ -21,7 +23,7 @@ print(model_id)
 wdb.properties.delete({})
 prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
 props = []
-for i in range(1000):
+for i in range(40000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
