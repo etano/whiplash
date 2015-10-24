@@ -75,14 +75,16 @@ var log = require(libs + 'log')(module);
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    ObjType.find(filter).limit(10).exec(function(err, objs) {
+    ObjType.find(filter).limit(1000).exec(function(err, objs) {
         var time_left = time_limit;
         var ids = [];
+        var work = [];
         for(var i=0; i<objs.length; i++) {
             var timeout = objs[i]["timeout"];
             if(timeout < time_left){
                 time_left -= timeout;
                 ids.push(objs[i]["_id"]);
+                work.push(objs[i]);
             }
         }
         if (!err) {
@@ -91,7 +93,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             ObjType.update({'_id': {'$in': ids}}, update, {multi:true},function(err) {console.log("Done");});
             return res.json({
                 status: 'OK',
-                objs: objs
+                objs: work
             });
         } else {
             res.statusCode = 500;
