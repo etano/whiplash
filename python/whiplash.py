@@ -212,8 +212,6 @@ class wdb:
                     if prop['executable_id'] == executables[i]['_id']:
                         obj['executable_index'] = i
                         break                    
-                assert obj['model_index'] != -1
-                assert obj['executable_index'] != -1
                 objs.append(obj)
 
             return [objs,models,executables]
