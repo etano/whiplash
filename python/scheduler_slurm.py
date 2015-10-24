@@ -16,7 +16,7 @@ def run(args):
     while True:
         num_unresolved = wdb.properties.get_num_unresolved()
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
-        print('unresolved:',num_resolved,' | ','pending:',num_pending)
+        print('unresolved:',num_unresolved,' | ','pending:',num_pending)
         if num_unresolved > 0 and num_pending == 0:
             print('submitting job')
             sp.call("ssh " + args.cluster + " \'cd /users/whiplash/whiplash/whiplash/python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.time_window) + "\'",shell=True)
