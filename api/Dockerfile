@@ -13,7 +13,7 @@ RUN npm install
 
 # copy in sources
 COPY bin /src/bin
-COPY logs /src/logs
+COPY mkdir /src/logs
 COPY libs /src/libs
 COPY docs /src/docs
 
