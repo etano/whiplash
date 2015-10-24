@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import json,whiplash,sys,time
+import json,whiplash,sys,time,math
 #import matplotlib.pyplot as plt
 
 with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
@@ -25,7 +25,9 @@ for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
-print(wdb.properties.fetch_work_batch(850))
+print(len(wdb.properties.fetch_work_batch(850)))
+wdb.properties.check_status()
+wdb.properties.refresh()
 wdb.properties.check_status()
 
 # Ts = []

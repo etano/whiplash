@@ -168,7 +168,7 @@ module.exports = {
     //
 
     update: function(ObjType,req,res) {
-        ObjType.update(req.body.filter, req.body.update, function (err, raw) {
+        ObjType.update(req.body.filter, req.body.update, {multi:true}, function (err, raw) {
             if (!err) {
                 return res.json({status: 'OK'});
             } else {
