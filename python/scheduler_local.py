@@ -4,7 +4,7 @@ import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
-def resolve_object(pid,obj):
+def resolve_object(pid,obj,models,executables):
     prop = obj['property']
     ID = prop['_id']
 
@@ -13,9 +13,9 @@ def resolve_object(pid,obj):
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
 
     with open(file_name, 'w') as propfile:
-        json.dump({'model':obj['model'],'params':prop['params']}, propfile)
+        json.dump({'model':models[obj['model_index']],'params':prop['params']}, propfile)
 
-    path = obj['executable']['path']
+    path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
 
     t0 = time.time()
@@ -55,12 +55,15 @@ def worker(pid,args):
         time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=True)
-            if len(unresolved) > 0:
-                print('worker',str(pid),'fetched',len(unresolved),'properties with',time_left(),'seconds of work left')
+            objs = unresolved[0]
+            models = unresolved[1]
+            executables = unresolved[2]
+            if len(objs) > 0:
+                print('worker',str(pid),'fetched',len(objs),'properties with',time_left(),'seconds of work left')
                 resolved = []
-                for obj in unresolved:
+                for obj in objs:
                     if time_left() > obj['property']['timeout']:
-                        resolved.append(resolve_object(pid,obj))
+                        resolved.append(resolve_object(pid,obj,models,executables))
                     else: break
                 wdb.properties.commit_resolved(resolved,batch=True)
                 print('worker',str(pid),'commited',len(resolved),'properties')

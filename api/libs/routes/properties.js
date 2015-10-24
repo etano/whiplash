@@ -89,7 +89,8 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
         }
         if (!err) {
             var now = new Date();
-            var update = {"status":1,"resolve_by":now.getSeconds() + time_limit};
+            var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
+            var update = {"status":1,"resolve_by":resolve_by};
             ObjType.update({'_id': {'$in': ids}}, update, {multi:true}, function(err) {console.log("Done");});
             return res.json({
                 status: 'OK',
