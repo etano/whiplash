@@ -191,38 +191,32 @@ class wdb:
 
             ####
 
-            model_ids = []
-            executable_ids = []
+            model_ids = set()
+            executable_ids = set()
             for prop in properties:
-                model_ids.append(prop['model_id'])
-                executable_ids.append(prop['executable_id'])
-
-            model_ids = list(set(model_ids))
-            executable_ids = list(set(executable_ids))
-
-            ####                
-
-            models = self.db.models.query({'_id': { '$in': model_ids }})
-            executables = self.db.executables.query({'_id': { '$in': executable_ids }})
+                model_ids.add(prop['model_id'])
+                executable_ids.add(prop['executable_id'])
+            models = self.db.models.query({'_id': { '$in': list(model_ids) }})
+            executables = self.db.executables.query({'_id': { '$in': list(executable_ids) }})
 
             ####            
 
             objs = []
             for prop in properties:
-                obj = {'property':prop,'model':'None','executable':'None'}
-                for model in models:
-                    if prop['model_id'] == model['_id']:
-                        obj['model'] = model
+                obj = {'property':prop,'model_index':-1,'executable_index':-1}
+                for i in range(len(models)):
+                    if prop['model_id'] == models[i]['_id']:
+                        obj['model_index'] = i
                         break
-                for executable in executables:
-                    if prop['executable_id'] == executable['_id']:
-                        obj['executable'] = executable
+                for i in range(len(executables)):
+                    if prop['executable_id'] == executables[i]['_id']:
+                        obj['executable_index'] = i
                         break                    
-                assert obj['model'] != 'None'
-                assert obj['executable'] != 'None'
+                assert obj['model_index'] != -1
+                assert obj['executable_index'] != -1
                 objs.append(obj)
 
-            return objs
+            return [objs,models,executables]
 
         def commit_resolved(self,props,batch=True):
             if batch:
