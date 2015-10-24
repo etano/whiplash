@@ -19,19 +19,18 @@ model_id = wdb.models.query_field_only('_id',{"class":"testing"})[0]
 print(model_id)
 
 wdb.properties.delete({})
-prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":1}
 props = []
 for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
 
-print(len(wdb.properties.fetch_work_batch(850)))
+print(len(wdb.properties.fetch_work_batch(5)))
+
+time.sleep(6)
+
 wdb.properties.check_status()
-
-prop = wdb.properties.query({"status":1})[0]
-print(prop["resolve_by"],' | ',prop["timestamp"])
-
 wdb.properties.refresh()
 wdb.properties.check_status()
 

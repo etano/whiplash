@@ -236,7 +236,6 @@ class wdb:
                     self.update_id(prop["_id"],prop)
 
         def refresh(self):
-            #TODO: test this
             self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
 
         def check_status(self):
