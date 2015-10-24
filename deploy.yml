@@ -2,6 +2,7 @@ odb:
     extends:
         file: odb/docker-compose.yml
         service: odb
+    restart: always
     volumes:
         - /data/db:/data/db
 api_1:
@@ -12,6 +13,7 @@ api_1:
         - 1337:1337
     links:
         - odb:mongo
+    restart: always
     command: sh -c "node bin/www"
 api_2:
     extends:
@@ -21,4 +23,5 @@ api_2:
         - 1338:1338
     links:
         - odb:mongo
+    restart: always
     command: sh -c "node bin/www"
