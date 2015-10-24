@@ -13,11 +13,11 @@ RUN npm install
 
 # copy in sources
 COPY bin /src/bin
-COPY mkdir /src/logs
+RUN mkdir /src/logs
 COPY libs /src/libs
-COPY docs /src/docs
 
 # building docs
+COPY docs /src/docs
 RUN mv docs/mkdocs.yml . && mkdocs build
 
 # expose port
