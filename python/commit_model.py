@@ -3,7 +3,7 @@
 import whiplash,json
 
 # Connect to local Whiplash instance
-wdb = whiplash.wdb("whiplash.ethz.ch","1337","1a27f0e538d83e5bf1a6f032c18548994a1e954d5f0b0338bdbb5417dd0a9dcb")
+wdb = whiplash.wdb("whiplash.ethz.ch","1337","1534d75d461100ab696aaac2e800d2ec7c88172d6394b89bfc6566611d1ef99f")
 model = json.load(open('model.json'))
 models = []
 for i in range(10):
