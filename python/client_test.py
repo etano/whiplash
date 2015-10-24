@@ -25,8 +25,13 @@ for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
+
 print(len(wdb.properties.fetch_work_batch(850)))
 wdb.properties.check_status()
+
+prop = wdb.properties.query({"status":1})[0]
+print(prop["resolve_by"],' | ',prop["timestamp"])
+
 wdb.properties.refresh()
 wdb.properties.check_status()
 

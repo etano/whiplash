@@ -14,7 +14,6 @@ class wdb:
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
-        print('server:',server,' | ','port:',port)
         if access_token == "":
             self.create_token(username,password,client_id,client_secret)
         else:
