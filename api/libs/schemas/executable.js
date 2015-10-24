@@ -12,7 +12,6 @@ var Executable = new Schema({
     build: { type: String, required: true},
     path: { type: String, required: true},
     timestamp: { type: Date, default: Date.now },
-    //_id: { type: Number }
 });
 
 module.exports = mongoose.model('Executable', Executable);

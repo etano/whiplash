@@ -14,7 +14,7 @@ class wdb:
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
-        print server, port
+        print('server:',server,' | ','port:',port)
         if access_token == "":
             self.create_token(username,password,client_id,client_secret)
         else:
@@ -238,4 +238,7 @@ class wdb:
 
         def refresh_properties(self):
             self.update({'status':1,'consume_by':{'$lt':time.time()}},{'status':0})
+
+        def check_status(self):
+            print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))
 

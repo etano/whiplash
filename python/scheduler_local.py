@@ -22,9 +22,9 @@ def resolve_object(pid,obj):
 
     try:
         sp.call([path,file_name],timeout=timeout)
-        prop['status'] = "resolved"
+        prop['status'] = 3
     except sp.TimeoutExpired:
-        prop['status'] = "oot"
+        prop['status'] = 2
 
     t1 = time.time()
 

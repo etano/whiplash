@@ -10,7 +10,6 @@ var Model = new Schema({
     description: { type: String, default: "" },
     body: { type: Schema.Types.Mixed, required: true },
     timestamp: { type: Date, default: Date.now },
-    //_id: { type: Number }
 });
 
 module.exports = mongoose.model('Model', Model);

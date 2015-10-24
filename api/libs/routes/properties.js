@@ -76,13 +76,9 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 
     //TODO: make this more advanced at some point
 
-    var num_properties = 100;
     var time_limit = req.body.time_limit;
-    var now = new Date();
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    var update = {"status":1,"consume_by":now.getSeconds() + time_limit};
-
-    ObjType.find(filter).limit(num_properties).exec(function(err, objs) {
+    ObjType.find(filter).limit(100).exec(function(err, objs) {
 
         var ids = [];
         for(var i=0; i<objs.length; i++) {
@@ -90,6 +86,8 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
         }
 
         if (!err) {
+            var now = new Date();
+            var update = {"status":1,"consume_by":now.getSeconds() + time_limit};
             ObjType.update({'_id': {'$in': ids}}, update, {multi:true},function(err) {console.log("Done");});
             return res.json({
                 status: 'OK',
