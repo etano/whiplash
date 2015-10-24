@@ -10,7 +10,7 @@ docker-compose -f test.yml up --force-recreate -d
 sleep 10
 
 # test
-PYTHONPATH=$PWD/python:$PYTHONPATH python ./python/tests.py ${DOCKERHOST:?"localhost"} 7357 test test test test
+PYTHONPATH=$PWD/python:$PYTHONPATH python ./python/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
 
 # cleanup
 docker-compose -f test.yml stop
