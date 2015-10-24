@@ -13,7 +13,6 @@ module.exports = {
         ObjType.count({}, function(err,count) {
             for(var i=0; i<req.body.length; i++) {
                 req.body[i].owner = req.user._id;
-                //req.body[i]._id = count+i;
             }
             ObjType.create(req.body, function(err,objs) {
                 if (!err) {
@@ -169,7 +168,7 @@ module.exports = {
     //
 
     update: function(ObjType,req,res) {
-        ObjType.update(req.body.filter, req.body.update, function (err, raw) {
+        ObjType.update(req.body.filter, req.body.update, {multi:true}, function (err, raw) {
             if (!err) {
                 return res.json({status: 'OK'});
             } else {

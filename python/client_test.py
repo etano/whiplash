@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import json,whiplash,sys,time
-import matplotlib.pyplot as plt
 
-with open('wdb_info.json', 'r') as infile: wdb_info = json.load(infile)
+import json,whiplash,sys,time,math
+#import matplotlib.pyplot as plt
+
+with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
@@ -17,28 +18,45 @@ wdb.models.commit(model)
 model_id = wdb.models.query_field_only('_id',{"class":"testing"})[0]
 print(model_id)
 
-Ts = []
-Ns = []
-for exp in range(1,20):
+wdb.properties.delete({})
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
+props = []
+for i in range(1000):
+    props.append(prop)
+wdb.properties.commit(props)
+wdb.properties.check_status()
 
-    N = 1 << exp
+print(len(wdb.properties.fetch_work_batch(850)))
+wdb.properties.check_status()
 
-    wdb.properties.delete({})
-    prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
-    props = []
-    for i in range(N):
-        props.append(prop)
-    t0 = time.time()
-    wdb.properties.commit(props)
-    t1 = time.time()
-    elapsed = t1-t0
+prop = wdb.properties.query({"status":1})[0]
+print(prop["resolve_by"],' | ',prop["timestamp"])
 
-    Ns.append(N)
-    Ts.append(elapsed)
-    print(N,elapsed)        
-    #print(wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"}))
-    #print(wdb.properties.fetch_work_batch(130))
-    #print(wdb.properties.count({"status":"unresolved"}),wdb.properties.count({"status":"pulled"}))
+wdb.properties.refresh()
+wdb.properties.check_status()
+
+# Ts = []
+# Ns = []
+# for exp in range(1,20):
+
+#     N = 1 << exp
+
+#     wdb.properties.delete({})
+#     prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":120}
+#     props = []
+#     for i in range(N):
+#         props.append(prop)
+#     t0 = time.time()
+#     wdb.properties.commit(props)
+#     t1 = time.time()
+#     elapsed = t1-t0
+
+#     Ns.append(N)
+#     Ts.append(elapsed)
+#     print(N,elapsed)        
+#     #print(wdb.properties.count({"status":0}),wdb.properties.count({"status":1}))
+#     #print(wdb.properties.fetch_work_batch(130))
+#     #print(wdb.properties.count({"status":0}),wdb.properties.count({"status":1}))
         
-plt.plot(Ns,Ts,'-o')
-plt.show()
+# plt.plot(Ns,Ts,'-o')
+# plt.show()
