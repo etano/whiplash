@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 
 // Property
 var Property = new Schema({
-    owner: { type: String, required: true },
+    owner: { type: String, required: true},
     model_id: { type: Schema.Types.ObjectId, required: true},
     executable_id: { type: Schema.Types.ObjectId, required: true},
     status: { type: Number, default: 0, required: true},
