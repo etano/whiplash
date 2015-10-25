@@ -3,7 +3,7 @@
 import json,whiplash,sys,time,math
 #import matplotlib.pyplot as plt
 
-with open('wdb_info.json', 'r') as infile: wdb_info = json.load(infile)
+with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
@@ -23,10 +23,11 @@ print(model_id)
 wdb.properties.delete({})
 prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
 props = []
-for i in range(40000):
+for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
+print('work time:',wdb.properties.get_work_time())
 
 #print(len(wdb.properties.get_unresolved(10)))
 #time.sleep(6)
