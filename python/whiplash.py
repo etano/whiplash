@@ -170,6 +170,14 @@ class wdb:
     #
     class properties_collection(collection):
 
+        #TODO: check if commited property already exists and insert
+        #with unresolved status if it does not. else return the
+        #resolved property
+
+        #TODO: statistics collections which are incrementally updated
+        #through mapreduce when user commits to database, properties
+        #are resolved, etc.
+
         #
         # Job schedulig
         #
@@ -241,4 +249,3 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/properties/total_time/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["total_time"]
         
-
