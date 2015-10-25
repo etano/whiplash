@@ -1,0 +1,1 @@
+{"class":"ising","description":"A discrete time simulated quantum annealing solver","algorithm":"SQA","name":"dtsqa","version":"1.0.0","build":"O3","path":"./whiplash-apps/apps/dtsqa.shared"}
