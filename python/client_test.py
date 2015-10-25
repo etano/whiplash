@@ -40,9 +40,9 @@ t0 = time.time()
 print('average fuckup:',wdb.properties.get_average_fuckup())
 print(time.time()-t0)
 
-#t0 = time.time()
-#print('mapreduce:',wdb.properties.mapreduce_test())
-#print(time.time()-t0)
+t0 = time.time()
+print('mapreduce:',wdb.properties.mapreduce_test())
+print(time.time()-t0)
 
 #print(len(wdb.properties.get_unresolved(10)))
 #time.sleep(6)
