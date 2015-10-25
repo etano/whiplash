@@ -27,7 +27,14 @@ for i in range(1000):
     props.append(prop)
 wdb.properties.commit(props)
 wdb.properties.check_status()
-print('work time:',wdb.properties.get_work_time())
+
+t0 = time.time()
+print('unresolved time:',wdb.properties.get_unresolved_time())
+print(time.time()-t0)
+
+t0 = time.time()
+print('mapreduce:',wdb.properties.mapreduce_test())
+print(time.time()-t0)
 
 #print(len(wdb.properties.get_unresolved(10)))
 #time.sleep(6)

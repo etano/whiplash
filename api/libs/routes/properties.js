@@ -124,4 +124,38 @@ router.get('/total_time/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+router.get('/unresolved_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var o = {};
+    o.query = {"status":0};
+    o.map = function () {emit(this.owner, this.timeout);};
+    o.reduce = function (key, values) { return Array.sum(values);};
+    o.out = {merge:'unresolved_time'};
+    ObjType.mapReduce(o, function (err, model, stats) {
+        console.log('map reduce took %d ms', stats.processtime)
+        model.find().exec(function (err, result) {
+            return res.json({
+                status: 'OK',
+                result: result
+            });            
+        });
+    })
+});
+
+router.get('/mapreduce_test/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var o = {};
+    o.query = {"status":0};
+    o.map = function () {emit(this.owner, this.timeout);};
+    o.reduce = function (key, values) { return Array.sum(values);};
+    o.out = {merge:'unresolved_time'};
+    ObjType.mapReduce(o, function (err, model, stats) {
+        console.log('map reduce took %d ms', stats.processtime)
+        model.find().exec(function (err, result) {
+            return res.json({
+                status: 'OK',
+                result: result
+            });            
+        });
+    })
+});
+
 module.exports = router;

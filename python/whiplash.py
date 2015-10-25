@@ -245,7 +245,11 @@ class wdb:
         def check_status(self):
             print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))
 
-        def get_work_time(self):
-            status, reason, res = self.db.request("GET","/api/properties/total_time/",json.dumps({}))
-            return json.loads(res.decode('utf-8'))["total_time"]
+        def get_unresolved_time(self):
+            status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
+
+        def mapreduce_test(self):
+            status, reason, res = self.db.request("GET","/api/properties/mapreduce_test/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
         
