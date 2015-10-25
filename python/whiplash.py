@@ -170,14 +170,23 @@ class wdb:
     #
     class properties_collection(collection):
 
+        #TODO: check if commited property already exists and insert
+        #with unresolved status if it does not. else return the
+        #resolved property
+
+        #TODO: statistics collections which are incrementally updated
+        #through mapreduce when user commits to database, properties
+        #are resolved, etc.
+
+        #
+        # Job schedulig
+        #
+
         def hold_until_resolved(self,property_ids,fraction):
             while True:
                 properties = self.query({'_id': { '$in': property_ids },'status':3})
                 if properties.count() > fraction*len(property_ids): break
             return properties
-
-        def get_num_unresolved(self):
-            return self.count({'status':0})
 
         def fetch_work_batch(self,time_limit):
             status, reason, res = self.db.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
@@ -189,8 +198,6 @@ class wdb:
             else:
                 properties = [self.update_one({'status':0},{'status':1})]
 
-            ####
-
             model_ids = set()
             executable_ids = set()
             for prop in properties:
@@ -198,8 +205,6 @@ class wdb:
                 executable_ids.add(prop['executable_id'])
             models = self.db.models.query({'_id': { '$in': list(model_ids) }})
             executables = self.db.executables.query({'_id': { '$in': list(executable_ids) }})
-
-            ####            
 
             objs = []
             for prop in properties:
@@ -230,6 +235,25 @@ class wdb:
         def refresh(self):
             self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
 
+        #
+        # Statistics
+        #
+
+        def get_num_unresolved(self):
+            return self.count({'status':0})
+
         def check_status(self):
             print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))
 
+        def get_unresolved_time(self):
+            status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
+
+        def get_average_fuckup(self):
+            status, reason, res = self.db.request("GET","/api/properties/average_fuckup/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
+
+        def mapreduce_test(self):
+            status, reason, res = self.db.request("GET","/api/properties/mapreduce_test/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
+        

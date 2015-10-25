@@ -7,7 +7,9 @@ with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.executables.delete({})
-executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":"/Users/ilia/ETH-Data/workspace/whiplash/whiplash-python/client"}
+#path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper"
+path = "/users/whiplash/whiplash/whiplash/python/sleeper"
+executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
 wdb.executables.commit(executable)
 executable_id = wdb.executables.query_field_only('_id',{"class":"testing"})[0]
 print(executable_id)
@@ -19,20 +21,34 @@ model_id = wdb.models.query_field_only('_id',{"class":"testing"})[0]
 print(model_id)
 
 wdb.properties.delete({})
-prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
 props = []
-for i in range(1000):
-    props.append(prop)
+
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
+for i in range(1000): props.append(prop)
+
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3,"walltime":1,"status":3}
+for i in range(500): props.append(prop)
+    
 wdb.properties.commit(props)
 wdb.properties.check_status()
 
-print(len(wdb.properties.get_unresolved(10)))
+t0 = time.time()
+print('unresolved time:',wdb.properties.get_unresolved_time())
+print(time.time()-t0)
 
-time.sleep(6)
+t0 = time.time()
+print('average fuckup:',wdb.properties.get_average_fuckup())
+print(time.time()-t0)
 
-wdb.properties.check_status()
-wdb.properties.refresh()
-wdb.properties.check_status()
+#t0 = time.time()
+#print('mapreduce:',wdb.properties.mapreduce_test())
+#print(time.time()-t0)
+
+#print(len(wdb.properties.get_unresolved(10)))
+#time.sleep(6)
+#wdb.properties.check_status()
+#wdb.properties.refresh()
+#wdb.properties.check_status()
 
 # Ts = []
 # Ns = []

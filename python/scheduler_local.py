@@ -52,7 +52,7 @@ def worker(pid,args):
     print('worker',str(pid),'connected to wdb')
 
     while True:
-        time_left = lambda: args.time_limit - (time.time()-t_start)
+        time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=True)
             objs = unresolved[0]
@@ -86,7 +86,7 @@ def run(args):
         context.Process(target=worker, args=(pid,args,)).start()
         time.sleep(5)
 
-    time.sleep(args.time_limit)
+    time.sleep(3600*args.time_limit)
 
 if __name__ == '__main__':
 
