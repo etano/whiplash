@@ -20,7 +20,7 @@ api_2:
         file: api/docker-compose.yml
         service: api
     ports:
-        - 1338:1338
+        - 1338:1337
     links:
         - odb:mongo
     restart: always
