@@ -249,6 +249,10 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
 
+        def get_average_fuckup(self):
+            status, reason, res = self.db.request("GET","/api/properties/average_fuckup/",json.dumps({}))
+            return json.loads(res.decode('utf-8'))["result"]
+
         def mapreduce_test(self):
             status, reason, res = self.db.request("GET","/api/properties/mapreduce_test/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]

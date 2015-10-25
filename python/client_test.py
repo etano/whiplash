@@ -21,10 +21,14 @@ model_id = wdb.models.query_field_only('_id',{"class":"testing"})[0]
 print(model_id)
 
 wdb.properties.delete({})
-prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
 props = []
-for i in range(1000):
-    props.append(prop)
+
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
+for i in range(1000): props.append(prop)
+
+prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3,"walltime":1,"status":3}
+for i in range(500): props.append(prop)
+    
 wdb.properties.commit(props)
 wdb.properties.check_status()
 
@@ -33,8 +37,12 @@ print('unresolved time:',wdb.properties.get_unresolved_time())
 print(time.time()-t0)
 
 t0 = time.time()
-print('mapreduce:',wdb.properties.mapreduce_test())
+print('average fuckup:',wdb.properties.get_average_fuckup())
 print(time.time()-t0)
+
+#t0 = time.time()
+#print('mapreduce:',wdb.properties.mapreduce_test())
+#print(time.time()-t0)
 
 #print(len(wdb.properties.get_unresolved(10)))
 #time.sleep(6)
