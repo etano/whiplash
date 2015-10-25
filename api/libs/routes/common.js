@@ -8,36 +8,40 @@ module.exports = {
     //
 
     commit: function(ObjType,req,res) {
-        // TODO: Bulk inserts with validation for performance.
-
-        ObjType.count({}, function(err,count) {
-            for(var i=0; i<req.body.length; i++) {
-                req.body[i].owner = req.user._id;
-            }
-            ObjType.create(req.body, function(err,objs) {
-                if (!err) {
-                    log.info("%s new objects created", String(objs.length));
-                    var ids = [];
-                    for(var i=0; i<objs.length; i++) {
-                        ids.push(objs[i]["_id"]);
-                    }
-                    return res.json({
-                        status: 'OK',
-                        ids: ids
-                    });
+        // Validate
+        for(var i=0; i<req.body.length; i++) {
+            req.body[i].owner = req.user._id;
+            var obj = new ObjType(req.body[i]);
+            var err = obj.validateSync();
+            if (!err) {
+                req.body[i] = obj.toObject();
+            } else {
+                if(err.name === 'ValidationError') {
+                    res.statusCode = 400;
+                    res.json({ error: err.toString() });
                 } else {
-                    if(err.name === 'ValidationError') {
-                        res.statusCode = 400;
-                        res.json({ error: err.toString() });
-                    } else {
-                        res.statusCode = 500;
-                        res.json({ error: 'Server error' });
-                    }
-                    log.error('Internal error(%d): %s', res.statusCode, err.message);
+                    res.statusCode = 500;
+                    res.json({ error: 'Server error' });
                 }
-            });
-
+                log.error('Internal error(%d): %s', res.statusCode, err.message);
+                return;
+            }
+        }
+        // Insert
+        ObjType.collection.insertMany(req.body, {w:1}, function(err,result) {
+            if (!err) {
+                log.info("%s new objects created", String(result.insertedCount));
+                return res.json({
+                    status: 'OK',
+                    ids: result.insertedIds
+                });
+            } else {
+                res.statusCode = 500;
+                res.json({ error: 'Server error' });
+                log.error('Internal error(%d): %s', res.statusCode, err.message);
+            }
         });
+
     },
 
     //
@@ -45,7 +49,7 @@ module.exports = {
     //
 
     query: function(ObjType,req,res) {
-        ObjType.find(req.body, function (err, objs) {
+        ObjType.collection.find(req.body).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -69,7 +73,7 @@ module.exports = {
     },
 
     query_one: function(ObjType,req,res) {
-        ObjType.findOne(req.body, function (err, obj) {
+        ObjType.collection.findOne(req.body).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -112,7 +116,9 @@ module.exports = {
     },
 
     query_field_only: function(ObjType,req,res) {
-        ObjType.find(req.body, req.params.field, function (err, objs) {
+        var proj = {};
+        proj[req.params.field] = 1;
+        ObjType.find(req.body).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -140,7 +146,7 @@ module.exports = {
     },
 
     query_id: function(ObjType,req,res) {
-        ObjType.findById(req.params.id, function (err, obj) {
+        ObjType.collection.findOne({_id:req.params.id}, function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
