@@ -1,7 +1,5 @@
 before_script:
-    - docker -d
     - docker info
 build_image:
     script:
         - docker-compose -f test.yml up --force-recreate -d
-
