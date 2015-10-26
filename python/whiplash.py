@@ -178,6 +178,9 @@ class wdb:
         #through mapreduce when user commits to database, properties
         #are resolved, etc.
 
+        #TODO: if executable does not exists, pull corresponding
+        #docker container specified in path
+
         #
         # Job schedulig
         #
@@ -234,6 +237,31 @@ class wdb:
 
         def refresh(self):
             self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+
+        def submit(self,model,executable,props):
+            model_ids = self.db.models.query_field_only('_id',model)
+            if len(model_ids) == 0:
+                model_id = self.db.models.commit(model)[0]
+            elif len(model_ids) == 1:
+                model_id = model_ids[0]
+            else:
+                print('there are multiple such models. please be more specific')
+                return
+
+            executable_ids = self.db.executables.query_field_only('_id',executable)
+            if len(executable_ids) == 0:
+                executable_id = self.db.executables.commit(executable)[0]
+            elif len(executable_ids) == 1:
+                executable_id = executable_ids[0]
+            else:
+                print('there are multiple such executables. please be more specific')
+                return
+                
+            for prop in props:
+                prop["model_id"] = model_id
+                prop["executable_id"] = executable_id
+
+            self.commit(props)
 
         #
         # Statistics
