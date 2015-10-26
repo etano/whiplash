@@ -27,21 +27,25 @@ module.exports = {
                 return;
             }
         }
-        // Insert
-        ObjType.collection.insertMany(req.body, {w:1}, function(err,result) {
-            if (!err) {
-                log.info("%s new objects created", String(result.insertedCount));
+
+        //Insert
+        var batch = ObjType.collection.initializeUnorderedBulkOp();
+        for(var i = 0; i < req.body.length; i++)
+            batch.insert(req.body[i]);
+        batch.execute({w:1},function(err,result) {
+            if (!err || err.code == 11000) {
+                log.info("%s new objects created", String(result.nInserted));
                 return res.json({
                     status: 'OK',
-                    ids: result.insertedIds
+                    count : result.nInserted
                 });
-            } else {
+            }
+            else {
                 res.statusCode = 500;
-                res.json({ error: 'Server error' });
                 log.error('Internal error(%d): %s', res.statusCode, err.message);
+                res.json({ error: 'Server error' });
             }
         });
-
     },
 
     //
