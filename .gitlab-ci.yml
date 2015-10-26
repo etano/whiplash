@@ -1,0 +1,30 @@
+before_script:
+    - docker info
+
+stages:
+  - build
+  - test
+  - cleanup
+
+build:
+  stage: build
+  script:
+    - docker-compose -f test.yml up --force-recreate -d
+    - sleep 10
+  tags:
+    - docker
+
+test:
+  stage: test
+  script:
+    - PYTHONPATH=$PWD/python:$PYTHONPATH python ./tests/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
+  tags:
+    - docker
+
+cleanup:
+  stage: cleanup
+  script:
+    - docker-compose -f test.yml stop
+    - docker-compose -f test.yml rm -f
+  tags:
+    - docker
