@@ -25,6 +25,6 @@ cleanup:
   stage: cleanup
   script:
     - docker-compose -f test.yml stop
-    - docker-compose -f test.yml rm
+    - docker-compose -f test.yml rm -f
   tags:
     - docker
