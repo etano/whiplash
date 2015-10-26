@@ -3,3 +3,5 @@ before_script:
 build_image:
     script:
         - docker-compose -f test.yml up --force-recreate -d
+        - sleep 10
+        - PYTHONPATH=$PWD/python:$PYTHONPATH python ./python/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
