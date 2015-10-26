@@ -178,8 +178,8 @@ class wdb:
         #through mapreduce when user commits to database, properties
         #are resolved, etc.
 
-        #TODO: if executable does not exists, pull corresponding
-        #docker container specified in path
+        #TODO: all executables inside docker containers specified in
+        #"path". pull each container before submitting job
 
         #
         # Job schedulig

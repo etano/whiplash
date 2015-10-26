@@ -3,12 +3,12 @@
 import json,whiplash,sys,time,math
 
 with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
-#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],username="test",password="test",client_id="test",client_secret="test")
+wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],username="test",password="test",client_id="test",client_secret="test")
 
 wdb.executables.delete({})
-#path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper"
-path = "/users/whiplash/whiplash/whiplash/python/sleeper"
+path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper2"
+#path = "/users/whiplash/whiplash/whiplash/python/sleeper2"
 executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
 
 wdb.models.delete({})
@@ -16,9 +16,12 @@ model = {"class":"testing","description":"sleep model","body":"empty"}
 
 wdb.properties.delete({})
 props = []
-for i in range(1000): props.append({"params":{"first":"None","seed":i},"timeout":3})
-for i in range(1000,1500): props.append({"params":{"first":"None","seed":i},"timeout":3,"status":3,"walltime":0.1})
+for i in range(10000): props.append({"params":{"first":"None","seed":i},"timeout":3})
 wdb.properties.submit(model,executable,props)
+for i in range(10000,15000): props.append({"params":{"first":"None","seed":i},"timeout":3,"status":3,"walltime":0.1})
+wdb.properties.check_status()
+
+print(wdb.properties.get_unresolved(10))
 wdb.properties.check_status()
 
 t0 = time.time()

@@ -14,12 +14,6 @@ int main(int argc, char* argv[])
     assert(argc > 1);
     const std::string file_name(argv[1]);
 
-    std::cout << "client starting: " << file_name << std::endl;
-
-    usleep(2.0e06);
-
-    std::cout << "client done" << std::endl;
-
     std::ifstream in(file_name);
     std::string json((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
 
@@ -32,6 +26,9 @@ int main(int argc, char* argv[])
 
     struct timeval tim;
     gettimeofday(&tim, NULL);
+
+    usleep(2.0e06);
+
     result["time"] = int(tim.tv_sec);
 
     rapidjson::StringBuffer buffer;
