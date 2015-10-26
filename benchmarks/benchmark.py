@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import time,whiplash,pymongo,sys,json
+import time,whiplash,pymongo,sys
 import subprocess as sp
 
 class benchmark:
@@ -24,12 +24,13 @@ class benchmark:
 
     def clean(self):
         if self.use_pymongo:
-            self.wdb.properties.drop()
-            self.wdb.models.drop()
-            self.wdb.executables.drop()
+            self.wdb.properties.remove({})
+            self.wdb.models.remove({})
+            self.wdb.executables.remove({})
         else:
-            print 'ERROR: Clean not implemented for API'
-            sys.exit()
+            self.wdb.properties.delete({})
+            self.wdb.models.delete({})
+            self.wdb.executables.delete({})
 
     def log_timer(self,func,description):
         t0 = time.time()
@@ -57,14 +58,8 @@ class benchmark:
         else:
             return self.get_collection(collection).commit(objs)
 
-    def commit(self,collection,obj,N):
-        try:
-            obj = json.load(open(obj))
-        except:
-            obj = obj
-        objs = []
-        for i in range(N):
-            objs.append(obj.copy())
+    def commit(self,collection,objs):
+
         return self.log_timer(lambda: self.do_commit(collection,objs),"commit " + collection)
 
     def do_query(self,collection,objs):

@@ -1,11 +1,23 @@
-import benchmark,sys
+import benchmark,sys,json
 
 def perform_benchmark(bm,N):
-    model_id = bm.commit("models","model.json",N)[0]
-    executable_id = bm.commit("executables","executable.json",N)[0]
-    params = {'n_sweeps':'10','T_0':'10.0','T_1':'1.e-8','seed':'0'}
-    property = {'executable_id':executable_id,'model_id':model_id,'params':params}
-    bm.commit("properties",property,N)
+    bm.clean()
+
+    model = json.load(open("model.json"))
+    executable = json.load(open("executable.json"))
+    models,executables = [],[]
+    for i in range(N):
+        model['class'] = i
+        models.append(model.copy())
+        executable['version'] = i
+        executables.append(executable.copy())
+    model_ids = bm.commit("models",models)
+    executable_ids = bm.commit("executables",executables)
+
+    properties = []
+    for model_id in model_ids:
+        properties.append({'executable_id':executable_ids[0],'model_id':model_id,'params':{'n':0}})
+    property_ids = bm.commit("properties",properties)
 
     bm.query("properties",{"status":0})
     bm.query("models",{"class":"ising"})
@@ -24,9 +36,7 @@ bm_pymongo = benchmark.benchmark(server,port,True)
 bm_api = benchmark.benchmark(server,port,False)
 
 print('Using PyMongo')
-bm_pymongo.clean()
 perform_benchmark(bm_pymongo,N)
 
 print('Using API')
-bm_pymongo.clean()
 perform_benchmark(bm_api,N)
