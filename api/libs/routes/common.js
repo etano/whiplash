@@ -49,7 +49,8 @@ module.exports = {
     //
 
     query: function(ObjType,req,res) {
-        ObjType.collection.find(req.body).toArray(function (err, objs) {
+        //ObjType.collection.find(req.body).toArray(function (err, objs) {
+        ObjType.find(req.body,function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -73,7 +74,8 @@ module.exports = {
     },
 
     query_one: function(ObjType,req,res) {
-        ObjType.collection.findOne(req.body).toArray(function (err, obj) {
+        //ObjType.collection.findOne(req.body).toArray(function (err, obj) {
+        ObjType.findOne(req.body,function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;

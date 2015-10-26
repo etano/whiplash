@@ -1,40 +1,27 @@
 #!/usr/bin/env python
 
 import json,whiplash,sys,time,math
-#import matplotlib.pyplot as plt
 
 with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
-#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],username="test",password="test",client_id="test",client_secret="test")
+wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],username="test",password="test",client_id="test",client_secret="test")
 
 wdb.executables.delete({})
-#path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper"
-path = "/users/whiplash/whiplash/whiplash/python/sleeper"
+path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper2"
+#path = "/users/whiplash/whiplash/whiplash/python/sleeper2"
 executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
-wdb.executables.commit(executable)
-executable_id = wdb.executables.query_field_only('_id',{"class":"testing"})[0]
-print(executable_id)
 
 wdb.models.delete({})
 model = {"class":"testing","description":"sleep model","body":"empty"}
-wdb.models.commit(model)
-model_id = wdb.models.query_field_only('_id',{"class":"testing"})[0]
-print(model_id)
 
 wdb.properties.delete({})
 props = []
+for i in range(10000): props.append({"params":{"first":"None","seed":i},"timeout":3})
+wdb.properties.submit(model,executable,props)
+for i in range(10000,15000): props.append({"params":{"first":"None","seed":i},"timeout":3,"status":3,"walltime":0.1})
+wdb.properties.check_status()
 
-prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3}
-#for i in range(1000): props.append(prop)
-
-#prop = {"model_id":model_id,"executable_id":executable_id,"params":{"first":"None"},"timeout":3,"walltime":1,"status":3}
-#for i in range(500): props.append(prop)
-
-#wdb.properties.commit(props)
-wdb.properties.commit([prop,prop])
-print('hello')
-sys.exit(0)
-
+print(wdb.properties.get_unresolved(10))
 wdb.properties.check_status()
 
 t0 = time.time()
@@ -50,6 +37,8 @@ print(time.time()-t0)
 #wdb.properties.check_status()
 #wdb.properties.refresh()
 #wdb.properties.check_status()
+
+#import matplotlib.pyplot as plt
 
 # Ts = []
 # Ns = []

@@ -11,11 +11,8 @@
 
 int main(int argc, char* argv[])
 {
-    assert(argc > 1);
-    const std::string file_name(argv[1]);
-
-    std::ifstream in(file_name);
-    std::string json((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
+    std::string json;
+    std::cin >> json;
 
     rapidjson::Document doc;
     doc.Parse(json.c_str());
@@ -34,10 +31,7 @@ int main(int argc, char* argv[])
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     result.Accept(writer);
-
-    std::ofstream out(file_name);
-    out << buffer.GetString();
-    out.close();
+    std::cout << buffer.GetString();
 
     return 0;
 }

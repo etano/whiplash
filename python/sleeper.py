@@ -4,11 +4,7 @@ import json,sys,time
 
 file_name = sys.argv[1]
 
-print 'client starting:',file_name
-
-time.sleep(0.5)
-
-print 'client done'
+time.sleep(2.0)
 
 with open(file_name, 'r') as infile:
     data = json.load(infile)

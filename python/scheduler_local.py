@@ -10,18 +10,14 @@ def resolve_object(pid,obj,models,executables):
 
     print('worker',str(pid),'computing property',ID)
 
-    file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
-
-    with open(file_name, 'w') as propfile:
-        json.dump({'model':models[obj['model_index']],'params':prop['params']}, propfile)
-
+    package = json.dumps({'model':models[obj['model_index']]['body'],'params':prop['params']})
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
 
     t0 = time.time()
 
     try:
-        sp.call([path,file_name],timeout=timeout)
+        prop['result'] = json.loads(sp.check_output(path,input=package,universal_newlines=True,timeout=timeout))
         prop['status'] = 3
     except sp.TimeoutExpired:
         prop['status'] = 2
@@ -31,11 +27,6 @@ def resolve_object(pid,obj,models,executables):
     elapsed = t1-t0
 
     prop['walltime'] = elapsed
-
-    with open(file_name, 'r') as propfile:
-        prop['result'] = json.load(propfile)
-
-    os.remove(file_name)
 
     print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return prop
