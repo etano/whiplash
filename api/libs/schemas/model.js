@@ -7,8 +7,9 @@ var Schema = mongoose.Schema;
 var Model = new Schema({
     class: { type: String, required: true },
     owner: { type: String, required: true },
-    body: { type: Schema.Types.Mixed, required: true },
+    content: { type: Schema.Types.Mixed, required: true },
     description: { type: String, default: "" },
+    //checksum: {type: md5, required: true}, //TODO: if mongo does not do this already
     timestamp: { type: Date, default: Date.now }
 });
 

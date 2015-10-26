@@ -14,7 +14,7 @@ print("Login")
 wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
 
 print("Commit model")
-model_id = wdb.models.commit([{"class":"ising", "body":{"n_spins":4, "edges":[[[0,1],1], [[0,2],1], [[0,3],-1], [[0,4],-1]]}}])[0]
+model_id = wdb.models.commit([{"class":"ising", "content":{"n_spins":4, "edges":[[[0,1],1], [[0,2],1], [[0,3],-1], [[0,4],-1]]}}])[0]
 print model_id
 
 print("Commit executable")

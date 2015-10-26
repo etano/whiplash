@@ -12,16 +12,16 @@ path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper2"
 executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
 
 wdb.models.delete({})
-model = {"class":"testing","description":"sleep model","body":"empty"}
+model = {"class":"testing","description":"sleep model","content":"empty"}
 
 wdb.properties.delete({})
 props = []
-for i in range(10000): props.append({"params":{"first":"None","seed":i},"timeout":3})
+for i in range(1000): props.append({"params":{"first":"None","seed":i},"timeout":1})
+for i in range(1000,1500): props.append({"params":{"first":"None","seed":i},"timeout":1,"status":3,"walltime":0.5})
 wdb.properties.submit(model,executable,props)
-for i in range(10000,15000): props.append({"params":{"first":"None","seed":i},"timeout":3,"status":3,"walltime":0.1})
 wdb.properties.check_status()
 
-print(wdb.properties.get_unresolved(10))
+print(wdb.properties.get_unresolved(3))
 wdb.properties.check_status()
 
 t0 = time.time()
@@ -32,11 +32,9 @@ t0 = time.time()
 print('average fuckup:',wdb.properties.get_average_fuckup())
 print(time.time()-t0)
 
-#print(len(wdb.properties.get_unresolved(10)))
-#time.sleep(6)
-#wdb.properties.check_status()
-#wdb.properties.refresh()
-#wdb.properties.check_status()
+time.sleep(4)
+wdb.properties.refresh()
+wdb.properties.check_status()
 
 #import matplotlib.pyplot as plt
 
