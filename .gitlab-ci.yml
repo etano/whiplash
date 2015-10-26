@@ -1,4 +1,5 @@
 before_script:
+    - docker -d
     - docker info
 build_image:
     script:
