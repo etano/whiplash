@@ -23,3 +23,4 @@ print executable_id
 
 print("Commit property")
 print wdb.properties.commit([{"timeout":100, "class":"ising", "model_id":model_id, "executable_id":executable_id, "params":{"n_sweeps":"10", "T_1":"1.e-8", "T_0":"10.0", "seed":0}}])
+

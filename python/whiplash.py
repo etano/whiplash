@@ -159,7 +159,7 @@ class wdb:
 
         def delete(self,fltr):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         def delete_id(self,ID):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
