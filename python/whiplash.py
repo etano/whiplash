@@ -131,7 +131,7 @@ class wdb:
 
         def query_one(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/one/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["obj"]        
+            return json.loads(res.decode('utf-8'))["obj"]
 
         def query_field_only(self,field,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/field/"+field,json.dumps(fltr))
