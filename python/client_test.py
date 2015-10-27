@@ -22,6 +22,9 @@ wdb.properties.submit(model,executable,props)
 wdb.properties.check_status()
 
 print(wdb.properties.get_unresolved(3))
+
+sys.exit(0)
+
 wdb.properties.check_status()
 
 t0 = time.time()

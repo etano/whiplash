@@ -11,6 +11,11 @@ var ObjType = require(libs + 'schemas/property');
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    for(var i=0; i<req.body.length; i++)
+        if(!("status" in req.body[i]))
+            req.body[i].status = 0;
+
     common.commit(ObjType,req,res);
 });
 
