@@ -27,5 +27,5 @@ wdb.properties.submit(model,executable,props)
 wdb.properties.check_status()
 
 print('unresolved time:',wdb.properties.get_unresolved_time())
-print('average fuckup:',wdb.properties.get_average_fuckup())
+print('average misestimate:',wdb.properties.get_average_misestimate())
 

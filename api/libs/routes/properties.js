@@ -158,7 +158,7 @@ router.get('/unresolved_time/', passport.authenticate('bearer', { session: false
     });
 });
 
-router.get('/average_fuckup/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.get('/average_misestimate/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var o = {};
     o.query = {"status":3};
     o.map = function (){ emit(this.owner, {sum:this.timeout,count:this.walltime}); };
@@ -174,7 +174,7 @@ router.get('/average_fuckup/', passport.authenticate('bearer', { session: false 
     {
         return reduced_value.sum/reduced_value.count;
     };
-    o.out = {merge:'average_fuckup'};
+    o.out = {merge:'average_misestimate'};
     ObjType.mapReduce(o, function (err, model, stats) {
         console.log('map reduce took %d ms', stats.processtime);
         model.find().exec(function (err, result) {

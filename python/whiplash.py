@@ -179,7 +179,7 @@ class wdb:
 
         def delete_id(self,ID):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
     #
     # Special helper functions, only for properties
@@ -235,7 +235,7 @@ class wdb:
                 for i in range(len(executables)):
                     if prop['executable_id'] == executables[i]['_id']:
                         obj['executable_index'] = i
-                        break                    
+                        break
                 objs.append(obj)
 
             return [objs,models,executables]
@@ -262,7 +262,7 @@ class wdb:
             if not by_id: self.db.executables.commit(executable)
             executable_ids = self.db.executables.query_field_only('_id',executable)
             assert len(executable_ids) == 1
-                
+
             for prop in props:
                 prop["model_id"] = model_ids[0]
                 prop["executable_id"] = executable_ids[0]
@@ -283,7 +283,7 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
 
-        def get_average_fuckup(self):
-            status, reason, res = self.db.request("GET","/api/properties/average_fuckup/",json.dumps({}))
+        def get_average_misestimate(self):
+            status, reason, res = self.db.request("GET","/api/properties/average_misestimate/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
-        
+
