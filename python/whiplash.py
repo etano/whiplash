@@ -138,20 +138,32 @@ class wdb:
             return json.loads(res.decode('utf-8'))["obj"]
 
         #
+        # Find and update
+        #
+
+        def find_one_and_update(self,fltr,update):
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        def find_id_and_update(self,ID,update):
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        #
         # Update
         #
 
         def update(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         def update_one(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return json.loads(res.decode('utf-8'))["count"]
 
         def update_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         #
         # Delete
@@ -199,7 +211,7 @@ class wdb:
             if batch:
                 properties = self.fetch_work_batch(time_limit)
             else:
-                properties = [self.update_one({'status':0},{'status':1})]
+                properties = [self.find_one_and_update({'status':0},{'status':1})]
 
             model_ids = set()
             executable_ids = set()
