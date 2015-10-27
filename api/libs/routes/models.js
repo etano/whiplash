@@ -13,11 +13,7 @@ var log = require(libs + 'log')(module);
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    if(req.body.length > 1){
-        log.error('Only single model commits are possible');
-        return;
-    }
-    else {
+    for(var i=0; i<req.body.length; i++) {
         var crypto = require('crypto');
         function checksum (str, algorithm, encoding) {
             return crypto
@@ -25,7 +21,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 .update(str, 'utf8')
                 .digest(encoding || 'hex')
         }
-        req.body[0].checksum = checksum(JSON.stringify(req.body[0].content));
+        req.body[i].checksum = checksum(JSON.stringify(req.body[i].content));
         common.commit(ObjType,req,res);
     }
 });
