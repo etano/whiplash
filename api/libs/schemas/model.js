@@ -7,7 +7,7 @@ var Model = new Schema({
     owner: { type: String, required: true },
     content: { type: Schema.Types.Mixed, required: true },
     description: { type: String, default: "" },
-    params: { type: Schema.Types.Mixed}
+    params: { type: Schema.Types.Mixed},
     //checksum: {type: md5, required: true}, //TODO: if mongo does not do this already
     timestamp: { type: Date, default: Date.now }
 });
