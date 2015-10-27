@@ -28,4 +28,3 @@ wdb.properties.check_status()
 
 print('unresolved time:',wdb.properties.get_unresolved_time())
 print('average mistime:',wdb.properties.get_average_mistime())
-

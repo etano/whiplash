@@ -286,4 +286,3 @@ class wdb:
         def get_average_mistime(self):
             status, reason, res = self.db.request("GET","/api/properties/average_mistime/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
-
