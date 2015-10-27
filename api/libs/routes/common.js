@@ -16,7 +16,9 @@ module.exports = {
             if (!err) {
                 obj = obj.toObject();
                 for(var field in obj) {
-                    req.body[i][field] = obj[field];
+                    if (!req.body[i].hasOwnProperty(field)){
+                        req.body[i][field] = obj[field];
+                    }
                 }
             } else {
                 if(err.name === 'ValidationError') {
