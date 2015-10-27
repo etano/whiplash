@@ -173,13 +173,43 @@ module.exports = {
     },
 
     //
+    // Find and update
+    //
+
+    find_one_and_update: function(ObjType,req,res) {
+        req.body.filter.owner = req.user._id;
+        ObjType.collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
+            if (!err) {
+                return res.json({
+                    status: 'OK',
+                    obj: result.value
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    find_id_and_update: function(ObjType,req,res) {
+        var filter = {"_id": req.params.id,"owner":req.user._id};
+        req.body.filter = filter;
+        return this.find_one_and_update(ObjType,req,res);
+    },
+
+    //
     // Update
     //
 
     update: function(ObjType,req,res) {
-        ObjType.update(req.body.filter, req.body.update, {multi:true}, function (err, raw) {
+        req.body.filter.owner = req.user._id;
+        ObjType.collection.updateMany(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
-                return res.json({status: 'OK'});
+                return res.json({
+                    status: 'OK',
+                    count: result.modifiedCount // Other options include matchedCount and upsertedCount
+                });
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -190,18 +220,11 @@ module.exports = {
 
     update_one: function(ObjType,req,res) {
         req.body.filter.owner = req.user._id;
-        ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Update
+        ObjType.collection.updateOne(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    obj: obj
+                    count: result.modifiedCount // Other options include matchedCount and upsertedCount
                 });
             } else {
                 res.statusCode = 500;
@@ -213,15 +236,8 @@ module.exports = {
 
     update_id: function(ObjType,req,res) {
         var filter = {"_id": req.params.id,"owner":req.user._id};
-        ObjType.update(filter, req.body, function (err, raw) {
-            if (!err) {
-                return res.json({status: 'OK'});
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+        req.body.filter = filter;
+        return this.update_one(ObjType,req,res);
     },
 
     //
