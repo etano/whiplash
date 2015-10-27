@@ -59,7 +59,6 @@ class benchmark:
             return self.get_collection(collection).commit(objs)
 
     def commit(self,collection,objs):
-
         return self.log_timer(lambda: self.do_commit(collection,objs),"commit " + collection)
 
     def do_query(self,collection,objs):
