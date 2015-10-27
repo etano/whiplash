@@ -129,6 +129,10 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/"+self.name+"/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["objs"]
 
+        def query_one(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/one/",json.dumps(fltr))
+            return json.loads(res.decode('utf-8'))["obj"]        
+
         def query_field_only(self,field,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/field/"+field,json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["objs"]
@@ -238,12 +242,12 @@ class wdb:
         def refresh(self):
             self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
 
-        def submit(self,model,executable,props):
-            self.db.models.commit(model)
+        def submit(self,model,executable,props,by_id=False):
+            if not by_id: self.db.models.commit(model)
             model_ids = self.db.models.query_field_only('_id',model)
             assert len(model_ids) == 1
 
-            self.db.executables.commit(executable)
+            if not by_id: self.db.executables.commit(executable)
             executable_ids = self.db.executables.query_field_only('_id',executable)
             assert len(executable_ids) == 1
                 
