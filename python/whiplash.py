@@ -283,7 +283,6 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
 
-        def get_average_misestimate(self):
-            status, reason, res = self.db.request("GET","/api/properties/average_misestimate/",json.dumps({}))
+        def get_average_mistime(self):
+            status, reason, res = self.db.request("GET","/api/properties/average_mistime/",json.dumps({}))
             return json.loads(res.decode('utf-8'))["result"]
-
