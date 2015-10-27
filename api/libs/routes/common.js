@@ -13,8 +13,11 @@ module.exports = {
             req.body[i].owner = req.user._id;
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
+            console.log(obj.toObject());
+            console.log(req.body[i]);
             if (!err) {
-                req.body[i] = obj.toObject();
+                obj = obj.toObject();
+                req.body[i].timestamp = obj.timestamp;
             } else {
                 if(err.name === 'ValidationError') {
                     res.statusCode = 400;
@@ -28,17 +31,21 @@ module.exports = {
             }
         }
         // Insert
-        ObjType.collection.insertMany(req.body, {w:1}, function(err,result) {
-            if (!err) {
-                log.info("%s new objects created", String(result.insertedCount));
+        var batch = ObjType.collection.initializeUnorderedBulkOp();
+        for(i=0; i<req.body.length; i++) {
+            batch.insert(req.body[i]);
+        }
+        batch.execute(function(err,result) {
+            if (result.ok) {
+                log.info("%s new objects created", String(result.nInserted));
+                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
-                    ids: result.insertedIds
+                    count: result.nInserted
                 });
             } else {
-                res.statusCode = 500;
-                res.json({ error: 'Server error' });
-                log.error('Internal error(%d): %s', res.statusCode, err.message);
+                log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                return;
             }
         });
 
@@ -49,8 +56,7 @@ module.exports = {
     //
 
     query: function(ObjType,req,res) {
-        //ObjType.collection.find(req.body).toArray(function (err, objs) {
-        ObjType.find(req.body,function (err, objs) {
+        ObjType.collection.find(req.body).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -74,8 +80,7 @@ module.exports = {
     },
 
     query_one: function(ObjType,req,res) {
-        //ObjType.collection.findOne(req.body).toArray(function (err, obj) {
-        ObjType.findOne(req.body,function (err, obj) {
+        ObjType.collection.findOne(req.body).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -99,7 +104,7 @@ module.exports = {
     },
 
     query_count: function(ObjType,req,res) {
-        ObjType.count(req.body, function (err, count) {
+        ObjType.collection.count(req.body, function (err, count) {
 
             // TODO: Check to make sure user has READ permissions
 
@@ -229,10 +234,17 @@ module.exports = {
 
     delete: function(ObjType,req,res) {
         var filter = req.body;
+
+        // Enforce user can only delete own documents
         filter.owner = req.user._id;
-        ObjType.remove(filter, function (err, raw) {
+
+        // Do delete operation
+        ObjType.collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
-                return res.json({status: 'OK'});
+                return res.json({
+                    status: 'OK',
+                    count: result.deletedCount
+                });
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);

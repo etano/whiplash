@@ -115,7 +115,7 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
-            return json.loads(res.decode('utf-8'))["ids"]
+            return json.loads(res.decode('utf-8'))["count"]
 
         #
         # Query
@@ -159,7 +159,7 @@ class wdb:
 
         def delete(self,fltr):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         def delete_id(self,ID):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
