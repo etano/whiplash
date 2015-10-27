@@ -26,6 +26,6 @@ for i in range(1000,1500): props.append({"class":"ising", "params":{"n_sweeps":"
 wdb.properties.submit(model,executable,props)
 wdb.properties.check_status()
 
-print('unresolved time: %f',wdb.properties.get_unresolved_time())
-print('resolved time: %f',wdb.properties.get_resolved_time())
-print('total mistime: %f',wdb.properties.get_total_mistime())
+print('unresolved time: %f'%(wdb.properties.get_unresolved_time()))
+print('resolved time: %f'%(wdb.properties.get_resolved_time()))
+print('average mistime: %f'%(wdb.properties.get_average_mistime()))
