@@ -12,7 +12,7 @@ path = "/Users/ilia/ETH-Data/workspace/whiplash/whiplash/python/sleeper2"
 executable = {"class":"testing","description":"test app","algorithm":"sleep","name":"sleeper","version":"1.0.0","build":"O0","path":path}
 
 wdb.models.delete({})
-model = {"class":"testing","description":"sleep model","content":"empty"}
+model = {"class":"testing","description":"sleep model","content":{"field0":0,"field1":1}}
 
 wdb.properties.delete({})
 props = []
