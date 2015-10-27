@@ -87,7 +87,7 @@ var log = require(libs + 'log')(module);
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    ObjType.find(filter).limit(1000).exec(function(err, objs) {
+    ObjType.collection.find(filter).limit(1000).toArray(function(err, objs) {
         var time_left = time_limit;
         var ids = [];
         var work = [];
@@ -103,7 +103,8 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             var now = new Date();
             var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
             var update = {"status":1,"resolve_by":resolve_by};
-            ObjType.update({'_id': {'$in': ids}}, update, {multi:true}, function(err) {console.log("Done");});
+            //ObjType.update({'_id': {'$in': ids}}, update, {multi:true}, function(err) {console.log("Done");});
+            ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
                 objs: work
@@ -116,17 +117,22 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.get('/total_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {"status":0};
-    ObjType.find(filter, "timeout", function (err, timeouts) {
-        var total_time = 0;
-        for(var i=0; i<timeouts.length; i++) {
-            total_time += timeouts[i].timeout;
-        }
-        if (!err) {
-            return res.json({
-                status: 'OK',
-                total_time: total_time
+router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    if (!req.query.field) {
+        req.query.field = req.body.field;
+        req.query.filter = req.body.filter;
+    }
+    var map = function () { emit(this.owner, this[field]); };
+    var reduce = function (key, values) { return Array.sum(values); };
+    req.query.filter.owner = String(req.user._id);
+    var o = {query: req.query.filter, out: {merge:'total'}, scope: {field:req.query.field}};
+    ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+        if(!err){
+            collection.find().toArray(function (err, result) {
+                return res.json({
+                    status: 'OK',
+                    result: result[0].value
+                });
             });
         } else {
             res.statusCode = 500;
@@ -136,28 +142,9 @@ router.get('/total_time/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.get('/unresolved_time/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var o = {};
-    o.query = {"status":0};
-    o.map = function () { emit(this.owner, this.timeout); };
-    o.reduce = function (key, values) { return Array.sum(values);};
-    o.out = {merge:'unresolved_time'};
-    ObjType.mapReduce(o, function (err, model, stats) {
-        console.log('map reduce took %d ms', stats.processtime);
-        model.find().exec(function (err, result) {
-            return res.json({
-                status: 'OK',
-                result: result
-            });
-        });
-    });
-});
-
 router.get('/average_mistime/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var o = {};
-    o.query = {"status":3};
-    o.map = function (){ emit(this.owner, {sum:this.timeout,count:this.walltime}); };
-    o.reduce = function (key, values)
+    var map = function (){ emit(this.owner, {sum:this.timeout,count:this.walltime}); };
+    var reduce = function (key, values)
     {
         var reduced_value = {sum : 0.0, count : values.length};
         for (var i = 0; i < values.length; i++) {
@@ -165,18 +152,25 @@ router.get('/average_mistime/', passport.authenticate('bearer', { session: false
         }
         return reduced_value;
     };
+    var o = {};
+    o.query = {"status":3,"owner":String(req.user._id)};
     o.finalize = function (key, reduced_value)
     {
         return reduced_value.sum/reduced_value.count;
     };
     o.out = {merge:'average_mistime'};
-    ObjType.mapReduce(o, function (err, model, stats) {
-        console.log('map reduce took %d ms', stats.processtime);
-        model.find().exec(function (err, result) {
-            return res.json({
-                status: 'OK',
-                result: result
-            });
+    ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+        collection.find().toArray(function (err, result) {
+            if(!err){
+                return res.json({
+                    status: 'OK',
+                    result: result[0].value
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
         });
     });
 });

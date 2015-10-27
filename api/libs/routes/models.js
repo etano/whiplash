@@ -7,27 +7,24 @@ var common = require(libs + 'routes/common');
 var ObjType = require(libs + 'schemas/model');
 
 var log = require(libs + 'log')(module);
+var crypto = require('crypto');
+function checksum (str, algorithm, encoding) {
+    return crypto
+        .createHash(algorithm || 'md5')
+        .update(str, 'utf8')
+        .digest(encoding || 'hex');
+}
+
 
 //
 // Commit
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    if(req.body.length > 1){
-        log.error('Only single model commits are possible');
-        return;
+    for(var i=0; i<req.body.length; i++) {
+        req.body[i].checksum = checksum(JSON.stringify(req.body[i].content));
     }
-    else {
-        var crypto = require('crypto');
-        function checksum (str, algorithm, encoding) {
-            return crypto
-                .createHash(algorithm || 'md5')
-                .update(str, 'utf8')
-                .digest(encoding || 'hex')
-        }
-        req.body[0].checksum = checksum(JSON.stringify(req.body[0].content));
-        common.commit(ObjType,req,res);
-    }
+    common.commit(ObjType,req,res);
 });
 
 //
