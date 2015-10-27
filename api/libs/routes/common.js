@@ -13,11 +13,8 @@ module.exports = {
             req.body[i].owner = req.user._id;
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
-            console.log(obj.toObject());
-            console.log(req.body[i]);
             if (!err) {
-                obj = obj.toObject();
-                req.body[i].timestamp = obj.timestamp;
+                req.body[i].timestamp = Date.now;
             } else {
                 if(err.name === 'ValidationError') {
                     res.statusCode = 400;
