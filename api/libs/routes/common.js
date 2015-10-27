@@ -207,7 +207,7 @@ module.exports = {
 
     update: function(ObjType,req,res) {
         req.body.filter.owner = String(req.user._id);
-        ObjType.collection.updateMany(req.body.filter, req.body.update, {w:1}, function (err, result) {
+        ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
