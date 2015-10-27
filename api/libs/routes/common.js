@@ -10,11 +10,16 @@ module.exports = {
     commit: function(ObjType,req,res) {
         // Validate
         for(var i=0; i<req.body.length; i++) {
-            req.body[i].owner = req.user._id;
+            req.body[i].owner = String(req.user._id);
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
-                req.body[i].timestamp = Date.now;
+                obj = obj.toObject();
+                for(var field in obj) {
+                    if (!req.body[i].hasOwnProperty(field)){
+                        req.body[i][field] = obj[field];
+                    }
+                }
             } else {
                 if(err.name === 'ValidationError') {
                     res.statusCode = 400;
@@ -177,7 +182,7 @@ module.exports = {
     //
 
     find_one_and_update: function(ObjType,req,res) {
-        req.body.filter.owner = req.user._id;
+        req.body.filter.owner = String(req.user._id);
         ObjType.collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
@@ -193,7 +198,7 @@ module.exports = {
     },
 
     find_id_and_update: function(ObjType,req,res) {
-        var filter = {"_id": req.params.id,"owner":req.user._id};
+        var filter = {"_id": req.params.id,"owner":String(req.user._id)};
         req.body.filter = filter;
         return this.find_one_and_update(ObjType,req,res);
     },
@@ -203,10 +208,8 @@ module.exports = {
     //
 
     update: function(ObjType,req,res) {
-        req.body.filter.owner = req.user._id;
+        req.body.filter.owner = String(req.user._id);
         ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
-            console.log(err);
-
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -221,23 +224,11 @@ module.exports = {
     },
 
     update_one: function(ObjType,req,res) {
-        req.body.filter.owner = req.user._id;
-        ObjType.collection.updateOne(req.body.filter, req.body.update, {w:1}, function (err, result) {
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    count: result.modifiedCount // Other options include matchedCount and upsertedCount
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+        return this.update(ObjType,req,res);
     },
 
     update_id: function(ObjType,req,res) {
-        var filter = {"_id": req.params.id,"owner":req.user._id};
+        var filter = {"_id": req.params.id};
         req.body.filter = filter;
         return this.update_one(ObjType,req,res);
     },
@@ -250,7 +241,7 @@ module.exports = {
         var filter = req.body;
 
         // Enforce user can only delete own documents
-        filter.owner = req.user._id;
+        filter.owner = String(req.user._id);
 
         // Do delete operation
         ObjType.collection.deleteMany(filter, {}, function (err, result) {
