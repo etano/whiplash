@@ -30,7 +30,7 @@ print('unresolved time:',wdb.properties.get_unresolved_time())
 print(time.time()-t0)
 
 t0 = time.time()
-print('average fuckup:',wdb.properties.get_average_fuckup())
+print('average mistime:',wdb.properties.get_average_estimate())
 print(time.time()-t0)
 
 time.sleep(4)

@@ -39,6 +39,18 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 });
 
 //
+// Find and update
+//
+
+router.post('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_one_and_update(ObjType,req,res);
+});
+
+router.post('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_id_and_update(ObjType,req,res);
+});
+
+//
 // Update
 //
 
