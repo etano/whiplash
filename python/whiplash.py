@@ -277,12 +277,22 @@ class wdb:
             return self.count({'status':0})
 
         def check_status(self):
-            print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))
+            print('unresolved: %d'%(self.count({"status":0})))
+            print('pulled: %d'%(self.count({"status":1})))
+            print('timed out: %d'%(self.count({"status":2})))
+            print('resolved: %d'%(self.count({"status":3})))
 
         def get_unresolved_time(self):
-            status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
+            status, reason, res = self.db.request("GET","/api/properties/timeout/",json.dumps({"status":0}))
             return json.loads(res.decode('utf-8'))["result"]
 
-        def get_average_mistime(self):
-            status, reason, res = self.db.request("GET","/api/properties/average_mistime/",json.dumps({}))
+        def get_resolved_time(self):
+            status, reason, res = self.db.request("GET","/api/properties/walltime/",json.dumps({"status":3}))
             return json.loads(res.decode('utf-8'))["result"]
+
+        def get_total_mistime(self):
+            status, reason, res = self.db.request("GET","/api/properties/walltime/",json.dumps({"status":3}))
+            walltime = json.loads(res.decode('utf-8'))["result"][0]["value"]
+            status, reason, res = self.db.request("GET","/api/properties/timeout/",json.dumps({"status":3}))
+            timeout = json.loads(res.decode('utf-8'))["result"][0]["value"]
+            return abs(walltime-timeout)
