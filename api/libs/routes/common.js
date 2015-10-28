@@ -155,7 +155,7 @@ module.exports = {
     },
 
     query_id: function(ObjType,req,res) {
-        ObjType.collection.findOne({_id:req.params.id}, function (err, obj) {
+        ObjType.collection.find({_id:req.params.id}).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
