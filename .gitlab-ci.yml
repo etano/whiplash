@@ -19,7 +19,7 @@ test:
   stage: test
   script:
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler.py --time_limit 0.002 --time_window 600 --test --test_ip ${DOCKERHOST:-localhost} --test_port 7357
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler_local.py --time_limit 0.002 --time_window 600 --test --test_ip ${DOCKERHOST:-localhost} --test_port 7357
   tags:
     - docker
 
