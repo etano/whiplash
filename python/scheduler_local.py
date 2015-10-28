@@ -4,6 +4,50 @@ import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
+def fetch_work_batch(db,time_limit):
+    status, reason, res = db.properties.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
+    return json.loads(res.decode('utf-8'))["objs"]
+
+def get_unresolved(db,time_limit,batch=True):
+    if batch:
+        properties = fetch_work_batch(time_limit)
+    else:
+        properties = [db.properties.find_one_and_update({'status':0},{'status':1})]
+
+    model_ids = set()
+    executable_ids = set()
+    for prop in properties:
+        model_ids.add(prop['model_id'])
+        executable_ids.add(prop['executable_id'])
+    models = db.models.query({'_id': { '$in': list(model_ids) }})
+    executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
+
+    objs = []
+    for prop in properties:
+        obj = {'property':prop,'model_index':-1,'executable_index':-1}
+        for i in range(len(models)):
+            if prop['model_id'] == models[i]['_id']:
+                obj['model_index'] = i
+                break
+        for i in range(len(executables)):
+            if prop['executable_id'] == executables[i]['_id']:
+                obj['executable_index'] = i
+                break
+        objs.append(obj)
+
+    return [objs,models,executables]
+
+def commit_resolved(db,props,batch=True):
+    if batch:
+        IDs = []
+        for prop in props:
+            IDs.append(prop["_id"])
+        db.properties.delete({'_id': { '$in': IDs }})
+        db.properties.commit(props)
+    else:
+        for prop in props:
+            db.properties.update_id(prop["_id"],prop)
+
 def resolve_object(pid,obj,models,executables):
     prop = obj['property']
     ID = prop['_id']
@@ -45,7 +89,7 @@ def worker(pid,args):
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            unresolved = wdb.properties.get_unresolved(min(time_left(),args.time_window),batch=True)
+            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),batch=True)
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
@@ -56,14 +100,14 @@ def worker(pid,args):
                     if time_left() > obj['property']['timeout']:
                         resolved.append(resolve_object(pid,obj,models,executables))
                     else: break
-                wdb.properties.commit_resolved(resolved,batch=True)
+                commit_resolved(wdb,resolved,batch=True)
                 print('worker',str(pid),'commited',len(resolved),'properties')
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
         else:
             break
-            
+
 def run(args):
 
     num_cpus = mp.cpu_count()
