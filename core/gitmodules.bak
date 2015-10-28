@@ -1,0 +1,8 @@
+[submodule "depends/mongo-c-driver"]
+	path = depends/mongo-c-driver
+	url = https://github.com/mongodb/mongo-c-driver
+	branch = 1.2.0-dev
+[submodule "depends/mongo-cxx-driver"]
+	path = depends/mongo-cxx-driver
+	url = https://github.com/etano/mongo-cxx-driver.git
+	branch = master
