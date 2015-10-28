@@ -7,25 +7,30 @@ def perform_benchmark(bm,N):
     executable = json.load(open("executable.json"))
     models,executables = [],[]
     for i in range(N):
-        model['class'] = i
+        model['class'] = str(i)
         models.append(model.copy())
         executable['version'] = i
         executables.append(executable.copy())
-    model_ids = bm.commit("models",models)
-    executable_ids = bm.commit("executables",executables)
+    bm.commit("models",models)
+    bm.commit("executables",executables)
+
+    model_ids = bm.query_field_only("models","_id",{})
+    executable_ids = bm.query_field_only("executables","_id",{})
 
     properties = []
     for model_id in model_ids:
-        properties.append({'executable_id':executable_ids[0],'model_id':model_id,'params':{'n':0}})
-    property_ids = bm.commit("properties",properties)
+        properties.append({'executable_id':executable_ids[0],'model_id':model_id,'params':{'n':0},'timeout':1})
+    bm.commit("properties",properties)
 
-    bm.query("properties",{"status":0})
-    bm.query("models",{"class":"ising"})
-    bm.query("executables",{"class":"ising"})
+    bm.query("properties",{})
+    bm.query("models",{})
+    bm.query("executables",{})
 
     # bm.resolve("scheduler")
     # bm.resolve("native")
     # bm.resolve("script")
+
+    bm.clean()
 
 server = "192.168.99.100"
 port = "1337"

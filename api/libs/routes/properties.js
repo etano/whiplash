@@ -1,8 +1,8 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
-
 var libs = process.cwd() + '/libs/';
+var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var ObjType = require(libs + 'schemas/property');
 
@@ -79,10 +79,20 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 });
 
 //
-// Special
+// Map-reduce
 //
 
-var log = require(libs + 'log')(module);
+router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.total(ObjType,req,res);
+});
+
+router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.avg_per_dif(ObjType,req,res);
+});
+
+//
+// Special
+//
 
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
@@ -114,64 +124,6 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
         }
-    });
-});
-
-router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    if (!req.query.field) {
-        req.query.field = req.body.field;
-        req.query.filter = req.body.filter;
-    }
-    var map = function () { emit(this.owner, this[field]); };
-    var reduce = function (key, values) { return Array.sum(values); };
-    req.query.filter.owner = String(req.user._id);
-    var o = {query: req.query.filter, out: {merge:'total'}, scope: {field:req.query.field}};
-    ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
-        if(!err){
-            collection.find().toArray(function (err, result) {
-                return res.json({
-                    status: 'OK',
-                    result: result[0].value
-                });
-            });
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
-    });
-});
-
-router.get('/average_mistime/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var map = function (){ emit(this.owner, {sum:this.timeout,count:this.walltime}); };
-    var reduce = function (key, values)
-    {
-        var reduced_value = {sum : 0.0, count : values.length};
-        for (var i = 0; i < values.length; i++) {
-            reduced_value.sum += (values[i].sum - values[i].count)/values[i].count;
-        }
-        return reduced_value;
-    };
-    var o = {};
-    o.query = {"status":3,"owner":String(req.user._id)};
-    o.finalize = function (key, reduced_value)
-    {
-        return reduced_value.sum/reduced_value.count;
-    };
-    o.out = {merge:'average_mistime'};
-    ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
-        collection.find().toArray(function (err, result) {
-            if(!err){
-                return res.json({
-                    status: 'OK',
-                    result: result[0].value
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
     });
 });
 
