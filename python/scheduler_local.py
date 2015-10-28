@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 import multiprocessing as mp
 import subprocess as sp
@@ -75,16 +75,10 @@ def resolve_object(pid,obj,models,executables):
     print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return prop
 
-def worker(pid,args):
+def worker(pid,wdb,args):
     print('worker',str(pid),'active')
 
     t_start = time.time()
-
-    with open(args.wdb_info, 'r') as infile:
-        wdb_info = json.load(infile)
-
-    wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-    print('worker',str(pid),'connected to wdb')
 
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
@@ -108,7 +102,7 @@ def worker(pid,args):
         else:
             break
 
-def run(args):
+def run(wdb,args):
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -117,25 +111,41 @@ def run(args):
 
     print('starting workers')
     context = mp.get_context('fork')
+    procs = []
     for pid in range(num_cpus):
-        context.Process(target=worker, args=(pid,args,)).start()
-        time.sleep(5)
+        p = context.Process(target=worker, args=(pid,wdb,args,))
+        p.start()
+        procs.append(p)
 
     time.sleep(3600*args.time_limit)
+    print('stopping workers')
+    for p in procs:
+        p.join()
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
-    parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)
-    parser.add_argument('--time_window',dest='time_window',required=True,type=int)
+    parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
+    parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
+    parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
+    parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
+    parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
+    parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
+
+    if args.test:
+        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+    else:
+        with open(args.wdb_info, 'r') as infile:
+            wdb_info = json.load(infile)
+        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+    print('scheduler connected to wdb')
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
-            run(args)
+            run(wdb,args)
     else:
-        run(args)
+        run(wdb,args)
