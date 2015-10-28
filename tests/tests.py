@@ -16,7 +16,7 @@ wdb.models.delete({})
 model = {"class":"ising", "content":{"n_spins":4, "edges":[[[0,1],1], [[0,2],1], [[0,3],-1], [[0,4],-1]]}}
 
 wdb.executables.delete({})
-executable = {"name":"test_app", "algorithm":"SA", "version":"1.0.0", "build":"O3", "path":"/home", "class":"ising", "description":"app for testing"}
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./sleeper2.py", "class":"test", "description":"test"}
 
 print("Commit properties")
 wdb.properties.delete({})
