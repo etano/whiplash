@@ -39,7 +39,7 @@ class wdb:
             conn.request(protocol,uri,payload,self.headers)
         except:
             conn = httplib.HTTPConnection(self.server,self.port)
-            conn.request(protocol,uri,payload,self.headers)
+            conn.request(protocol,uri,str(payload),self.headers)
         res = conn.getresponse()
         if res.status != 200:
             print(res.status, res.reason, res.read())
