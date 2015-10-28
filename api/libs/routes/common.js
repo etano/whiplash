@@ -224,6 +224,26 @@ module.exports = {
         });
     },
 
+    batch_update: function(ObjType,req,res) {
+        var arr = []
+        for(i=0; i<req.body.length; i++) {
+            arr.push({ updateOne: { filter: {_id:req.body[i]._id}, replacement: req.body[i]}});
+        }
+        ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
+            if (result.ok) {
+                log.info("%s new objects replaced", String(result.modifiedCount));
+                log.error('Write errors: %s', result.getWriteErrors().toString());
+                return res.json({
+                    status: 'OK',
+                    count: result.modifiedCount
+                });
+            } else {
+                log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                return;
+            }
+        });
+    },
+
     update_one: function(ObjType,req,res) {
         return this.update(ObjType,req,res);
     },

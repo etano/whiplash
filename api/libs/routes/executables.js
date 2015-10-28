@@ -58,6 +58,10 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(ObjType,req,res);
 });
 
+router.put('/batch', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.batch_update(ObjType,req,res);
+});
+
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.update_one(ObjType,req,res);
 });

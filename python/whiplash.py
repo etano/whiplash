@@ -161,6 +161,10 @@ class wdb:
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["count"]
 
+        def batch_update(self,updates):
+            status, reason, res = self.db.request("PUT","/api/"+self.name+"/batch",json.dumps(updates))
+            return json.loads(res.decode('utf-8'))["count"]
+
         def update_one(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
             return json.loads(res.decode('utf-8'))["count"]
