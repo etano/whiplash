@@ -323,10 +323,17 @@ module.exports = {
         ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
             collection.find().toArray(function (err, result) {
                 if(!err){
-                    return res.json({
-                        status: 'OK',
-                        result: result[0].value
-                    });
+                    if (result.length > 0) {
+                        return res.json({
+                            status: 'OK',
+                            result: result[0].value
+                        });
+                    } else {
+                        return res.json({
+                            status: 'OK',
+                            result: 0
+                        });
+                    }
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
