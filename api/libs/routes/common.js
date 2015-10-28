@@ -41,7 +41,6 @@ module.exports = {
         batch.execute(function(err,result) {
             if (result.ok) {
                 log.info("%s new objects created", String(result.nInserted));
-                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
                     count: result.nInserted
@@ -232,7 +231,6 @@ module.exports = {
         ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
-                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
                     count: result.modifiedCount
@@ -343,10 +341,17 @@ module.exports = {
         ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
             collection.find().toArray(function (err, result) {
                 if(!err){
-                    return res.json({
-                        status: 'OK',
-                        result: result[0].value
-                    });
+                    if (result.length > 0) {
+                        return res.json({
+                            status: 'OK',
+                            result: result[0].value
+                        });
+                    } else {
+                        return res.json({
+                            status: 'OK',
+                            result: 0
+                        });
+                    }
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
