@@ -14,6 +14,7 @@ module.exports = {
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
+                req.body[i]._id = obj.id; // convert object id to string
                 obj = obj.toObject();
                 for(var field in obj) {
                     if (!req.body[i].hasOwnProperty(field)){
