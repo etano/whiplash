@@ -5,12 +5,12 @@ import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
 def fetch_work_batch(db,time_limit):
-    status, reason, res = db.properties.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
+    status, reason, res = db.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
     return json.loads(res.decode('utf-8'))["objs"]
 
 def get_unresolved(db,time_limit,batch=True):
     if batch:
-        properties = fetch_work_batch(time_limit)
+        properties = fetch_work_batch(db,time_limit)
     else:
         properties = [db.properties.find_one_and_update({'status':0},{'status':1})]
 
