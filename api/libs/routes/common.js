@@ -41,7 +41,6 @@ module.exports = {
         batch.execute(function(err,result) {
             if (result.ok) {
                 log.info("%s new objects created", String(result.nInserted));
-                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
                     count: result.nInserted
@@ -232,7 +231,6 @@ module.exports = {
         ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
-                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
                     count: result.modifiedCount
