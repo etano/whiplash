@@ -14,6 +14,7 @@ module.exports = {
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
+                req.body[i]._id = obj.id; // convert object id to string
                 obj = obj.toObject();
                 for(var field in obj) {
                     if (!req.body[i].hasOwnProperty(field)){
@@ -57,8 +58,7 @@ module.exports = {
     //
 
     query: function(ObjType,req,res) {
-        //ObjType.collection.find(req.body).toArray(function (err, objs) {
-        ObjType.find(req.body,function (err, objs) {
+        ObjType.collection.find(req.body).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
