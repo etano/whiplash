@@ -39,11 +39,7 @@ def get_unresolved(db,time_limit,batch=True):
 
 def commit_resolved(db,props,batch=True):
     if batch:
-        IDs = []
-        for prop in props:
-            IDs.append(prop["_id"])
-        db.properties.delete({'_id': { '$in': IDs }})
-        db.properties.commit(props)
+        db.properties.batch_update(props)
     else:
         for prop in props:
             db.properties.update_id(prop["_id"],prop)
