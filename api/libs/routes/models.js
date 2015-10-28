@@ -7,6 +7,13 @@ var common = require(libs + 'routes/common');
 var ObjType = require(libs + 'schemas/model');
 
 var log = require(libs + 'log')(module);
+var crypto = require('crypto');
+function checksum (str, algorithm, encoding) {
+    return crypto
+        .createHash(algorithm || 'md5')
+        .update(str, 'utf8')
+        .digest(encoding || 'hex');
+}
 
 //
 // Commit
@@ -14,16 +21,9 @@ var log = require(libs + 'log')(module);
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     for(var i=0; i<req.body.length; i++) {
-        var crypto = require('crypto');
-        function checksum (str, algorithm, encoding) {
-            return crypto
-                .createHash(algorithm || 'md5')
-                .update(str, 'utf8')
-                .digest(encoding || 'hex')
-        }
-        req.body[i].checksum = checksum(JSON.stringify(req.body[i].content));
-        common.commit(ObjType,req,res);
+        req.body[i].checksum = checksum(JSON.stringify(req.body[i]));
     }
+    common.commit(ObjType,req,res);
 });
 
 //
@@ -90,5 +90,16 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
     common.delete_id(ObjType,req,res);
 });
 
+//
+// Map-reduce
+//
+
+router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.total(ObjType,req,res);
+});
+
+router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.avg_per_dif(ObjType,req,res);
+});
 
 module.exports = router;

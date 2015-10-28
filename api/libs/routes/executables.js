@@ -78,4 +78,16 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
     common.delete_id(ObjType,req,res);
 });
 
+//
+// Map-reduce
+//
+
+router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.total(ObjType,req,res);
+});
+
+router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.avg_per_dif(ObjType,req,res);
+});
+
 module.exports = router;

@@ -36,7 +36,10 @@ class benchmark:
         t0 = time.time()
         res = func()
         t1 = time.time()
-        log = description+" : "+str(len(res))+" objects : "+str(t1-t0)+" seconds"
+        try:
+            log = description+" : "+str(len(res))+" objects : "+str(t1-t0)+" seconds"
+        except:
+            log = description+" : "+str(res)+" objects : "+str(t1-t0)+" seconds"
         print(log)
         self.log_handle.write(log+"\n")
         return res
@@ -70,8 +73,20 @@ class benchmark:
         else:
             return self.get_collection(collection).query(objs)
 
-    def query(self,collection,fltr):
-        return self.log_timer(lambda: self.do_query(collection,fltr),"query " + collection + " on " + str(fltr))
+    def query(self,collection,filter):
+        return self.log_timer(lambda: self.do_query(collection,filter),"query " + collection + " on " + str(filter))
+
+    def do_query_field_only(self,collection,field,filter):
+        if self.use_pymongo:
+            docs = []
+            for doc in self.get_collection(collection).find(filter):
+                docs.append(doc)
+            return docs
+        else:
+            return self.get_collection(collection).query_field_only(field,filter)
+
+    def query_field_only(self,collection,field,filter):
+        return self.log_timer(lambda: self.do_query_field_only(collection,field,filter),"query " + collection + " on " + str(filter) + " for " + field)
 
     def resolve(self,method):
         if method == "scheduler":

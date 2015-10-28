@@ -263,4 +263,76 @@ module.exports = {
         this.delete(ObjType,req,res);
     },
 
+    //
+    // Map-reduce
+    //
+
+    total: function(ObjType,req,res) {
+        if (!req.query.field) {
+            req.query.field = req.body.field;
+            req.query.filter = req.body.filter;
+        }
+        var map = function () { emit(this.owner, this[field]); };
+        var reduce = function (key, values) { return Array.sum(values); };
+        req.query.filter.owner = String(req.user._id);
+        var o = {};
+        o.query = req.query.filter;
+        o.out = {merge:'total'};
+        o.scope = {field: req.query.field};
+        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+            if(!err){
+                collection.find().toArray(function (err, result) {
+                    return res.json({
+                        status: 'OK',
+                        result: result[0].value
+                    });
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    avg_per_dif: function(ObjType,req,res) {
+        if (!req.query.field1) {
+            req.query.field1 = req.body.field1;
+            req.query.field2 = req.body.field2;
+            req.query.filter = req.body.filter;
+        }
+        var map = function (){ emit(this.owner, {sum:this[field1],count:this[field2]}); };
+        var reduce = function (key, values)
+        {
+            var reduced_value = {sum : 0.0, count : values.length};
+            for (var i = 0; i < values.length; i++) {
+                reduced_value.sum += (values[i].sum - values[i].count)/values[i].count;
+            }
+            return reduced_value;
+        };
+        var o = {};
+        req.query.filter.owner = String(req.user._id);
+        o.scope = {field1: req.query.field1, field2: req.query.field2};
+        o.query = req.query.filter;
+        o.finalize = function (key, reduced_value)
+        {
+            return reduced_value.sum/reduced_value.count;
+        };
+        o.out = {merge:'average_mistime'};
+        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+            collection.find().toArray(function (err, result) {
+                if(!err){
+                    return res.json({
+                        status: 'OK',
+                        result: result[0].value
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        });
+    },
+
 };
