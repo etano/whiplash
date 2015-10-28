@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 import whiplash,daemon,argparse,time,json,sys,os
 import subprocess as sp

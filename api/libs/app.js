@@ -22,7 +22,7 @@ var oauth2 = require('./auth/oauth2');
 
 var app = express();
 
-app.use(bodyParser.json({limit: '100mb'}));
+app.use(bodyParser.json({limit: '1024mb'})); //100mb
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride());

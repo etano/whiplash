@@ -10,11 +10,17 @@ module.exports = {
     commit: function(ObjType,req,res) {
         // Validate
         for(var i=0; i<req.body.length; i++) {
-            req.body[i].owner = req.user._id;
+            req.body[i].owner = String(req.user._id);
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
-                req.body[i] = obj.toObject();
+                req.body[i]._id = obj.id; // convert object id to string
+                obj = obj.toObject();
+                for(var field in obj) {
+                    if (!req.body[i].hasOwnProperty(field)){
+                        req.body[i][field] = obj[field];
+                    }
+                }
             } else {
                 if(err.name === 'ValidationError') {
                     res.statusCode = 400;
@@ -28,20 +34,23 @@ module.exports = {
             }
         }
         // Insert
-        ObjType.collection.insertMany(req.body, {w:1}, function(err,result) {
-            if (!err) {
-                log.info("%s new objects created", String(result.insertedCount));
+        var batch = ObjType.collection.initializeUnorderedBulkOp();
+        for(i=0; i<req.body.length; i++) {
+            batch.insert(req.body[i]);
+        }
+        batch.execute(function(err,result) {
+            if (result.ok) {
+                log.info("%s new objects created", String(result.nInserted));
+                log.error('Write errors: %s', result.getWriteErrors().toString());
                 return res.json({
                     status: 'OK',
-                    ids: result.insertedIds
+                    count: result.nInserted
                 });
             } else {
-                res.statusCode = 500;
-                res.json({ error: 'Server error' });
-                log.error('Internal error(%d): %s', res.statusCode, err.message);
+                log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                return;
             }
         });
-
     },
 
     //
@@ -73,7 +82,7 @@ module.exports = {
     },
 
     query_one: function(ObjType,req,res) {
-        ObjType.collection.findOne(req.body).toArray(function (err, obj) {
+        ObjType.collection.find(req.body).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -97,7 +106,7 @@ module.exports = {
     },
 
     query_count: function(ObjType,req,res) {
-        ObjType.count(req.body, function (err, count) {
+        ObjType.collection.count(req.body, function (err, count) {
 
             // TODO: Check to make sure user has READ permissions
 
@@ -146,7 +155,7 @@ module.exports = {
     },
 
     query_id: function(ObjType,req,res) {
-        ObjType.collection.findOne({_id:req.params.id}, function (err, obj) {
+        ObjType.collection.find({_id:req.params.id}).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -170,35 +179,16 @@ module.exports = {
     },
 
     //
-    // Update
+    // Find and update
     //
 
-    update: function(ObjType,req,res) {
-        ObjType.update(req.body.filter, req.body.update, {multi:true}, function (err, raw) {
-            if (!err) {
-                return res.json({status: 'OK'});
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },
-
-    update_one: function(ObjType,req,res) {
-        req.body.filter.owner = req.user._id;
-        ObjType.findOneAndUpdate(req.body.filter, req.body.update, {new: true}, function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Update
+    find_one_and_update: function(ObjType,req,res) {
+        req.body.filter.owner = String(req.user._id);
+        ObjType.collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    obj: obj
+                    obj: result.value
                 });
             } else {
                 res.statusCode = 500;
@@ -208,11 +198,24 @@ module.exports = {
         });
     },
 
-    update_id: function(ObjType,req,res) {
-        var filter = {"_id": req.params.id,"owner":req.user._id};
-        ObjType.update(filter, req.body, function (err, raw) {
+    find_id_and_update: function(ObjType,req,res) {
+        var filter = {"_id": req.params.id,"owner":String(req.user._id)};
+        req.body.filter = filter;
+        return this.find_one_and_update(ObjType,req,res);
+    },
+
+    //
+    // Update
+    //
+
+    update: function(ObjType,req,res) {
+        req.body.filter.owner = String(req.user._id);
+        ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
-                return res.json({status: 'OK'});
+                return res.json({
+                    status: 'OK',
+                    count: result.modifiedCount // Other options include matchedCount and upsertedCount
+                });
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -221,16 +224,33 @@ module.exports = {
         });
     },
 
+    update_one: function(ObjType,req,res) {
+        return this.update(ObjType,req,res);
+    },
+
+    update_id: function(ObjType,req,res) {
+        var filter = {"_id": req.params.id};
+        req.body.filter = filter;
+        return this.update_one(ObjType,req,res);
+    },
+
     //
     // Delete
     //
 
     delete: function(ObjType,req,res) {
         var filter = req.body;
-        filter.owner = req.user._id;
-        ObjType.remove(filter, function (err, raw) {
+
+        // Enforce user can only delete own documents
+        filter.owner = String(req.user._id);
+
+        // Do delete operation
+        ObjType.collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
-                return res.json({status: 'OK'});
+                return res.json({
+                    status: 'OK',
+                    count: result.deletedCount
+                });
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -242,6 +262,78 @@ module.exports = {
     delete_id: function(ObjType,req,res) {
         req.body = {"_id": req.params.id};
         this.delete(ObjType,req,res);
+    },
+
+    //
+    // Map-reduce
+    //
+
+    total: function(ObjType,req,res) {
+        if (!req.query.field) {
+            req.query.field = req.body.field;
+            req.query.filter = req.body.filter;
+        }
+        var map = function () { emit(this.owner, this[field]); };
+        var reduce = function (key, values) { return Array.sum(values); };
+        req.query.filter.owner = String(req.user._id);
+        var o = {};
+        o.query = req.query.filter;
+        o.out = {merge:'total'};
+        o.scope = {field: req.query.field};
+        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+            if(!err){
+                collection.find().toArray(function (err, result) {
+                    return res.json({
+                        status: 'OK',
+                        result: result[0].value
+                    });
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },
+
+    avg_per_dif: function(ObjType,req,res) {
+        if (!req.query.field1) {
+            req.query.field1 = req.body.field1;
+            req.query.field2 = req.body.field2;
+            req.query.filter = req.body.filter;
+        }
+        var map = function (){ emit(this.owner, {sum:this[field1],count:this[field2]}); };
+        var reduce = function (key, values)
+        {
+            var reduced_value = {sum : 0.0, count : values.length};
+            for (var i = 0; i < values.length; i++) {
+                reduced_value.sum += (values[i].sum - values[i].count)/values[i].count;
+            }
+            return reduced_value;
+        };
+        var o = {};
+        req.query.filter.owner = String(req.user._id);
+        o.scope = {field1: req.query.field1, field2: req.query.field2};
+        o.query = req.query.filter;
+        o.finalize = function (key, reduced_value)
+        {
+            return reduced_value.sum/reduced_value.count;
+        };
+        o.out = {merge:'average_mistime'};
+        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+            collection.find().toArray(function (err, result) {
+                if(!err){
+                    return res.json({
+                        status: 'OK',
+                        result: result[0].value
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        });
     },
 
 };

@@ -39,7 +39,7 @@ class wdb:
             conn.request(protocol,uri,payload,self.headers)
         except:
             conn = httplib.HTTPConnection(self.server,self.port)
-            conn.request(protocol,uri,payload,self.headers)
+            conn.request(protocol,uri,str(payload),self.headers)
         res = conn.getresponse()
         if res.status != 200:
             print(res.status, res.reason, res.read())
@@ -115,7 +115,7 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
-            return json.loads(res.decode('utf-8'))["ids"]
+            return json.loads(res.decode('utf-8'))["count"]
 
         #
         # Query
@@ -129,6 +129,10 @@ class wdb:
             status, reason, res = self.db.request("GET","/api/"+self.name+"/",json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["objs"]
 
+        def query_one(self,fltr):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/one/",json.dumps(fltr))
+            return json.loads(res.decode('utf-8'))["obj"]
+
         def query_field_only(self,field,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/field/"+field,json.dumps(fltr))
             return json.loads(res.decode('utf-8'))["objs"]
@@ -138,20 +142,32 @@ class wdb:
             return json.loads(res.decode('utf-8'))["obj"]
 
         #
+        # Find and update
+        #
+
+        def find_one_and_update(self,fltr,update):
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        def find_id_and_update(self,ID,update):
+            status, reason, res = self.db.request("POST","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
+            return json.loads(res.decode('utf-8'))["obj"]
+
+        #
         # Update
         #
 
         def update(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         def update_one(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return json.loads(res.decode('utf-8'))["count"]
 
         def update_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         #
         # Delete
@@ -159,81 +175,47 @@ class wdb:
 
         def delete(self,fltr):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
 
         def delete_id(self,ID):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))
+            return json.loads(res.decode('utf-8'))["count"]
+
+        #
+        # Map-reduce
+        #
+
+        def total(self,field,filter):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/total/",json.dumps({"field":field,"filter":filter}))
+            return json.loads(res.decode('utf-8'))["result"]
+
+        def avg_per_dif(self,field1,field2,filter):
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/avg_per_dif/",json.dumps({"field1":field1,"field2":field2,"filter":filter}))
+            return json.loads(res.decode('utf-8'))["result"]
 
     #
     # Special helper functions, only for properties
     #
     class properties_collection(collection):
 
-        #TODO: check if commited property already exists and insert
-        #with unresolved status if it does not. else return the
-        #resolved property
-
-        #TODO: statistics collections which are incrementally updated
-        #through mapreduce when user commits to database, properties
-        #are resolved, etc.
-
         #
-        # Job schedulig
+        # Submit
         #
 
-        def hold_until_resolved(self,property_ids,fraction):
-            while True:
-                properties = self.query({'_id': { '$in': property_ids },'status':3})
-                if properties.count() > fraction*len(property_ids): break
-            return properties
+        def submit(self,model,executable,props,by_id=False):
+            if not by_id: self.db.models.commit(model)
+            model_ids = self.db.models.query_field_only('_id',model)
+            assert len(model_ids) == 1
 
-        def fetch_work_batch(self,time_limit):
-            status, reason, res = self.db.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
-            return json.loads(res.decode('utf-8'))["objs"]
+            if not by_id: self.db.executables.commit(executable)
+            executable_ids = self.db.executables.query_field_only('_id',executable)
+            assert len(executable_ids) == 1
 
-        def get_unresolved(self,time_limit,batch=True):
-            if batch:
-                properties = self.fetch_work_batch(time_limit)
-            else:
-                properties = [self.update_one({'status':0},{'status':1})]
+            for prop in props:
+                prop["model_id"] = model_ids[0]
+                prop["executable_id"] = executable_ids[0]
 
-            model_ids = set()
-            executable_ids = set()
-            for prop in properties:
-                model_ids.add(prop['model_id'])
-                executable_ids.add(prop['executable_id'])
-            models = self.db.models.query({'_id': { '$in': list(model_ids) }})
-            executables = self.db.executables.query({'_id': { '$in': list(executable_ids) }})
-
-            objs = []
-            for prop in properties:
-                obj = {'property':prop,'model_index':-1,'executable_index':-1}
-                for i in range(len(models)):
-                    if prop['model_id'] == models[i]['_id']:
-                        obj['model_index'] = i
-                        break
-                for i in range(len(executables)):
-                    if prop['executable_id'] == executables[i]['_id']:
-                        obj['executable_index'] = i
-                        break                    
-                objs.append(obj)
-
-            return [objs,models,executables]
-
-        def commit_resolved(self,props,batch=True):
-            if batch:
-                IDs = []
-                for prop in props:
-                    IDs.append(prop["_id"])
-                self.delete({'_id': { '$in': IDs }})
-                self.commit(props)
-            else:
-                for prop in props:
-                    self.update_id(prop["_id"],prop)
-
-        def refresh(self):
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+            self.commit(props)
 
         #
         # Statistics
@@ -242,14 +224,24 @@ class wdb:
         def get_num_unresolved(self):
             return self.count({'status':0})
 
-        def check_status(self):
-            print(self.count({"status":0}),' | ',self.count({"status":1}),' | ',self.count({"status":2}),' | ',self.count({"status":3}))
-
         def get_unresolved_time(self):
-            status, reason, res = self.db.request("GET","/api/properties/unresolved_time/",json.dumps({}))
-            return json.loads(res.decode('utf-8'))["result"]
+            return self.total("timeout",{"status":0})
 
-        def get_average_fuckup(self):
-            status, reason, res = self.db.request("GET","/api/properties/average_fuckup/",json.dumps({}))
-            return json.loads(res.decode('utf-8'))["result"]
-        
+        def get_resolved_time(self):
+            return self.total("walltime",{"status":3})
+
+        def get_average_mistime(self):
+            return self.avg_per_dif("timeout","walltime",{"status":3})
+
+        #
+        # Testing
+        #
+
+        def refresh(self):
+            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+
+        def check_status(self):
+            print('unresolved: %d'%(self.count({"status":0})))
+            print('pulled: %d'%(self.count({"status":1})))
+            print('timed out: %d'%(self.count({"status":2})))
+            print('resolved: %d'%(self.count({"status":3})))

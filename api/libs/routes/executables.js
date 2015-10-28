@@ -39,6 +39,18 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 });
 
 //
+// Find and update
+//
+
+router.post('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_one_and_update(ObjType,req,res);
+});
+
+router.post('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_id_and_update(ObjType,req,res);
+});
+
+//
 // Update
 //
 
@@ -64,6 +76,18 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 
 router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.delete_id(ObjType,req,res);
+});
+
+//
+// Map-reduce
+//
+
+router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.total(ObjType,req,res);
+});
+
+router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.avg_per_dif(ObjType,req,res);
 });
 
 module.exports = router;
