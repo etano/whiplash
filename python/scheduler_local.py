@@ -54,7 +54,8 @@ def resolve_object(pid,obj,models,executables):
 
     print('worker',str(pid),'computing property',ID)
 
-    package = json.dumps({'model':models[obj['model_index']]['content'],'params':prop['params']})
+    package = json.dumps({'model':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
+
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
 

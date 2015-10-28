@@ -82,7 +82,7 @@ module.exports = {
     },
 
     query_one: function(ObjType,req,res) {
-        ObjType.collection.findOne(req.body).toArray(function (err, obj) {
+        ObjType.collection.find(req.body).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
