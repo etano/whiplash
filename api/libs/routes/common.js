@@ -43,7 +43,7 @@ module.exports = {
                 log.info("%s new objects created", String(result.nInserted));
                 return res.json({
                     status: 'OK',
-                    count: result.nInserted
+                    result: result.nInserted
                 });
             } else {
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
@@ -70,7 +70,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    objs: objs
+                    result: objs
                 });
             } else {
                 res.statusCode = 500;
@@ -94,7 +94,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    obj: obj
+                    result: obj
                 });
             } else {
                 res.statusCode = 500;
@@ -113,7 +113,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    count: count
+                    result: count
                 });
             } else {
                 res.statusCode = 500;
@@ -143,7 +143,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    objs: projection
+                    result: projection
                 });
             } else {
                 res.statusCode = 500;
@@ -167,7 +167,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    obj: obj
+                    result: obj
                 });
             } else {
                 res.statusCode = 500;
@@ -187,7 +187,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    obj: result.value
+                    result: result.value
                 });
             } else {
                 res.statusCode = 500;
@@ -213,7 +213,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    count: result.modifiedCount // Other options include matchedCount and upsertedCount
+                    result: result.modifiedCount // Other options include matchedCount and upsertedCount
                 });
             } else {
                 res.statusCode = 500;
@@ -233,7 +233,7 @@ module.exports = {
                 log.info("%s new objects replaced", String(result.modifiedCount));
                 return res.json({
                     status: 'OK',
-                    count: result.modifiedCount
+                    result: result.modifiedCount
                 });
             } else {
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
@@ -267,7 +267,7 @@ module.exports = {
             if (!err) {
                 return res.json({
                     status: 'OK',
-                    count: result.deletedCount
+                    result: result.deletedCount
                 });
             } else {
                 res.statusCode = 500;
