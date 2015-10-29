@@ -107,7 +107,7 @@ class wdb:
             self.name = name
             self.db = db
 
-        def request(protocol,uri,payload):
+        def request(self,protocol,uri,payload):
             status, reason, res = self.db.request(protocol,uri,json.dumps(payload))
             if status == 200:
                 return json.loads(res.decode('utf-8'))["result"]
