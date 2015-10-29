@@ -6,7 +6,11 @@ import whiplash,time,json,os,argparse,daemon,sys
 
 def fetch_work_batch(db,time_limit):
     status, reason, res = db.request("PUT","/api/properties/work_batch/",json.dumps({'time_limit':time_limit}))
-    return json.loads(res.decode('utf-8'))["objs"]
+    if status == 200:
+        return json.loads(res.decode('utf-8'))["objs"]
+    else:
+        print(status,reason,res)
+        sys.exit(0)    
 
 def get_unresolved(db,time_limit,batch=True):
     if batch:

@@ -115,7 +115,11 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)
 
         #
         # Query
@@ -123,23 +127,43 @@ class wdb:
 
         def count(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)
 
         def query(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["objs"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def query_one(self,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/one/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["obj"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["obj"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)
 
         def query_field_only(self,field,fltr):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/field/"+field,json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["objs"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def query_id(self,ID):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["obj"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["obj"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         #
         # Find and update
@@ -147,11 +171,19 @@ class wdb:
 
         def find_one_and_update(self,fltr,update):
             status, reason, res = self.db.request("POST","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["obj"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["obj"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def find_id_and_update(self,ID,update):
             status, reason, res = self.db.request("POST","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))["obj"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["obj"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         #
         # Update
@@ -159,19 +191,35 @@ class wdb:
 
         def update(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def batch_update(self,updates):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/batch",json.dumps(updates))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loadse(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def update_one(self,fltr,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def update_id(self,ID,update):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         #
         # Delete
@@ -179,11 +227,19 @@ class wdb:
 
         def delete(self,fltr):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def delete_id(self,ID):
             status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["count"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["count"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         #
         # Map-reduce
@@ -191,11 +247,19 @@ class wdb:
 
         def total(self,field,filter):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/total/",json.dumps({"field":field,"filter":filter}))
-            return json.loads(res.decode('utf-8'))["result"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["result"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
         def avg_per_dif(self,field1,field2,filter):
             status, reason, res = self.db.request("GET","/api/"+self.name+"/avg_per_dif/",json.dumps({"field1":field1,"field2":field2,"filter":filter}))
-            return json.loads(res.decode('utf-8'))["result"]
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["result"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)            
 
     #
     # Special helper functions, only for properties
