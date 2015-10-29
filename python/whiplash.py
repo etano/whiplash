@@ -107,6 +107,13 @@ class wdb:
             self.name = name
             self.db = db
 
+        def request(self,protocol,uri,payload):
+            status, reason, res = self.db.request(protocol,uri,json.dumps(payload))
+            if status == 200:
+                return json.loads(res.decode('utf-8'))["result"]
+            else:
+                print(status,reason,res)
+                sys.exit(0)
         #
         # Commit
         #
@@ -114,88 +121,72 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/",json.dumps(objs))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("POST","/api/"+self.name+"/",objs)
 
         #
         # Query
         #
 
         def count(self,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/count/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("GET","/api/"+self.name+"/count/",fltr)
 
         def query(self,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
+            return self.request("GET","/api/"+self.name+"/",fltr)
 
         def query_one(self,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/one/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return self.request("GET","/api/"+self.name+"/one/",fltr)
 
         def query_field_only(self,field,fltr):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/field/"+field,json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["objs"]
+            return self.request("GET","/api/"+self.name+"/field/"+field,fltr)
 
         def query_id(self,ID):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["obj"]
+            return self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
 
         #
         # Find and update
         #
 
         def find_one_and_update(self,fltr,update):
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return self.request("POST","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
 
         def find_id_and_update(self,ID,update):
-            status, reason, res = self.db.request("POST","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))["obj"]
+            return self.request("POST","/api/"+self.name+"/id/"+str(ID),update)
 
         #
         # Update
         #
 
         def update(self,fltr,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
         def batch_update(self,updates):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/batch",json.dumps(updates))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("PUT","/api/"+self.name+"/batch",updates)
 
         def update_one(self,fltr,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/one/",json.dumps({'filter':fltr,'update':update}))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
 
         def update_id(self,ID,update):
-            status, reason, res = self.db.request("PUT","/api/"+self.name+"/id/"+str(ID),json.dumps(update))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("PUT","/api/"+self.name+"/id/"+str(ID),update)
 
         #
         # Delete
         #
 
         def delete(self,fltr):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/",json.dumps(fltr))
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("DELETE","/api/"+self.name+"/",fltr)
 
         def delete_id(self,ID):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-            return json.loads(res.decode('utf-8'))["count"]
+            return self.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
 
         #
         # Map-reduce
         #
 
         def total(self,field,filter):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/total/",json.dumps({"field":field,"filter":filter}))
-            return json.loads(res.decode('utf-8'))["result"]
+            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":filter})
 
         def avg_per_dif(self,field1,field2,filter):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/avg_per_dif/",json.dumps({"field1":field1,"field2":field2,"filter":filter}))
-            return json.loads(res.decode('utf-8'))["result"]
+            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":filter})
 
     #
     # Special helper functions, only for properties
