@@ -158,7 +158,7 @@ class wdb:
                 sys.exit(0)            
 
         def query_id(self,ID):
-            status, reason, res = self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
+            status, reason, res = self.db.request("GET","/api/"+self.name+"/id/"+str(ID),json.dumps({}))
             if status == 200:
                 return json.loads(res.decode('utf-8'))["obj"]
             else:
@@ -200,7 +200,7 @@ class wdb:
         def batch_update(self,updates):
             status, reason, res = self.db.request("PUT","/api/"+self.name+"/batch",json.dumps(updates))
             if status == 200:
-                return json.loadse(res.decode('utf-8'))["count"]
+                return json.loads(res.decode('utf-8'))["count"]
             else:
                 print(status,reason,res)
                 sys.exit(0)            
@@ -234,7 +234,7 @@ class wdb:
                 sys.exit(0)            
 
         def delete_id(self,ID):
-            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
+            status, reason, res = self.db.request("DELETE","/api/"+self.name+"/id/"+str(ID),json.dumps({}))
             if status == 200:
                 return json.loads(res.decode('utf-8'))["count"]
             else:
