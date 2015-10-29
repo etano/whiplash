@@ -121,7 +121,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
-                objs: work
+                result: work
             });
         } else {
             res.statusCode = 500;
