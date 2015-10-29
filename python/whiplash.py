@@ -198,13 +198,21 @@ class wdb:
         #
 
         def submit(self,model,executable,props,by_id=False):
-            if not by_id: self.db.models.commit(model)
-            model_ids = self.db.models.query_field_only('_id',model)
-            assert len(model_ids) == 1
+            model_ids = []
+            if "_id" in model:
+                model_ids = [model["_id"]]
+            else:
+                if not by_id: self.db.models.commit(model)
+                model_ids = self.db.models.query_field_only('_id',model)
+                assert len(model_ids) == 1
 
-            if not by_id: self.db.executables.commit(executable)
-            executable_ids = self.db.executables.query_field_only('_id',executable)
-            assert len(executable_ids) == 1
+            executable_ids = []
+            if "_id" in executable:
+                executable_ids = [executable["_id"]]
+            else:
+                if not by_id: self.db.executables.commit(executable)
+                executable_ids = self.db.executables.query_field_only('_id',executable)
+                assert len(executable_ids) == 1
 
             for prop in props:
                 prop["model_id"] = model_ids[0]
