@@ -10,8 +10,8 @@ client_id = sys.argv[5]
 client_secret = sys.argv[6]
 
 print("Login")
-#wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
-with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
+wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
+#with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
 wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.models.delete({})
