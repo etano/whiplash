@@ -188,6 +188,14 @@ class wdb:
         def avg_per_dif(self,field1,field2,filter):
             return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":filter})
 
+
+        #
+        # GridFS
+        #
+
+        def write_file(self,obj):
+            return self.request("POST","/api/"+self.name+"/write/",obj)
+
     #
     # Special helper functions, only for properties
     #
