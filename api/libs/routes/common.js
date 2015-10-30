@@ -34,7 +34,7 @@ module.exports = {
             }
         }
         // Insert
-        var batch = ObjType.collection.initializeUnorderedBulkOp();
+        var batch = ObjType.collection.initializeOrderedBulkOp();
         for(i=0; i<req.body.length; i++) {
             batch.insert(req.body[i]);
         }
@@ -43,7 +43,7 @@ module.exports = {
                 log.info("%s new objects created", String(result.nInserted));
                 return res.json({
                     status: 'OK',
-                    result: result.nInserted
+                    result: {'n':result.nInserted,'ids':result.getInsertedIds()}
                 });
             } else {
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
@@ -209,7 +209,7 @@ module.exports = {
 
     update: function(ObjType,req,res) {
         req.body.filter.owner = String(req.user._id);
-        ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
+        ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {many:true,w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -224,9 +224,9 @@ module.exports = {
     },
 
     batch_update: function(ObjType,req,res) {
-        var arr = []
-        for(i=0; i<req.body.length; i++) {
-            arr.push({ updateOne: { filter: {_id:req.body[i]._id}, replacement: req.body[i]}});
+        var arr = [];
+        for(var i=0; i<req.body.length; i++) {
+            arr.push({ replaceOne: { filter: {_id:req.body[i]._id}, replacement: req.body[i]}});
         }
         ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
             if (result.ok) {
@@ -286,7 +286,7 @@ module.exports = {
     // Map-reduce
     //
 
-    total: function(ObjType,req,res) {
+    total: function(ObjType,req,res,cb) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;

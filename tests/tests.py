@@ -13,16 +13,16 @@ print("Login")
 wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
 
 wdb.models.delete({})
-model = {"class":"test", "content":{"test":"test"}}
+model = {"tags":{"test":"test"}, "content":{"test":"test"}}
 
 wdb.executables.delete({})
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "class":"test", "description":"test"}
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
 
 print("Commit properties")
 wdb.properties.delete({})
 props = []
-for i in range(1000): props.append({"class":"test","params":{"sleep_time":1.0,"seed":i},"timeout":1})
-for i in range(1000,1500): props.append({"class":"test","params":{"sleep_time":1.0,"seed":i},"timeout":1,"status":3,"walltime":1.05})
+for i in range(1000): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":3})
+for i in range(1000,1500): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":3, "status":3, "walltime":1.05})
 wdb.properties.submit(model,executable,props)
 wdb.properties.check_status()
 

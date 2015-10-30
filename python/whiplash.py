@@ -215,7 +215,7 @@ class wdb:
                 assert len(executable_ids) == 1
 
             for prop in props:
-                prop["model_id"] = model_ids[0]
+                prop["input_model_id"] = model_ids[0]
                 prop["executable_id"] = executable_ids[0]
 
             self.commit(props)
