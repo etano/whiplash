@@ -21,7 +21,7 @@ function checksum (str, algorithm, encoding) {
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     for(var i=0; i<req.body.length; i++) {
-        req.body[i].checksum = checksum(JSON.stringify(req.body[i]));
+        req.body[i].checksum = checksum(JSON.stringify(req.body[i].content));
     }
     common.commit(ObjType,req,res);
 });

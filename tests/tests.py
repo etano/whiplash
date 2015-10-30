@@ -15,6 +15,7 @@ wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
 #wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 wdb.models.delete({})
+model = {"tags":{"test":"test"}, "content":{"test":"test"}}
 
 N = 28
 
@@ -24,16 +25,14 @@ for i in range(N):
         value = 2.0*random.random()-1.0
         hamiltonian.append([[i,j],value])
 
-model = {"class":"ising","description":"unitary evolution test","content":{"n_spins":N,"edges": hamiltonian}}
-
 wdb.executables.delete({})
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "class":"test", "description":"test"}
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
 
 print("Commit properties")
 wdb.properties.delete({})
 props = []
-for i in range(1000): props.append({"class":"test","params":{"sleep_time":1.0,"seed":i},"timeout":1})
-for i in range(1000,1500): props.append({"class":"test","params":{"sleep_time":1.0,"seed":i},"timeout":1,"status":3,"walltime":1.05})
+for i in range(1000): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":3})
+for i in range(1000,1500): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":3, "status":3, "walltime":1.05})
 wdb.properties.submit(model,executable,props)
 wdb.properties.check_status()
 
