@@ -171,41 +171,6 @@ router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session
     });
 });
 
-router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var time_limit = req.body.time_limit;
-    var filter = {"status":0,"timeout":{$lt:time_limit}};
-    var now = new Date();
-    var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
-    var update = {"status":1,"resolve_by":resolve_by};
-    var time_left = time_limit;
-    var objs = [];
-    function get_work(filter,update,objs,time_left) {
-        if (time_left > 0) {
-            ObjType.collection.findOneAndUpdate(filter, {$set: update}, {returnOriginal: false}, function (err, result) {
-                if (!err) {
-                    if (result.value) {
-                        objs.push(result.value);
-                        time_left -= result.value.timeout;
-                        get_work(filter,update,objs,time_left);
-                    } else {
-                        time_left = 0;
-                    }
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
-                }
-            });
-        } else {
-            return res.json({
-                status: 'OK',
-                result: objs
-            });
-        }
-    }
-    get_work(filter,update,objs,time_left);
-});
-
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
