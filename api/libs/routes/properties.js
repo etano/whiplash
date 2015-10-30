@@ -137,7 +137,7 @@ router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session
 
                     // Release unused work
                     update = {"status":0,"worker_id":-1};
-                    ObjType.collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {multi:true,w:1}, function (err, result) {
+                    ObjType.collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
                         if (!err) {
                             log.info("%d objects released for worker %d work batch", result.modifiedCount, worker_id);
                         } else {
@@ -147,7 +147,7 @@ router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session
 
                     // Update work to pulled and rerturn
                     update = {"status":1,"resolve_by":resolve_by};
-                    ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {multi:true,w:1}, function (err, result) {
+                    ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {
                         if (!err) {
                             log.info("%d objects pulled for worker %d work batch", result.modifiedCount, worker_id);
                             return res.json({
@@ -225,8 +225,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             var now = new Date();
             var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
             var update = {"status":1,"resolve_by":resolve_by};
-            //ObjType.update({'_id': {'$in': ids}}, update, {multi:true}, function(err) {console.log("Done");});
-            ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {multi:true,w:1}, function (err, result) {});
+            ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
                 result: work
