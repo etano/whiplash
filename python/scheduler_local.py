@@ -75,7 +75,7 @@ def resolve_object(pid,obj,models,executables):
     prop['walltime'] = elapsed
 
     with open(file_name, 'r') as propfile:
-        result = json.load(propfile)
+        result = json.loads(json.load(propfile))
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
