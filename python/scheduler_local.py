@@ -47,6 +47,11 @@ def resolve_object(pid,obj,models,executables):
 
     package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
 
+    file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
+
+    with open(file_name, 'w') as propfile:
+        json.dump(package, propfile)
+
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
 
@@ -54,27 +59,25 @@ def resolve_object(pid,obj,models,executables):
 
     try:
         #stdin -> input=package
-        log = sp.check_output(path,timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
+        prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
     except sp.TimeoutExpired as e:
-        log = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
+        prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         prop['status'] = 2
     except sp.CalledProcessError as e:
-        log = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
+        prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         prop['status'] = 4
 
-    prop['log'] = log
-
-    print(log)
-    sys.exit(0)
-    
     t1 = time.time()
 
     elapsed = t1-t0
 
     prop['walltime'] = elapsed
 
-    result = {}
+    with open(file_name, 'r') as propfile:
+        result = json.load(propfile)
+    os.remove(file_name)
+
     if 'content' not in result: result['content'] = {}
     if 'tags' not in result: result['tags'] = {}
 
