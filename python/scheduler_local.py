@@ -50,7 +50,7 @@ def resolve_object(pid,obj,models,executables):
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
 
     with open(file_name, 'w') as propfile:
-        json.dump(package, propfile)
+        propfile.write(package)
 
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
