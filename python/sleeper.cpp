@@ -20,16 +20,18 @@ int main(int argc, char* argv[])
     rapidjson::Document doc;
     doc.Parse(json.c_str());
 
-    const char* result_str = "{\"time\":0}";
+    const char* result_str = "{\"content\":{\"time\":0},\"tags\":{\"some\":\"tags\"}}";
     rapidjson::Document result;
     result.Parse(result_str);
 
     struct timeval tim;
     gettimeofday(&tim, NULL);
-
     usleep(2.0e06);
 
-    result["time"] = int(tim.tv_sec);
+    result["content"]["time"] = int(tim.tv_sec);
+
+    std::cerr << "here is an error" << std::endl;
+    std::cout << "here is an output" << std::endl;
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

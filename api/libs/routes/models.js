@@ -106,4 +106,51 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
     common.avg_per_dif(ObjType,req,res);
 });
 
+//
+// GridFS
+//
+
+var mongoose = require('mongoose');
+//var GridStore = mongoose.mongo.GridStore;
+var GridStore = require('mongodb').GridStore;
+//var Grid = mongoose.mongo.Grid;
+var ObjectID  = require('mongodb').ObjectID;
+var db = mongoose.connection;
+
+router.post('/write/', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    var metadata = {};
+    metadata.owner = String(req.user._id);
+    metadata.tags = req.body.tags;
+    metadata.property_id = req.body.property_id;
+    metadata.filename = 'some_file_name';
+
+    var gs = new GridStore(db, new ObjectID(), 'w', {metadata:metadata});
+    //var gs = new GridStore(db, 'some_name', 'w', {metadata:metadata});
+    gs.open(function(err, gs) {
+        console.log("HERE0")
+        console.log(gs);
+        gs.write(JSON.stringify(req.body.content), true, function(err, gs) {
+        //gs.write(new Buffer(JSON.stringify(req.body.content)), true, function(err, gs) {
+            console.log("HERE1");
+            if(!err){
+                log.info("file inserted");
+                return req.json({
+                    status: 'OK',
+                    result: result
+                });
+                console.log("PAST RETURN");
+            }
+            else{
+                log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                return;
+            }
+        });
+    });
+});
+
+// router.get('/read/', passport.authenticate('bearer', { session: false }), function(req, res) {
+//     common.query(ObjType,req,res);
+// });
+
 module.exports = router;
