@@ -50,7 +50,7 @@ def resolve_object(pid,obj,models,executables):
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
 
     with open(file_name, 'w') as propfile:
-        json.dump(package, propfile)
+        propfile.write(package)
 
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
@@ -75,7 +75,7 @@ def resolve_object(pid,obj,models,executables):
     prop['walltime'] = elapsed
 
     with open(file_name, 'r') as propfile:
-        result = json.loads(json.load(propfile))
+        result = json.load(propfile)
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
