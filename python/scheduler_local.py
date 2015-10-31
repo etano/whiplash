@@ -35,8 +35,8 @@ def get_unresolved(db,time_limit,pid):
 
 def commit_resolved(db,props,results):
     ids = db.models.commit(results)['ids']
-    for id in ids:
-        props[id['index']]['output_model_id'] = id['_id']
+    for ID in ids:
+        props[ID['index']]['output_model_id'] = ID['_id']
     db.properties.batch_update(props)
 
 def resolve_object(pid,obj,models,executables):
@@ -54,24 +54,30 @@ def resolve_object(pid,obj,models,executables):
 
     result = {}
     try:
-        result = json.loads(sp.check_output(path,input=package,universal_newlines=True,timeout=timeout))
+        #stdin -> input=package
+        log = sp.check_output(path,timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
-    except sp.TimeoutExpired:
+    except sp.TimeoutExpired as e:
+        log = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         prop['status'] = 2
+    except sp.CalledProcessError as e:
+        log = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
+        prop['status'] = 4
 
+    print(log)
+    sys.exit(0)
+    
     t1 = time.time()
 
     elapsed = t1-t0
 
     prop['walltime'] = elapsed
-    if 'content' not in result:
-        result['content'] = {}
-    if 'tags' not in result:
-        result['tags'] = {}
-    model = {'content':result['content'],'tags':result['tags'],'property_id':ID}
+
+    if 'content' not in result: result['content'] = {}
+    if 'tags' not in result: result['tags'] = {}
 
     print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
-    return [prop,model]
+    return [prop,{'content':result['content'],'tags':result['tags'],'property_id':ID}]
 
 def worker(pid,wdb,args):
     print('worker',str(pid),'active')
