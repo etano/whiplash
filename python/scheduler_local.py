@@ -52,7 +52,6 @@ def resolve_object(pid,obj,models,executables):
 
     t0 = time.time()
 
-    result = {}
     try:
         #stdin -> input=package
         log = sp.check_output(path,timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
@@ -64,6 +63,8 @@ def resolve_object(pid,obj,models,executables):
         log = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         prop['status'] = 4
 
+    prop['log'] = log
+
     print(log)
     sys.exit(0)
     
@@ -73,6 +74,7 @@ def resolve_object(pid,obj,models,executables):
 
     prop['walltime'] = elapsed
 
+    result = {}
     if 'content' not in result: result['content'] = {}
     if 'tags' not in result: result['tags'] = {}
 
