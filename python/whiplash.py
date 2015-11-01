@@ -193,8 +193,10 @@ class wdb:
         # GridFS
         #
 
-        def write_file(self,obj):
-            return self.request("POST","/api/"+self.name+"/file/",obj)
+        def write_files(self,objs):
+            if not isinstance(objs, list):
+                objs = [objs]
+            return self.request("POST","/api/"+self.name+"/files/",objs)
 
         def read_file(self,ID):
             return self.request("GET","/api/"+self.name+"/file_id/"+str(ID),{})
@@ -202,7 +204,7 @@ class wdb:
         def find_files(self,fltr):
             return self.request("GET","/api/"+self.name+"/tags/",fltr)
 
-        def delete_file(self,ID):
+        def delete_file_id(self,ID):
             return self.request("DELETE","/api/"+self.name+"/file/"+str(ID),{})
 
     #

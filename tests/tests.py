@@ -39,9 +39,9 @@ model = {"content":content,"tags":tags,"property_id":""}
 
 files = wdb.models.find_files({})
 for f in files:
-    print(f["_id"],wdb.models.delete_file(f["_id"]))
+    print(f["_id"],wdb.models.delete_file_id(f["_id"]))
 
-file_id = wdb.models.write_file(model)
+file_id = wdb.models.write_files(model)
 print('wrote:',file_id)
 print(wdb.models.read_file(file_id))
 print(wdb.models.find_files(tags))

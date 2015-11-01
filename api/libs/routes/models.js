@@ -116,36 +116,40 @@ Grid.mongo = mongoose.mongo;
 var conn = require(libs + 'db/mongoose').connection;
 var gridfs = Grid(conn.db);
 
-router.post('/file/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var metadata = req.body.tags;
-    metadata.owner = String(req.user._id);
-    metadata.property_id = req.body.property_id;
-    
-    var options = {
-        metadata: metadata
-    };
+router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    for(var i=0; i<req.body.length; i++) {
 
-    var writeStream = gridfs.createWriteStream(options);
+        var metadata = req.body[i].tags;
+        metadata.owner = String(req.user._id);
+        metadata.property_id = req.body[i].property_id;
+        
+        var options = {
+            metadata: metadata
+        };
 
-    var Readable = require('stream').Readable;
+        var writeStream = gridfs.createWriteStream(options);
 
-    var s = new Readable();
-    s.push(JSON.stringify(req.body.content));
-    s.push(null);
-    s.pipe(writeStream);
+        var Readable = require('stream').Readable;
 
-    writeStream.on("close", function (file) {
-        log.info("Wrote file: %s",file._id.toString());
-        return res.json({
-            status: 'OK',
-            result: file._id.toString()
+        var s = new Readable();
+        s.push(JSON.stringify(req.body[i].content));
+        s.push(null);
+        s.pipe(writeStream);
+
+        writeStream.on("close", function (file) {
+            log.info("Wrote file: %s",file._id.toString());
+            return res.json({
+                status: 'OK',
+                result: file._id.toString()
+            });
         });
-    });
 
-    writeStream.on('error', function (err) {
-        log.error("Write error: %s",err.message);
-        return res.json({ error: 'Server error' });;
-    });
+        writeStream.on('error', function (err) {
+            log.error("Write error: %s",err.message);
+            return res.json({ error: 'Server error' });;
+        });
+
+    }
     
 });
 
