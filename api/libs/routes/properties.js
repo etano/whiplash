@@ -98,15 +98,20 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 // Special
 //
 
+var crypto = require('crypto');
+
 router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var worker_id = req.body.worker_id;
     var job_limit = 100; //req.body.job_limit;
 
+    var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
+    var worker_tag = crypto.randomBytes(32).toString('hex');
+
     // Reserve block
     var arr = [];
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    var update = {"status":99,"worker_id":worker_id};
+    var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
     for(var i=0; i<job_limit; i++) {
         arr.push({updateOne: {filter: filter, update: {'$set':update}}});
     }
@@ -115,7 +120,7 @@ router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session
             log.info("%d objects reserved for worker %d work batch", result.modifiedCount, worker_id);
 
             // Compose work batch
-            filter = {"status":99,"worker_id":worker_id};
+            filter = {"worker_tag":worker_tag};
             ObjType.collection.find(filter).toArray(function(err, objs) {
                 if (!err) {
                     var time_left = time_limit;
@@ -133,29 +138,18 @@ router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session
                         }
                     }
                     var now = new Date();
-                    var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
 
                     // Release unused work
-                    update = {"status":0,"worker_id":-1};
+                    update = {"status":0,"worker_tag":-1};
                     ObjType.collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
                         if (!err) {
                             log.info("%d objects released for worker %d work batch", result.modifiedCount, worker_id);
-                        } else {
-                            log.error('Error releasing work for worker %d: %s', worker_id, err.message);
-                        }
-                    });
-
-                    // Update work to pulled and rerturn
-                    update = {"status":1,"resolve_by":resolve_by};
-                    ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {
-                        if (!err) {
-                            log.info("%d objects pulled for worker %d work batch", result.modifiedCount, worker_id);
                             return res.json({
                                 status: 'OK',
                                 result: work
                             });
                         } else {
-                            log.error('Error returning work for worker %d: %s', worker_id, err.message);
+                            log.error('Error releasing work for worker %d: %s', worker_id, err.message);
                             return res.json({ error: 'Server error' });
                         }
                     });
