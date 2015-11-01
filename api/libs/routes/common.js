@@ -4,11 +4,10 @@ var log = require(libs + 'log')(module);
 module.exports = {
 
     //
-    // Commit
+    // Validate
     //
 
-    commit: function(ObjType,req,res) {
-        // Validate
+    validate: function(ObjType,req) {
         for(var i=0; i<req.body.length; i++) {
             req.body[i].owner = String(req.user._id);
             var obj = new ObjType(req.body[i]);
@@ -21,35 +20,47 @@ module.exports = {
                         req.body[i][field] = obj[field];
                     }
                 }
+            }
+            else return err;
+        }
+        return null;
+    },
+
+    //
+    // Commit
+    //
+
+    commit: function(ObjType,req,res) {
+        var err = this.validate(ObjType,req);
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
             } else {
-                if(err.name === 'ValidationError') {
-                    res.statusCode = 400;
-                    res.json({ error: err.toString() });
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            }
+        }
+        else{
+            var batch = ObjType.collection.initializeOrderedBulkOp();
+            for(i=0; i<req.body.length; i++) {
+                batch.insert(req.body[i]);
+            }
+            batch.execute(function(err,result) {
+                if (result.ok) {
+                    log.info("%s new objects created", String(result.nInserted));
+                    return res.json({
+                        status: 'OK',
+                        result: {'n':result.nInserted,'ids':result.getInsertedIds()}
+                    });
                 } else {
-                    res.statusCode = 500;
-                    res.json({ error: 'Server error' });
+                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                    return res.json({ error: 'Server error' });;
                 }
-                log.error('Internal error(%d): %s', res.statusCode, err.message);
-                return res.json({ error: 'Server error' });
-            }
+            });
         }
-        // Insert
-        var batch = ObjType.collection.initializeOrderedBulkOp();
-        for(i=0; i<req.body.length; i++) {
-            batch.insert(req.body[i]);
-        }
-        batch.execute(function(err,result) {
-            if (result.ok) {
-                log.info("%s new objects created", String(result.nInserted));
-                return res.json({
-                    status: 'OK',
-                    result: {'n':result.nInserted,'ids':result.getInsertedIds()}
-                });
-            } else {
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return res.json({ error: 'Server error' });;
-            }
-        });
     },
 
     //
