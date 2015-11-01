@@ -111,47 +111,97 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 //
 
 var mongoose = require('mongoose');
-var Grid = require("gridfs-stream");
-Grid.mongo = mongoose.mongo;
+var Grid = require("gridfs-stream"); Grid.mongo = mongoose.mongo;
 var conn = require(libs + 'db/mongoose').connection;
 var gridfs = Grid(conn.db);
 
 router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    for(var i=0; i<req.body.length; i++) {
-
-        var metadata = req.body[i].tags;
-        metadata.owner = String(req.user._id);
-        metadata.property_id = req.body[i].property_id;
-        
-        var options = {
-            metadata: metadata
-        };
-
-        var writeStream = gridfs.createWriteStream(options);
-
-        var Readable = require('stream').Readable;
-
-        var s = new Readable();
-        s.push(JSON.stringify(req.body[i].content));
-        s.push(null);
-        s.pipe(writeStream);
-
-        writeStream.on("close", function (file) {
-            log.info("Wrote file: %s",file._id.toString());
-            return res.json({
-                status: 'OK',
-                result: file._id.toString()
-            });
-        });
-
-        writeStream.on('error', function (err) {
-            log.error("Write error: %s",err.message);
-            return res.json({ error: 'Server error' });;
-        });
-
+    var err = common.validate(ObjType,req);
+    if(err) {
+        if(err.name === 'ValidationError') {
+            res.statusCode = 400;
+            log.error('Validation error(%d): %s', res.statusCode, err.message);
+            return res.json({ error: err.toString() });
+        } else {
+            res.statusCode = 500;
+            log.error('Server error(%d): %s', res.statusCode, err.message);
+            return res.json({ error: err.toString() });
+        }
     }
-    
+    else {
+        for(var i=0; i<req.body.length; i++) {
+
+            var metadata = req.body[i].tags;
+            metadata.owner = String(req.user._id);
+            metadata.property_id = req.body[i].property_id;
+            
+            var options = {
+                metadata: metadata
+            };
+
+            var writeStream = gridfs.createWriteStream(options);
+
+            var Readable = require('stream').Readable;
+
+            var s = new Readable();
+            s.push(JSON.stringify(req.body[i].content));
+            s.push(null);
+            s.pipe(writeStream);
+
+            writeStream.on("close", function (file) {
+                log.info("Wrote file: %s",file._id.toString());
+                return res.json({
+                    status: 'OK',
+                    result: file._id.toString()
+                });
+            });
+
+            writeStream.on('error', function (err) {
+                log.error("Write error: %s",err.message);
+                return res.json({ error: 'Server error' });;
+            });
+        }
+    }
 });
+
+//*********
+
+// var GridStore = require('mongodb').GridStore;
+// var ObjectID = require('mongodb').ObjectID;
+// var test = require('assert');
+
+// router.post('/files2/', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+//     // Our file ID
+//     var fileId = new ObjectID();
+
+//     // Open a new file
+//     var gridStore = new GridStore(conn.db, fileId, 'w');
+
+//     // Open the new file
+//     gridStore.open(function(err, gridStore) {
+
+//         console.log("HERE0");
+
+//         // Write a text string
+//         gridStore.write('Hello world', function(err, gridStore) {
+
+//             console.log("HERE1");
+
+//             // Close the
+//             gridStore.close(function(err, result) {
+//                 console.log("HERE2");
+//                 console.log(result);
+//                 return res.json({
+//                     status: 'OK',
+//                     result: result
+//                 });
+//             });
+//         });
+//     });
+// });
+
+//*********
 
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
 
