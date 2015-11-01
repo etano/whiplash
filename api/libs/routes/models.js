@@ -111,46 +111,111 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 //
 
 var mongoose = require('mongoose');
-//var GridStore = mongoose.mongo.GridStore;
-var GridStore = require('mongodb').GridStore;
-//var Grid = mongoose.mongo.Grid;
-var ObjectID  = require('mongodb').ObjectID;
-var db = mongoose.connection;
+var Grid = require("gridfs-stream");
+Grid.mongo = mongoose.mongo;
+var conn = require(libs + 'db/mongoose').connection;
+var gridfs = Grid(conn.db);
 
-router.post('/write/', passport.authenticate('bearer', { session: false }), function(req, res) {
-
-    var metadata = {};
+router.post('/write_file/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var metadata = req.body.tags;
     metadata.owner = String(req.user._id);
-    metadata.tags = req.body.tags;
     metadata.property_id = req.body.property_id;
-    metadata.filename = 'some_file_name';
+    
+    var options = {
+        metadata: metadata
+    };
 
-    var gs = new GridStore(db, new ObjectID(), 'w', {metadata:metadata});
-    //var gs = new GridStore(db, 'some_name', 'w', {metadata:metadata});
-    gs.open(function(err, gs) {
-        console.log("HERE0")
-        console.log(gs);
-        gs.write(JSON.stringify(req.body.content), true, function(err, gs) {
-        //gs.write(new Buffer(JSON.stringify(req.body.content)), true, function(err, gs) {
-            console.log("HERE1");
-            if(!err){
-                log.info("file inserted");
-                return req.json({
-                    status: 'OK',
-                    result: result
-                });
-                console.log("PAST RETURN");
-            }
-            else{
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return;
-            }
+    var writeStream = gridfs.createWriteStream(options);
+
+    var Readable = require('stream').Readable;
+
+    var s = new Readable();
+    s.push(JSON.stringify(req.body.content));
+    s.push(null);
+    s.pipe(writeStream);
+
+    writeStream.on("close", function (file) {
+        log.info("Wrote file: %s",file._id.toString());
+        return res.json({
+            status: 'OK',
+            result: file._id.toString()
+        });
+    });
+
+    writeStream.on('error', function (err) {
+        log.error("Write error: %s",err.message);
+        return res.json({ error: 'Server error' });;
+    });
+    
+});
+
+router.get('/read_file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    var readStream = gridfs.createReadStream({ _id: req.params.id });
+
+    readStream.on("error", function(err) {
+        log.error("Read error: %s",err.message);
+        return res.json({ error: 'Server error' });
+    });
+
+    var buffer = "";
+    readStream.on("data", function (chunk) {
+        console.log("reading chunk:",chunk)
+        buffer += chunk;
+    });
+
+    readStream.on("end", function () {
+        log.info("Read file: %s",req.params.id);
+        return res.json({
+            status: 'OK',
+            result: buffer
         });
     });
 });
 
-// router.get('/read/', passport.authenticate('bearer', { session: false }), function(req, res) {
-//     common.query(ObjType,req,res);
-// });
+router.get('/find_files/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = {}
+    for(var key in req.body)
+        if(req.body.hasOwnProperty(key))
+            filter["metadata."+key] = req.body[key];
+
+    gridfs.files.find(filter).toArray(function (err, files) {
+
+        if(!files) {
+            res.statusCode = 404;
+            return res.json({ error: 'Not found' });
+        }
+
+        if (!err) {
+            return res.json({
+                status: 'OK',
+                result: files
+            });
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }        
+    });
+});
+
+router.delete('/delete_file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    var filter = {_id : req.params.id, owner : String(req.user._id)}
+
+    gridfs.remove(filter, function (err) {
+        if (!err) {
+            return res.json({
+                status: 'OK',
+                result: 'file deleted'
+            });
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }        
+    });
+
+});
 
 module.exports = router;

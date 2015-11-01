@@ -30,7 +30,7 @@ module.exports = {
                     res.json({ error: 'Server error' });
                 }
                 log.error('Internal error(%d): %s', res.statusCode, err.message);
-                return;
+                return res.json({ error: 'Server error' });
             }
         }
         // Insert
@@ -47,7 +47,7 @@ module.exports = {
                 });
             } else {
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return;
+                return res.json({ error: 'Server error' });;
             }
         });
     },
@@ -237,7 +237,7 @@ module.exports = {
                 });
             } else {
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return;
+                return res.json({ error: 'Server error' });;
             }
         });
     },

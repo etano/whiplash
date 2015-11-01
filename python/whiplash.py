@@ -182,11 +182,11 @@ class wdb:
         # Map-reduce
         #
 
-        def total(self,field,filter):
-            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":filter})
+        def total(self,field,fltr):
+            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":fltr})
 
-        def avg_per_dif(self,field1,field2,filter):
-            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":filter})
+        def avg_per_dif(self,field1,field2,fltr):
+            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})
 
 
         #
@@ -194,7 +194,16 @@ class wdb:
         #
 
         def write_file(self,obj):
-            return self.request("POST","/api/"+self.name+"/write/",obj)
+            return self.request("POST","/api/"+self.name+"/write_file/",obj)
+
+        def find_files(self,fltr):
+            return self.request("GET","/api/"+self.name+"/find_files/",fltr)
+
+        def read_file(self,ID):
+            return self.request("GET","/api/"+self.name+"/read_file/"+str(ID),{})
+
+        def delete_file(self,ID):
+            return self.request("DELETE","/api/"+self.name+"/delete_file/"+str(ID),{})
 
     #
     # Special helper functions, only for properties
