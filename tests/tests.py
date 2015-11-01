@@ -34,6 +34,7 @@ for i in range(N):
 content = {"n_spins":N,"edges": hamiltonian}
 tags = {"field0":0,"field1":1}
 model = {"content":content,"tags":tags,"property_id":""}
+model1 = {"content":content,"tags":tags,"property_id":"1"}
 
 #GridFS
 
@@ -41,7 +42,8 @@ files = wdb.models.find_files({})
 for f in files:
     print(f["_id"],wdb.models.delete_file_id(f["_id"]))
 
-ids = wdb.models.write_files([model,model])
+ids = wdb.models.write_files([model,model,model1])
+assert len(ids) == 2
 print('wrote:',ids)
 print(wdb.models.read_file(ids[0]))
 print(wdb.models.find_files(tags))

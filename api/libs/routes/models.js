@@ -129,39 +129,48 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
         }
     }
     else {
-        var ids = [];
-        for(var i=0; i<req.body.length; i++) {
+        var ids = []; var count = 0;
+        function write_file() {
 
-            var metadata = req.body[i].tags;
-            metadata.owner = String(req.user._id);
-            metadata.property_id = req.body[i].property_id;
-            
-            var options = {
-                metadata: metadata
-            };
+            if(count < req.body.length){
 
-            var writeStream = gridfs.createWriteStream(options);
+                var metadata = req.body[count].tags;
+                metadata.owner = req.body[count].owner;
+                metadata.property_id = req.body[count].property_id;
+                
+                var options = {
+                    metadata: metadata
+                };
 
-            var Readable = require('stream').Readable;
+                var writeStream = gridfs.createWriteStream(options);
 
-            var s = new Readable();
-            s.push(JSON.stringify(req.body[i].content));
-            s.push(null);
-            s.pipe(writeStream);
+                var Readable = require('stream').Readable;
 
-            writeStream.on("close", function (file) {
-                log.info("Wrote file: %s",file._id.toString());
-                ids.push(file._id.toString());
-            });
+                var s = new Readable();
+                s.push(JSON.stringify(req.body[count].content));
+                s.push(null);
+                s.pipe(writeStream);
 
-            writeStream.on('error', function (err) {
-                log.error("Write error: %s",err.message);
-            });
+                count++;
+
+                writeStream.on("close", function (file) {
+                    log.info("Wrote file: %s",file._id.toString());
+                    ids.push(file._id.toString());
+                    write_file();
+                });
+
+                writeStream.on('error', function (err) {
+                    log.error("Write error: %s",err.message);
+                    write_file();
+                });
+            } else {
+                return res.json({
+                    status: 'OK',
+                    result: ids
+                });        
+            }
         }
-        return res.json({
-            status: 'OK',
-            result: ids
-        });        
+        write_file();
     }
 });
 

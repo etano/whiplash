@@ -5,7 +5,7 @@ import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
 def fetch_work_batch(db,time_limit,job_limit,pid):
-    return db.properties.request("PUT","/api/properties/work_batch_atomic_bulk/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
+    return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
 def get_unresolved(db,time_limit,job_limit,pid):
     properties = fetch_work_batch(db,time_limit,job_limit,pid)
@@ -58,7 +58,6 @@ def resolve_object(pid,obj,models,executables):
     t0 = time.time()
 
     try:
-        #stdin -> input=package
         prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
     except sp.TimeoutExpired as e:

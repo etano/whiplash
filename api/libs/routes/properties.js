@@ -100,7 +100,7 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 
 var crypto = require('crypto');
 
-router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var worker_id = req.body.worker_id;
     var job_limit = req.body.job_limit;
