@@ -194,16 +194,16 @@ class wdb:
         #
 
         def write_file(self,obj):
-            return self.request("POST","/api/"+self.name+"/write_file/",obj)
-
-        def find_files(self,fltr):
-            return self.request("GET","/api/"+self.name+"/find_files/",fltr)
+            return self.request("POST","/api/"+self.name+"/file/",obj)
 
         def read_file(self,ID):
-            return self.request("GET","/api/"+self.name+"/read_file/"+str(ID),{})
+            return self.request("GET","/api/"+self.name+"/file_id/"+str(ID),{})
+
+        def find_files(self,fltr):
+            return self.request("GET","/api/"+self.name+"/tags/",fltr)
 
         def delete_file(self,ID):
-            return self.request("DELETE","/api/"+self.name+"/delete_file/"+str(ID),{})
+            return self.request("DELETE","/api/"+self.name+"/file/"+str(ID),{})
 
     #
     # Special helper functions, only for properties

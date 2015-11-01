@@ -116,7 +116,7 @@ Grid.mongo = mongoose.mongo;
 var conn = require(libs + 'db/mongoose').connection;
 var gridfs = Grid(conn.db);
 
-router.post('/write_file/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.post('/file/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var metadata = req.body.tags;
     metadata.owner = String(req.user._id);
     metadata.property_id = req.body.property_id;
@@ -149,7 +149,7 @@ router.post('/write_file/', passport.authenticate('bearer', { session: false }),
     
 });
 
-router.get('/read_file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
 
     var readStream = gridfs.createReadStream({ _id: req.params.id });
 
@@ -173,7 +173,7 @@ router.get('/read_file/:id', passport.authenticate('bearer', { session: false })
     });
 });
 
-router.get('/find_files/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.get('/tags/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {}
     for(var key in req.body)
         if(req.body.hasOwnProperty(key))
@@ -199,7 +199,7 @@ router.get('/find_files/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.delete('/delete_file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.delete('/file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
 
     var filter = {_id : req.params.id, owner : String(req.user._id)}
 
