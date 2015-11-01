@@ -4,11 +4,11 @@ import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
-def fetch_work_batch(db,time_limit,pid):
-    return db.properties.request("PUT","/api/properties/work_batch_atomic_bulk/",{'time_limit':time_limit,'worker_id':pid})
+def fetch_work_batch(db,time_limit,job_limit,pid):
+    return db.properties.request("PUT","/api/properties/work_batch_atomic_bulk/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
-def get_unresolved(db,time_limit,pid):
-    properties = fetch_work_batch(db,time_limit,pid)
+def get_unresolved(db,time_limit,job_limit,pid):
+    properties = fetch_work_batch(db,time_limit,job_limit,pid)
 
     model_ids = set()
     executable_ids = set()
@@ -92,7 +92,7 @@ def worker(pid,wdb,args):
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),pid)
+            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
@@ -138,6 +138,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
+    parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')

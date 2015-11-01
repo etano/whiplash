@@ -103,7 +103,7 @@ var crypto = require('crypto');
 router.put('/work_batch_atomic_bulk/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var worker_id = req.body.worker_id;
-    var job_limit = 100; //req.body.job_limit;
+    var job_limit = req.body.job_limit;
 
     var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
     var worker_tag = crypto.randomBytes(32).toString('hex');
