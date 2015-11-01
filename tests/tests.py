@@ -41,9 +41,9 @@ files = wdb.models.find_files({})
 for f in files:
     print(f["_id"],wdb.models.delete_file_id(f["_id"]))
 
-file_id = wdb.models.write_files(model)
-print('wrote:',file_id)
-print(wdb.models.read_file(file_id))
+ids = wdb.models.write_files([model,model])
+print('wrote:',ids)
+print(wdb.models.read_file(ids[0]))
 print(wdb.models.find_files(tags))
 
 ###

@@ -129,6 +129,7 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
         }
     }
     else {
+        var ids = [];
         for(var i=0; i<req.body.length; i++) {
 
             var metadata = req.body[i].tags;
@@ -150,17 +151,17 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
 
             writeStream.on("close", function (file) {
                 log.info("Wrote file: %s",file._id.toString());
-                return res.json({
-                    status: 'OK',
-                    result: file._id.toString()
-                });
+                ids.push(file._id.toString());
             });
 
             writeStream.on('error', function (err) {
                 log.error("Write error: %s",err.message);
-                return res.json({ error: 'Server error' });;
             });
         }
+        return res.json({
+            status: 'OK',
+            result: ids
+        });        
     }
 });
 
