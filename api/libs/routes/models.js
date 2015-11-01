@@ -164,45 +164,6 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
     }
 });
 
-//*********
-
-// var GridStore = require('mongodb').GridStore;
-// var ObjectID = require('mongodb').ObjectID;
-// var test = require('assert');
-
-// router.post('/files2/', passport.authenticate('bearer', { session: false }), function(req, res) {
-
-//     // Our file ID
-//     var fileId = new ObjectID();
-
-//     // Open a new file
-//     var gridStore = new GridStore(conn.db, fileId, 'w');
-
-//     // Open the new file
-//     gridStore.open(function(err, gridStore) {
-
-//         console.log("HERE0");
-
-//         // Write a text string
-//         gridStore.write('Hello world', function(err, gridStore) {
-
-//             console.log("HERE1");
-
-//             // Close the
-//             gridStore.close(function(err, result) {
-//                 console.log("HERE2");
-//                 console.log(result);
-//                 return res.json({
-//                     status: 'OK',
-//                     result: result
-//                 });
-//             });
-//         });
-//     });
-// });
-
-//*********
-
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
 
     var readStream = gridfs.createReadStream({ _id: req.params.id });
