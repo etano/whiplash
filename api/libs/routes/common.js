@@ -135,9 +135,7 @@ module.exports = {
     },
 
     query_field_only: function(ObjType,req,res) {
-        var proj = {};
-        proj[req.params.field] = 1;
-        ObjType.collection.find(req.body).project(proj).toArray(function (err, objs) {
+        ObjType.collection.find(req.body).project({req.params.field : 1}).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
