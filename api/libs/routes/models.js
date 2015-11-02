@@ -156,7 +156,7 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
 
                     var fileId = new ObjectID();
 
-                    var gridStore = new GridStore(conn.db, fileId, 'w');
+                    var gridStore = new GridStore(conn.db, fileId, 'w',options);
 
                     gridStore.open(function(err, gridStore) {
                         if(err){
@@ -246,7 +246,7 @@ router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), 
 
     // var buffer = "";
     // readStream.on("data", function (chunk) {
-    //     console.log("reading chunk:",chunk)
+    //     log.info("Reading chunk: %s",chunk);
     //     buffer += chunk;
     // });
 
