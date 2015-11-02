@@ -20,8 +20,9 @@ module.exports = {
                         req.body[i][field] = obj[field];
                     }
                 }
+            } else {
+                cb(err);
             }
-            else cb(err);
         }
         cb(null);
     },
@@ -30,36 +31,21 @@ module.exports = {
     // Commit
     //
 
-    commit: function(ObjType,req,res) {
-        this.validate(ObjType,req,function(err){
-            if(err) {
-                if(err.name === 'ValidationError') {
-                    res.statusCode = 400;
-                    log.error('Validation error(%d): %s', res.statusCode, err.message);
-                    return res.json({ error: err.toString() });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Server error(%d): %s', res.statusCode, err.message);
-                    return res.json({ error: err.toString() });
-                }
-            }
-            else{
-                var batch = ObjType.collection.initializeOrderedBulkOp();
-                for(i=0; i<req.body.length; i++) {
-                    batch.insert(req.body[i]);
-                }
-                batch.execute(function(err,result) {
-                    if (result.ok) {
-                        log.info("%s new objects created", String(result.nInserted));
-                        return res.json({
-                            status: 'OK',
-                            result: {'n':result.nInserted,'ids':result.getInsertedIds()}
-                        });
-                    } else {
-                        log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                        return res.json({ error: 'Server error' });;
-                    }
+    commit: function(collection,req,res) {
+        var batch = collection.initializeOrderedBulkOp();
+        for(var i=0; i<req.body.length; i++) {
+            batch.insert(req.body[i]);
+        }
+        batch.execute(function(err,result) {
+            if (result.ok) {
+                log.info("%s new objects created", String(result.nInserted));
+                return res.json({
+                    status: 'OK',
+                    result: {'n':result.nInserted,'ids':result.getInsertedIds()}
                 });
+            } else {
+                log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                return res.json({ error: 'Server error' });
             }
         });
     },
@@ -68,8 +54,8 @@ module.exports = {
     // Query
     //
 
-    query: function(ObjType,req,res) {
-        ObjType.collection.find(req.body).toArray(function (err, objs) {
+    query: function(collection,req,res) {
+        collection.find(req.body).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -92,8 +78,8 @@ module.exports = {
         });
     },
 
-    query_one: function(ObjType,req,res) {
-        ObjType.collection.find(req.body).limit(1).toArray(function (err, obj) {
+    query_one: function(collection,req,res) {
+        collection.find(req.body).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -116,8 +102,8 @@ module.exports = {
         });
     },
 
-    query_count: function(ObjType,req,res) {
-        ObjType.collection.count(req.body, function (err, count) {
+    query_count: function(collection,req,res) {
+        collection.count(req.body, function (err, count) {
 
             // TODO: Check to make sure user has READ permissions
 
@@ -135,10 +121,10 @@ module.exports = {
         });
     },
 
-    query_field_only: function(ObjType,req,res) {
+    query_field_only: function(collection,req,res) {
         var proj = {};
         proj[req.params.field] = 1;
-        ObjType.collection.find(req.body).project(proj).toArray(function (err, objs) {
+        collection.find(req.body).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -165,8 +151,8 @@ module.exports = {
         });
     },
 
-    query_id: function(ObjType,req,res) {
-        ObjType.collection.find({_id:req.params.id}).limit(1).toArray(function (err, obj) {
+    query_id: function(collection,req,res) {
+        collection.find({_id:req.params.id}).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -193,9 +179,9 @@ module.exports = {
     // Find and update
     //
 
-    find_one_and_update: function(ObjType,req,res) {
+    find_one_and_update: function(collection,req,res) {
         req.body.filter.owner = String(req.user._id);
-        ObjType.collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
+        collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -209,19 +195,19 @@ module.exports = {
         });
     },
 
-    find_id_and_update: function(ObjType,req,res) {
+    find_id_and_update: function(collection,req,res) {
         var filter = {"_id": req.params.id,"owner":String(req.user._id)};
         req.body.filter = filter;
-        return this.find_one_and_update(ObjType,req,res);
+        return this.find_one_and_update(collection,req,res);
     },
 
     //
     // Update
     //
 
-    update: function(ObjType,req,res) {
+    update: function(collection,req,res) {
         req.body.filter.owner = String(req.user._id);
-        ObjType.collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
+        collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -235,12 +221,12 @@ module.exports = {
         });
     },
 
-    batch_update: function(ObjType,req,res) {
+    batch_update: function(collection,req,res) {
         var arr = [];
         for(var i=0; i<req.body.length; i++) {
             arr.push({ replaceOne: { filter: {_id:req.body[i]._id}, replacement: req.body[i]}});
         }
-        ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
+        collection.bulkWrite(arr,{w:1},function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
                 return res.json({
@@ -254,28 +240,28 @@ module.exports = {
         });
     },
 
-    update_one: function(ObjType,req,res) {
-        return this.update(ObjType,req,res);
+    update_one: function(collection,req,res) {
+        return this.update(collection,req,res);
     },
 
-    update_id: function(ObjType,req,res) {
+    update_id: function(collection,req,res) {
         var filter = {"_id": req.params.id};
         req.body.filter = filter;
-        return this.update_one(ObjType,req,res);
+        return this.update_one(collection,req,res);
     },
 
     //
     // Delete
     //
 
-    delete: function(ObjType,req,res) {
+    delete: function(collection,req,res) {
         var filter = req.body;
 
         // Enforce user can only delete own documents
         filter.owner = String(req.user._id);
 
         // Do delete operation
-        ObjType.collection.deleteMany(filter, {}, function (err, result) {
+        collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
                 return res.json({
                     status: 'OK',
@@ -289,16 +275,16 @@ module.exports = {
         });
     },
 
-    delete_id: function(ObjType,req,res) {
+    delete_id: function(collection,req,res) {
         req.body = {"_id": req.params.id};
-        this.delete(ObjType,req,res);
+        this.delete(collection,req,res);
     },
 
     //
     // Map-reduce
     //
 
-    total: function(ObjType,req,res,cb) {
+    total: function(collection,req,res,cb) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
@@ -310,7 +296,7 @@ module.exports = {
         o.query = req.query.filter;
         o.out = {merge:'total'};
         o.scope = {field: req.query.field};
-        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+        collection.mapReduce(map, reduce, o, function (err, collection) {
             if(!err){
                 collection.find().toArray(function (err, result) {
                     return res.json({
@@ -326,7 +312,7 @@ module.exports = {
         });
     },
 
-    avg_per_dif: function(ObjType,req,res) {
+    avg_per_dif: function(collection,req,res) {
         if (!req.query.field1) {
             req.query.field1 = req.body.field1;
             req.query.field2 = req.body.field2;
@@ -350,7 +336,7 @@ module.exports = {
             return reduced_value.sum/reduced_value.count;
         };
         o.out = {merge:'average_mistime'};
-        ObjType.collection.mapReduce(map, reduce, o, function (err, collection) {
+        collection.mapReduce(map, reduce, o, function (err, collection) {
             collection.find().toArray(function (err, result) {
                 if(!err){
                     if (result.length > 0) {

@@ -4,14 +4,32 @@ var router = express.Router();
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
+var conn = require(libs + 'db/mongoose').connection;
+var collection = conn.db.collection('properties');
 var ObjType = require(libs + 'schemas/property');
+
 
 //
 // Commit
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType,req,res);
+    common.validate(ObjType,req,function(err){
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            } else {
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            }
+        }
+        else {
+            common.commit(collection,req,res);
+        }
+    });
 });
 
 //
@@ -19,23 +37,23 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(ObjType,req,res);
+    common.query(collection,req,res);
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(ObjType,req,res);
+    common.query_one(collection,req,res);
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(ObjType,req,res);
+    common.query_count(collection,req,res);
 });
 
 router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_field_only(ObjType,req,res);
+    common.query_field_only(collection,req,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_id(ObjType,req,res);
+    common.query_id(collection,req,res);
 });
 
 //
@@ -43,19 +61,19 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update(ObjType,req,res);
+    common.update(collection,req,res);
 });
 
 router.put('/batch', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.batch_update(ObjType,req,res);
+    common.batch_update(collection,req,res);
 });
 
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update_one(ObjType,req,res);
+    common.update_one(collection,req,res);
 });
 
 router.put('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update_id(ObjType,req,res);
+    common.update_id(collection,req,res);
 });
 
 //
@@ -63,11 +81,11 @@ router.put('/id/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.post('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_one_and_update(ObjType,req,res);
+    common.find_one_and_update(collection,req,res);
 });
 
 router.post('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_id_and_update(ObjType,req,res);
+    common.find_id_and_update(collection,req,res);
 });
 
 //
@@ -75,11 +93,11 @@ router.post('/id/:id', passport.authenticate('bearer', { session: false }), func
 //
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(ObjType,req,res);
+    common.delete(collection,req,res);
 });
 
 router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete_id(ObjType,req,res);
+    common.delete_id(collection,req,res);
 });
 
 //
@@ -87,11 +105,11 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 //
 
 router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.total(ObjType,req,res);
+    common.total(collection,req,res);
 });
 
 router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.avg_per_dif(ObjType,req,res);
+    common.avg_per_dif(collection,req,res);
 });
 
 //
@@ -105,6 +123,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var worker_id = req.body.worker_id;
     var job_limit = req.body.job_limit;
 
+    var now = new Date();
     var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
     var worker_tag = crypto.randomBytes(32).toString('hex');
 
@@ -115,13 +134,13 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     for(var i=0; i<job_limit; i++) {
         arr.push({updateOne: {filter: filter, update: {'$set':update}}});
     }
-    ObjType.collection.bulkWrite(arr,{w:1},function(err,result) {
+    collection.bulkWrite(arr,{w:1},function(err,result) {
         if (result.ok) {
             log.info("%d objects reserved for worker %d work batch", result.modifiedCount, worker_id);
 
             // Compose work batch
             filter = {"worker_tag":worker_tag};
-            ObjType.collection.find(filter).toArray(function(err, objs) {
+            collection.find(filter).toArray(function(err, objs) {
                 if (!err) {
                     var time_left = time_limit;
                     var ids = [];
@@ -137,11 +156,10 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                             unused_ids.push(objs[i]["_id"]);
                         }
                     }
-                    var now = new Date();
 
                     // Release unused work
                     update = {"status":0,"worker_tag":-1};
-                    ObjType.collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
+                    collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
                         if (!err) {
                             log.info("%d objects released for worker %d work batch", result.modifiedCount, worker_id);
                             return res.json({
@@ -168,7 +186,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
 router.put('/work_batch/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    ObjType.collection.find(filter).limit(1000).toArray(function(err, objs) {
+    collection.find(filter).limit(1000).toArray(function(err, objs) {
         var time_left = time_limit;
         var ids = [];
         var work = [];
@@ -184,7 +202,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
             var now = new Date();
             var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
             var update = {"status":1,"resolve_by":resolve_by};
-            ObjType.collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
+            collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
                 result: work
