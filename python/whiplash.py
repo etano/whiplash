@@ -202,7 +202,7 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/file_id/"+str(ID),{})
 
         def find_files(self,fltr):
-            return self.request("GET","/api/"+self.name+"/tags/",fltr)
+            return self.request("GET","/api/"+self.name+"/metas/",fltr)
 
         def delete_file_id(self,ID):
             return self.request("DELETE","/api/"+self.name+"/file_id/"+str(ID),{})
