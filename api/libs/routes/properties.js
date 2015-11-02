@@ -123,6 +123,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var worker_id = req.body.worker_id;
     var job_limit = req.body.job_limit;
 
+    var now = new Date();
     var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
     var worker_tag = crypto.randomBytes(32).toString('hex');
 
@@ -155,7 +156,6 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                             unused_ids.push(objs[i]["_id"]);
                         }
                     }
-                    var now = new Date();
 
                     // Release unused work
                     update = {"status":0,"worker_tag":-1};
