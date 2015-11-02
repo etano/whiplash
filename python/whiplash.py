@@ -189,24 +189,6 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})
 
 
-        #
-        # GridFS
-        #
-
-        def write_files(self,objs):
-            if not isinstance(objs, list):
-                objs = [objs]
-            return self.request("POST","/api/"+self.name+"/files/",objs)
-
-        def read_file(self,ID):
-            return self.request("GET","/api/"+self.name+"/file_id/"+str(ID),{})
-
-        def find_files(self,fltr):
-            return self.request("GET","/api/"+self.name+"/metas/",fltr)
-
-        def delete_file_id(self,ID):
-            return self.request("DELETE","/api/"+self.name+"/file_id/"+str(ID),{})
-
     #
     # Special helper functions, only for properties
     #
@@ -222,7 +204,7 @@ class wdb:
                 model_ids = [model["_id"]]
             else:
                 self.db.models.commit(model)
-                model_ids = self.db.models.query_field_only('_id',model)
+                model_ids = self.db.models.query_field_only('_id',model["tags"])
                 assert len(model_ids) == 1
 
             if "_id" in executable:

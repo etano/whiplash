@@ -78,10 +78,13 @@ def resolve_object(pid,obj,models,executables):
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
+    if 'None' in result['content']: result['content'] = {}
     if 'tags' not in result: result['tags'] = {}
+    if 'None' in result['tags']: result['tags'] = {}
+    result['tags']['property_id'] = ID
 
     print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
-    return [prop,{'content':result['content'],'tags':result['tags'],'property_id':ID}]
+    return [prop,result]
 
 def worker(pid,wdb,args):
     print('worker',str(pid),'active')
