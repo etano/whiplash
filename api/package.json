@@ -21,7 +21,6 @@
         "passport-http-bearer": "^1.0.x",
         "passport-oauth2-client-password": "^0.1.x",
         "winston": "^0.8.x",
-        "gridfs-stream": "^1.1.x",
         "mongodb": "^2.0.x"
     },
     "jshintConfig":{

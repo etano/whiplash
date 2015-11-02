@@ -114,10 +114,6 @@ var conn = require(libs + 'db/mongoose').connection;
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 
-// var mongoose = require('mongoose');
-// var Grid = require("gridfs-stream"); Grid.mongo = mongoose.mongo;
-// var gridfs = Grid(conn.db);
-
 router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
     //TODO: dangling chunks
@@ -181,33 +177,6 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
                             });
                         }
                     });
-
-                    //*********
-
-                    // var writeStream = gridfs.createWriteStream(options);
-
-                    // var Readable = require('stream').Readable;
-
-                    // var s = new Readable();
-                    // s.push(JSON.stringify(req.body[count].content));
-                    // s.push(null);
-                    // s.pipe(writeStream);
-
-                    // count++;
-
-                    // writeStream.on("close", function (file) {
-                    //     log.info("Wrote file: %s",file._id.toString());
-                    //     ids.push(file._id.toString());
-                    //     write_file();
-                    // });
-
-                    // writeStream.on('error', function (err) {
-                    //     log.error("Write error: %s",err.message);
-                    //     write_file();
-                    // });
-
-                    //*********
-
                 } else {
                     return res.json({
                         status: 'OK',
@@ -221,7 +190,6 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-
     GridStore.read(conn.db, new ObjectID(req.params.id), function(err, fileData) {
         if(!err) {
             log.info("Read file: %s",req.params.id);
@@ -234,29 +202,6 @@ router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), 
             return res.json({ error: 'Server error' });
         }
     });
-
-    //*********
-
-    // var readStream = gridfs.createReadStream({ _id: req.params.id });
-
-    // readStream.on("error", function(err) {
-    //     log.error("Read error: %s",err.message);
-    //     return res.json({ error: 'Server error' });
-    // });
-
-    // var buffer = "";
-    // readStream.on("data", function (chunk) {
-    //     log.info("Reading chunk: %s",chunk);
-    //     buffer += chunk;
-    // });
-
-    // readStream.on("end", function () {
-    //     log.info("Read file: %s",req.params.id);
-    //     return res.json({
-    //         status: 'OK',
-    //         result: buffer
-    //     });
-    // });
 });
 
 router.get('/tags/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -265,9 +210,7 @@ router.get('/tags/', passport.authenticate('bearer', { session: false }), functi
         if(req.body.hasOwnProperty(key))
             filter["metadata."+key] = req.body[key];
 
-    //gridfs.files.find(filter).toArray(function (err, files) {
     conn.db.collection('fs.files').find(filter).toArray(function (err, files) {
-
         if(!files) {
             res.statusCode = 404;
             return res.json({ error: 'Not found' });
@@ -289,7 +232,6 @@ router.get('/tags/', passport.authenticate('bearer', { session: false }), functi
 router.delete('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var gridStore = new GridStore(conn.db, new ObjectID(req.params.id), 'w');
     gridStore.open(function(err, gridStore) {
-
         if(err) {
             res.statusCode = 500;
             log.error('Error opening file (%d): %s',res.statusCode,err.message);
@@ -314,24 +256,6 @@ router.delete('/file_id/:id', passport.authenticate('bearer', { session: false }
             });
         }
     });
-
-    //*********
-
-    // var filter = {_id : req.params.id, "metadata.owner" : String(req.user._id)}        
-
-    // gridfs.remove(filter, function (err) {
-    //     if (!err) {
-    //         return res.json({
-    //             status: 'OK',
-    //             result: 'file deleted'
-    //         });
-    //     } else {
-    //         res.statusCode = 500;
-    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
-    //         return res.json({ error: 'Server error' });
-    //     }        
-    // });
-
 });
 
 module.exports = router;
