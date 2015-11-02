@@ -116,62 +116,66 @@ var conn = require(libs + 'db/mongoose').connection;
 var gridfs = Grid(conn.db);
 
 router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var err = common.validate(ObjType,req);
-    if(err) {
-        if(err.name === 'ValidationError') {
-            res.statusCode = 400;
-            log.error('Validation error(%d): %s', res.statusCode, err.message);
-            return res.json({ error: err.toString() });
-        } else {
-            res.statusCode = 500;
-            log.error('Server error(%d): %s', res.statusCode, err.message);
-            return res.json({ error: err.toString() });
-        }
-    }
-    else {
-        var ids = []; var count = 0;
-        function write_file() {
 
-            if(count < req.body.length){
+    //TODO: dangling chunks
 
-                var metadata = req.body[count].tags;
-                metadata.owner = req.body[count].owner;
-                metadata.property_id = req.body[count].property_id;
-                
-                var options = {
-                    metadata: metadata
-                };
-
-                var writeStream = gridfs.createWriteStream(options);
-
-                var Readable = require('stream').Readable;
-
-                var s = new Readable();
-                s.push(JSON.stringify(req.body[count].content));
-                s.push(null);
-                s.pipe(writeStream);
-
-                count++;
-
-                writeStream.on("close", function (file) {
-                    log.info("Wrote file: %s",file._id.toString());
-                    ids.push(file._id.toString());
-                    write_file();
-                });
-
-                writeStream.on('error', function (err) {
-                    log.error("Write error: %s",err.message);
-                    write_file();
-                });
+    common.validate(ObjType,req,function(err){
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
             } else {
-                return res.json({
-                    status: 'OK',
-                    result: ids
-                });        
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
             }
         }
-        write_file();
-    }
+        else {
+            var ids = []; var count = 0;
+            function write_file() {
+
+                if(count < req.body.length){
+
+                    var metadata = req.body[count].tags;
+                    metadata.owner = req.body[count].owner;
+                    metadata.property_id = req.body[count].property_id;
+                    
+                    var options = {
+                        metadata: metadata
+                    };
+
+                    var writeStream = gridfs.createWriteStream(options);
+
+                    var Readable = require('stream').Readable;
+
+                    var s = new Readable();
+                    s.push(JSON.stringify(req.body[count].content));
+                    s.push(null);
+                    s.pipe(writeStream);
+
+                    count++;
+
+                    writeStream.on("close", function (file) {
+                        log.info("Wrote file: %s",file._id.toString());
+                        ids.push(file._id.toString());
+                        write_file();
+                    });
+
+                    writeStream.on('error', function (err) {
+                        log.error("Write error: %s",err.message);
+                        write_file();
+                    });
+                } else {
+                    return res.json({
+                        status: 'OK',
+                        result: ids
+                    });        
+                }
+            }
+            write_file();
+        }
+    });
 });
 
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -198,13 +202,17 @@ router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+var GridStore = require('mongodb').GridStore;
+var ObjectID = require('mongodb').ObjectID;
+
 router.get('/tags/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {}
+    var filter = {};
     for(var key in req.body)
         if(req.body.hasOwnProperty(key))
             filter["metadata."+key] = req.body[key];
 
-    gridfs.files.find(filter).toArray(function (err, files) {
+    //gridfs.files.find(filter).toArray(function (err, files) {
+    conn.db.collection('fs.files').find(filter).toArray(function (err, files) {
 
         if(!files) {
             res.statusCode = 404;
@@ -224,22 +232,51 @@ router.get('/tags/', passport.authenticate('bearer', { session: false }), functi
     });
 });
 
-router.delete('/file/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.delete('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var gridStore = new GridStore(conn.db, new ObjectID(req.params.id), 'w');
+    gridStore.open(function(err, gridStore) {
 
-    var filter = {_id : req.params.id, owner : String(req.user._id)}
-
-    gridfs.remove(filter, function (err) {
-        if (!err) {
-            return res.json({
-                status: 'OK',
-                result: 'file deleted'
-            });
-        } else {
+        if(err) {
             res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            log.error('Error opening file (%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
-        }        
+        } else if(gridStore.metadata.owner != req.user._id) {
+            res.statusCode = 400;
+            log.error('Wrong owner');
+            return res.json({ error: 'You are not the owner of this file' });
+        }
+        else {
+            gridStore.unlink(function(err, result) {
+                if(!err){
+                    return res.json({
+                        status: 'OK',
+                        result: 'file deleted'
+                    });                    
+                } else{
+                    res.statusCode = 500;
+                    log.error('Error deleting file (%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        }
     });
+
+    //*********
+
+    // var filter = {_id : req.params.id, "metadata.owner" : String(req.user._id)}        
+
+    // gridfs.remove(filter, function (err) {
+    //     if (!err) {
+    //         return res.json({
+    //             status: 'OK',
+    //             result: 'file deleted'
+    //         });
+    //     } else {
+    //         res.statusCode = 500;
+    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
+    //         return res.json({ error: 'Server error' });
+    //     }        
+    // });
 
 });
 

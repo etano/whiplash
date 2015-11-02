@@ -205,7 +205,7 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/tags/",fltr)
 
         def delete_file_id(self,ID):
-            return self.request("DELETE","/api/"+self.name+"/file/"+str(ID),{})
+            return self.request("DELETE","/api/"+self.name+"/file_id/"+str(ID),{})
 
     #
     # Special helper functions, only for properties
