@@ -182,19 +182,30 @@ class wdb:
         # Map-reduce
         #
 
-        def total(self,field,filter):
-            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":filter})
+        def total(self,field,fltr):
+            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":fltr})
 
-        def avg_per_dif(self,field1,field2,filter):
-            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":filter})
+        def avg_per_dif(self,field1,field2,fltr):
+            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})
 
 
         #
         # GridFS
         #
 
-        def write_file(self,obj):
-            return self.request("POST","/api/"+self.name+"/write/",obj)
+        def write_files(self,objs):
+            if not isinstance(objs, list):
+                objs = [objs]
+            return self.request("POST","/api/"+self.name+"/files/",objs)
+
+        def read_file(self,ID):
+            return self.request("GET","/api/"+self.name+"/file_id/"+str(ID),{})
+
+        def find_files(self,fltr):
+            return self.request("GET","/api/"+self.name+"/tags/",fltr)
+
+        def delete_file_id(self,ID):
+            return self.request("DELETE","/api/"+self.name+"/file_id/"+str(ID),{})
 
     #
     # Special helper functions, only for properties

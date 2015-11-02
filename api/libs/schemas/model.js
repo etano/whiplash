@@ -7,7 +7,7 @@ var Model = new Schema({
     content: { type: Schema.Types.Mixed, default: "", required: true },
     tags: { type: Schema.Types.Mixed, default: "", required: true },
     property_id: { type: String, default: "" },
-    checksum: { type: String, required: true },
+    md5: { type: String },
     timestamp: { type: Date, default: Date.now, required: true }
 });
 

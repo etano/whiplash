@@ -21,7 +21,7 @@ function checksum (str, algorithm, encoding) {
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     for(var i=0; i<req.body.length; i++) {
-        req.body[i].checksum = checksum(JSON.stringify(req.body[i].content));
+        req.body[i].md5 = checksum(JSON.stringify(req.body[i].content));
     }
     common.commit(ObjType,req,res);
 });
@@ -111,46 +111,173 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 //
 
 var mongoose = require('mongoose');
-//var GridStore = mongoose.mongo.GridStore;
-var GridStore = require('mongodb').GridStore;
-//var Grid = mongoose.mongo.Grid;
-var ObjectID  = require('mongodb').ObjectID;
-var db = mongoose.connection;
+var Grid = require("gridfs-stream"); Grid.mongo = mongoose.mongo;
+var conn = require(libs + 'db/mongoose').connection;
+var gridfs = Grid(conn.db);
 
-router.post('/write/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
-    var metadata = {};
-    metadata.owner = String(req.user._id);
-    metadata.tags = req.body.tags;
-    metadata.property_id = req.body.property_id;
-    metadata.filename = 'some_file_name';
+    //TODO: dangling chunks
 
-    var gs = new GridStore(db, new ObjectID(), 'w', {metadata:metadata});
-    //var gs = new GridStore(db, 'some_name', 'w', {metadata:metadata});
-    gs.open(function(err, gs) {
-        console.log("HERE0")
-        console.log(gs);
-        gs.write(JSON.stringify(req.body.content), true, function(err, gs) {
-        //gs.write(new Buffer(JSON.stringify(req.body.content)), true, function(err, gs) {
-            console.log("HERE1");
-            if(!err){
-                log.info("file inserted");
-                return req.json({
-                    status: 'OK',
-                    result: result
-                });
-                console.log("PAST RETURN");
+    common.validate(ObjType,req,function(err){
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            } else {
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
             }
-            else{
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return;
+        }
+        else {
+            var ids = []; var count = 0;
+            function write_file() {
+
+                if(count < req.body.length){
+
+                    var metadata = req.body[count].tags;
+                    metadata.owner = req.body[count].owner;
+                    metadata.property_id = req.body[count].property_id;
+                    
+                    var options = {
+                        metadata: metadata
+                    };
+
+                    var writeStream = gridfs.createWriteStream(options);
+
+                    var Readable = require('stream').Readable;
+
+                    var s = new Readable();
+                    s.push(JSON.stringify(req.body[count].content));
+                    s.push(null);
+                    s.pipe(writeStream);
+
+                    count++;
+
+                    writeStream.on("close", function (file) {
+                        log.info("Wrote file: %s",file._id.toString());
+                        ids.push(file._id.toString());
+                        write_file();
+                    });
+
+                    writeStream.on('error', function (err) {
+                        log.error("Write error: %s",err.message);
+                        write_file();
+                    });
+                } else {
+                    return res.json({
+                        status: 'OK',
+                        result: ids
+                    });        
+                }
             }
+            write_file();
+        }
+    });
+});
+
+router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    var readStream = gridfs.createReadStream({ _id: req.params.id });
+
+    readStream.on("error", function(err) {
+        log.error("Read error: %s",err.message);
+        return res.json({ error: 'Server error' });
+    });
+
+    var buffer = "";
+    readStream.on("data", function (chunk) {
+        console.log("reading chunk:",chunk)
+        buffer += chunk;
+    });
+
+    readStream.on("end", function () {
+        log.info("Read file: %s",req.params.id);
+        return res.json({
+            status: 'OK',
+            result: buffer
         });
     });
 });
 
-// router.get('/read/', passport.authenticate('bearer', { session: false }), function(req, res) {
-//     common.query(ObjType,req,res);
-// });
+var GridStore = require('mongodb').GridStore;
+var ObjectID = require('mongodb').ObjectID;
+
+router.get('/tags/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = {};
+    for(var key in req.body)
+        if(req.body.hasOwnProperty(key))
+            filter["metadata."+key] = req.body[key];
+
+    //gridfs.files.find(filter).toArray(function (err, files) {
+    conn.db.collection('fs.files').find(filter).toArray(function (err, files) {
+
+        if(!files) {
+            res.statusCode = 404;
+            return res.json({ error: 'Not found' });
+        }
+
+        if (!err) {
+            return res.json({
+                status: 'OK',
+                result: files
+            });
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }        
+    });
+});
+
+router.delete('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var gridStore = new GridStore(conn.db, new ObjectID(req.params.id), 'w');
+    gridStore.open(function(err, gridStore) {
+
+        if(err) {
+            res.statusCode = 500;
+            log.error('Error opening file (%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        } else if(gridStore.metadata.owner != req.user._id) {
+            res.statusCode = 400;
+            log.error('Wrong owner');
+            return res.json({ error: 'You are not the owner of this file' });
+        }
+        else {
+            gridStore.unlink(function(err, result) {
+                if(!err){
+                    return res.json({
+                        status: 'OK',
+                        result: 'file deleted'
+                    });                    
+                } else{
+                    res.statusCode = 500;
+                    log.error('Error deleting file (%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        }
+    });
+
+    //*********
+
+    // var filter = {_id : req.params.id, "metadata.owner" : String(req.user._id)}        
+
+    // gridfs.remove(filter, function (err) {
+    //     if (!err) {
+    //         return res.json({
+    //             status: 'OK',
+    //             result: 'file deleted'
+    //         });
+    //     } else {
+    //         res.statusCode = 500;
+    //         log.error('Internal error(%d): %s',res.statusCode,err.message);
+    //         return res.json({ error: 'Server error' });
+    //     }        
+    // });
+
+});
 
 module.exports = router;
