@@ -1,11 +1,8 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 import sys,whiplash,json,random
 
 print("Login")
-
-#####
-
 host = sys.argv[1]
 port = int(sys.argv[2])
 username = sys.argv[3]
@@ -15,52 +12,36 @@ client_secret = sys.argv[6]
 
 wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
 
-##
-
-#with open('wdb_info_local.json', 'r') as infile: wdb_info = json.load(infile)
-#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-
-#####
-
+print("Reset database")
 wdb.models.delete({})
-
-N = 12
-hamiltonian = []
-for i in range(N):
-    for j in range(i+1,N):
-        value = 2.0*random.random()-1.0
-        hamiltonian.append([[i,j],value])
-
-content = {"n_spins":N,"edges": hamiltonian}
-tags = {"field0":0,"field1":1}
-model = {"content":content,"tags":tags,"property_id":""}
-model1 = {"content":content,"tags":tags,"property_id":"1"}
-
-#GridFS
-
-files = wdb.models.find_files({})
-for f in files:
-    print(f["_id"],wdb.models.delete_file_id(f["_id"]))
-
-ids = wdb.models.write_files([model,model,model1])
-assert len(ids) == 2
-print('wrote:',ids)
-print(wdb.models.read_file(ids[0]))
-print(wdb.models.find_files(tags))
-
-###
-
+assert wdb.models.count({}) == 0
 wdb.executables.delete({})
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
-
-print("Commit properties")
+assert wdb.executables.count({}) == 0
 wdb.properties.delete({})
-props = []
-for i in range(1000): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":3})
-for i in range(1000,1500): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":3, "status":3, "walltime":1.05})
-wdb.properties.submit(model,executable,props)
-wdb.properties.check_status()
+assert wdb.properties.count({}) == 0
 
-print('unresolved time: %f'%(wdb.properties.get_unresolved_time()))
-print('resolved time: %f'%(wdb.properties.get_resolved_time()))
-print('average mistime: %f'%(wdb.properties.get_average_mistime()))
+print("Commit model")
+hamiltonian = [[[1,2],1],[[2,3],1],[[3,4],-1],[[4,1],1]]
+model = {"content":{"edges": hamiltonian},"tags":{"n_spins":4,"name":"test"}}
+model_id = wdb.models.commit(model)['ids'][0]['_id']
+
+print("Query model")
+assert model_id == wdb.models.query_field_only('_id',model['tags'])[0]
+
+print("Commit executable")
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
+executable_id = wdb.executables.commit(executable)['ids'][0]['_id']
+
+print("Query executable")
+assert executable_id == wdb.executables.query_field_only('_id',executable)[0]
+
+print("Submit properties")
+props = []
+for i in range(1000): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":1})
+for i in range(1000,2000): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":1, "status":3, "walltime":2.0})
+wdb.properties.submit(model,executable,props)
+
+print("Check status")
+assert wdb.properties.get_unresolved_time() == 1000
+assert wdb.properties.get_resolved_time() == 2000
+assert wdb.properties.get_average_mistime() == -0.51000

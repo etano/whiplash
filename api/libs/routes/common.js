@@ -54,8 +54,8 @@ module.exports = {
     // Query
     //
 
-    query: function(collection,req,res) {
-        collection.find(req.body).toArray(function (err, objs) {
+    query: function(collection,filter,res) {
+        collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -78,8 +78,8 @@ module.exports = {
         });
     },
 
-    query_one: function(collection,req,res) {
-        collection.find(req.body).limit(1).toArray(function (err, obj) {
+    query_one: function(collection,filter,res) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -102,8 +102,8 @@ module.exports = {
         });
     },
 
-    query_count: function(collection,req,res) {
-        collection.count(req.body, function (err, count) {
+    query_count: function(collection,filter,res) {
+        collection.count(filter, function (err, count) {
 
             // TODO: Check to make sure user has READ permissions
 
@@ -121,10 +121,10 @@ module.exports = {
         });
     },
 
-    query_field_only: function(collection,req,res) {
+    query_field_only: function(collection,field,filter,res) {
         var proj = {};
-        proj[req.params.field] = 1;
-        collection.find(req.body).project(proj).toArray(function (err, objs) {
+        proj[field] = 1;
+        collection.find(filter).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -134,7 +134,7 @@ module.exports = {
             // TODO: Check to make sure user has READ permissions
             var projection = [];
             for(var i=0; i<objs.length; i++) {
-                projection.push(objs[i][req.params.field]);
+                projection.push(objs[i][field]);
             }
 
             // Return object
@@ -142,30 +142,6 @@ module.exports = {
                 return res.json({
                     status: 'OK',
                     result: projection
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },
-
-    query_id: function(collection,req,res) {
-        collection.find({_id:req.params.id}).limit(1).toArray(function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // TODO: Check to make sure user has READ permissions
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    result: obj
                 });
             } else {
                 res.statusCode = 500;
