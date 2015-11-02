@@ -110,10 +110,13 @@ router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }),
 // GridFS
 //
 
-var mongoose = require('mongoose');
-var Grid = require("gridfs-stream"); Grid.mongo = mongoose.mongo;
 var conn = require(libs + 'db/mongoose').connection;
-var gridfs = Grid(conn.db);
+var GridStore = require('mongodb').GridStore;
+var ObjectID = require('mongodb').ObjectID;
+
+// var mongoose = require('mongoose');
+// var Grid = require("gridfs-stream"); Grid.mongo = mongoose.mongo;
+// var gridfs = Grid(conn.db);
 
 router.post('/files/', passport.authenticate('bearer', { session: false }), function(req, res) {
 
@@ -144,28 +147,67 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
                     var options = {
                         metadata: metadata
                     };
+                    
+                    //*********
 
-                    var writeStream = gridfs.createWriteStream(options);
-
-                    var Readable = require('stream').Readable;
-
-                    var s = new Readable();
-                    s.push(JSON.stringify(req.body[count].content));
-                    s.push(null);
-                    s.pipe(writeStream);
+                    var content = JSON.stringify(req.body[count].content);
 
                     count++;
 
-                    writeStream.on("close", function (file) {
-                        log.info("Wrote file: %s",file._id.toString());
-                        ids.push(file._id.toString());
-                        write_file();
+                    var fileId = new ObjectID();
+
+                    var gridStore = new GridStore(conn.db, fileId, 'w');
+
+                    gridStore.open(function(err, gridStore) {
+                        if(err){
+                            log.error("Error opening file: %s",err.message);
+                            write_file();
+                        } else {
+                            gridStore.write(content, function(err, gridStore) {
+                                if(err){
+                                    log.error("Error writing file: %s",err.message);
+                                    write_file();
+                                } else {
+                                    gridStore.close(function(err, result) {
+                                        if(err){
+                                            log.error("Error closing file: %s",err.message);
+                                        } else {
+                                            log.info("Wrote file: %s",fileId.toString());
+                                            ids.push(fileId.toString());
+                                        }
+                                        write_file();
+                                    });
+                                }
+                            });
+                        }
                     });
 
-                    writeStream.on('error', function (err) {
-                        log.error("Write error: %s",err.message);
-                        write_file();
-                    });
+                    //*********
+
+                    // var writeStream = gridfs.createWriteStream(options);
+
+                    // var Readable = require('stream').Readable;
+
+                    // var s = new Readable();
+                    // s.push(JSON.stringify(req.body[count].content));
+                    // s.push(null);
+                    // s.pipe(writeStream);
+
+                    // count++;
+
+                    // writeStream.on("close", function (file) {
+                    //     log.info("Wrote file: %s",file._id.toString());
+                    //     ids.push(file._id.toString());
+                    //     write_file();
+                    // });
+
+                    // writeStream.on('error', function (err) {
+                    //     log.error("Write error: %s",err.message);
+                    //     write_file();
+                    // });
+
+                    //*********
+
                 } else {
                     return res.json({
                         status: 'OK',
@@ -180,30 +222,42 @@ router.post('/files/', passport.authenticate('bearer', { session: false }), func
 
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
 
-    var readStream = gridfs.createReadStream({ _id: req.params.id });
-
-    readStream.on("error", function(err) {
-        log.error("Read error: %s",err.message);
-        return res.json({ error: 'Server error' });
+    GridStore.read(conn.db, new ObjectID(req.params.id), function(err, fileData) {
+        if(!err) {
+            log.info("Read file: %s",req.params.id);
+            return res.json({
+                status: 'OK',
+                result: fileData.toString()
+            });
+        } else {
+            log.error("Read error: %s",err.message);
+            return res.json({ error: 'Server error' });
+        }
     });
 
-    var buffer = "";
-    readStream.on("data", function (chunk) {
-        console.log("reading chunk:",chunk)
-        buffer += chunk;
-    });
+    //*********
 
-    readStream.on("end", function () {
-        log.info("Read file: %s",req.params.id);
-        return res.json({
-            status: 'OK',
-            result: buffer
-        });
-    });
+    // var readStream = gridfs.createReadStream({ _id: req.params.id });
+
+    // readStream.on("error", function(err) {
+    //     log.error("Read error: %s",err.message);
+    //     return res.json({ error: 'Server error' });
+    // });
+
+    // var buffer = "";
+    // readStream.on("data", function (chunk) {
+    //     console.log("reading chunk:",chunk)
+    //     buffer += chunk;
+    // });
+
+    // readStream.on("end", function () {
+    //     log.info("Read file: %s",req.params.id);
+    //     return res.json({
+    //         status: 'OK',
+    //         result: buffer
+    //     });
+    // });
 });
-
-var GridStore = require('mongodb').GridStore;
-var ObjectID = require('mongodb').ObjectID;
 
 router.get('/tags/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {};
