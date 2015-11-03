@@ -44,6 +44,7 @@ module.exports = {
                     result: {'n':result.nInserted,'ids':result.getInsertedIds()}
                 });
             } else {
+                res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
                 return res.json({ error: 'Server error' });
             }
@@ -210,6 +211,7 @@ module.exports = {
                     result: result.modifiedCount
                 });
             } else {
+                res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
                 return res.json({ error: 'Server error' });;
             }
