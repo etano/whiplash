@@ -1,19 +1,22 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python
 
 import whiplash
 
 #CONNECT TO WHIPLASH
 host = "whiplash.ethz.ch"
 port = 443
-token = "dc1373b7b0b4099c88937e2e0ed3ba87908588d675e9f28f87ae2ba83733d344"
+token = "51ffa798e4e00b801dd88f367030cc85134d331bcf817b0b8d8ccd78c6c9ff4b"
 wdb = whiplash.wdb(host,port,token)
 
 #DEFINE MODEL
 model = {"class":"ising","description":"unitary evolution test","content":{"n_spins":5,"edges":[[[0,1],1],[[0,2],1],[[0,3],-1],[[0,4],-1]]}}
 
+#QUERY FOR EXECUTABLE
+executable = wdb.executables.query({"algorithm":"UE"})
+
 #SUBMIT PROPERTIES
 properties = []
-for i in range(100000):
+for i in range(1000):
     properties.append({"params":{"hx":-1,"Ttot":500,"nsteps":400,"seed":i},"timeout":3})
 wdb.properties.submit(model,executable,properties)
 

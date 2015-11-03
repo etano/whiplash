@@ -5,6 +5,8 @@ odb:
     restart: always
     volumes:
         - /data/db:/data/db
+    ports:
+        - 27017:27017
 api_1:
     extends:
         file: api/docker-compose.yml

@@ -2,7 +2,15 @@
 
 import os,json,sys,time
 
+# input
 data = json.loads(sys.stdin.readline())
-time.sleep(2.0)
-data['time'] = int(time.time())
-sys.stdout.write(json.dumps(data))
+content_in = data['content']
+params = data['params']
+
+# sleep
+time.sleep(params['sleep_time'])
+
+# output
+tags_out = {'feels':'good to sleep'}
+content_out = {'time':int(time.time())}
+sys.stdout.write(json.dumps({'tags':tags_out,'content':content_out}))

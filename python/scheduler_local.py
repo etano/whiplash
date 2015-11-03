@@ -4,19 +4,16 @@ import multiprocessing as mp
 import subprocess as sp
 import whiplash,time,json,os,argparse,daemon,sys
 
-def fetch_work_batch(db,time_limit):
-    return db.properties.request("PUT","/api/properties/work_batch/",{'time_limit':time_limit})
+def fetch_work_batch(db,time_limit,job_limit,pid):
+    return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
-def get_unresolved(db,time_limit,batch=True):
-    if batch:
-        properties = fetch_work_batch(db,time_limit)
-    else:
-        properties = [db.properties.find_one_and_update({'status':0},{'status':1})]
+def get_unresolved(db,time_limit,job_limit,pid):
+    properties = fetch_work_batch(db,time_limit,job_limit,pid)
 
     model_ids = set()
     executable_ids = set()
     for prop in properties:
-        model_ids.add(prop['model_id'])
+        model_ids.add(prop['input_model_id'])
         executable_ids.add(prop['executable_id'])
     models = db.models.query({'_id': { '$in': list(model_ids) }})
     executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
@@ -25,7 +22,7 @@ def get_unresolved(db,time_limit,batch=True):
     for prop in properties:
         obj = {'property':prop,'model_index':-1,'executable_index':-1}
         for i in range(len(models)):
-            if prop['model_id'] == models[i]['_id']:
+            if prop['input_model_id'] == models[i]['_id']:
                 obj['model_index'] = i
                 break
         for i in range(len(executables)):
@@ -36,12 +33,11 @@ def get_unresolved(db,time_limit,batch=True):
 
     return [objs,models,executables]
 
-def commit_resolved(db,props,batch=True):
-    if batch:
-        db.properties.batch_update(props)
-    else:
-        for prop in props:
-            db.properties.update_id(prop["_id"],prop)
+def commit_resolved(db,props,results):
+    ids = db.models.commit(results)['ids']
+    for ID in ids:
+        props[ID['index']]['output_model_id'] = ID['_id']
+    db.properties.batch_update(props)
 
 def resolve_object(pid,obj,models,executables):
     prop = obj['property']
@@ -49,7 +45,12 @@ def resolve_object(pid,obj,models,executables):
 
     print('worker',str(pid),'computing property',ID)
 
-    package = json.dumps({'model':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
+    package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
+
+    file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
+
+    with open(file_name, 'w') as propfile:
+        propfile.write(package)
 
     path = executables[obj['executable_index']]['path']
     timeout = prop['timeout']
@@ -57,10 +58,14 @@ def resolve_object(pid,obj,models,executables):
     t0 = time.time()
 
     try:
-        prop['result'] = json.loads(sp.check_output(path,input=package,universal_newlines=True,timeout=timeout))
+        prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
-    except sp.TimeoutExpired:
+    except sp.TimeoutExpired as e:
+        prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         prop['status'] = 2
+    except sp.CalledProcessError as e:
+        prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
+        prop['status'] = 4
 
     t1 = time.time()
 
@@ -68,8 +73,18 @@ def resolve_object(pid,obj,models,executables):
 
     prop['walltime'] = elapsed
 
+    with open(file_name, 'r') as propfile:
+        result = json.load(propfile)
+    os.remove(file_name)
+
+    if 'content' not in result: result['content'] = {}
+    if 'None' in result['content']: result['content'] = {}
+    if 'tags' not in result: result['tags'] = {}
+    if 'None' in result['tags']: result['tags'] = {}
+    result['tags']['property_id'] = ID
+
     print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
-    return prop
+    return [prop,result]
 
 def worker(pid,wdb,args):
     print('worker',str(pid),'active')
@@ -79,19 +94,21 @@ def worker(pid,wdb,args):
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),batch=True)
+            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
             if len(objs) > 0:
                 print('worker',str(pid),'fetched',len(objs),'properties with',time_left(),'seconds of work left')
-                resolved = []
+                props,results = [],[]
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
-                        resolved.append(resolve_object(pid,obj,models,executables))
+                        resolved = resolve_object(pid,obj,models,executables)
+                        props.append(resolved[0])
+                        results.append(resolved[1])
                     else: break
-                commit_resolved(wdb,resolved,batch=True)
-                print('worker',str(pid),'commited',len(resolved),'properties')
+                commit_resolved(wdb,props,results)
+                print('worker',str(pid),'commited',len(props),'properties')
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
@@ -123,6 +140,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
+    parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')

@@ -182,11 +182,12 @@ class wdb:
         # Map-reduce
         #
 
-        def total(self,field,filter):
-            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":filter})
+        def total(self,field,fltr):
+            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":fltr})
 
-        def avg_per_dif(self,field1,field2,filter):
-            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":filter})
+        def avg_per_dif(self,field1,field2,fltr):
+            return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})
+
 
     #
     # Special helper functions, only for properties
@@ -197,17 +198,24 @@ class wdb:
         # Submit
         #
 
-        def submit(self,model,executable,props,by_id=False):
-            if not by_id: self.db.models.commit(model)
-            model_ids = self.db.models.query_field_only('_id',model)
-            assert len(model_ids) == 1
+        def submit(self,model,executable,props):
 
-            if not by_id: self.db.executables.commit(executable)
-            executable_ids = self.db.executables.query_field_only('_id',executable)
-            assert len(executable_ids) == 1
+            if "_id" in model:
+                model_ids = [model["_id"]]
+            else:
+                self.db.models.commit(model)
+                model_ids = self.db.models.query_field_only('_id',model["tags"])
+                assert len(model_ids) == 1
+
+            if "_id" in executable:
+                executable_ids = [executable["_id"]]
+            else:
+                self.db.executables.commit(executable)
+                executable_ids = self.db.executables.query_field_only('_id',executable)
+                assert len(executable_ids) == 1
 
             for prop in props:
-                prop["model_id"] = model_ids[0]
+                prop["input_model_id"] = model_ids[0]
                 prop["executable_id"] = executable_ids[0]
 
             self.commit(props)
