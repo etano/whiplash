@@ -86,7 +86,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                         }
                     });
                 } else {
-                    log.info("Returning %d files",ids.length);
+                    log.info("Commited %d objects",ids.length);
                     return res.json({
                         status: 'OK',
                         result: {'ids':ids,'n':ids.length}
