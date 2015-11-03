@@ -294,12 +294,13 @@ module.exports = {
             req.query.field2 = req.body.field2;
             req.query.filter = req.body.filter;
         }
-        var map = function (){ emit(this.owner, {sum:this[field1],count:this[field2]}); };
+        var map = function (){ emit(this.owner, {avg:(this[field1] - this[field2])/this[field2],count:1}); };
         var reduce = function (key, values)
         {
-            var reduced_value = {sum : 0.0, count : values.length};
+            var reduced_value = {avg : 0.0, count : 0};
             for (var i = 0; i < values.length; i++) {
-                reduced_value.sum += (values[i].sum - values[i].count)/values[i].count;
+                reduced_value.avg += values[i].avg;
+                reduced_value.count += values[i].count;
             }
             return reduced_value;
         };
@@ -309,7 +310,7 @@ module.exports = {
         o.query = req.query.filter;
         o.finalize = function (key, reduced_value)
         {
-            return reduced_value.sum/reduced_value.count;
+            return reduced_value.avg/reduced_value.count;
         };
         o.out = {merge:'average_mistime'};
         collection.mapReduce(map, reduce, o, function (err, collection) {

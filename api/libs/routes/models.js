@@ -86,6 +86,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                         }
                     });
                 } else {
+                    log.info("Commited %d objects",ids.length);
                     return res.json({
                         status: 'OK',
                         result: {'ids':ids,'n':ids.length}
@@ -135,6 +136,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
+                log.error("Objects with filter %s not found",JSON.stringify(filter));
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
@@ -149,6 +151,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 } else {
                     // Return object
                     if (!err) {
+                        log.info("Returning %d objects",objs.length)
                         return res.json({
                             status: 'OK',
                             result: objs
@@ -302,6 +305,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
     collection.find(req.body).project(proj).toArray(function(err, objs) {
         // Check exists
         if(!objs) {
+            log.error("Objects with filter %s not found",JSON.stringify(filter));
             res.statusCode = 404;
             return res.json({ error: 'Not found' });
         }
@@ -319,6 +323,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
             } else {
                 // Return object
                 if (!err) {
+                    log.info("Deleting %d objects",objs.length)
                     return res.json({
                         status: 'OK',
                         result: objs.length
@@ -338,6 +343,7 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
     delete_by_id(req.params.id,res,function(err,obj) {
         // Return object
         if (!err) {
+            log.info("Deleting object with id %s",req.params.id)
             return res.json({
                 status: 'OK',
                 result: obj
