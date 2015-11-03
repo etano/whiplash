@@ -94,12 +94,14 @@ def worker(pid,wdb,args):
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
+            t0 = time.time()
             unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
+            t1 = time.time()            
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
             if len(objs) > 0:
-                print('worker',str(pid),'fetched',len(objs),'properties with',time_left(),'seconds of work left')
+                print('worker',str(pid),'fetched',len(objs),'properties in time',t1-t0,'with',time_left(),'seconds of work left')
                 props,results = [],[]
                 t0 = time.time()
                 for obj in objs:
@@ -110,8 +112,10 @@ def worker(pid,wdb,args):
                     else: break
                 t1 = time.time()
                 print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
+                t0 = time.time()                
                 commit_resolved(wdb,props,results)
-                print('worker',str(pid),'commited',len(props),'properties')
+                t1 = time.time()
+                print('worker',str(pid),'commited',len(props),'properties in time',t1-t0)
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
