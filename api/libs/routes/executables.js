@@ -5,8 +5,8 @@ var router = express.Router();
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
-var conn = require(libs + 'db/mongoose').connection;
-var collection = conn.db.collection('executables');
+var db = require(libs + 'db/mongo');
+var collection = db.get().collection('executables');
 var ObjType = require(libs + 'schemas/executable');
 
 //

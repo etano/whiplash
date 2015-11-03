@@ -4,8 +4,6 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
-var db = require(libs + 'db/mongoose');
-var common = require(libs + 'routes/common');
 var Client = require(libs + 'schemas/client');
 
 router.post('/', passport.authenticate('bearer', { session: false }),

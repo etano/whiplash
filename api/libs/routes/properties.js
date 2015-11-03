@@ -4,10 +4,9 @@ var router = express.Router();
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
-var conn = require(libs + 'db/mongoose').connection;
-var collection = conn.db.collection('properties');
+var db = require(libs + 'db/mongo');
+var collection = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/property');
-
 
 //
 // Commit

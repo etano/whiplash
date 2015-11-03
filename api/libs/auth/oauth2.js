@@ -3,10 +3,8 @@ var passport = require('passport');
 var crypto = require('crypto');
 
 var libs = process.cwd() + '/libs/';
-
 var config = require(libs + 'config');
 var log = require(libs + 'log')(module);
-
 var db = require(libs + 'db/mongoose');
 var User = require(libs + 'schemas/user');
 var AccessToken = require(libs + 'schemas/accessToken');
