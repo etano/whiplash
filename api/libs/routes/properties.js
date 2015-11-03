@@ -136,11 +136,11 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var work = [];
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
     var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
-    collection.find(filter).limit(1).toArray(function(err, t_objs) {
+    collection.count(filter,function(err, count) {
         if(err) {
             return res.json({ error: 'Server error' });
         } else {
-            if(t_objs.length > 0) {
+            if(count>0) {
                 var arr = [];
                 for(var i=0; i<job_limit; i++) {
                     arr.push({updateOne: {filter: filter, update: {'$set':update}}});
