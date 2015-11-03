@@ -74,7 +74,6 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                                                 if(err){
                                                     log.error("Error closing file: %s",err.message);
                                                 } else {
-                                                    log.info("Wrote file: %s",fileId);
                                                     ids.push({'index':ids.length,'_id':fileId});
                                                 }
                                                 write_file();
