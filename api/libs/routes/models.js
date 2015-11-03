@@ -49,7 +49,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     var content = JSON.stringify(req.body[i].content);
                     var md5 = checksum(content);
                     i++;
-                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).taArray(function (err, objs) {
+                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
                         if(err){
                             log.error("Error in count: %s",err.message);
                             write_file();
