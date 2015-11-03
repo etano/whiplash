@@ -3,7 +3,7 @@
 import multiprocessing as mp
 import subprocess as sp
 import threading as th
-import whiplash,time,json,os,argparse,daemon,sys
+import whiplash,time,json,os,argparse,daemon,sys,math
 
 def fetch_work_batch(db,time_limit,job_limit,pid):
     return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
@@ -123,7 +123,7 @@ def worker(pid,wdb,args):
                 thread.start()
             else:
                 print('no properties currently unresolved')
-            time.sleep(1)
+            time.sleep(math.ceil(args.time_window()/100))
         else:
             break
 
