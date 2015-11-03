@@ -39,10 +39,17 @@ module.exports = {
         batch.execute(function(err,result) {
             if (result.ok) {
                 log.info("%s new objects created", String(result.nInserted));
-                return res.json({
-                    status: 'OK',
-                    result: {'n':result.nInserted,'ids':result.getInsertedIds()}
-                });
+                if (result.nInserted > 0) {
+                    return res.json({
+                        status: 'OK',
+                        result: {'n':result.nInserted,'ids':result.getInsertedIds()}
+                    });
+                } else {
+                    return res.json({
+                        status: 'OK',
+                        result: {'n':result.nInserted,'ids':[]}
+                    });
+                }
             } else {
                 res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());

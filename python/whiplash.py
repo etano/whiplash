@@ -248,3 +248,4 @@ class wdb:
             print('pulled: %d'%(self.count({"status":1})))
             print('timed out: %d'%(self.count({"status":2})))
             print('resolved: %d'%(self.count({"status":3})))
+            print('errored: %d'%(self.count({"status":4})))
