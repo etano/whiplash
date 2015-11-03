@@ -275,10 +275,17 @@ module.exports = {
         collection.mapReduce(map, reduce, o, function (err, collection) {
             if(!err){
                 collection.find().toArray(function (err, result) {
-                    return res.json({
-                        status: 'OK',
-                        result: result[0].value
-                    });
+                    if(result.length>0) {
+                        return res.json({
+                            status: 'OK',
+                            result: result[0].value
+                        });
+                    } else {
+                        return res.json({
+                            status: 'OK',
+                            result: 0
+                        });
+                    }
                 });
             } else {
                 res.statusCode = 500;
