@@ -15,10 +15,10 @@ function checksum (str, algorithm, encoding) {
         .digest(encoding || 'hex');
 }
 
-var conn = require(libs + 'db/mongoose').connection;
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
-var collection = conn.db.collection('models');
+var conn = require(libs + 'db/mongoose').connection;
+var collection = conn.db.collection('fs.files');
 
 //
 // Commit
@@ -49,7 +49,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     var content = JSON.stringify(req.body[count].content);
                     var md5 = checksum(content);
                     count++;
-                    conn.db.collection('fs.files').count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
+                    collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
                         if(err){
                             log.error("Error in count: %s",err.message);
                             write_file();
@@ -131,9 +131,9 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     }
 
     if (req.params.tags_only) {
-        common.query(conn.db.collection('fs.files'),filter,res);
+        common.query(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).toArray(function (err, objs) {
+        collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 log.error("Objects with filter %s not found",JSON.stringify(filter));
@@ -180,9 +180,9 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
         }
     }
     if (req.params.tags_only) {
-        common.query_one(conn.db.collection('fs.files'),filter,res);
+        common.query_one(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).limit(1).toArray(function (err, obj) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -220,7 +220,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
             filter['_id'] = req.body[key];
         }
     }
-    common.query_count(conn.db.collection('fs.files'),filter,res);
+    common.query_count(collection,filter,res);
 });
 
 router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -235,15 +235,15 @@ router.get('/field/:field', passport.authenticate('bearer', { session: false }),
             filter['_id'] = req.body[key];
         }
     }
-    common.query_field_only(conn.db.collection('fs.files'),field,filter,res);
+    common.query_field_only(collection,field,filter,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {_id:req.params.id};
     if (req.params.tags_only) {
-        common.query_one(conn.db.collection('fs.files'),filter,res);
+        common.query_one(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).limit(1).toArray(function (err, obj) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -302,7 +302,7 @@ var delete_by_id = function(id,req,res,cb) {
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var proj = {};
     proj._id = 1;
-    conn.db.collection('fs.files').find(req.body).project(proj).toArray(function(err, objs) {
+    collection.find(req.body).project(proj).toArray(function(err, objs) {
         // Check exists
         if(!objs) {
             log.error("Objects with filter %s not found",JSON.stringify(filter));
