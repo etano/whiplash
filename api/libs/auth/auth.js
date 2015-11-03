@@ -4,9 +4,7 @@ var ClientPasswordStrategy = require('passport-oauth2-client-password').Strategy
 var BearerStrategy = require('passport-http-bearer').Strategy;
 
 var libs = process.cwd() + '/libs/';
-
 var config = require(libs + 'config');
-
 var User = require(libs + 'schemas/user');
 var Client = require(libs + 'schemas/client');
 var AccessToken = require(libs + 'schemas/accessToken');
