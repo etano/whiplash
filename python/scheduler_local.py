@@ -2,6 +2,7 @@
 
 import multiprocessing as mp
 import subprocess as sp
+import threading as th
 import whiplash,time,json,os,argparse,daemon,sys
 
 def fetch_work_batch(db,time_limit,job_limit,pid):
@@ -86,6 +87,12 @@ def resolve_object(pid,obj,models,executables):
     #print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return [prop,result]
 
+def threaded_commit(wdb,props,results,pid):
+    t0 = time.time()
+    commit_resolved(wdb,props,results)
+    t1 = time.time()
+    print('worker',str(pid),'commited',len(props),'properties in time',t1-t0)
+
 def worker(pid,wdb,args):
     print('worker',str(pid),'active')
 
@@ -112,10 +119,8 @@ def worker(pid,wdb,args):
                     else: break
                 t1 = time.time()
                 print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                t0 = time.time()                
-                commit_resolved(wdb,props,results)
-                t1 = time.time()
-                print('worker',str(pid),'commited',len(props),'properties in time',t1-t0)
+                thread = th.Thread(target = threaded_commit, args = (wdb,props,results,pid, ))
+                thread.start()
             else:
                 print('no properties currently unresolved')
             time.sleep(1)
