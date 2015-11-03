@@ -32,6 +32,7 @@ exports.get = function() {
 exports.close = function() {
     if (state.db) {
         state.db.close(function(err, result) {
+          log.info("Disconnected from database!");
           state.db = null;
           state.mode = null;
         });
