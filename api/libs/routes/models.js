@@ -107,7 +107,6 @@ var find_by_id = function(id,cb) {
     var err = null;
     GridStore.read(db.get(), id, function(err, fileData) {
         if(!err) {
-            log.info("Read file: %s",id);
             data = fileData.toString();
         } else {
             log.error("Read error: %s",err.message);
@@ -150,7 +149,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 } else {
                     // Return object
                     if (!err) {
-                        log.info("Returning %d objects",objs.length)
+                        log.info("Returning %d objects",objs.length);
                         return res.json({
                             status: 'OK',
                             result: objs
