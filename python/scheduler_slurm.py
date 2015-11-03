@@ -19,7 +19,7 @@ def run(args):
         print('unresolved:',num_unresolved,' | ','pending:',num_pending)
         if num_unresolved > 0 and num_pending == 0:
             print('submitting job')
-            sp.call("ssh " + args.cluster + " \"bash -lc \'cd /users/whiplash/whiplash/whiplash/python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.job_limit) + " " + str(args.num_cpus) + " " + str(args.time_window) + "\'\"",shell=True)
+            sp.call("ssh " + args.cluster + " \"bash -lc \'cd /users/whiplash/whiplash/whiplash/python && sh run.sh " + args.wdb_info + " " + str(job_number) + " " + str(args.time_limit) + " " + str(args.job_limit) + " " + str(args.time_window) + " " + str(args.num_cpus) + "\'\"",shell=True)
             job_number += 1
         time.sleep(5)
     
