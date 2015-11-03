@@ -21,8 +21,13 @@ wdb.properties.delete({})
 assert wdb.properties.count({}) == 0
 
 print("Commit model")
-hamiltonian = [[[1,2],1],[[2,3],1],[[3,4],-1],[[4,1],1]]
-model = {"content":{"edges": hamiltonian},"tags":{"n_spins":4,"name":"test"}}
+N = 100
+hamiltonian = []
+for i in range(N):
+    for j in range(i+1,N):
+        value = 2.0*random.random()-1.0
+        hamiltonian.append([[i,j],value])
+model = {"content":{"edges": hamiltonian},"tags":{"n_spins":N,"name":"test"}}
 model_id = wdb.models.commit(model)['ids'][0]['_id']
 
 print("Query model")
@@ -36,12 +41,14 @@ print("Query executable")
 assert executable_id == wdb.executables.query_field_only('_id',executable)[0]
 
 print("Submit properties")
+N0 = 10000; t0 = 1.0
+N1 = 10000; t1 = 2.0; w1 = 1.0
 props = []
-for i in range(1000): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":1})
-for i in range(1000,2000): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":1, "status":3, "walltime":2.0})
+for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "timeout":t0})
+for i in range(N0,N0+N1): props.append({"params":{"sleep_time":1.0, "seed":i}, "timeout":t1, "status":3, "walltime":w1})
 wdb.properties.submit(model,executable,props)
 
 print("Check status")
-assert wdb.properties.get_unresolved_time() == 1000
-assert wdb.properties.get_resolved_time() == 2000
-assert wdb.properties.get_average_mistime() == -0.51000
+assert wdb.properties.get_unresolved_time() == N0*t0
+assert wdb.properties.get_resolved_time() == N1*w1
+assert abs(wdb.properties.get_average_mistime()/((t1-w1)/w1) - 1.0) < 0.05
