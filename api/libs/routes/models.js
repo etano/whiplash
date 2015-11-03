@@ -369,6 +369,7 @@ router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), 
                 result: fileData.toString()
             });
         } else {
+            res.statusCode = 500;
             log.error("Read error: %s",err.message);
             return res.json({ error: 'Server error' });
         }
