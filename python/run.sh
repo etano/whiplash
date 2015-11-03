@@ -3,7 +3,9 @@
 wdb_info=$1
 job_number=$2
 time_limit=$3
-time_window=$4
+job_limit=$4
+time_window=$5
+num_cpus=$6
 
 ###
 
@@ -24,6 +26,6 @@ echo "#SBATCH --time=${time_limit}:00:00" >> $run_file
 echo "#SBATCH --nodes=1" >> $run_file
 echo "#SBATCH --exclusive" >> $run_file
 echo "#SBATCH --ntasks=1" >> $run_file
-echo "srun python scheduler_local.py --wdb_info ${wdb_info} --time_limit ${time_limit} --time_window ${time_window}" >> $run_file
+echo "srun python scheduler_local.py --wdb_info ${wdb_info} --time_limit ${time_limit} --job_limit ${job_limit} --time_window ${time_window} --num_cpus ${num_cpus}" >> $run_file
 
 sbatch $run_file
