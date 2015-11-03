@@ -34,11 +34,18 @@ def get_unresolved(db,time_limit,job_limit,pid):
 
     return [objs,models,executables]
 
-def commit_resolved(db,props,results):
+def commit_resolved(db,props,results,pid):
+    t0 = time.time()
     ids = db.models.commit(results)['ids']
+    t1 = time.time()
+    elapsed0 = t1-t0
     for ID in ids:
         props[ID['index']]['output_model_id'] = ID['_id']
+    t0 = time.time()
     db.properties.batch_update(props)
+    t1 = time.time()
+    elapsed1 = t1-t0
+    print('worker',str(pid),'commited',len(props),'properties in times',elapsed0,'and',elapsed1)
 
 def resolve_object(pid,obj,models,executables):
     prop = obj['property']
@@ -87,12 +94,6 @@ def resolve_object(pid,obj,models,executables):
     #print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return [prop,result]
 
-def threaded_commit(wdb,props,results,pid):
-    t0 = time.time()
-    commit_resolved(wdb,props,results)
-    t1 = time.time()
-    print('worker',str(pid),'commited',len(props),'properties in time',t1-t0)
-
 def worker(pid,wdb,args):
     print('worker',str(pid),'active')
 
@@ -119,7 +120,7 @@ def worker(pid,wdb,args):
                     else: break
                 t1 = time.time()
                 print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                thread = th.Thread(target = threaded_commit, args = (wdb,props,results,pid, ))
+                thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
                 thread.start()
             else:
                 print('no properties currently unresolved')
