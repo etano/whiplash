@@ -136,7 +136,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         conn.db.collection('fs.files').find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
-                log.error("Objects with filter %s not found",String(filter));
+                log.error("Objects with filter %s not found",JSON.stringify(filter));
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
@@ -305,7 +305,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
     conn.db.collection('fs.files').find(req.body).project(proj).toArray(function(err, objs) {
         // Check exists
         if(!objs) {
-            log.error("Objects with filter %s not found",String(filter));
+            log.error("Objects with filter %s not found",JSON.stringify(filter));
             res.statusCode = 404;
             return res.json({ error: 'Not found' });
         }
