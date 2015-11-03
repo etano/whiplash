@@ -49,11 +49,11 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     var content = JSON.stringify(req.body[i].content);
                     var md5 = checksum(content);
                     i++;
-                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
+                    collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
                         if(err){
                             log.error("Error in count: %s",err.message);
                             write_file();
-                        } else if(objs.length > 0){
+                        } else if(count > 0){
                             log.error("Duplicate file with md5: %s",md5);
                             write_file();
                         } else {
