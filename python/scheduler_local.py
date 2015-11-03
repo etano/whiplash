@@ -43,7 +43,7 @@ def resolve_object(pid,obj,models,executables):
     prop = obj['property']
     ID = prop['_id']
 
-    print('worker',str(pid),'computing property',ID)
+    #print('worker',str(pid),'computing property',ID)
 
     package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
 
@@ -83,7 +83,7 @@ def resolve_object(pid,obj,models,executables):
     if 'None' in result['tags']: result['tags'] = {}
     result['tags']['property_id'] = ID
 
-    print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
+    #print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return [prop,result]
 
 def worker(pid,wdb,args):
