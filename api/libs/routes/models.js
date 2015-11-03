@@ -40,45 +40,49 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 return res.json({ error: err.toString() });
             }
         } else {
-            var write_file = function(i,fileId,metadata,content) {
-                var options = { metadata: metadata };
-                var gridStore = new GridStore(db.get(),fileId,fileId,'w',options);
-                gridStore.open(function(err, gridStore) {
-                    if(err){
-                        log.error("Error opening file: %s",err.message);
-                    } else {
-                        gridStore.write(content, function(err, gridStore) {
-                            if(err){
-                                log.error("Error writing file: %s",err.message);
-                            } else {
-                                gridStore.close(function(err, result) {
-                                    if(err){
-                                        log.error("Error closing file: %s",err.message);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            };
             var ids = [];
-            var check_for_duplicates = function(i) {
-                if (i<req.body.length) {
-                    var metadata = req.body[i].tags;
-                    metadata.owner = req.body[i].owner;
-                    var content = JSON.stringify(req.body[i].content);
+            var count = 0;
+            var write_file = function() {
+                if(count < req.body.length){
+                    var metadata = req.body[count].tags;
+                    metadata.owner = req.body[count].owner;
+                    var content = JSON.stringify(req.body[count].content);
                     var md5 = checksum(content);
+                    count++;
                     collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
-                        if(err) {
+                        if(err){
                             log.error("Error in count: %s",err.message);
-                        } else if(count > 0) {
+                            write_file();
+                        } else if(count > 0){
                             log.error("Duplicate file with md5: %s",md5);
+                            write_file();
                         } else {
                             var fileId = String(new ObjectID());
-                            write_file(i,fileId,metadata,content);
-                            ids.push({'index':ids.length,'_id':fileId});
+                            var options = { metadata: metadata };
+                            var gridStore = new GridStore(db.get(),fileId,fileId,'w',options);
+                            gridStore.open(function(err, gridStore) {
+                                if(err){
+                                    log.error("Error opening file: %s",err.message);
+                                    write_file();
+                                } else {
+                                    gridStore.write(content, function(err, gridStore) {
+                                        if(err){
+                                            log.error("Error writing file: %s",err.message);
+                                            write_file();
+                                        } else {
+                                            gridStore.close(function(err, result) {
+                                                if(err){
+                                                    log.error("Error closing file: %s",err.message);
+                                                } else {
+                                                    ids.push({'index':ids.length,'_id':fileId});
+                                                }
+                                                write_file();
+                                            });
+                                        }
+                                    });
+                                }
+                            });
                         }
-                        check_for_duplicates(i+1);
                     });
                 } else {
                     log.info("Commited %d objects",ids.length);
@@ -88,7 +92,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     });
                 }
             };
-            check_for_duplicates(0);
+            write_file();
         }
     });
 
