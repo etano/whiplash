@@ -24,7 +24,7 @@ def run(args):
     while True:
         num_unresolved = wdb.properties.get_num_unresolved()
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'" + num_pending_cmd + "\'", shell=True))
-        num_running = int(sp.check_output("ssh " + args.cluster + " \'" + num_running_cmd + "\'", shell=True))
+        num_running = int(sp.check_output("ssh " + args.cluster + " \'" + num_running_cmd + "\'", shell=True)) - 1
         print('unresolved:',num_unresolved,' | ','pending:',num_pending,' | ','running:',num_running)
         if num_unresolved > 0 and num_pending == 0:
             print('submitting job')
