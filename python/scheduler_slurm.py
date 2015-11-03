@@ -17,8 +17,8 @@ def run(args):
     for FILE in ["whiplash.py","run.sh","scheduler_local.py",args.wdb_info]:
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
-    num_pending_cmd = "squeue -u whiplash | grep \"PD\" | wc -l"
-    num_running_cmd = "squeue -u whiplash | grep \"R\" | wc -l"
+    num_pending_cmd = "squeue -u whiplash | grep \" PD \" | wc -l"
+    num_running_cmd = "squeue -u whiplash | grep \" R \" | wc -l"
     scheduler_command = "cd rte && sh run.sh"
 
     while True:
