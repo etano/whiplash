@@ -15,10 +15,10 @@ function checksum (str, algorithm, encoding) {
         .digest(encoding || 'hex');
 }
 
-var conn = require(libs + 'db/mongoose').connection;
+var db = require(libs + 'db/mongo');
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
-var collection = conn.db.collection('models');
+var collection = db.get().collection('fs.files');
 
 //
 // Commit
@@ -49,7 +49,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     var content = JSON.stringify(req.body[count].content);
                     var md5 = checksum(content);
                     count++;
-                    conn.db.collection('fs.files').count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
+                    collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
                         if(err){
                             log.error("Error in count: %s",err.message);
                             write_file();
@@ -59,7 +59,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                         } else {
                             var fileId = String(new ObjectID());
                             var options = { metadata: metadata };
-                            var gridStore = new GridStore(conn.db,fileId,fileId,'w',options);
+                            var gridStore = new GridStore(db.get(),fileId,fileId,'w',options);
                             gridStore.open(function(err, gridStore) {
                                 if(err){
                                     log.error("Error opening file: %s",err.message);
@@ -105,7 +105,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 var find_by_id = function(id,cb) {
     var data = null;
     var err = null;
-    GridStore.read(conn.db, id, function(err, fileData) {
+    GridStore.read(db.get(), id, function(err, fileData) {
         if(!err) {
             log.info("Read file: %s",id);
             data = fileData.toString();
@@ -130,9 +130,9 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     }
 
     if (req.params.tags_only) {
-        common.query(conn.db.collection('fs.files'),filter,res);
+        common.query(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).toArray(function (err, objs) {
+        collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
@@ -177,9 +177,9 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
         }
     }
     if (req.params.tags_only) {
-        common.query_one(conn.db.collection('fs.files'),filter,res);
+        common.query_one(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).limit(1).toArray(function (err, obj) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -217,7 +217,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
             filter['_id'] = req.body[key];
         }
     }
-    common.query_count(conn.db.collection('fs.files'),filter,res);
+    common.query_count(collection,filter,res);
 });
 
 router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -232,15 +232,15 @@ router.get('/field/:field', passport.authenticate('bearer', { session: false }),
             filter['_id'] = req.body[key];
         }
     }
-    common.query_field_only(conn.db.collection('fs.files'),field,filter,res);
+    common.query_field_only(collection,field,filter,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {_id:req.params.id};
     if (req.params.tags_only) {
-        common.query_one(conn.db.collection('fs.files'),filter,res);
+        common.query_one(collection,filter,res);
     } else {
-        conn.db.collection('fs.files').find(filter).limit(1).toArray(function (err, obj) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
@@ -274,7 +274,7 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 var delete_by_id = function(id,req,res,cb) {
     var err = null;
     var data = null;
-    var gridStore = new GridStore(conn.db, id, id, 'w');
+    var gridStore = new GridStore(db.get(), id, id, 'w');
     gridStore.open(function(open_err, gs) {
         if(err) {
             log.error('Error opening file: %s',open_err.message);
@@ -299,7 +299,7 @@ var delete_by_id = function(id,req,res,cb) {
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var proj = {};
     proj._id = 1;
-    conn.db.collection('fs.files').find(req.body).project(proj).toArray(function(err, objs) {
+    collection.find(req.body).project(proj).toArray(function(err, objs) {
         // Check exists
         if(!objs) {
             res.statusCode = 404;
@@ -355,7 +355,7 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 //
 
 router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    GridStore.read(conn.db, req.params.id, function(err, fileData) {
+    GridStore.read(db.get(), req.params.id, function(err, fileData) {
         if(!err) {
             log.info("Read file: %s",req.params.id);
             return res.json({
