@@ -133,15 +133,15 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var worker_tag = crypto.randomBytes(32).toString('hex');
 
     // Reserve block
-    var arr = [];
+    var work = [];
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
     var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
-    collection.updateOne(filter, update, {w:1}, function(err, res) {
+    collection.find(filter).limit(1).toArray(function(err, t_objs) {
         if(err) {
-            res.statusCode = 500;
             return res.json({ error: 'Server error' });
         } else {
-            if(res.modifiedCount > 0) {
+            if(t_objs.length > 0) {
+                var arr = [];
                 for(var i=0; i<job_limit; i++) {
                     arr.push({updateOne: {filter: filter, update: {'$set':update}}});
                 }
@@ -156,7 +156,6 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                                 var time_left = time_limit;
                                 var ids = [];
                                 var unused_ids = [];
-                                var work = [];
                                 for(var i=0; i<objs.length; i++) {
                                     var timeout = objs[i]["timeout"];
                                     if(timeout < time_left){
@@ -196,7 +195,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
             } else {
                 return res.json({
                     status: 'OK',
-                    result: []
+                    result: work
                 });
             }
         }

@@ -41,19 +41,19 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             }
         } else {
             var ids = [];
-            var count = 0;
+            var i = 0;
             var write_file = function() {
-                if(count < req.body.length){
-                    var metadata = req.body[count].tags;
-                    metadata.owner = req.body[count].owner;
-                    var content = JSON.stringify(req.body[count].content);
+                if(i < req.body.length){
+                    var metadata = req.body[i].tags;
+                    metadata.owner = req.body[i].owner;
+                    var content = JSON.stringify(req.body[i].content);
                     var md5 = checksum(content);
-                    count++;
-                    collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
+                    i++;
+                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).taArray(function (err, objs) {
                         if(err){
                             log.error("Error in count: %s",err.message);
                             write_file();
-                        } else if(count > 0){
+                        } else if(objs.length > 0){
                             log.error("Duplicate file with md5: %s",md5);
                             write_file();
                         } else {
