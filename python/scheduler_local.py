@@ -68,12 +68,16 @@ def resolve_object(pid,obj,models,executables):
     try:
         prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
+        with open(file_name, 'r') as propfile:
+            result = json.load(propfile)
     except sp.TimeoutExpired as e:
         prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         prop['status'] = 2
+        result = {}
     except sp.CalledProcessError as e:
         prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         prop['status'] = 4
+        result = {}
 
     t1 = time.time()
 
@@ -81,8 +85,6 @@ def resolve_object(pid,obj,models,executables):
 
     prop['walltime'] = elapsed
 
-    with open(file_name, 'r') as propfile:
-        result = json.load(propfile)
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
