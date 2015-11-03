@@ -101,12 +101,15 @@ def worker(pid,wdb,args):
             if len(objs) > 0:
                 print('worker',str(pid),'fetched',len(objs),'properties with',time_left(),'seconds of work left')
                 props,results = [],[]
+                t0 = time.time()
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
                         resolved = resolve_object(pid,obj,models,executables)
                         props.append(resolved[0])
                         results.append(resolved[1])
                     else: break
+                t1 = time.time()
+                print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
                 commit_resolved(wdb,props,results)
                 print('worker',str(pid),'commited',len(props),'properties')
             else:
