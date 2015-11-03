@@ -135,7 +135,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     // Reserve block
     var arr = [];
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
-    var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
+    var update = {"status":99,"worker_tag":worker_tag,"resolve_by":resolve_by};
     for(var i=0; i<job_limit; i++) {
         arr.push({updateOne: {filter: filter, update: {'$set':update}}});
     }
@@ -167,12 +167,22 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                     collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
                         if (!err) {
                             log.info("%d objects released for worker %d work batch", result.modifiedCount, worker_id);
+                        } else {
+                            log.error('Error releasing work for worker %d: %s', worker_id, err.message);
+                        }
+                    });
+
+                    // Return work
+                    update = {"status":1};
+                    collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {
+                        if (!err) {
+                            log.info("%d objects given for worker %d work batch", result.modifiedCount, worker_id);
                             return res.json({
                                 status: 'OK',
                                 result: work
                             });
                         } else {
-                            log.error('Error releasing work for worker %d: %s', worker_id, err.message);
+                            log.error('Error giving work for worker %d: %s', worker_id, err.message);
                             return res.json({ error: 'Server error' });
                         }
                     });
