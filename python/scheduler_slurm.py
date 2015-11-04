@@ -3,9 +3,12 @@
 import whiplash,daemon,argparse,time,json,sys,os
 import subprocess as sp
 
-def submit_job(args,job_number):
+def put_job_tag(wdb,time_limit,job_limit):
+    return wdb.properties.request("PUT","/api/properties/job_tag/",{'time_limit':time_limit,'job_limit':job_limit})
+
+def submit_job(args,job_tag):
     print('submitting job')
-    job_name = "whiplash_job_" + str(job_number)
+    job_name = "whiplash_job_" + str(job_tag)
     log_dir = "log/" + job_name
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte/" + log_dir + "\'\"",shell=True)
     with open("run.sbatch","w") as sbatch:
@@ -18,7 +21,7 @@ def submit_job(args,job_number):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + " --job_tag " + job_tag + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
 
@@ -30,22 +33,16 @@ def run(args):
     print('connecting to wdb')
     wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
-    job_number = 0
-
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte && mkdir -p rte/log" + "\'\"",shell=True)
     for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
     while True:
-        num_unresolved = wdb.properties.get_num_unresolved()
-        num_pending = int(sp.check_output("ssh " + args.cluster + " \'" + "squeue -u whiplash | grep \" PD \" | wc -l" + "\'", shell=True))
-        num_running = int(sp.check_output("ssh " + args.cluster + " \'" + "squeue -u whiplash | grep \" R \" | wc -l" + "\'", shell=True))
-        print('unresolved:',num_unresolved,' | ','pending:',num_pending,' | ','running:',num_running)
-        if num_unresolved > 0 and num_pending == 0:
-            submit_job(args,job_number)
-            job_number += 1
+        job_tag = put_job_tag(wdb,args.time_limit,args.job_limit)
+        if job_tag != '':
+            submit_job(args,job_tag)
         time.sleep(5)
-    
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
