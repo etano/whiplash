@@ -253,10 +253,11 @@ router.put('/reservation/', passport.authenticate('bearer', { session: false }),
             }
             var now = new Date();
             var update = {"status":5};
+            var job_tag = crypto.randomBytes(32).toString('hex');
             collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
-                result: crypto.randomBytes(32).toString('hex');
+                result: job_tag
             });
         } else {
             res.statusCode = 500;
