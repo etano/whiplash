@@ -7,7 +7,7 @@ def reserve_batch(wdb,time_limit,job_limit,num_cpus):
     return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
 
 def seconds2time(time_limit):
-    m, s = divmod(seconds, 60)
+    m, s = divmod(time_limit, 60)
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
@@ -32,7 +32,10 @@ def submit_job(args,time_limit,job_tag):
 
 def get_time_limit(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
-    return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['stddev'])))
+    if timeouts['count'] == 0:
+        return 0
+    else:
+        return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['stddev'])))
 
 def scheduler(args):
 
@@ -50,11 +53,12 @@ def scheduler(args):
     while True:
         if count % 100 == 0:
             time_limit = get_time_limit(wdb)
-        job_tag = reserve_batch(wdb,time_limit,args.job_limit,args.num_cpus)
-        if job_tag != '':
-            submit_job(args,time_limit,job_tag)
+        if time_limit > 0:
+            job_tag = reserve_batch(wdb,time_limit,args.job_limit,args.num_cpus)
+            if job_tag != '':
+                submit_job(args,time_limit,job_tag)
+            count += 1
         time.sleep(1)
-        count += 1
 
 if __name__ == '__main__':
 
