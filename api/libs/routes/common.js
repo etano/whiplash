@@ -262,41 +262,6 @@ module.exports = {
     // Map-reduce
     //
 
-    total: function(collection,req,res,cb) {
-        if (!req.query.field) {
-            req.query.field = req.body.field;
-            req.query.filter = req.body.filter;
-        }
-        var map = function () { emit(this.owner, this[field]); };
-        var reduce = function (key, values) { return Array.sum(values); };
-        req.query.filter.owner = String(req.user._id);
-        var o = {};
-        o.query = req.query.filter;
-        o.out = {merge:'total'};
-        o.scope = {field: req.query.field};
-        collection.mapReduce(map, reduce, o, function (err, collection) {
-            if(!err){
-                collection.find().toArray(function (err, result) {
-                    if(result.length>0) {
-                        return res.json({
-                            status: 'OK',
-                            result: result[0].value
-                        });
-                    } else {
-                        return res.json({
-                            status: 'OK',
-                            result: 0
-                        });
-                    }
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },
-
     stats: function(collection,req,res,cb) {
         if (!req.query.field) {
             req.query.field = req.body.field;
