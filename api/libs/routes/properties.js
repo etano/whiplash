@@ -235,7 +235,7 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.put('/job_tag/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/reservation/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
     var job_limit = req.body.job_limit;
     var num_cpus = req.body.num_cpus;
@@ -252,13 +252,11 @@ router.put('/job_tag/', passport.authenticate('bearer', { session: false }), fun
                 }
             }
             var now = new Date();
-            var resolve_by = Math.ceil(now.getTime()/1000) + time_limit;
-            var job_tag = crypto.randomBytes(32).toString('hex');
-            var update = {"status":1,"job_tag":job_tag,"resolve_by":resolve_by};
+            var update = {"status":5};
             collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
                 status: 'OK',
-                result: job_tag
+                result: crypto.randomBytes(32).toString('hex');
             });
         } else {
             res.statusCode = 500;

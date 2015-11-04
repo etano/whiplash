@@ -3,8 +3,8 @@
 import whiplash,daemon,argparse,time,json,sys,os
 import subprocess as sp
 
-def put_job_tag(wdb,time_limit,job_limit,num_cpus):
-    return wdb.properties.request("PUT","/api/properties/job_tag/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
+def reserve_batch(wdb,time_limit,job_limit,num_cpus):
+    return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
 
 def submit_job(args,job_tag):
     print('submitting job')
@@ -21,11 +21,11 @@ def submit_job(args,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + " --job_tag " + job_tag + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(3600*args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
 
-def run(args):
+def scheduler(args):
 
     with open(args.wdb_info, 'r') as infile:
         wdb_info = json.load(infile)
@@ -38,7 +38,7 @@ def run(args):
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
     while True:
-        job_tag = put_job_tag(wdb,3600*args.time_limit,args.job_limit,args.num_cpus)
+        job_tag = reserve_batch(wdb,3600*args.time_limit,args.job_limit,args.num_cpus)
         if job_tag != '':
             submit_job(args,job_tag)
         time.sleep(5)
@@ -60,6 +60,6 @@ if __name__ == '__main__':
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
-            run(args)
+            scheduler(args)
     else:
-        run(args)
+        scheduler(args)
