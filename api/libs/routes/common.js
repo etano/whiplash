@@ -314,7 +314,7 @@ module.exports = {
                         } else {
                             return res.json({
                                 status: 'OK',
-                                result: 0
+                                result: {'count':0}
                             });
                         }
                     } else {
