@@ -274,7 +274,7 @@ module.exports = {
                   min: this[field],
                   count: 1,
                   diff: 0
-            });
+                 });
         };
         var reduce = function (key, values) {
             var a = values[0];
@@ -305,16 +305,22 @@ module.exports = {
         collection.mapReduce(map, reduce, o, function (err, collection) {
             if(!err){
                 collection.find().toArray(function (err, result) {
-                    if(result.length>0) {
-                        return res.json({
-                            status: 'OK',
-                            result: result[0].value
-                        });
+                    if(!err) {
+                        if(result.length>0) {
+                            return res.json({
+                                status: 'OK',
+                                result: result[0].value
+                            });
+                        } else {
+                            return res.json({
+                                status: 'OK',
+                                result: 0
+                            });
+                        }
                     } else {
-                        return res.json({
-                            status: 'OK',
-                            result: 0
-                        });
+                        res.statusCode = 500;
+                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                        return res.json({ error: 'Server error' });
                     }
                 });
             } else {
@@ -351,25 +357,31 @@ module.exports = {
         };
         o.out = {merge:'average_mistime'};
         collection.mapReduce(map, reduce, o, function (err, collection) {
-            collection.find().toArray(function (err, result) {
-                if(!err){
-                    if (result.length > 0) {
-                        return res.json({
-                            status: 'OK',
-                            result: result[0].value
-                        });
+            if(!err){
+                collection.find().toArray(function (err, result) {
+                    if(!err){
+                        if (result.length > 0) {
+                            return res.json({
+                                status: 'OK',
+                                result: result[0].value
+                            });
+                        } else {
+                            return res.json({
+                                status: 'OK',
+                                result: 0
+                            });
+                        }
                     } else {
-                        return res.json({
-                            status: 'OK',
-                            result: 0
-                        });
+                        res.statusCode = 500;
+                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                        return res.json({ error: 'Server error' });
                     }
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
-                }
-            });
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
         });
     },
 
