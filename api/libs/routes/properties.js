@@ -237,11 +237,12 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
 
 router.put('/job_tag/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var time_limit = req.body.time_limit;
-    var job_limit = req.body.job_limit;    
+    var job_limit = req.body.job_limit;
+    var num_cpus = req.body.num_cpus;
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
     collection.find(filter).limit(job_limit).toArray(function(err, objs) {
         if (!err) {
-            var time_left = time_limit;
+            var time_left = time_limit*num_cpus;
             var ids = [];
             for(var i=0; i<objs.length; i++) {
                 var timeout = objs[i]["timeout"];
@@ -251,7 +252,7 @@ router.put('/job_tag/', passport.authenticate('bearer', { session: false }), fun
                 }
             }
             var now = new Date();
-            var resolve_by = time_limit + Math.ceil(now.getTime()/1000);
+            var resolve_by = Math.ceil(now.getTime()/1000) + time_limit;
             var job_tag = crypto.randomBytes(32).toString('hex');
             var update = {"status":1,"job_tag":job_tag,"resolve_by":resolve_by};
             collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
