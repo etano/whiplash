@@ -139,7 +139,7 @@ def worker(pid,wdb,args):
         else:
             break
 
-def scheduler(wdb,args):
+def scheduler(args):
 
     if args.test:
         wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
@@ -207,6 +207,6 @@ if __name__ == '__main__':
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
-            scheduler(wdb,args)
+            scheduler(args)
     else:
-        scheduler(wdb,args)
+        scheduler(args)
