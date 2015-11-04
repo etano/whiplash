@@ -205,6 +205,8 @@ if __name__ == '__main__':
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 
+    assert args.num_cpus <= 20
+
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
             scheduler(args)
