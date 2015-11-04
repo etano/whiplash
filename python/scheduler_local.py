@@ -122,10 +122,11 @@ def worker(pid,wdb,args):
                         results.append(resolved[1])
                     else: break
                 t1 = time.time()
-                print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
-                thread.start()
-                threads.append(thread)
+                if len(props) > 0:
+                    print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
+                    thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
+                    thread.start()
+                    threads.append(thread)
             else:
                 # Get alive threads
                 threads = [thread for thread in threads if thread.is_alive()]
