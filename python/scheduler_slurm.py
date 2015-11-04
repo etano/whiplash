@@ -6,6 +6,11 @@ import subprocess as sp
 def reserve_batch(wdb,time_limit,job_limit,num_cpus):
     return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
 
+def seconds2time(time_limit):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return "%d:%02d:%02d" % (h, m, s)
+
 def submit_job(args,job_tag):
     print('submitting job')
     job_name = "whiplash_job_" + str(job_tag)
@@ -17,11 +22,11 @@ def submit_job(args,job_tag):
         sbatch.write("#SBATCH --output=" + log_dir + "/out.o" + "\n")
         sbatch.write("#SBATCH --error=" + log_dir + "/out.e" + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
-        sbatch.write("#SBATCH --time=" + str(args.time_limit) + ":00:00" + "\n")
+        sbatch.write("#SBATCH --time=" + seconds2time(args.time_limit) + "\n")
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(3600*args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
 
@@ -38,10 +43,10 @@ def scheduler(args):
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
     while True:
-        job_tag = reserve_batch(wdb,3600*args.time_limit,args.job_limit,args.num_cpus)
+        job_tag = reserve_batch(wdb,args.time_limit,args.job_limit,args.num_cpus)
         if job_tag != '':
             submit_job(args,job_tag)
-        time.sleep(5)
+        time.sleep(1)
 
 if __name__ == '__main__':
 
