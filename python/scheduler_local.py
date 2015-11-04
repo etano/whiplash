@@ -103,7 +103,7 @@ def worker(pid,wdb,args):
 
     threads = []
     while True:
-        time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
+        time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             t0 = time.time()
             unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
