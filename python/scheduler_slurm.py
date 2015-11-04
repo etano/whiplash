@@ -3,8 +3,8 @@
 import whiplash,daemon,argparse,time,json,sys,os
 import subprocess as sp
 
-def put_job_tag(wdb,time_limit,job_limit):
-    return wdb.properties.request("PUT","/api/properties/job_tag/",{'time_limit':time_limit,'job_limit':job_limit})
+def put_job_tag(wdb,time_limit,job_limit,num_cpus):
+    return wdb.properties.request("PUT","/api/properties/job_tag/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
 
 def submit_job(args,job_tag):
     print('submitting job')
@@ -21,7 +21,7 @@ def submit_job(args,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + " --job_tag " + job_tag + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + " --job_tag " + job_tag + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
 
@@ -38,7 +38,7 @@ def run(args):
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
     while True:
-        job_tag = put_job_tag(wdb,args.time_limit,args.job_limit)
+        job_tag = put_job_tag(wdb,3600*args.time_limit,args.job_limit,args.num_cpus)
         if job_tag != '':
             submit_job(args,job_tag)
         time.sleep(5)
@@ -47,9 +47,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
-    parser.add_argument('--time_limit',dest='time_limit',required=True,type=int)
+    parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
-    parser.add_argument('--time_window',dest='time_window',required=True,type=int)
+    parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--cluster',dest='cluster',required=True,type=str)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
