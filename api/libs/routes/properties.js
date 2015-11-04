@@ -133,7 +133,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var worker_tag = crypto.randomBytes(32).toString('hex');
 
     // Reserve block
-    var filter = {"status":5,"timeout":{"$lt":time_limit}};
+    var filter = {"status":0,"timeout":{"$lt":time_limit}};
     var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
     collection.count(filter,function(err, count) {
         if(!err) {
@@ -171,7 +171,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                                 }
 
                                 // Release unused work
-                                update = {"status":5,"worker_tag":-1};
+                                update = {"status":0,"worker_tag":-1};
                                 collection.updateMany({'_id': {'$in': unused_ids}}, {'$set':update}, {w:1}, function (err, result) {
                                     if (!err) {
                                         log.info("%d objects released for worker %d work batch", result.modifiedCount, worker_id);
@@ -239,7 +239,7 @@ router.put('/reservation/', passport.authenticate('bearer', { session: false }),
     var time_limit = req.body.time_limit;
     var job_limit = req.body.job_limit;
     var num_cpus = req.body.num_cpus;
-    var filter = {"status":0,"timeout":{"$lt":time_limit}};
+    var filter = {"status":0,"timeout":{"$lt":time_limit},"reserved":0};
     collection.find(filter).limit(job_limit).toArray(function(err, objs) {
         if (!err) {
             var time_left = time_limit*num_cpus;
@@ -252,7 +252,7 @@ router.put('/reservation/', passport.authenticate('bearer', { session: false }),
                 }
             }
             var now = new Date();
-            var update = {"status":5};
+            var update = {"reserved":1};
             var job_tag = crypto.randomBytes(32).toString('hex');
             collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
             return res.json({
