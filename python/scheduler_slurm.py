@@ -45,6 +45,8 @@ if __name__ == '__main__':
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
+    assert args.num_cpus <= 20
+
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
             run(args)
