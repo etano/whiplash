@@ -26,7 +26,7 @@ def submit_job(args,time_limit,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
 
