@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import whiplash,daemon,argparse,time,json,sys,os
+import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
 
 def reserve_batch(wdb,time_limit,job_limit,num_cpus):
@@ -11,7 +11,7 @@ def seconds2time(time_limit):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def submit_job(args,job_tag):
+def submit_job(args,time_limit,job_tag):
     print('submitting job')
     job_name = "whiplash_job_" + str(job_tag)
     log_dir = "log/" + job_name
@@ -22,13 +22,17 @@ def submit_job(args,job_tag):
         sbatch.write("#SBATCH --output=" + log_dir + "/out.o" + "\n")
         sbatch.write("#SBATCH --error=" + log_dir + "/out.e" + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
-        sbatch.write("#SBATCH --time=" + seconds2time(args.time_limit) + "\n")
+        sbatch.write("#SBATCH --time=" + seconds2time(time_limit) + "\n")
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(args.time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " str(time_limit) + " --job_limit " + str(args.job_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
+
+def get_time_limit(wdb):
+    timeouts = wdb.properties.stats("timeout",{"status":0})
+    return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['sd'])))
 
 def scheduler(args):
 
@@ -42,17 +46,20 @@ def scheduler(args):
     for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
+    count = 0
     while True:
-        job_tag = reserve_batch(wdb,args.time_limit,args.job_limit,args.num_cpus)
+        if count % 1000 == 0:
+            time_limit = get_time_limit(wdb)
+        job_tag = reserve_batch(wdb,time_limit,args.job_limit,args.num_cpus)
         if job_tag != '':
-            submit_job(args,job_tag)
+            submit_job(args,time_limit,job_tag)
         time.sleep(1)
+        count += 1
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
-    parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
@@ -62,6 +69,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     assert args.num_cpus <= 20
+    assert args.time_window < 3600
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
