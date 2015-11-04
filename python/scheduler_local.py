@@ -207,6 +207,6 @@ if __name__ == '__main__':
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
-            run(wdb,args)
+            scheduler(wdb,args)
     else:
-        run(wdb,args)
+        scheduler(wdb,args)
