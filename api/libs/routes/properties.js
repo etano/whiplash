@@ -133,14 +133,16 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
     var worker_tag = crypto.randomBytes(32).toString('hex');
 
     // Reserve block
-    var work = [];
     var filter = {"status":0,"timeout":{"$lt":time_limit}};
     var update = {"status":1,"worker_tag":worker_tag,"resolve_by":resolve_by};
     collection.count(filter,function(err, count) {
-        if(err) {
-            return res.json({ error: 'Server error' });
-        } else {
-            if(count>0) {
+        if(!err) {
+            if(count == 0) {
+                return res.json({
+                    status: 'OK',
+                    result: []
+                });
+            } else {
                 var arr = [];
                 for(var i=0; i<job_limit; i++) {
                     arr.push({updateOne: {filter: filter, update: {'$set':update}}});
@@ -150,6 +152,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                         log.info("%d objects reserved for worker %d work batch", result.modifiedCount, worker_id);
 
                         // Compose work batch
+                        var work = [];                        
                         filter = {"worker_tag":worker_tag};
                         collection.find(filter).toArray(function(err, objs) {
                             if (!err) {
@@ -179,6 +182,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                                         });
                                     } else {
                                         log.error('Error releasing work for worker %d: %s', worker_id, err.message);
+                                        return res.json({ error: 'Server error' });                                        
                                     }
                                 });
                             } else {
@@ -191,13 +195,10 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                         return res.json({ error: 'Server error' });
                     }
                 });
-
-            } else {
-                return res.json({
-                    status: 'OK',
-                    result: work
-                });
             }
+        } else {
+            log.error('Error counting work for worker %d: %s', worker_id, err.message);
+            return res.json({ error: 'Server error' });
         }
     });
 });
