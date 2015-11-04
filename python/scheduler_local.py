@@ -139,7 +139,15 @@ def worker(pid,wdb,args):
         else:
             break
 
-def run(wdb,args):
+def scheduler(wdb,args):
+
+    if args.test:
+        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+    else:
+        with open(args.wdb_info, 'r') as infile:
+            wdb_info = json.load(infile)
+        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+    print('scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -196,14 +204,6 @@ if __name__ == '__main__':
     parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
-
-    if args.test:
-        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
-    else:
-        with open(args.wdb_info, 'r') as infile:
-            wdb_info = json.load(infile)
-        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-    print('scheduler connected to wdb')
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
