@@ -182,8 +182,8 @@ class wdb:
         # Map-reduce
         #
 
-        def total(self,field,fltr):
-            return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":fltr})
+        def stats(self,field,fltr):
+            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
         def avg_per_dif(self,field1,field2,fltr):
             return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})
@@ -228,10 +228,10 @@ class wdb:
             return self.count({'status':0})
 
         def get_unresolved_time(self):
-            return self.total("timeout",{"status":0})
+            return self.stats("timeout",{"status":0})['sum']
 
         def get_resolved_time(self):
-            return self.total("walltime",{"status":3})
+            return self.stats("walltime",{"status":3})['sum']
 
         def get_average_mistime(self):
             return self.avg_per_dif("timeout","walltime",{"status":3})

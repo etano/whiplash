@@ -110,8 +110,8 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 // Map-reduce
 //
 
-router.get('/total/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.total(collection,req,res);
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.stats(collection,req,res);
 });
 
 router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {

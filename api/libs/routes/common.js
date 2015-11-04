@@ -262,18 +262,46 @@ module.exports = {
     // Map-reduce
     //
 
-    total: function(collection,req,res,cb) {
+    stats: function(collection,req,res,cb) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
         }
-        var map = function () { emit(this.owner, this[field]); };
-        var reduce = function (key, values) { return Array.sum(values); };
-        req.query.filter.owner = String(req.user._id);
+        var map = function () {
+            emit(this.owner,
+                 {sum: this[field],
+                  max: this[field],
+                  min: this[field],
+                  count: 1,
+                  diff: 0
+            });
+        };
+        var reduce = function (key, values) {
+            var a = values[0];
+            for (var i=1; i < values.length; i++){
+                var b = values[i];
+                var delta = a.sum/a.count - b.sum/b.count;
+                var weight = (a.count * b.count)/(a.count + b.count);
+                a.diff += b.diff + delta*delta*weight;
+                a.sum += b.sum;
+                a.count += b.count;
+                a.min = Math.min(a.min, b.min);
+                a.max = Math.max(a.max, b.max);
+            }
+            return a;
+        };
         var o = {};
-        o.query = req.query.filter;
-        o.out = {merge:'total'};
+        o.finalize = function (key, value)
+        {
+            value.mean = value.sum / value.count;
+            value.variance = value.diff / value.count;
+            value.stddev = Math.sqrt(value.variance);
+            return value;
+        };
+        req.query.filter.owner = String(req.user._id);
         o.scope = {field: req.query.field};
+        o.query = req.query.filter;
+        o.out = {merge: 'stats'};
         collection.mapReduce(map, reduce, o, function (err, collection) {
             if(!err){
                 collection.find().toArray(function (err, result) {
@@ -295,7 +323,7 @@ module.exports = {
                 return res.json({ error: 'Server error' });
             }
         });
-    },
+    },    
 
     avg_per_dif: function(collection,req,res) {
         if (!req.query.field1) {

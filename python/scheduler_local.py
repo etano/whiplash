@@ -101,12 +101,13 @@ def worker(pid,wdb,args):
 
     t_start = time.time()
 
+    threads = []
     while True:
-        time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
+        time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             t0 = time.time()
             unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
-            t1 = time.time()            
+            t1 = time.time()
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
@@ -121,16 +122,33 @@ def worker(pid,wdb,args):
                         results.append(resolved[1])
                     else: break
                 t1 = time.time()
-                print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
-                thread.start()
+                if len(props) > 0:
+                    print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
+                    thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
+                    thread.start()
+                    threads.append(thread)
             else:
-                print('no properties currently unresolved')
-            time.sleep(2)
+                # Get alive threads
+                threads = [thread for thread in threads if thread.is_alive()]
+                n_alive = len(threads)
+                if len(threads) == 0:
+                    print('worker',str(pid),'has no threads still alive, shutting down')
+                    sys.exit(0)
+                else:
+                    print('worker',str(pid),'found no unresolved properties currently, but has',str(n_alive),'threads alive')
+                time.sleep(2)
         else:
             break
 
-def run(wdb,args):
+def scheduler(args):
+
+    if args.test:
+        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+    else:
+        with open(args.wdb_info, 'r') as infile:
+            wdb_info = json.load(infile)
+        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+    print('scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -143,12 +161,35 @@ def run(wdb,args):
     for pid in range(num_cpus):
         p = context.Process(target=worker, args=(pid,wdb,args,))
         p.start()
-        procs.append(p)
+        procs.append([pid,p])
 
-    time.sleep(3600*args.time_limit)
-    print('stopping workers')
-    for p in procs:
-        p.join()
+    while True:
+        # Check if there are unresolved properties
+        num_unresolved = wdb.properties.get_num_unresolved()
+
+        # Loop through workers, checking if they are alive
+        n_alive = 0
+        for [pid,p] in procs:
+            if p.is_alive():
+                n_alive += 1
+            else:
+                # If worker has stopped, but there is work, start it again
+                if num_unresolved > 0:
+                    print('restarting worker',str(pid))
+                    p.join()
+                    p = context.Process(target=worker, args=(pid,wdb,args,))
+                    p.start()
+                    n_alive += 1
+
+        # If no workers are alive, join them and kill myself
+        if n_alive == 0:
+            print('stopping workers')
+            for [pid,p] in procs:
+                p.join()
+            sys.exit(0)
+
+        # Sleep
+        time.sleep(2)
 
 if __name__ == '__main__':
 
@@ -157,7 +198,7 @@ if __name__ == '__main__':
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
-    parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
+    parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
@@ -165,16 +206,10 @@ if __name__ == '__main__':
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 
-    if args.test:
-        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
-    else:
-        with open(args.wdb_info, 'r') as infile:
-            wdb_info = json.load(infile)
-        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
-    print('scheduler connected to wdb')
+    assert args.num_cpus <= 20
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
-            run(wdb,args)
+            scheduler(args)
     else:
-        run(wdb,args)
+        scheduler(args)
