@@ -297,6 +297,69 @@ module.exports = {
         });
     },
 
+    stats: function(collection,req,res,cb) {
+        if (!req.query.field) {
+            req.query.field = req.body.field;
+            req.query.filter = req.body.filter;
+        }
+        var map = function () {
+            emit(this.owner,
+                 {sum: this[field],
+                  max: this[field],
+                  min: this[field],
+                  count: 1,
+                  diff: 0
+            });
+        };
+        var reduce = function (key, values) {
+            var a = values[0];
+            for (var i=1; i < values.length; i++){
+                var b = values[i];
+                var delta = a.sum/a.count - b.sum/b.count;
+                var weight = (a.count * b.count)/(a.count + b.count);
+                a.diff += b.diff + delta*delta*weight;
+                a.sum += b.sum;
+                a.count += b.count;
+                a.min = Math.min(a.min, b.min);
+                a.max = Math.max(a.max, b.max);
+            }
+            return a;
+        };
+        var o = {};
+        o.finalize = function (key, value)
+        {
+            value.mean = value.sum / value.count;
+            value.variance = value.diff / value.count;
+            value.stddev = Math.sqrt(value.variance);
+            return value;
+        };
+        req.query.filter.owner = String(req.user._id);
+        o.scope = {field: req.query.field};
+        o.query = req.query.filter;
+        o.out = {merge: 'stats'};
+        collection.mapReduce(map, reduce, o, function (err, collection) {
+            if(!err){
+                collection.find().toArray(function (err, result) {
+                    if(result.length>0) {
+                        return res.json({
+                            status: 'OK',
+                            result: result[0].value
+                        });
+                    } else {
+                        return res.json({
+                            status: 'OK',
+                            result: 0
+                        });
+                    }
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    },    
+
     avg_per_dif: function(collection,req,res) {
         if (!req.query.field1) {
             req.query.field1 = req.body.field1;

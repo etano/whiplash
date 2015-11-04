@@ -114,6 +114,10 @@ router.get('/total/', passport.authenticate('bearer', { session: false }), funct
     common.total(collection,req,res);
 });
 
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.stats(collection,req,res);
+});
+
 router.get('/avg_per_dif/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.avg_per_dif(collection,req,res);
 });

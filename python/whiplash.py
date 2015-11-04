@@ -186,7 +186,7 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/total/",{"field":field,"filter":fltr})
 
         def stats(self,field,fltr):
-            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})        
+            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
         def avg_per_dif(self,field1,field2,fltr):
             return self.request("GET","/api/"+self.name+"/avg_per_dif/",{"field1":field1,"field2":field2,"filter":fltr})

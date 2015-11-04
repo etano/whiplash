@@ -32,7 +32,7 @@ def submit_job(args,time_limit,job_tag):
 
 def get_time_limit(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
-    return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['sd'])))
+    return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['stddev'])))
 
 def scheduler(args):
 
@@ -48,7 +48,7 @@ def scheduler(args):
 
     count = 0
     while True:
-        if count % 1000 == 0:
+        if count % 100 == 0:
             time_limit = get_time_limit(wdb)
         job_tag = reserve_batch(wdb,time_limit,args.job_limit,args.num_cpus)
         if job_tag != '':
