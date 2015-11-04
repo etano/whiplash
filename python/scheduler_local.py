@@ -101,12 +101,13 @@ def worker(pid,wdb,args):
 
     t_start = time.time()
 
+    threads = []
     while True:
         time_left = lambda: 3600*args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             t0 = time.time()
             unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
-            t1 = time.time()            
+            t1 = time.time()
             objs = unresolved[0]
             models = unresolved[1]
             executables = unresolved[2]
@@ -124,9 +125,17 @@ def worker(pid,wdb,args):
                 print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
                 thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
                 thread.start()
+                threads.append(thread)
             else:
-                print('no properties currently unresolved')
-            time.sleep(2)
+                # Get alive threads
+                threads = [thread for thread in threads if thread.is_alive()]
+                n_alive = len(threads)
+                if len(threads) == 0:
+                    print('worker',str(pid),'has no threads still alive, shutting down')
+                    sys.exit(0)
+                else:
+                    print('worker',str(pid),'found no unresolved properties currently, but has',str(n_alive),'threads alive')
+                time.sleep(2)
         else:
             break
 
@@ -143,12 +152,35 @@ def run(wdb,args):
     for pid in range(num_cpus):
         p = context.Process(target=worker, args=(pid,wdb,args,))
         p.start()
-        procs.append(p)
+        procs.append([pid,p])
 
-    time.sleep(3600*args.time_limit)
-    print('stopping workers')
-    for p in procs:
-        p.join()
+    while True:
+        # Check if there are unresolved properties
+        num_unresolved = wdb.properties.get_num_unresolved()
+
+        # Loop through workers, checking if they are alive
+        n_alive = 0
+        for [pid,p] in procs:
+            if p.is_alive():
+                n_alive += 1
+            else:
+                # If worker has stopped, but there is work, start it again
+                if num_unresolved > 0:
+                    print('restarting worker',str(pid))
+                    p.join()
+                    p = context.Process(target=worker, args=(pid,wdb,args,))
+                    p.start()
+                    n_alive += 1
+
+        # If no workers are alive, join them and kill myself
+        if n_alive == 0:
+            print('stopping workers')
+            for [pid,p] in procs:
+                p.join()
+            sys.exit(0)
+
+        # Sleep
+        time.sleep(2)
 
 if __name__ == '__main__':
 
