@@ -290,18 +290,19 @@ module.exports = {
             }
             return a;
         };
-        var o = {};
-        o.finalize = function (key, value)
+        var finalize = function (key, value)
         {
             value.mean = value.sum / value.count;
             value.variance = value.diff / value.count;
             value.stddev = Math.sqrt(value.variance);
             return value;
         };
+        var o = {};
+        o.finalize = finalize;
         req.query.filter.owner = String(req.user._id);
         o.scope = {field: req.query.field};
         o.query = req.query.filter;
-        o.out = {merge: 'statistics'};
+        o.out = {merge: 'statistics' + '_' + collection.collectionName};
         collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
                 out_collection.find().toArray(function (err, result) {
@@ -347,15 +348,16 @@ module.exports = {
             }
             return reduced_value;
         };
-        var o = {};
-        req.query.filter.owner = String(req.user._id);
-        o.scope = {field1: req.query.field1, field2: req.query.field2};
-        o.query = req.query.filter;
-        o.finalize = function (key, reduced_value)
+        var finalize = function (key, reduced_value)
         {
             return reduced_value.avg/reduced_value.count;
         };
-        o.out = {merge:'average_per_dif'};
+        var o = {};
+        o.finalize = finalize;
+        req.query.filter.owner = String(req.user._id);
+        o.scope = {field1: req.query.field1, field2: req.query.field2};
+        o.query = req.query.filter;
+        o.out = {merge:'average_per_dif' + '_' + collection.collectionName};
         collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
                 out_collection.find().toArray(function (err, result) {
