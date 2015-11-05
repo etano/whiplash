@@ -51,7 +51,7 @@ def scheduler(args):
         if count % 100 == 0:
             time_limit = get_time_limit(wdb)
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
-        if (time_limit > 0) and (num_pending < args.max_in_queue):
+        if (time_limit > 0) and (num_pending == 0):
             submit_job(args,time_limit,count)
             count += 1
         time.sleep(1)
@@ -66,7 +66,6 @@ if __name__ == '__main__':
     parser.add_argument('--cluster',dest='cluster',required=True,type=str)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
-    parser.add_argument('--max_in_queue',dest='daemonise',required=False,type=int,default=1)
     args = parser.parse_args()
 
     assert args.num_cpus <= 20
