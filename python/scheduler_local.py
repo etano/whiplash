@@ -198,15 +198,13 @@ if __name__ == '__main__':
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
-    parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
+    parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
-
-    assert args.num_cpus <= 20
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
