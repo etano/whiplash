@@ -302,9 +302,9 @@ module.exports = {
         o.scope = {field: req.query.field};
         o.query = req.query.filter;
         o.out = {merge: 'statistics'};
-        collection.mapReduce(map, reduce, o, function (err, collection) {
+        collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
-                collection.find().toArray(function (err, result) {
+                out_collection.find().toArray(function (err, result) {
                     if(!err) {
                         if(result.length>0) {
                             return res.json({
@@ -355,10 +355,10 @@ module.exports = {
         {
             return reduced_value.avg/reduced_value.count;
         };
-        o.out = {merge:'average_mistime'};
-        collection.mapReduce(map, reduce, o, function (err, collection) {
+        o.out = {merge:'average_per_dif'};
+        collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
-                collection.find().toArray(function (err, result) {
+                out_collection.find().toArray(function (err, result) {
                     if(!err){
                         if (result.length > 0) {
                             return res.json({
