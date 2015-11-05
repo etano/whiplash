@@ -131,10 +131,8 @@ def worker(pid,wdb,args):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
                 fetch_thread = th.Thread(target = get_unresolved, args = (wdb,min(time_left(),args.time_window),args.job_limit,pid,unresolved0,is_work,))
-                print('fetching')
                 fetch_thread.start()
             if len(unresolved1) > 0:
-                print('computing')
                 objs = unresolved1[0]
                 models = unresolved1[1]
                 executables = unresolved1[2]
