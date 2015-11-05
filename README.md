@@ -9,3 +9,7 @@
 
 # Start deployment environment
     docker-compose -f deploy.yml up -d
+    
+# Settings
+
+In api/bin/www, the server.timeout is set to 1 hour. 
