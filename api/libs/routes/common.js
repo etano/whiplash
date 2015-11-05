@@ -262,7 +262,7 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res,cb) {
+    stats: function(collection,req,res) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
