@@ -374,4 +374,12 @@ router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+//
+// Map-reduce
+//
+
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.stats(collection,req,res);
+});
+
 module.exports = router;

@@ -262,7 +262,7 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res,cb) {
+    stats: function(collection,req,res) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
@@ -302,7 +302,7 @@ module.exports = {
         req.query.filter.owner = String(req.user._id);
         o.scope = {field: req.query.field};
         o.query = req.query.filter;
-        o.out = {merge: 'statistics' + '_' + collection.collectionName};
+        o.out = {merge: 'statistics' + '_' + req.query.field + '_' + collection.collectionName};
         collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
                 out_collection.find().toArray(function (err, result) {
