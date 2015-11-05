@@ -4,11 +4,12 @@ import multiprocessing as mp
 import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys
+import copy
 
 def fetch_work_batch(db,time_limit,job_limit,pid):
     return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
-def get_unresolved(db,time_limit,job_limit,pid):
+def get_unresolved(db,time_limit,job_limit,pid,unresolved):
     properties = fetch_work_batch(db,time_limit,job_limit,pid)
 
     model_ids = set()
@@ -32,7 +33,7 @@ def get_unresolved(db,time_limit,job_limit,pid):
                 break
         objs.append(obj)
 
-    return [objs,models,executables]
+    unresolved = [objs,models,executables]
 
 def commit_resolved(db,props,results,pid):
     t0 = time.time()
@@ -101,18 +102,26 @@ def worker(pid,wdb,args):
 
     t_start = time.time()
 
+    unresolved0 = [[],[],[]]
+    unresolved1 = [[],[],[]]    
+    work_thread = th.Thread()
+
     threads = []
     while True:
         time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
             t0 = time.time()
-            unresolved = get_unresolved(wdb,min(time_left(),args.time_window),args.job_limit,pid)
+            if not work_thread.is_alive():
+                unresolved1 = copy.deepcopy(unresolved0)
+                unresolved0 = [[],[],[]]
+                work_thread = th.Thread(target = get_unresolved, args = (wdb,min(time_left(),args.time_window),args.job_limit,pid,unresolved0, ))
+                work_thread.start()
             t1 = time.time()
-            objs = unresolved[0]
-            models = unresolved[1]
-            executables = unresolved[2]
-            if len(objs) > 0:
+            if len(unresolved1[0]) > 0:
                 print('worker',str(pid),'fetched',len(objs),'properties in time',t1-t0,'with',time_left(),'seconds of work left')
+                objs = unresolved1[0]
+                models = unresolved1[1]
+                executables = unresolved1[2]
                 props,results = [],[]
                 t0 = time.time()
                 for obj in objs:
@@ -122,6 +131,7 @@ def worker(pid,wdb,args):
                         results.append(resolved[1])
                     else: break
                 t1 = time.time()
+                unresolved1 = [[],[],[]]
                 if len(props) > 0:
                     print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
                     thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
