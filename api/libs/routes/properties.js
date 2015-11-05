@@ -152,7 +152,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                         log.info("%d objects reserved for worker %d work batch", result.modifiedCount, worker_id);
 
                         // Compose work batch
-                        var work = [];                        
+                        var work = [];
                         filter = {"worker_tag":worker_tag};
                         collection.find(filter).toArray(function(err, objs) {
                             if (!err) {
@@ -182,7 +182,7 @@ router.put('/work_batch_atomic/', passport.authenticate('bearer', { session: fal
                                         });
                                     } else {
                                         log.error('Error releasing work for worker %d: %s', worker_id, err.message);
-                                        return res.json({ error: 'Server error' });                                        
+                                        return res.json({ error: 'Server error' });
                                     }
                                 });
                             } else {
@@ -227,45 +227,6 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
                 status: 'OK',
                 result: work
             });
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
-    });
-});
-
-router.put('/reservation/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var time_limit = req.body.time_limit;
-    var job_limit = req.body.job_limit;
-    var num_cpus = req.body.num_cpus;
-    var filter = {"status":0,"timeout":{"$lt":time_limit},"reserved":0};
-    collection.find(filter).limit(job_limit).toArray(function(err, objs) {
-        if (!err) {
-            if(objs.length > 0) {
-                var time_left = time_limit*num_cpus;
-                var ids = [];
-                for(var i=0; i<objs.length; i++) {
-                    var timeout = objs[i]["timeout"];
-                    if(timeout < time_left){
-                        time_left -= timeout;
-                        ids.push(objs[i]["_id"]);
-                    }
-                }
-                var now = new Date();
-                var update = {"reserved":1};
-                var job_tag = crypto.randomBytes(8).toString('hex');
-                collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
-                return res.json({
-                    status: 'OK',
-                    result: job_tag
-                });
-            } else {
-                return res.json({
-                    status: 'OK',
-                    result: ''
-                });
-            }
         } else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
