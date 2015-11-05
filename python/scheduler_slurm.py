@@ -52,7 +52,7 @@ def scheduler(args):
             time_limit = get_time_limit(wdb)
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
         if (time_limit > 0) and (num_pending < args.max_in_queue):
-            submit_job(args,time_limit,job_tag)
+            submit_job(args,time_limit,count)
             count += 1
         time.sleep(1)
 
