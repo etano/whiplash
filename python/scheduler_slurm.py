@@ -3,9 +3,6 @@
 import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
 
-def reserve_batch(wdb,time_limit,job_limit,num_cpus):
-    return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'job_limit':job_limit,'num_cpus':num_cpus})
-
 def seconds2time(time_limit):
     m, s = divmod(time_limit, 60)
     h, m = divmod(m, 60)
@@ -53,10 +50,9 @@ def scheduler(args):
     while True:
         if count % 100 == 0:
             time_limit = get_time_limit(wdb)
-        if time_limit > 0:
-            job_tag = reserve_batch(wdb,time_limit,args.job_limit,args.num_cpus)
-            if job_tag != '':
-                submit_job(args,time_limit,job_tag)
+        num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \"PD\" | wc -l\'", shell=True))
+        if (time_limit > 0) and (num_pending < args.max_in_queue):
+            submit_job(args,time_limit,job_tag)
             count += 1
         time.sleep(1)
 
@@ -70,6 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--cluster',dest='cluster',required=True,type=str)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
+    parser.add_argument('--max_in_queue',dest='daemonise',required=False,type=int,default=1)
     args = parser.parse_args()
 
     assert args.num_cpus <= 20

@@ -13,8 +13,7 @@ var Property = new Schema({
     params: { type: Schema.Types.Mixed, default: "", required: true},
     timestamp: { type: Date, default: Date.now, required : true},
     walltime: { type: Number, default: -1, required : true},
-    resolve_by: { type: Number, default: -1, required : true},
-    reserved: { type: Number, default: 0}
+    resolve_by: { type: Number, default: -1, required : true}
 });
 
 module.exports = mongoose.model('Property', Property);
