@@ -254,7 +254,7 @@ router.put('/reservation/', passport.authenticate('bearer', { session: false }),
                 }
                 var now = new Date();
                 var update = {"reserved":1};
-                var job_tag = crypto.randomBytes(32).toString('hex');
+                var job_tag = crypto.randomBytes(8).toString('hex');
                 collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
                 return res.json({
                     status: 'OK',
