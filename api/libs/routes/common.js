@@ -301,7 +301,7 @@ module.exports = {
         req.query.filter.owner = String(req.user._id);
         o.scope = {field: req.query.field};
         o.query = req.query.filter;
-        o.out = {merge: 'stats'};
+        o.out = {merge: 'statistics'};
         collection.mapReduce(map, reduce, o, function (err, collection) {
             if(!err){
                 collection.find().toArray(function (err, result) {
