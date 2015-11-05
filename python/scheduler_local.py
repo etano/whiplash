@@ -9,31 +9,45 @@ import copy
 def fetch_work_batch(db,time_limit,job_limit,pid):
     return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
-def get_unresolved(db,time_limit,job_limit,pid,unresolved):
+def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
+
+    t0 = time.time()
+
     properties = fetch_work_batch(db,time_limit,job_limit,pid)
 
-    model_ids = set()
-    executable_ids = set()
-    for prop in properties:
-        model_ids.add(prop['input_model_id'])
-        executable_ids.add(prop['executable_id'])
-    models = db.models.query({'_id': { '$in': list(model_ids) }})
-    executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
+    if len(properties) == 0:
+        is_work[0] = False
+        unresolved = []
+    else:
+        model_ids = set()
+        executable_ids = set()
+        for prop in properties:
+            model_ids.add(prop['input_model_id'])
+            executable_ids.add(prop['executable_id'])
+        models = db.models.query({'_id': { '$in': list(model_ids) }})
+        executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
 
-    objs = []
-    for prop in properties:
-        obj = {'property':prop,'model_index':-1,'executable_index':-1}
-        for i in range(len(models)):
-            if prop['input_model_id'] == models[i]['_id']:
-                obj['model_index'] = i
-                break
-        for i in range(len(executables)):
-            if prop['executable_id'] == executables[i]['_id']:
-                obj['executable_index'] = i
-                break
-        objs.append(obj)
+        objs = []
+        for prop in properties:
+            obj = {'property':prop,'model_index':-1,'executable_index':-1}
+            for i in range(len(models)):
+                if prop['input_model_id'] == models[i]['_id']:
+                    obj['model_index'] = i
+                    break
+            for i in range(len(executables)):
+                if prop['executable_id'] == executables[i]['_id']:
+                    obj['executable_index'] = i
+                    break
+            objs.append(obj)
 
-    unresolved = [objs,models,executables]
+        assert len(objs) > 0
+
+        unresolved.append(objs)
+        unresolved.append(models)
+        unresolved.append(executables)
+
+    t1 = time.time()
+    print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)    
 
 def commit_resolved(db,props,results,pid):
     t0 = time.time()
@@ -69,6 +83,7 @@ def resolve_object(pid,obj,models,executables):
     try:
         prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
         prop['status'] = 3
+
         with open(file_name, 'r') as propfile:
             result = json.load(propfile)
     except sp.TimeoutExpired as e:
@@ -102,23 +117,24 @@ def worker(pid,wdb,args):
 
     t_start = time.time()
 
-    unresolved0 = [[],[],[]]
-    unresolved1 = [[],[],[]]    
-    work_thread = th.Thread()
+    unresolved0 = []
+    unresolved1 = []    
+    fetch_thread = th.Thread()
+
+    is_work = [True]
 
     threads = []
     while True:
         time_left = lambda: args.time_limit - (time.time()-t_start)
         if time_left() > 0:
-            t0 = time.time()
-            if not work_thread.is_alive():
+            if not fetch_thread.is_alive():
                 unresolved1 = copy.deepcopy(unresolved0)
-                unresolved0 = [[],[],[]]
-                work_thread = th.Thread(target = get_unresolved, args = (wdb,min(time_left(),args.time_window),args.job_limit,pid,unresolved0, ))
-                work_thread.start()
-            t1 = time.time()
-            if len(unresolved1[0]) > 0:
-                print('worker',str(pid),'fetched',len(objs),'properties in time',t1-t0,'with',time_left(),'seconds of work left')
+                unresolved0 = []
+                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,min(time_left(),args.time_window),args.job_limit,pid,unresolved0,is_work,))
+                print('fetching')
+                fetch_thread.start()
+            if len(unresolved1) > 0:
+                print('computing')
                 objs = unresolved1[0]
                 models = unresolved1[1]
                 executables = unresolved1[2]
@@ -137,7 +153,7 @@ def worker(pid,wdb,args):
                     thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
                     thread.start()
                     threads.append(thread)
-            else:
+            elif not is_work[0]:
                 # Get alive threads
                 threads = [thread for thread in threads if thread.is_alive()]
                 n_alive = len(threads)
@@ -146,7 +162,7 @@ def worker(pid,wdb,args):
                     sys.exit(0)
                 else:
                     print('worker',str(pid),'found no unresolved properties currently, but has',str(n_alive),'threads alive')
-                time.sleep(2)
+            time.sleep(2)
         else:
             break
 
