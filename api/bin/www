@@ -14,6 +14,7 @@ db.connect(function(err) {
             debug('Express server listening on port ' + app.get('port'));
             log.info('Express server listening on port ' + app.get('port'));
         });
+        server.timeout = 3600000;
     }
 });
 
