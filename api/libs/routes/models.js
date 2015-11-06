@@ -20,6 +20,8 @@ var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var collection = db.get().collection('fs.files');
 
+var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5'];
+
 //
 // Commit
 //
@@ -217,19 +219,22 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
     common.query_count(collection,filter,res);
 });
 
-router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var field = req.params.field;
+router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {};
-    for(var key in req.body) {
+    for(var key in req.body.filter) {
         if(key !== '_id') {
-            if(req.body.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body[key];
+            if(req.body.filter.hasOwnProperty(key)) {
+                filter["metadata."+key] = req.body.filter[key];
             }
         } else {
-            filter['_id'] = req.body[key];
+            filter['_id'] = req.body.filter[key];
         }
     }
-    common.query_field_only(collection,field,filter,res);
+    var fields = req.body.fields;
+    for(var i=0; i <fields.length; i++)
+        if(!~special.indexOf(fields[i]))
+            fields[i] = 'metadata.' + fields[i];
+    common.query_fields_only(collection,filter,fields,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
