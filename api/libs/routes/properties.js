@@ -235,42 +235,4 @@ router.put('/work_batch/', passport.authenticate('bearer', { session: false }), 
     });
 });
 
-router.put('/reservation/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var time_limit = req.body.time_limit;
-    var num_cpus = req.body.num_cpus;
-    var filter = {"status":0,"timeout":{"$lt":time_limit},"reserved":0};
-    collection.find(filter).limit(1000).toArray(function(err, objs) {
-        if (!err) {
-            if(objs.length > 0) {
-                var time_left = time_limit*num_cpus;
-                var ids = [];
-                for(var i=0; i<objs.length; i++) {
-                    var timeout = objs[i]["timeout"];
-                    if(timeout < time_left){
-                        time_left -= timeout;
-                        ids.push(objs[i]["_id"]);
-                    }
-                }
-                var now = new Date();
-                var update = {"reserved":1};
-                var job_tag = crypto.randomBytes(8).toString('hex');
-                collection.updateMany({'_id': {'$in': ids}}, {'$set':update}, {w:1}, function (err, result) {});
-                return res.json({
-                    status: 'OK',
-                    result: job_tag
-                });
-            } else {
-                return res.json({
-                    status: 'OK',
-                    result: ''
-                });
-            }
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
-    });
-});
-
 module.exports = router;
