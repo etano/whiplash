@@ -126,11 +126,12 @@ def worker(pid,wdb,args):
     threads = []
     while True:
         time_left = lambda: args.time_limit - (time.time()-t_start)
+        num_alive = lambda: sum(thread.is_alive() for thread in threads)
         if time_left() > 0:
-            if not fetch_thread.is_alive():
+            if (not fetch_thread.is_alive()) and (time_left() > args.time_window):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
-                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,min(time_left(),args.time_window),args.job_limit,pid,unresolved0,is_work,))
+                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,args.job_limit,pid,unresolved0,is_work,))
                 fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
@@ -148,18 +149,17 @@ def worker(pid,wdb,args):
                 unresolved1 = [[],[],[]]
                 if len(props) > 0:
                     print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                    thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid, ))
+                    thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid,))
                     thread.start()
                     threads.append(thread)
+            elif time_left() < args.time_window:
+                print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
             elif not is_work[0]:
-                # Get alive threads
-                threads = [thread for thread in threads if thread.is_alive()]
-                n_alive = len(threads)
-                if len(threads) == 0:
-                    print('worker',str(pid),'has no threads still alive, shutting down')
+                if num_alive() == 0:
+                    print('worker',str(pid),'has no live threads, shutting down')
                     sys.exit(0)
                 else:
-                    print('worker',str(pid),'found no unresolved properties currently, but has',str(n_alive),'threads alive')
+                    print('no unresolved properties.',str(num_alive()),'threads alive on worker',str(pid))
             time.sleep(2)
         else:
             break
