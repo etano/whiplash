@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import whiplash,daemon,argparse,time,json,sys,os,random,binascii
+import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
 
 def seconds2time(time_limit):
@@ -50,7 +50,7 @@ def scheduler(args):
         time_limit = get_time_limit(wdb)
         num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
         if (time_limit > 0) and (num_pending == 0):
-            job_tag = binascii.hexlify(os.urandom(8))
+            job_tag = str(int(time.time()))
             submit_job(args,time_limit,job_tag)
         time.sleep(5)
 
