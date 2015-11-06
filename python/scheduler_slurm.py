@@ -3,6 +3,9 @@
 import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
 
+def reserve_batch(wdb,time_limit,num_cpus):
+    return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'num_cpus':num_cpus})
+
 def seconds2time(time_limit):
     m, s = divmod(time_limit, 60)
     h, m = divmod(m, 60)
@@ -50,9 +53,10 @@ def scheduler(args):
     while True:
         if count % 100 == 0:
             time_limit = get_time_limit(wdb)
-        num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
-        if (time_limit > 0) and (num_pending == 0):
-            submit_job(args,time_limit,count)
+        if time_limit > 0:
+            job_tag = reserve_batch(wdb,time_limit,args.num_cpus)
+            if job_tag != '':
+                submit_job(args,time_limit,job_tag)
             count += 1
         time.sleep(1)
 
