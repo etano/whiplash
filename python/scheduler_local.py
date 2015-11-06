@@ -6,14 +6,14 @@ import threading as th
 import whiplash,time,json,os,argparse,daemon,sys
 import copy
 
-def fetch_work_batch(db,time_limit,job_limit,pid):
-    return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
+def fetch_work_batch(wdb,time_limit,job_limit,pid):
+    return wdb.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
-def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
+def get_unresolved(wdb,time_limit,job_limit,pid,unresolved,is_work):
 
     t0 = time.time()
 
-    properties = fetch_work_batch(db,time_limit,job_limit,pid)
+    properties = fetch_work_batch(wdb,time_limit,job_limit,pid)
 
     if len(properties) == 0:
         is_work[0] = False
@@ -24,8 +24,8 @@ def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
         for prop in properties:
             model_ids.add(prop['input_model_id'])
             executable_ids.add(prop['executable_id'])
-        models = db.models.query({'_id': { '$in': list(model_ids) }})
-        executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
+        models = wdb.models.query({'_id': { '$in': list(model_ids) }})
+        executables = wdb.executables.query({'_id': { '$in': list(executable_ids) }})
 
         objs = []
         for prop in properties:
@@ -49,15 +49,15 @@ def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
     t1 = time.time()
     print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)    
 
-def commit_resolved(db,props,results,pid):
+def commit_resolved(wdb,props,results,pid):
     t0 = time.time()
-    ids = db.models.commit(results)['ids']
+    ids = wdb.models.commit(results)['ids']
     t1 = time.time()
     elapsed0 = t1-t0
     for ID in ids:
         props[ID['index']]['output_model_id'] = ID['_id']
     t0 = time.time()
-    db.properties.batch_update(props)
+    wdb.properties.batch_update(props)
     t1 = time.time()
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(props),'properties in times',elapsed0,'and',elapsed1)
