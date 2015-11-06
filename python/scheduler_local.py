@@ -3,8 +3,7 @@
 import multiprocessing as mp
 import subprocess as sp
 import threading as th
-import whiplash,time,json,os,argparse,daemon,sys
-import copy
+import whiplash,time,json,os,argparse,daemon,sys,copy
 
 def fetch_work_batch(wdb,time_limit,job_limit,pid):
     return wdb.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
@@ -66,8 +65,6 @@ def resolve_object(pid,obj,models,executables):
     prop = obj['property']
     ID = prop['_id']
 
-    #print('worker',str(pid),'computing property',ID)
-
     package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
 
     file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
@@ -109,7 +106,6 @@ def resolve_object(pid,obj,models,executables):
     if 'None' in result['tags']: result['tags'] = {}
     result['tags']['property_id'] = ID
 
-    #print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return [prop,result]
 
 def worker(pid,wdb,args):
@@ -188,31 +184,25 @@ def scheduler(args):
         procs.append([pid,p])
 
     while True:
-        # Check if there are unresolved properties
         num_unresolved = wdb.properties.get_num_unresolved()
 
-        # Loop through workers, checking if they are alive
         n_alive = 0
         for [pid,p] in procs:
             if p.is_alive():
                 n_alive += 1
-            else:
-                # If worker has stopped, but there is work, start it again
-                if num_unresolved > 0:
-                    print('restarting worker',str(pid))
-                    p.join()
-                    p = context.Process(target=worker, args=(pid,wdb,args,))
-                    p.start()
-                    n_alive += 1
+            elif num_unresolved > 0:
+                print('restarting worker',str(pid))
+                p.join()
+                p = context.Process(target=worker, args=(pid,wdb,args,))
+                p.start()
+                n_alive += 1
 
-        # If no workers are alive, join them and kill myself
         if n_alive == 0:
             print('stopping workers')
             for [pid,p] in procs:
                 p.join()
             sys.exit(0)
 
-        # Sleep
         time.sleep(2)
 
 if __name__ == '__main__':
