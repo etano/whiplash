@@ -5,14 +5,9 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-# def fetch_work_batch(wdb,time_limit,job_limit,pid):
-#     return wdb.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
-
-def get_unresolved(wdb,time_limit,job_limit,pid,unresolved,is_work):
+def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
 
     t0 = time.time()
-
-    #properties = fetch_work_batch(wdb,time_limit,job_limit,pid)
 
     property_ids = wdb.work_batches.request("GET","/api/work_batches/",{})
     properties = wdb.properties.query({'_id': {'$in': property_ids}})
@@ -130,7 +125,7 @@ def worker(pid,wdb,args):
             if (not fetch_thread.is_alive()) and (time_left() > args.time_window):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
-                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,args.job_limit,pid,unresolved0,is_work,))
+                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,pid,unresolved0,is_work,))
                 fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
@@ -213,7 +208,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
-    parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
