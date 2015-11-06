@@ -25,10 +25,7 @@ var collection = db.get().collection('fs.files');
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    for(var i=0; i<req.body.length; i++) {
-        req.body[i].md5 = checksum(JSON.stringify(req.body[i].content));
-    }
-    common.validate(ObjType,req,function(err){
+    common.validate(ObjType,req,function(err) {
         if(err) {
             if(err.name === 'ValidationError') {
                 res.statusCode = 400;
@@ -41,42 +38,41 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             }
         } else {
             var ids = [];
-            var i = 0;
-            var write_file = function() {
-                if(i < req.body.length){
+            var write_file = function(i) {
+                if(i < req.body.length) {
                     var metadata = req.body[i].tags;
                     metadata.owner = req.body[i].owner;
                     var content = JSON.stringify(req.body[i].content);
                     var md5 = checksum(content);
-                    i++;
-                    collection.count({md5 : md5, "metadata.property_id" : metadata.property_id}, function (err, count) {
-                        if(err){
+                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
+                        if(err) {
                             log.error("Error in count: %s",err.message);
-                            write_file();
-                        } else if(count > 0){
+                            write_file(i+1);
+                        } else if(objs.length > 0) {
                             log.error("Duplicate file with md5: %s",md5);
-                            write_file();
+                            ids.push({'index':ids.length,'_id':objs[0]._id});
+                            write_file(i+1);
                         } else {
                             var fileId = String(new ObjectID());
                             var options = { metadata: metadata };
                             var gridStore = new GridStore(db.get(),fileId,fileId,'w',options);
                             gridStore.open(function(err, gridStore) {
-                                if(err){
+                                if(err) {
                                     log.error("Error opening file: %s",err.message);
-                                    write_file();
+                                    write_file(i+1);
                                 } else {
                                     gridStore.write(content, function(err, gridStore) {
-                                        if(err){
+                                        if(err) {
                                             log.error("Error writing file: %s",err.message);
-                                            write_file();
+                                            write_file(i+1);
                                         } else {
                                             gridStore.close(function(err, result) {
-                                                if(err){
+                                                if(err) {
                                                     log.error("Error closing file: %s",err.message);
                                                 } else {
                                                     ids.push({'index':ids.length,'_id':fileId});
                                                 }
-                                                write_file();
+                                                write_file(i+1);
                                             });
                                         }
                                     });
@@ -92,7 +88,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     });
                 }
             };
-            write_file();
+            write_file(0);
         }
     });
 
