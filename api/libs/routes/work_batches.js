@@ -25,11 +25,19 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     collection.findOneAndDelete({owner:String(req.user._id)}, {projection: {ids: 1}}, function (err, result) {
+        console.log(result)
         if (!err) {
-            return res.json({
-                status: 'OK',
-                result: result.value.ids
-            });
+            if(result.value){
+                return res.json({
+                    status: 'OK',
+                    result: result.value.ids
+                });
+            } else {
+                return res.json({
+                    status: 'OK',
+                    result: []
+                });
+            }
         } else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
