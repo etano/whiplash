@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-import whiplash,daemon,argparse,time,json,sys,os,random
+import whiplash,daemon,argparse,time,json,sys,os,random,binascii
 import subprocess as sp
-
-def reserve_batch(wdb,time_limit,num_cpus):
-    return wdb.properties.request("PUT","/api/properties/reservation/",{'time_limit':time_limit,'num_cpus':num_cpus})
 
 def seconds2time(time_limit):
     m, s = divmod(time_limit, 60)
@@ -49,16 +46,13 @@ def scheduler(args):
     for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
         sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
-    count = 0
     while True:
-        if count % 100 == 0:
-            time_limit = get_time_limit(wdb)
-        if time_limit > 0:
-            job_tag = reserve_batch(wdb,time_limit,args.num_cpus)
-            if job_tag != '':
-                submit_job(args,time_limit,job_tag)
-            count += 1
-        time.sleep(1)
+        time_limit = get_time_limit(wdb)
+        num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
+        if (time_limit > 0) and (num_pending == 0):
+            job_tag = binascii.hexlify(os.urandom(8))
+            submit_job(args,time_limit,job_tag)
+        time.sleep(5)
 
 if __name__ == '__main__':
 
