@@ -34,6 +34,31 @@ def get_time_limit(wdb):
     else:
         return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['stddev'])))
 
+def make_batches(wdb,time_window):
+
+    properties = wdb.properties.query_fields_only({"status":0,"timeout":{"$lt":time_window}},['_id','timeout'])
+
+    ids = properties['_id']
+    timeouts = properties['timeout']
+
+    wdb.properties.update({'_id': {'$in': ids}},{'status':1})
+
+    batches = []
+    times_left = []
+    for i in range(len(ids)):
+        found = False
+        for j in range(len(batches)):
+            if timeouts[i] < times_left[j]:
+                times_left[j] -= timeouts[i]
+                batches[j]['ids'].append(ids[i])
+                found = True
+                break
+        if not found:
+            batches.append({'ids':[ids[i]]})
+            times_left.append(time_window)
+
+    wdb.work_batches.commit(batches)
+
 def scheduler(args):
 
     with open(args.wdb_info, 'r') as infile:
@@ -41,6 +66,8 @@ def scheduler(args):
 
     print('connecting to wdb')
     wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+
+    make_batches(wdb,args.time_window)
 
     sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte && mkdir -p rte/log" + "\'\"",shell=True)
     for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:

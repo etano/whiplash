@@ -18,6 +18,7 @@ var clients = require('./routes/clients');
 var models = require('./routes/models');
 var executables = require('./routes/executables');
 var properties = require('./routes/properties');
+var work_batches = require('./routes/work_batches');
 var oauth2 = require('./auth/oauth2');
 
 var app = express();
@@ -36,7 +37,7 @@ app.use('/api/clients', clients);
 app.use('/api/models', models);
 app.use('/api/executables', executables);
 app.use('/api/properties', properties);
-
+app.use('/api/work_batches', work_batches);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next){

@@ -23,6 +23,7 @@ class wdb:
         self.models = self.collection(self,"models")
         self.executables = self.collection(self,"executables")
         self.properties = self.properties_collection(self,"properties")
+        self.work_batches = self.collection(self,"work_batches")
 
     #
     # Request

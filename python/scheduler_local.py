@@ -5,14 +5,17 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def fetch_work_batch(wdb,time_limit,job_limit,pid):
-    return wdb.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
+# def fetch_work_batch(wdb,time_limit,job_limit,pid):
+#     return wdb.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
 
 def get_unresolved(wdb,time_limit,job_limit,pid,unresolved,is_work):
 
     t0 = time.time()
 
-    properties = fetch_work_batch(wdb,time_limit,job_limit,pid)
+    #properties = fetch_work_batch(wdb,time_limit,job_limit,pid)
+
+    property_ids = wdb.work_batches.request("GET","/api/work_batches/",{})
+    properties = wdb.properties.query({'_id': {'$in': property_ids}})
 
     if len(properties) == 0:
         is_work[0] = False

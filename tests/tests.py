@@ -22,6 +22,8 @@ wdb.executables.delete({})
 assert wdb.executables.count({}) == 0
 wdb.properties.delete({})
 assert wdb.properties.count({}) == 0
+wdb.work_batches.delete({})
+assert wdb.work_batches.count({}) == 0
 
 print("Commit model")
 N = 4
