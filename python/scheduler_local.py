@@ -115,7 +115,7 @@ def worker(pid,wdb,args):
     unresolved1 = []    
     fetch_thread = th.Thread()
 
-    is_work = [True]
+    is_work = [wdb.properties.get_num_unresolved() > 0]
 
     threads = []
     while True:
