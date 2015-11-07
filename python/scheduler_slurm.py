@@ -10,9 +10,9 @@ def seconds2time(time_limit):
 
 def submit_job(args,time_limit,job_tag):
     print('submitting job')
-    job_name = "whiplash_job_" + str(job_tag)
+    job_name = args.user + "_" + str(job_tag)
     log_dir = "log/" + job_name
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + args.user + "/run/" + log_dir + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/whiplash/run/" + log_dir + "\'\"",shell=True)
     with open("run.sbatch","w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + job_name + "\n")
@@ -24,9 +24,9 @@ def submit_job(args,time_limit,job_tag):
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
         sbatch.write("srun python scheduler_local.py" + " --host " + args.host + "--port " + args.port + "--token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
-    sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/" + args.user + "/run/",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + "/" + args.user + "/run && source /users/whiplash/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + args.user + "/run/" + "run.sbatch" + "\'\"",shell=True)
+    sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/whiplash/run/",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + "/whiplash/run && source /users/whiplash/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/whiplash/run/" + "run.sbatch" + "\'\"",shell=True)
 
 def get_time_limit(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
@@ -71,7 +71,7 @@ def scheduler(args):
     make_batches(wdb,args.time_window)
 
     if not args.test:
-        sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + args.user + "/run && mkdir -p " + args.work_dir + "/" + args.user + "/run/log" + "\'\"",shell=True)
+        sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/whiplash/run && mkdir -p " + args.work_dir + "/whiplash/run/log" + "\'\"",shell=True)
 
         while True:
             time_limit = get_time_limit(wdb)
