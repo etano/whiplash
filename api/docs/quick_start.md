@@ -3,6 +3,10 @@
 1. Go to [http://whiplash.ethz.ch](http://whiplash.ethz.ch) and apply for
 an account. Make note of your session token.
 
+2. Add Whiplash's public key to ~/.ssh/authorized_keys on your account
+
+           ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0+Reqt4F8IO3nb0nx84aaZuyfrR1htA+J3SuT5az9he6TcAVY1/kzHeDWV7EaKDquM0wfPES173ozKAUVG5sgNdJTpI10+9+cIgN5/GhbYbA/XEveod0yfjvcdIXONsvOEX4FIxvfQxp3gTG9smX6Xb1Uu6KVYiTiwj9jnrHVxx00zpNAGNDVnaTI4DXTZtuzl/Pymzjl06b7s07d07UCnPrDXXa3jqlwHamms/jPDFq1OIsLkq5LcOGl0VK5fsVnBe5UKktjEVv6ojF18jrOef812v0/wHjTkOBuiYYRTMv/USoerHlZdBsPCjDf0TrHPbjiRSrpe85O0uMxM15h root@whiplash-dev
+
 2. Get the Whiplash python module
 
 3. Make sure the executable you want to run exists somewhere on the
@@ -26,7 +30,7 @@ cluster
 
          props = []
          for seed in range(N):
-             props.append({"params":{"n_sweeps":1000,"slices":64,"seed":seed}, "timeout":3600})
+             props.append({"params":{"n_sweeps":1000,"n_slices":64,"seed":seed}, "timeout":3600})
 
 8. Submit jobs
 
