@@ -12,7 +12,7 @@ def submit_job(args,time_limit,job_tag):
     print('submitting job')
     job_name = "whiplash_job_" + str(job_tag)
     log_dir = "log/" + job_name
-    sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte/" + log_dir + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + args.user + "/rte/" + log_dir + "\'\"",shell=True)
     with open("run.sbatch","w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + job_name + "\n")
@@ -24,8 +24,8 @@ def submit_job(args,time_limit,job_tag):
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
         sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(time_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
-    sp.call("scp " + "run.sbatch" + " " + args.cluster + ":rte/",shell=True)
-    sp.call("ssh " + args.cluster + " \"bash -lc \'" + "cd rte && sbatch run.sbatch" + "\'\"",shell=True)
+    sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/" + args.user + "/rte/",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + "/" + args.user + "/rte && source /users/whiplash/start.sh && sbatch run.sbatch" + "\'\"",shell=True)
 
 def get_time_limit(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
@@ -72,13 +72,13 @@ def scheduler(args):
     make_batches(wdb,args.time_window)
 
     if not args.test:
-        sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte && mkdir -p rte/log" + "\'\"",shell=True)
+        sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + args.user + "/rte && mkdir -p " + args.work_dir + "/" + args.user + "/rte/log" + "\'\"",shell=True)
         for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
-            sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
+            sp.call("scp " + FILE + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/" + args.user + "/rte/",shell=True)
 
         while True:
             time_limit = get_time_limit(wdb)
-            num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
+            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
             if (time_limit > 0) and (num_pending == 0):
                 job_tag = str(int(time.time()))
                 submit_job(args,time_limit,job_tag)
@@ -90,7 +90,9 @@ if __name__ == '__main__':
     parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
-    parser.add_argument('--cluster',dest='cluster',required=True,type=str)
+    parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
+    parser.add_argument('--cluster',dest='cluster',required=False,type=str,default='monch.cscs.ch')
+    parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='/mnt/lnec')
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
