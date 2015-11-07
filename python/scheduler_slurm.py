@@ -61,35 +61,41 @@ def make_batches(wdb,time_window):
 
 def scheduler(args):
 
-    with open(args.wdb_info, 'r') as infile:
-        wdb_info = json.load(infile)
-
-    print('connecting to wdb')
-    wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+    if args.test:
+        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+    else:
+        with open(args.wdb_info, 'r') as infile:
+            wdb_info = json.load(infile)
+        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+    print('scheduler connected to wdb')
 
     make_batches(wdb,args.time_window)
 
-    sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte && mkdir -p rte/log" + "\'\"",shell=True)
-    for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
-        sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
+    if not args.test:
+        sp.call("ssh " + args.cluster + " \"bash -lc \'" + "mkdir -p rte && mkdir -p rte/log" + "\'\"",shell=True)
+        for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
+            sp.call("scp " + FILE + " " + args.cluster + ":rte/",shell=True)
 
-    while True:
-        time_limit = get_time_limit(wdb)
-        num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
-        if (time_limit > 0) and (num_pending == 0):
-            job_tag = str(int(time.time()))
-            submit_job(args,time_limit,job_tag)
-        time.sleep(5)
+        while True:
+            time_limit = get_time_limit(wdb)
+            num_pending = int(sp.check_output("ssh " + args.cluster + " \'squeue -u whiplash | grep \" PD \" | wc -l\'", shell=True))
+            if (time_limit > 0) and (num_pending == 0):
+                job_tag = str(int(time.time()))
+                submit_job(args,time_limit,job_tag)
+            time.sleep(5)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wdb_info',dest='wdb_info',required=True,type=str)
+    parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--cluster',dest='cluster',required=True,type=str)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
+    parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
+    parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
+    parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 
     assert args.num_cpus <= 20

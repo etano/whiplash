@@ -106,27 +106,28 @@ def resolve_object(pid,obj,models,executables):
 
     return [prop,result]
 
-def worker(pid,wdb,args):
+def worker(pid,wdb,args,end_time):
     print('worker',str(pid),'active')
 
-    t_start = time.time()
+    start_time = time.time()
 
     unresolved0 = []
-    unresolved1 = []    
+    unresolved1 = []
     fetch_thread = th.Thread()
 
-    is_work = [wdb.properties.get_num_unresolved() > 0]
+    is_work = [wdb.work_batches.count({}) > 0]
 
     threads = []
     while True:
-        time_left = lambda: args.time_limit - (time.time()-t_start)
+        time_left = lambda: end_time - time.time()
         num_alive = lambda: sum(thread.is_alive() for thread in threads)
         if time_left() > 0:
             if (not fetch_thread.is_alive()) and (time_left() > args.time_window):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
-                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,pid,unresolved0,is_work,))
-                fetch_thread.start()
+                if (time_left() > 2*args.time_window):
+                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,pid,unresolved0,is_work,))
+                    fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
                 models = unresolved1[1]
@@ -148,17 +149,21 @@ def worker(pid,wdb,args):
                     threads.append(thread)
             elif time_left() < args.time_window:
                 print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
+                time.sleep(2)
             elif not is_work[0]:
                 if num_alive() == 0:
                     print('worker',str(pid),'has no live threads, shutting down')
                     sys.exit(0)
                 else:
                     print('no unresolved properties.',str(num_alive()),'threads alive on worker',str(pid))
-            time.sleep(2)
+                time.sleep(2)
         else:
             break
 
 def scheduler(args):
+    start_time = time.time()
+    end_time = time.time() + args.time_limit
+    print('scheduler started at',str(int(start_time)))
 
     if args.test:
         wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
@@ -177,21 +182,21 @@ def scheduler(args):
     context = mp.get_context('fork')
     procs = []
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,wdb,args,))
+        p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
         p.start()
         procs.append([pid,p])
 
     while True:
-        num_unresolved = wdb.properties.get_num_unresolved()
+        is_work = wdb.work_batches.count({})
 
         n_alive = 0
         for [pid,p] in procs:
             if p.is_alive():
                 n_alive += 1
-            elif num_unresolved > 0:
-                print('restarting worker',str(pid))
+            elif (is_work) and ((end_time-time.time())>args.time_window):
+                print('worker',str(pid),'restarting')
                 p.join()
-                p = context.Process(target=worker, args=(pid,wdb,args,))
+                p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
                 p.start()
                 n_alive += 1
 
@@ -202,6 +207,8 @@ def scheduler(args):
             sys.exit(0)
 
         time.sleep(2)
+
+    print('shutting down')
 
 if __name__ == '__main__':
 
