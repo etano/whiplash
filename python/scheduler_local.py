@@ -213,7 +213,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
     parser.add_argument('--port',dest='port',required=False,type=int,default=443)
-    parser.add_argument('--token',dest='token',required=True,type=str)
+    parser.add_argument('--token',dest='token',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
