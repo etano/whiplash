@@ -168,9 +168,7 @@ def scheduler(args):
     if args.test:
         wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
     else:
-        with open(args.wdb_info, 'r') as infile:
-            wdb_info = json.load(infile)
-        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+        wdb = whiplash.wdb(args.host,args.port,args.token)
     print('scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
@@ -213,7 +211,9 @@ def scheduler(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
+    parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
+    parser.add_argument('--port',dest='port',required=False,type=int,default=443)
+    parser.add_argument('--token',dest='token',required=True,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)

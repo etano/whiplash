@@ -23,9 +23,10 @@ def submit_job(args,time_limit,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py --wdb_info " + args.wdb_info + " --time_limit " + str(time_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py" + " --host " + args.host + "--port " + args.port + "--token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/" + args.user + "/rte/",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + "/" + args.user + "/rte && source /users/whiplash/start.sh && sbatch run.sbatch" + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + args.user + "/rte/" + "run.sbatch" + "\'\"",shell=True)
 
 def get_time_limit(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
@@ -64,16 +65,14 @@ def scheduler(args):
     if args.test:
         wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
     else:
-        with open(args.wdb_info, 'r') as infile:
-            wdb_info = json.load(infile)
-        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+        wdb = whiplash.wdb(args.host,args.port,args.token)
     print('scheduler connected to wdb')
 
     make_batches(wdb,args.time_window)
 
     if not args.test:
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + args.user + "/rte && mkdir -p " + args.work_dir + "/" + args.user + "/rte/log" + "\'\"",shell=True)
-        for FILE in ["whiplash.py","scheduler_local.py",args.wdb_info]:
+        for FILE in ["whiplash.py","scheduler_local.py"]:
             sp.call("scp " + FILE + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/" + args.user + "/rte/",shell=True)
 
         while True:
@@ -87,7 +86,9 @@ def scheduler(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
+    parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
+    parser.add_argument('--port',dest='port',required=False,type=int,default=443)
+    parser.add_argument('--token',dest='token',required=True,type=str)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
