@@ -50,10 +50,10 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
     common.query_count(collection,filter,res);
 });
 
-router.get('/field/:field', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var field = req.params.field;
-    var filter = req.body;
-    common.query_field_only(collection,field,filter,res);
+router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body.filter;
+    var fields = req.body.fields;
+    common.query_fields_only(collection,filter,fields,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {

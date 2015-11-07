@@ -11,9 +11,9 @@ client_id = sys.argv[5]
 client_secret = sys.argv[6]
 
 wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
-# with open("python/wdb_info_local.json", 'r') as infile:
-#     wdb_info = json.load(infile)
-# wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+#with open("python/wdb_info_local.json", 'r') as infile:
+#    wdb_info = json.load(infile)
+#wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
 
 print("Reset database")
 wdb.models.delete({})
@@ -22,6 +22,8 @@ wdb.executables.delete({})
 assert wdb.executables.count({}) == 0
 wdb.properties.delete({})
 assert wdb.properties.count({}) == 0
+wdb.work_batches.delete({})
+assert wdb.work_batches.count({}) == 0
 
 print("Commit model")
 N = 4
@@ -34,14 +36,14 @@ model = {"content":{"edges": hamiltonian},"tags":{"n_spins":N,"name":"test"}}
 model_id = wdb.models.commit(model)['ids'][0]['_id']
 
 print("Query model")
-assert model_id == wdb.models.query_field_only('_id',model['tags'])[0]
+assert model_id == wdb.models.query_fields_only(model['tags'],'_id')['_id'][0]
 
 print("Commit executable")
 executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
 executable_id = wdb.executables.commit(executable)['ids'][0]['_id']
 
 print("Query executable")
-assert executable_id == wdb.executables.query_field_only('_id',executable)[0]
+assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
 print("Submit properties")
 N0 = 1000; t0 = 1.0
@@ -64,7 +66,7 @@ assert stats['stddev'] == 0.0
 assert stats['count'] == N0
 
 print("Querying results")
-prop_ids = wdb.properties.query_field_only('_id',{"status":3,"params.sleep_time":1.0})
+prop_ids = wdb.properties.query_fields_only({"status":3,"params.sleep_time":1.0},'_id')['_id']
 assert len(prop_ids) == N1
 
 models = []
