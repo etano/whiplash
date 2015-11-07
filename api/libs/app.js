@@ -30,6 +30,7 @@ app.use(methodOverride());
 app.use(passport.initialize());
 
 app.use('/', www);
+app.use('/docs', express.static( www + "/docs" ));
 app.use('/api', api);
 app.use('/api/users', users);
 app.use('/api/users/token', oauth2.token);
