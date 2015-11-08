@@ -8,8 +8,8 @@ def seconds2time(time_limit):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def submit_job(args,time_limit,job_tag):
-    print('submitting job')
+def submit_job(args,time_limit,time_window,job_tag):
+    print('submitting job:',job_tag,' | ',time_limit,' | ',time_window)
     job_name = args.user + "_" + str(job_tag)
     log_dir = "log/" + job_name
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/whiplash/run/" + log_dir + "\'\"",shell=True)
@@ -23,17 +23,17 @@ def submit_job(args,time_limit,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python scheduler_local.py" + " --host " + args.host + "--port " + args.port + "--token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(args.time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python scheduler_local.py" + " --host " + args.host + "--port " + args.port + "--token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/whiplash/run/",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + "/whiplash/run && source /users/whiplash/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/whiplash/run/" + "run.sbatch" + "\'\"",shell=True)
 
-def get_time_limit(wdb):
+def get_times(wdb):
     timeouts = wdb.properties.stats("timeout",{"status":0})
     if timeouts['count'] == 0:
-        return 0
+        return [0,0]
     else:
-        return min(24*3600,max(3600,random.normalvariate(timeouts['mean'],timeouts['stddev'])))
+        return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(timeouts['min'],600)]
 
 def make_batches(wdb,time_window):
 
@@ -66,20 +66,22 @@ def scheduler(args):
         wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
     else:
         wdb = whiplash.wdb(args.host,args.port,args.token)
-    print('scheduler connected to wdb')
 
-    make_batches(wdb,args.time_window)
+    print('scheduler connected to wdb')
 
     if not args.test:
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/whiplash/run && mkdir -p " + args.work_dir + "/whiplash/run/log" + "\'\"",shell=True)
-
+        count = 0
         while True:
-            time_limit = get_time_limit(wdb)
+            if count % 100 == 0:
+                [time_limit,time_window] = get_times(wdb)
+                make_batches(wdb,time_window)
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
-            if (time_limit > 0) and (num_pending == 0):
+            if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
                 job_tag = str(int(time.time()))
-                submit_job(args,time_limit,job_tag)
+                submit_job(args,time_limit,time_window,job_tag)
             time.sleep(5)
+            count += 1
 
 if __name__ == '__main__':
 
@@ -87,7 +89,6 @@ if __name__ == '__main__':
     parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
     parser.add_argument('--port',dest='port',required=False,type=int,default=443)
     parser.add_argument('--token',dest='token',required=False,type=str)
-    parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
     parser.add_argument('--cluster',dest='cluster',required=False,type=str,default='monch.cscs.ch')
@@ -100,7 +101,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     assert args.num_cpus <= 20
-    assert args.time_window < 3600
 
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
