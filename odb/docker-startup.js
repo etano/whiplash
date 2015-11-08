@@ -4,3 +4,4 @@ db.createUser({user:"pwn",pwd:"cftXzdrjheHEAR!JKT(>>,V",roles:[{role:"dbOwner",d
 db.fs.files.createIndex({md5 : 1, "metadata.property_id" : 1},{unique : true});
 db.executables.createIndex({name : 1, algorithm : 1, version : 1, build : 1},{unique : true});
 db.properties.createIndex({input_model_id : 1, executable_id : 1, params : 1},{unique : true});
+db.setProfilingLevel(2)
