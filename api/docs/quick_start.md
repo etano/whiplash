@@ -46,11 +46,10 @@ scratch directory under __/mnt/lnec/your_username/...__
 
 1. Get results
 
-         data = wdb.properties.query({"params.n_sweeps":1000,"params.n_slices":64}})
+         data = wdb.properties.query({"params.n_sweeps":1000,"params.n_slices":64})
 
 1. Plot data
 
          import matplotlib.pyplot as plt
          plt.plot(range(N),data.energies)
          plt.show()
-
