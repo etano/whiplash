@@ -23,7 +23,7 @@ def submit_job(args,time_limit,time_window,job_tag):
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python /users/whiplash/rte/scheduler_local.py" + " --host " + args.host + "--port " + str(args.port) + "--token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + args.work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
+        sbatch.write("srun python /users/whiplash/rte/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + args.work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + "run.sbatch" + "\'\"",shell=True)
@@ -34,7 +34,7 @@ def get_times(wdb):
     if timeouts['count'] == 0:
         return [0,0]
     else:
-        return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(timeouts['min'],600)]
+        return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(timeouts['min'],601)]
 
 def make_batches(wdb,time_window):
     print('making batches')
