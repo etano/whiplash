@@ -45,13 +45,6 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                            }
                        }
                    }
-                   console.log("CLIENTS:");
-                   console.log(clients);
-                   console.log("REFRESH:");
-                   console.log(refreshTokens);
-                   console.log("ACCESS:");
-                   console.log(accessTokens);
-                   console.log("USER_ID:",String(req.user._id));
                    return res.json({ status: 'OK', objs: clients });
                });
            });
