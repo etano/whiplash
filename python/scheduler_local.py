@@ -166,7 +166,7 @@ def scheduler(args):
     print('scheduler started at',str(int(start_time)))
 
     if args.test:
-        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+        wdb = whiplash.wdb(args.test_host,args.test_port,"","test","test","test","test")
     else:
         wdb = whiplash.wdb(args.host,args.port,args.token)
     print('scheduler connected to wdb')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
-    parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
+    parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 
