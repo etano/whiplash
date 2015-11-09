@@ -16,19 +16,17 @@ var webAuth = function(req, res, next){
     }
 };
 
-router.post('/', webAuth,
-    function(req, res){
-        var user = new User({ username: req.body.username, password: req.body.password });
-        user.save(function(err, user){
-            if(!err) {
-                log.info("New user: %s", user.username);
-                res.send("OK");
-            } else {
-                log.error(err);
-                res.send("Bof");
-            }
-        });
-    }
-);
+router.post('/', webAuth, function(req, res){
+    var user = new User({ username: req.body.username, password: req.body.password });
+    user.save(function(err, user){
+        if(!err) {
+            log.info("New user: %s", user.username);
+            res.send("OK");
+        } else {
+            log.error(err);
+            res.send("Bof");
+        }
+    });
+});
 
 module.exports = router;
