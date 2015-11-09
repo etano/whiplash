@@ -59,13 +59,13 @@ def commit_resolved(wdb,props,results,pid):
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(props),'properties in times',elapsed0,'and',elapsed1)
 
-def resolve_object(pid,obj,models,executables):
+def resolve_object(pid,obj,models,executables,work_dir):
     prop = obj['property']
     ID = prop['_id']
 
     package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
 
-    file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
+    file_name = work_dir + '/object_' + str(pid) + '_' + str(ID) + '.json'
 
     with open(file_name, 'w') as propfile:
         propfile.write(package)
@@ -136,7 +136,7 @@ def worker(pid,wdb,args,end_time):
                 t0 = time.time()
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
-                        resolved = resolve_object(pid,obj,models,executables)
+                        resolved = resolve_object(pid,obj,models,executables,args.work_dir)
                         props.append(resolved[0])
                         results.append(resolved[1])
                     else: break
@@ -216,6 +216,7 @@ if __name__ == '__main__':
     parser.add_argument('--token',dest='token',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
+    parser.add_argument('--work_dir',dest='work_dir',required=True,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
