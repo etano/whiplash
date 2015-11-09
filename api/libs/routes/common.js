@@ -32,23 +32,30 @@ module.exports = {
     //
 
     commit: function(collection,req,res) {
-        var batch = collection.initializeUnorderedBulkOp();
-        for(var i=0; i<req.body.length; i++) {
-            batch.insert(req.body[i]);
-        }
-        batch.execute(function(err,result) {
-            if (result.ok) {
-                log.info("%s new objects created", String(result.nInserted));
-                return res.json({
-                    status: 'OK',
-                    result: {'n':result.nInserted,'ids':result.getInsertedIds()}
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return res.json({ error: 'Server error' });
+        if(req.body.length == 0) {
+            return res.json({
+                status: 'OK',
+                result: {'n':0,'ids':[]}
+            });
+        } else {
+            var batch = collection.initializeUnorderedBulkOp();
+            for(var i=0; i<req.body.length; i++) {
+                batch.insert(req.body[i]);
             }
-        });
+            batch.execute(function(err,result) {
+                if (result.ok) {
+                    log.info("%s new objects created", String(result.nInserted));
+                    return res.json({
+                        status: 'OK',
+                        result: {'n':result.nInserted,'ids':result.getInsertedIds()}
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        }
     },
 
     //
