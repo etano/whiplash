@@ -24,8 +24,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 log.error('Server error(%d): %s', res.statusCode, err.message);
                 return res.json({ error: err.toString() });
             }
-        }
-        else {
+        } else {
             common.commit(collection,req,res);
         }
     });

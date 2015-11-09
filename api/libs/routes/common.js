@@ -32,7 +32,7 @@ module.exports = {
     //
 
     commit: function(collection,req,res) {
-        var batch = collection.initializeOrderedBulkOp();
+        var batch = collection.initializeUnorderedBulkOp();
         for(var i=0; i<req.body.length; i++) {
             batch.insert(req.body[i]);
         }
