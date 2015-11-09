@@ -19,8 +19,8 @@ test:
   stage: test
   script:
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/tests.py ${DOCKERHOST:-localhost} 7357 test test test test
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler_slurm.py --cluster test --test --test_ip ${DOCKERHOST:-localhost} --test_port 7357 --num_cpus 1
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler_local.py --time_limit 8 --time_window 3 --test --test_ip ${DOCKERHOST:-localhost} --test_port 7357 --num_cpus 1
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler_slurm.py --test --test_host ${DOCKERHOST:-localhost} --test_port 7357 --num_cpus 1
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./python/scheduler_local.py --time_limit 8 --time_window 3 --test --test_host ${DOCKERHOST:-localhost} --test_port 7357 --work_dir . --num_cpus 1
   tags:
     - docker
 

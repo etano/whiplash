@@ -23,6 +23,8 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     });
 });
 
+//TODO: fix undefined session and refresh tokens
+
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res){
     var filter = { userId : String(req.user._id) };
     collection.find(filter).toArray(function (err, clients) {
@@ -37,7 +39,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                                clients[i].refreshToken = refreshTokens[j].token;
                            }
                        }
-                       for(j=0; j<accessTokens.length; j++) {
+                       for(var j=0; j<accessTokens.length; j++) {
                            if(accessTokens[j].clientId == clients[i].clientId) {
                                clients[i].accessToken = accessTokens[j].token;
                            }
