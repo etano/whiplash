@@ -29,6 +29,7 @@ def submit_job(args,time_limit,time_window,job_tag):
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + "run.sbatch" + "\'\"",shell=True)
 
 def get_times(wdb):
+    print('getting times')
     timeouts = wdb.properties.stats("timeout",{"status":0})
     if timeouts['count'] == 0:
         return [0,0]
@@ -36,9 +37,8 @@ def get_times(wdb):
         return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(timeouts['min'],600)]
 
 def make_batches(wdb,time_window):
-
+    print('making batches')
     properties = wdb.properties.query_fields_only({"status":0,"timeout":{"$lt":time_window}},['_id','timeout'])
-
     ids = properties['_id']
     timeouts = properties['timeout']
 
@@ -82,6 +82,9 @@ def scheduler(args):
                 submit_job(args,time_limit,time_window,job_tag)
             time.sleep(5)
             count += 1
+    else:
+        [time_limit,time_window] = get_times(wdb)
+        make_batches(wdb,time_window)        
 
 if __name__ == '__main__':
 
