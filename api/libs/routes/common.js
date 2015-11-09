@@ -122,9 +122,11 @@ module.exports = {
         });
     },
 
-    query_field_only: function(collection,field,filter,res) {
+    query_fields_only: function(collection,filter,fields,res) {
         var proj = {};
-        proj[field] = 1;
+        for(var i=0; i<fields.length; i++){
+            proj[fields[i]] = 1;
+        }
         collection.find(filter).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
@@ -133,9 +135,25 @@ module.exports = {
             }
 
             // TODO: Check to make sure user has READ permissions
-            var projection = [];
+
+            var fields1 = [];
+            for(var j=0; j<fields.length; j++){
+                if(~fields[j].indexOf('metadata.'))
+                    fields1.push(fields[j].split('.')[1]);
+                else
+                    fields1.push(fields[j]);
+            }
+            var projection = {};
+            for(var j=0; j<fields1.length; j++){
+                projection[fields1[j]] = [];
+            }
             for(var i=0; i<objs.length; i++) {
-                projection.push(objs[i][field]);
+                for(var j=0; j<fields1.length; j++){
+                    if(fields1[j] == fields[j])
+                        projection[fields1[j]].push(objs[i][fields[j]]);
+                    else
+                        projection[fields1[j]].push(objs[i]['metadata'][fields1[j]]);
+                }
             }
 
             // Return object

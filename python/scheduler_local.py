@@ -3,17 +3,14 @@
 import multiprocessing as mp
 import subprocess as sp
 import threading as th
-import whiplash,time,json,os,argparse,daemon,sys
-import copy
+import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def fetch_work_batch(db,time_limit,job_limit,pid):
-    return db.properties.request("PUT","/api/properties/work_batch_atomic/",{'time_limit':time_limit,'job_limit':job_limit,'worker_id':pid})
-
-def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
+def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
 
     t0 = time.time()
 
-    properties = fetch_work_batch(db,time_limit,job_limit,pid)
+    property_ids = wdb.work_batches.request("GET","/api/work_batches/",{})
+    properties = wdb.properties.query({'_id': {'$in': property_ids}})
 
     if len(properties) == 0:
         is_work[0] = False
@@ -24,8 +21,8 @@ def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
         for prop in properties:
             model_ids.add(prop['input_model_id'])
             executable_ids.add(prop['executable_id'])
-        models = db.models.query({'_id': { '$in': list(model_ids) }})
-        executables = db.executables.query({'_id': { '$in': list(executable_ids) }})
+        models = wdb.models.query({'_id': { '$in': list(model_ids) }})
+        executables = wdb.executables.query({'_id': { '$in': list(executable_ids) }})
 
         objs = []
         for prop in properties:
@@ -49,28 +46,26 @@ def get_unresolved(db,time_limit,job_limit,pid,unresolved,is_work):
     t1 = time.time()
     print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)    
 
-def commit_resolved(db,props,results,pid):
+def commit_resolved(wdb,props,results,pid):
     t0 = time.time()
-    ids = db.models.commit(results)['ids']
+    ids = wdb.models.commit(results)['ids']
     t1 = time.time()
     elapsed0 = t1-t0
     for ID in ids:
         props[ID['index']]['output_model_id'] = ID['_id']
     t0 = time.time()
-    db.properties.batch_update(props)
+    wdb.properties.batch_update(props)
     t1 = time.time()
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(props),'properties in times',elapsed0,'and',elapsed1)
 
-def resolve_object(pid,obj,models,executables):
+def resolve_object(pid,obj,models,executables,work_dir):
     prop = obj['property']
     ID = prop['_id']
 
-    #print('worker',str(pid),'computing property',ID)
-
     package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
 
-    file_name = 'property_' + str(pid) + '_' + str(ID) + '.json'
+    file_name = work_dir + '/object_' + str(pid) + '_' + str(ID) + '.json'
 
     with open(file_name, 'w') as propfile:
         propfile.write(package)
@@ -109,30 +104,30 @@ def resolve_object(pid,obj,models,executables):
     if 'None' in result['tags']: result['tags'] = {}
     result['tags']['property_id'] = ID
 
-    #print('worker',str(pid),'resolved property',ID,'with status',prop['status'],'and walltime',elapsed)
     return [prop,result]
 
-def worker(pid,wdb,args):
+def worker(pid,wdb,args,end_time):
     print('worker',str(pid),'active')
 
-    t_start = time.time()
+    start_time = time.time()
 
     unresolved0 = []
-    unresolved1 = []    
+    unresolved1 = []
     fetch_thread = th.Thread()
 
-    is_work = [True]
+    is_work = [wdb.work_batches.count({}) > 0]
 
     threads = []
     while True:
-        time_left = lambda: args.time_limit - (time.time()-t_start)
+        time_left = lambda: end_time - time.time()
         num_alive = lambda: sum(thread.is_alive() for thread in threads)
         if time_left() > 0:
             if (not fetch_thread.is_alive()) and (time_left() > args.time_window):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
-                fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,args.job_limit,pid,unresolved0,is_work,))
-                fetch_thread.start()
+                if (time_left() > 2*args.time_window):
+                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,pid,unresolved0,is_work,))
+                    fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
                 models = unresolved1[1]
@@ -141,7 +136,7 @@ def worker(pid,wdb,args):
                 t0 = time.time()
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
-                        resolved = resolve_object(pid,obj,models,executables)
+                        resolved = resolve_object(pid,obj,models,executables,args.work_dir)
                         props.append(resolved[0])
                         results.append(resolved[1])
                     else: break
@@ -154,24 +149,26 @@ def worker(pid,wdb,args):
                     threads.append(thread)
             elif time_left() < args.time_window:
                 print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
+                time.sleep(2)
             elif not is_work[0]:
                 if num_alive() == 0:
                     print('worker',str(pid),'has no live threads, shutting down')
                     sys.exit(0)
                 else:
                     print('no unresolved properties.',str(num_alive()),'threads alive on worker',str(pid))
-            time.sleep(2)
+                time.sleep(2)
         else:
             break
 
 def scheduler(args):
+    start_time = time.time()
+    end_time = time.time() + args.time_limit
+    print('scheduler started at',str(int(start_time)))
 
     if args.test:
-        wdb = whiplash.wdb(args.test_ip,args.test_port,"","test","test","test","test")
+        wdb = whiplash.wdb(args.test_host,args.test_port,"","test","test","test","test")
     else:
-        with open(args.wdb_info, 'r') as infile:
-            wdb_info = json.load(infile)
-        wdb = whiplash.wdb(wdb_info["host"],wdb_info["port"],wdb_info["token"])
+        wdb = whiplash.wdb(args.host,args.port,args.token)
     print('scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
@@ -183,50 +180,48 @@ def scheduler(args):
     context = mp.get_context('fork')
     procs = []
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,wdb,args,))
+        p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
         p.start()
         procs.append([pid,p])
 
     while True:
-        # Check if there are unresolved properties
-        num_unresolved = wdb.properties.get_num_unresolved()
+        is_work = wdb.work_batches.count({})
 
-        # Loop through workers, checking if they are alive
         n_alive = 0
         for [pid,p] in procs:
             if p.is_alive():
                 n_alive += 1
-            else:
-                # If worker has stopped, but there is work, start it again
-                if num_unresolved > 0:
-                    print('restarting worker',str(pid))
-                    p.join()
-                    p = context.Process(target=worker, args=(pid,wdb,args,))
-                    p.start()
-                    n_alive += 1
+            elif (is_work) and ((end_time-time.time())>args.time_window):
+                print('worker',str(pid),'restarting')
+                p.join()
+                p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
+                p.start()
+                n_alive += 1
 
-        # If no workers are alive, join them and kill myself
         if n_alive == 0:
             print('stopping workers')
             for [pid,p] in procs:
                 p.join()
             sys.exit(0)
 
-        # Sleep
         time.sleep(2)
+
+    print('shutting down')
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--wdb_info',dest='wdb_info',required=False,type=str)
+    parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
+    parser.add_argument('--port',dest='port',required=False,type=int,default=443)
+    parser.add_argument('--token',dest='token',required=False,type=str)
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
-    parser.add_argument('--job_limit',dest='job_limit',required=False,type=int,default=1000)
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
+    parser.add_argument('--work_dir',dest='work_dir',required=True,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
-    parser.add_argument('--test_ip',dest='test_ip',required=False,type=str,default='192.168.99.100')
+    parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
     parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 

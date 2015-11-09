@@ -23,6 +23,7 @@ class wdb:
         self.models = self.collection(self,"models")
         self.executables = self.collection(self,"executables")
         self.properties = self.properties_collection(self,"properties")
+        self.work_batches = self.collection(self,"work_batches")
 
     #
     # Request
@@ -136,8 +137,10 @@ class wdb:
         def query_one(self,fltr):
             return self.request("GET","/api/"+self.name+"/one/",fltr)
 
-        def query_field_only(self,field,fltr):
-            return self.request("GET","/api/"+self.name+"/field/"+field,fltr)
+        def query_fields_only(self,fltr,fields):
+            if not isinstance(fields, list):
+                fields = [fields]
+            return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
 
         def query_id(self,ID):
             return self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
@@ -204,14 +207,14 @@ class wdb:
                 model_ids = [model["_id"]]
             else:
                 self.db.models.commit(model)
-                model_ids = self.db.models.query_field_only('_id',model["tags"])
+                model_ids = self.db.models.query_fields_only(model["tags"],'_id')['_id']
                 assert len(model_ids) == 1
 
             if "_id" in executable:
                 executable_ids = [executable["_id"]]
             else:
                 self.db.executables.commit(executable)
-                executable_ids = self.db.executables.query_field_only('_id',executable)
+                executable_ids = self.db.executables.query_fields_only(executable,'_id')['_id']
                 assert len(executable_ids) == 1
 
             for prop in props:
