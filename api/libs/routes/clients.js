@@ -23,9 +23,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     });
 });
 
-//TODO: fix undefined session and refresh tokens and store clients
-//with the corresponding user and refresh and access tokens with the
-//corresponding client
+//TODO: fix undefined session and refresh tokens
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res){
     var filter = { userId : String(req.user._id) };
@@ -47,6 +45,13 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                            }
                        }
                    }
+                   console.log("CLIENTS:");
+                   console.log(clients);
+                   console.log("REFRESH:");
+                   console.log(refreshTokens);
+                   console.log("ACCESS:");
+                   console.log(accessTokens);
+                   console.log("USER_ID:",String(req.user._id));
                    return res.json({ status: 'OK', objs: clients });
                });
            });
