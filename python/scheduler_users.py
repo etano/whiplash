@@ -5,7 +5,7 @@ import subprocess as sp
 import threading as th
 
 def start_scheduler_slurm(wdb_user):
-    sp.call("./scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'],shell=True)
+    sp.call("./scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
 
 def get_request(wdb,uri):
     status, reason, res = wdb.request("GET",uri,json.dumps({}))
@@ -22,7 +22,8 @@ def get_users(wdb):
     for user in users:
         for token in tokens:
             if user['_id'] == token['userId']:
-                wdb_users.append({'username':user['username'],'token':token['token']})
+                cluster = "monch.cscs.ch" #TODO: dedicated collection of clusters
+                wdb_users.append({'username':user['username'],'token':token['token'],'cluster':cluster})
                 break
     return wdb_users
 
