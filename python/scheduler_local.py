@@ -149,8 +149,8 @@ def worker(pid,wdb,args,end_time):
                     else: break
                 t1 = time.time()
                 unresolved1 = [[],[],[]]
-                if len(props) > 0:
-                    print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
+                if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
+                    print('worker',str(pid),'resolved',len(good_results['properties']),'and fumbled',len(bad_results['properties']),'properties in time',t1-t0)
                     thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
                     thread.start()
                     threads.append(thread)
