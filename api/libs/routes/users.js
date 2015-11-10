@@ -7,6 +7,10 @@ var log = require(libs + 'log')(module);
 var config = require(libs + 'config');
 var User = require(libs + 'schemas/user');
 
+var common = require(libs + 'routes/common');
+var db = require(libs + 'db/mongo');
+var collection = db.get().collection('users');
+
 var webAuth = function(req, res, next){
     var token = req.body.server_token;
     if(token === config.get('WebAccessToken')) {
@@ -27,6 +31,16 @@ router.post('/', webAuth, function(req, res){
             res.send("Bof");
         }
     });
+});
+
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body;
+    common.query(collection,filter,res);
+});
+
+router.get('/tokens/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body;
+    common.query(db.get().collection('accesstokens'),filter,res);
 });
 
 module.exports = router;
