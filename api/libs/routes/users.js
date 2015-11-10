@@ -34,11 +34,13 @@ router.post('/', webAuth, function(req, res){
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: check for authorized user
     var filter = req.body;
     common.query(collection,filter,res);
 });
 
 router.get('/tokens/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: check for authorized user
     var filter = req.body;
     common.query(db.get().collection('accesstokens'),filter,res);
 });
