@@ -56,7 +56,7 @@ def make_batches(wdb,time_window):
                 break
         if not found:
             batches.append({'ids':[ids[i]]})
-            times_left.append(time_window)
+            times_left.append(time_window-timeouts[i])
 
     wdb.work_batches.commit(batches)
 
