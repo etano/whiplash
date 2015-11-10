@@ -32,12 +32,10 @@ def scheduler(args):
 
     print('scheduler connected to wdb')
 
-    wdb_users = get_users(wdb)
-
     users = []
     while True:
 
-        for wdb_user in wdb_users:
+        for wdb_user in get_users(wdb):
             user = wdb_user['username']
             if user not in users:
                 print('starting slurm scheduler for user',user)
