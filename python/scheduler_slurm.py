@@ -73,7 +73,7 @@ def scheduler(args):
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + " && mkdir -p " + args.work_dir + "/log" + "\'\"",shell=True)
         count = 0
         while True:
-            if count % 100 == 0:
+            if (count % 100 == 0) and (wdb.work_batches.count({}) == 0):
                 [time_limit,time_window] = get_times(wdb)
                 make_batches(wdb,time_window)
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
