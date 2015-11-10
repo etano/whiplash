@@ -44,20 +44,22 @@ def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
         unresolved.append(executables)
 
     t1 = time.time()
-    print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)    
+    print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)
 
-def commit_resolved(wdb,props,results,pid):
+def commit_resolved(wdb,good_results,bad_results,pid):
     t0 = time.time()
-    ids = wdb.models.commit(results)['ids']
+    ids = wdb.models.commit(good_results['models'])['ids']
     t1 = time.time()
     elapsed0 = t1-t0
+    print('worker',str(pid),'commited',len(good_results['models']),'models in time',elapsed0)
     for ID in ids:
-        props[ID['index']]['output_model_id'] = ID['_id']
+        good_results['properties'][ID['index']]['output_model_id'] = ID['_id']
     t0 = time.time()
-    wdb.properties.batch_update(props)
+    all_properties = good_results['properties']+bad_results['properties']
+    wdb.properties.batch_update(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
-    print('worker',str(pid),'commited',len(props),'properties in times',elapsed0,'and',elapsed1)
+    print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
 def resolve_object(pid,obj,models,executables,work_dir):
     prop = obj['property']
@@ -104,7 +106,7 @@ def resolve_object(pid,obj,models,executables,work_dir):
     if 'None' in result['tags']: result['tags'] = {}
     result['tags']['property_id'] = ID
 
-    return [prop,result]
+    return {'property':prop,'model':result}
 
 def worker(pid,wdb,args,end_time):
     print('worker',str(pid),'active')
@@ -132,19 +134,24 @@ def worker(pid,wdb,args,end_time):
                 objs = unresolved1[0]
                 models = unresolved1[1]
                 executables = unresolved1[2]
-                props,results = [],[]
+                good_results = {'properties':[],'models':[]}
+                bad_results = {'properties':[],'models':[]}
                 t0 = time.time()
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
                         resolved = resolve_object(pid,obj,models,executables,args.work_dir)
-                        props.append(resolved[0])
-                        results.append(resolved[1])
+                        if resolved['property']['status'] == 3:
+                            good_results['properties'].append(resolved['property'])
+                            good_results['models'].append(resolved['model'])
+                        else:
+                            bad_results['properties'].append(resolved['property'])
+                            bad_results['models'].append(resolved['model'])
                     else: break
                 t1 = time.time()
                 unresolved1 = [[],[],[]]
                 if len(props) > 0:
                     print('worker',str(pid),'resolved',len(props),'properties in time',t1-t0)
-                    thread = th.Thread(target = commit_resolved, args = (wdb,props,results,pid,))
+                    thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
                     thread.start()
                     threads.append(thread)
             elif time_left() < args.time_window:
