@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.4
 
 import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
@@ -56,7 +56,7 @@ def make_batches(wdb,time_window):
                 break
         if not found:
             batches.append({'ids':[ids[i]]})
-            times_left.append(time_window)
+            times_left.append(time_window-timeouts[i])
 
     wdb.work_batches.commit(batches)
 
@@ -73,7 +73,7 @@ def scheduler(args):
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + " && mkdir -p " + args.work_dir + "/log" + "\'\"",shell=True)
         count = 0
         while True:
-            if count % 100 == 0:
+            if (count % 100 == 0) and (wdb.work_batches.count({}) == 0):
                 [time_limit,time_window] = get_times(wdb)
                 make_batches(wdb,time_window)
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))

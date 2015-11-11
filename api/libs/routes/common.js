@@ -74,6 +74,7 @@ module.exports = {
 
             // Return object
             if (!err) {
+                log.info("Query objects in %s",collection.collectionName);
                 return res.json({
                     status: 'OK',
                     result: objs
@@ -98,6 +99,7 @@ module.exports = {
 
             // Return object
             if (!err) {
+                log.info("Query single object in %s",collection.collectionName);
                 return res.json({
                     status: 'OK',
                     result: obj
@@ -117,6 +119,7 @@ module.exports = {
 
             // Return object
             if (!err) {
+                log.info("Counting %d objects in %s",count,collection.collectionName);
                 return res.json({
                     status: 'OK',
                     result: count
@@ -165,6 +168,7 @@ module.exports = {
 
             // Return object
             if (!err) {
+                log.info("Querying fields in %s",collection.collectionName);
                 return res.json({
                     status: 'OK',
                     result: projection
@@ -185,6 +189,7 @@ module.exports = {
         req.body.filter.owner = String(req.user._id);
         collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
+                log.info("Found and updated object in %s",collection.collectionName);
                 return res.json({
                     status: 'OK',
                     result: result.value
@@ -211,6 +216,7 @@ module.exports = {
         req.body.filter.owner = String(req.user._id);
         collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
+                log.info("%d objects updated",result.modifiedCount);
                 return res.json({
                     status: 'OK',
                     result: result.modifiedCount // Other options include matchedCount and upsertedCount
@@ -266,6 +272,7 @@ module.exports = {
         // Do delete operation
         collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
+                log.info("Deleting %d objects",result.deletedCount);
                 return res.json({
                     status: 'OK',
                     result: result.deletedCount
@@ -332,6 +339,7 @@ module.exports = {
             if(!err){
                 out_collection.find().toArray(function (err, result) {
                     if(!err) {
+                        log.info("Computing statistics for %s",req.query.field);
                         if(result.length>0) {
                             return res.json({
                                 status: 'OK',
