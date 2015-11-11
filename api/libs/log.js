@@ -8,7 +8,9 @@ function logger(module) {
         transports : [
             new winston.transports.File({
                 level: 'info',
-                filename: process.cwd() + '/logs/all.log',
+                //filename: process.cwd() + '/logs/all.log',
+                //filename: '/var/log/node/all.log',
+                filename: '/users/whiplash/logs/node/all.log',
                 handleException: true,
                 json: true,
                 maxSize: 5242880, //5mb 
