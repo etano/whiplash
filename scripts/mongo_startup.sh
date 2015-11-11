@@ -1,3 +1,3 @@
 #!/bin/bash
 
-numactl --interleave=all mongod --config mongod.conf
+numactl --interleave=all mongod --config config/mongo/mongod.conf
