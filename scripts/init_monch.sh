@@ -25,3 +25,8 @@ export MONGO_API_USERNAME=api
 export MONGO_API_PASSWORD=haYrv{Ak9UJiaDsqVTe7rLJTc
 export MONGO_PORT_27017_TCP_ADDR=localhost
 export MONGO_PORT_27017_TCP_PORT=27017
+
+# Aliases
+alias mongod="/users/whiplash/mongodb-linux-x86_64-3.0.7/bin/mongod"
+alias mongo="/users/whiplash/mongodb-linux-x86_64-3.0.7/bin/mongo"
+alias node="/users/whiplash/node-v4.2.2-linux-x64/bin/node"
