@@ -15,9 +15,9 @@ passport.use(new BasicStrategy(
         Client.findOne({ clientId: username }, function(err, client) {
             if (err) { return done(err); }
 
-            if (!client) { return done(null, false); }
+            if (!client) { return done(null, false, { message: 'Wrong username or password' }); }
 
-            if (client.clientSecret !== password) { return done(null, false); }
+            if (client.clientSecret !== password) { return done(null, false, { message: 'Wrong username or password' }); }
 
             return done(null, client);
         });
@@ -29,9 +29,9 @@ passport.use(new ClientPasswordStrategy(
         Client.findOne({ clientId: clientId }, function(err, client) {
             if (err) { return done(err); }
 
-            if (!client) { return done(null, false); }
+            if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
 
-            if (client.clientSecret !== clientSecret) { return done(null, false); }
+            if (client.clientSecret !== clientSecret) { return done(null, false, { message: 'Wrong client id or secret' }); }
 
             return done(null, client);
         });
