@@ -89,8 +89,8 @@ def scheduler(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
-    parser.add_argument('--port',dest='port',required=False,type=int,default=443)
+    parser.add_argument('--host',dest='host',required=False,type=str,default="monchc300.cscs.ch") #"whiplash.ethz.ch"
+    parser.add_argument('--port',dest='port',required=False,type=int,default=1337) #443
     parser.add_argument('--token',dest='token',required=False,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
