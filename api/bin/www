@@ -6,6 +6,15 @@ var config = require(libs + 'config');
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
 
+var throng = require('throng');
+
+throng(start, {
+    workers: 4,
+    lifetime: Infinity,
+    grace: 4000
+});
+
+function start() {
 db.connect(function(err) {
     if(!err) {
         var app = require(libs + 'app');
@@ -17,4 +26,5 @@ db.connect(function(err) {
         server.timeout = 3600000;
     }
 });
+}
 
