@@ -24,7 +24,7 @@ def submit_job(args,time_limit,time_window):
         sbatch.write("#SBATCH --ntasks=1" + "\n")
         sbatch.write("srun python /users/whiplash/whiplash/python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + args.work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/whiplash/scripts/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/whiplash/scripts/user_init.sh && sbatch run.sbatch" + "\'\"",shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + "run.sbatch" + "\'\"",shell=True)
 
 def get_times(wdb):
