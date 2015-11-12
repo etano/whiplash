@@ -11,7 +11,7 @@ var throng = require('throng');
 throng(start, {
     workers: 8,
     lifetime: Infinity,
-    grace: 4000
+    grace: 10000
 });
 
 function start() {
