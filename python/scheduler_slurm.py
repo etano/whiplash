@@ -12,7 +12,7 @@ def submit_job(args,time_limit,time_window):
     t = str(int(time.time()))
     job_name = args.user + "_" + t
     print('submitting job:',job_name,' | ',time_limit,' | ',time_window)
-    with open("run.sbatch","w") as sbatch:
+    with open("run_" + args.user + ".sbatch","w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + "whiplash_" + t + "\n")
         sbatch.write("#SBATCH --output=" + args.log_dir + '/local/' + job_name + '.o' + "\n")
@@ -23,9 +23,8 @@ def submit_job(args,time_limit,time_window):
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
         sbatch.write("srun python /users/whiplash/whiplash/python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + args.work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
-    sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/whiplash/scripts/user_init.sh && sbatch run.sbatch" + "\'\"",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + "run.sbatch" + "\'\"",shell=True)
+    sp.call("scp " + "run_" + args.user + ".sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/whiplash/scripts/user_init.sh && sbatch run_" + args.user + ".sbatch" + "\'\"",shell=True)
 
 def get_times(wdb):
     print('getting times')
