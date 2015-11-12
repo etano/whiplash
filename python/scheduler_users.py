@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import daemon,argparse,time,sys,os,json,pymongo
+import daemon,argparse,time,os,pymongo
 import subprocess as sp
 import multiprocessing as mp
 
