@@ -25,7 +25,7 @@ def submit_job(args,time_limit,time_window):
         sbatch.write("#SBATCH --ntasks=1" + "\n")
         sbatch.write("srun python " + args.work_dir + "/rte/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + run_dir + " --num_cpus " + str(args.num_cpus) + "\n")
     sp.call("scp " + "run_" + args.user + ".sbatch" + " " + args.user + "@" + args.cluster + ":" + run_dir + "/",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + run_dir + " && source " + args.work_dir + "/rte/user_init.sh && sbatch run_" + args.user + ".sbatch" + "\'\"",shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source rte/user_init.sh && sbatch run/run_" + args.user + ".sbatch" + "\'\"",shell=True)
 
 def get_times(wdb):
     print('getting times')
