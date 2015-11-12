@@ -41,7 +41,7 @@ def scheduler(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host',dest='host',required=False,type=str,default="whiplash.ethz.ch")
+    parser.add_argument('--host',dest='host',required=False,type=str,default="monchc300.cscs.ch") #whiplash.ethz.ch
     parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_users_' + str(int(time.time())) + '.log')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
