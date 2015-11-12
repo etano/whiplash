@@ -22,7 +22,7 @@ def get_users(wdb):
 def scheduler(args):
 
     client = pymongo.MongoClient(args.host,27017)
-    client.wdb.authenticate('scheduler','c93lbcp0hc[5209sebf10{3ja',mechanism='SCRAM-SHA-1')
+    client.wdb.authenticate('scheduler','c93lbcp0hc[5209sebf10{3ca',mechanism='SCRAM-SHA-1')
 
     print('scheduler connected to wdb')
 
@@ -41,7 +41,7 @@ def scheduler(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host',dest='host',required=False,type=str,default="monchc300.cscs.ch") #whiplash.ethz.ch
+    parser.add_argument('--host',dest='host',required=False,type=str,default="127.0.0.1") #whiplash.ethz.ch
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
