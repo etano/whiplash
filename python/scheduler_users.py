@@ -5,6 +5,9 @@ import subprocess as sp
 import multiprocessing as mp
 
 def start_scheduler_slurm(wdb_user):
+    print(wdb_user)
+    print("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'] + " --daemonise")
+    sys.exit(0)
     sp.call("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'] + " --daemonise",shell=True)
 
 def get_users(wdb):

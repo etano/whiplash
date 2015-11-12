@@ -11,7 +11,7 @@ def seconds2time(time_limit):
 def submit_job(args,time_limit,time_window):
     user_work_dir = '/mnt/lnec/' + args.user + '/whiplash_run'
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_work_dir + "\'\"",shell=True)
-    user_log_dir = '/mnt/lnec/' + args.user + '/whiplash_run/logs'    
+    user_log_dir = '/mnt/lnec/' + args.user + '/whiplash_run/logs'
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_log_dir + "\'\"",shell=True)
     t = str(int(time.time()))
     job_name = "job_" + t
