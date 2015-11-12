@@ -9,7 +9,7 @@ var db = require(libs + 'db/mongo');
 var throng = require('throng');
 
 throng(start, {
-    workers: 4,
+    workers: 8,
     lifetime: Infinity,
     grace: 4000
 });
