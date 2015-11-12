@@ -9,11 +9,12 @@ def seconds2time(time_limit):
     return "%d:%02d:%02d" % (h, m, s)
 
 def submit_job(args,time_limit,time_window):
-    job_name = args.user + "_" + str(int(time.time()))
+    t = str(int(time.time()))
+    job_name = args.user + "_" + t
     print('submitting job:',job_name,' | ',time_limit,' | ',time_window)
     with open("run.sbatch","w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
-        sbatch.write("#SBATCH --job-name=" + job_name + "\n")
+        sbatch.write("#SBATCH --job-name=" + "whiplash_" + t + "\n")
         sbatch.write("#SBATCH --output=" + args.log_dir + '/local/' + job_name + '.o' + "\n")
         sbatch.write("#SBATCH --error=" + args.log_dir + '/local/' + job_name + '.e' + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
