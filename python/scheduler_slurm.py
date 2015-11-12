@@ -8,16 +8,14 @@ def seconds2time(time_limit):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def submit_job(args,time_limit,time_window,job_tag):
-    print('submitting job:',job_tag,' | ',time_limit,' | ',time_window)
-    job_name = args.user + "_" + str(job_tag)
-    log_dir = "log/" + job_name
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + log_dir + "\'\"",shell=True)
+def submit_job(args,time_limit,time_window):
+    job_name = args.user + "_" + str(int(time.time()))
+    print('submitting job:',job_name,' | ',time_limit,' | ',time_window)
     with open("run.sbatch","w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + job_name + "\n")
-        sbatch.write("#SBATCH --output=" + log_dir + "/out.o" + "\n")
-        sbatch.write("#SBATCH --error=" + log_dir + "/out.e" + "\n")
+        sbatch.write("#SBATCH --output=" + args.log_dir + '/local/' + job_name + '.o' + "\n")
+        sbatch.write("#SBATCH --error=" + args.log_dir + '/local/' + job_name + '.e' + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
         sbatch.write("#SBATCH --time=" + seconds2time(time_limit) + "\n")
         sbatch.write("#SBATCH --nodes=1" + "\n")
@@ -78,8 +76,7 @@ def scheduler(args):
                 make_batches(wdb,time_window)
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
             if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
-                job_tag = str(int(time.time()))
-                submit_job(args,time_limit,time_window,job_tag)
+                submit_job(args,time_limit,time_window)
             time.sleep(5)
             count += 1
     else:
@@ -96,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
     parser.add_argument('--cluster',dest='cluster',required=False,type=str,default='monch.cscs.ch')
     parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='/mnt/lnec/whiplash/run')
-    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
+    parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
@@ -106,7 +103,7 @@ if __name__ == '__main__':
     assert args.num_cpus <= 20
 
     if args.daemonise:
-        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_dir + '/slurm/' + args.user + '_' + str(int(time.time())) + '.log', 'w+')):
             scheduler(args)
     else:
         scheduler(args)

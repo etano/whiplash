@@ -42,12 +42,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--host',dest='host',required=False,type=str,default="monchc300.cscs.ch") #whiplash.ethz.ch
-    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_users_' + str(int(time.time())) + '.log')
+    parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     if args.daemonise:
-        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_dir + '/users/' + str(int(time.time())) + '.log', 'w+')):
             scheduler(args)
     else:
         scheduler(args)
