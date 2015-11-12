@@ -2,7 +2,7 @@
 
 import daemon,argparse,time,sys,os,json,pymongo
 import subprocess as sp
-import threading as th
+import multiprocessing as mp
 
 def start_scheduler_slurm(wdb_user):
     sp.call("./scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
@@ -26,13 +26,15 @@ def scheduler(args):
 
     print('scheduler connected to wdb')
 
+    context = mp.get_context('fork')
+
     users = []
     while True:
         for wdb_user in get_users(client.wdb):
             user = wdb_user['username']
             if user not in users:
                 print('starting slurm scheduler for user',user)
-                th.Thread(target = start_scheduler_slurm, args = (wdb_user,)).start()
+                context.Process(target=start_scheduler_slurm, args=(wdb_user,)).start()
                 users.append(user)
         time.sleep(60)
 
