@@ -11,16 +11,18 @@ def seconds2time(time_limit):
 def submit_job(args,time_limit,time_window):
     user_work_dir = '/mnt/lnec/' + args.user + '/whiplash_run'
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_work_dir + "\'\"",shell=True)
+    user_log_dir = '/mnt/lnec/' + args.user + '/whiplash_run/logs'    
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_log_dir + "\'\"",shell=True)
     t = str(int(time.time()))
-    job_name = args.user + "_" + t
+    job_name = "job_" + t
     job_file = "job_" + args.user + ".sbatch"
     user_job_file = "whiplash_job.sbatch"    
-    print('submitting job:',job_name,' | ',time_limit,' | ',time_window)
+    print('submitting job:',args.user,' | ',time_limit,' | ',time_window)
     with open(job_file,"w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + "whiplash_" + t + "\n")
-        sbatch.write("#SBATCH --output=" + args.log_dir + '/local/' + job_name + '.o' + "\n")
-        sbatch.write("#SBATCH --error=" + args.log_dir + '/local/' + job_name + '.e' + "\n")
+        sbatch.write("#SBATCH --output=" + user_log_dir + '/' + job_name + '.o' + "\n")
+        sbatch.write("#SBATCH --error=" + user_log_dir + '/' + job_name + '.e' + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
         sbatch.write("#SBATCH --time=" + seconds2time(time_limit) + "\n")
         sbatch.write("#SBATCH --nodes=1" + "\n")
