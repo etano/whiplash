@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 
-import daemon,argparse,time,os,pymongo,sys
+import daemon,argparse,time,os,pymongo
 import subprocess as sp
 import multiprocessing as mp
 
 def start_scheduler_slurm(wdb_user):
-    print(wdb_user)
-    print("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'] + " --daemonise")
-    sys.exit(0)
-    sp.call("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'] + " --daemonise",shell=True)
+    sp.call("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
 
 def get_users(wdb):
     users = wdb.users.find({})
