@@ -42,4 +42,4 @@ scratch directory on Monch __/mnt/lnec/whiplash/rte/whiplash.py__
 
 1. Get results
 
-         results = wdb.properties.query({"params.n_sweeps":1000,"params.n_slices":64})
+         results = wdb.get_results({'params.seed':{'$in': list(range(10,40))}})
