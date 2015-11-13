@@ -4,52 +4,42 @@
 [http://www.cscs.ch](http://www.cscs.ch/user_lab/becoming_a_user/new_user_of_existing_project/index.html)
 and choose __Matthias Troyer, p501a__ in the __Select PI__ dropdown
 
-1. Apply for a Whiplash account on
-[http://whiplash.ethz.ch](http://whiplash.ethz.ch). Make note of your
-session token
+1. Make a Whiplash account on
+[http://whiplash.ethz.ch](http://whiplash.ethz.ch). Note your session
+token
 
 1. Add Whiplash's public key to ~/.ssh/authorized_keys on your account
 
-           ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0+Reqt4F8IO3nb0nx84aaZuyfrR1htA+J3SuT5az9he6TcAVY1/kzHeDWV7EaKDquM0wfPES173ozKAUVG5sgNdJTpI10+9+cIgN5/GhbYbA/XEveod0yfjvcdIXONsvOEX4FIxvfQxp3gTG9smX6Xb1Uu6KVYiTiwj9jnrHVxx00zpNAGNDVnaTI4DXTZtuzl/Pymzjl06b7s07d07UCnPrDXXa3jqlwHamms/jPDFq1OIsLkq5LcOGl0VK5fsVnBe5UKktjEVv6ojF18jrOef812v0/wHjTkOBuiYYRTMv/USoerHlZdBsPCjDf0TrHPbjiRSrpe85O0uMxM15h root@whiplash-dev
+           ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2bjz1D8/BIxumZnKp42ERDwtpTKEVK1iXu6+JUrBR86SK24S2uyxxARJDDQFZ8k1JL3FVc7b2k4di2WP6y3N8AImgGxclyXuJEiR2orbC/ij0PeN1ReyO/NHsIQZVvVt31AnnRA8nyfcnabIUas9c2zPXp5jWddz2dEijINffcQv0rgPVcm0bLAf3gM1ZG3QVD+6/dDaa7984Ebtif/kThi8EzOjtiK7ZM2Bqmp2HQBNhOvqCDiItjk6wSbdk/o96w4hZZ6D4ueqn4hTXUQnkH5j3L7PBanMQhIv8kn8OLEbtyuDsWG/iTV07fet9hhsDgihyOilio5CKOySCrRnQ== whiplash@cscs.ch
 
-1. Get the latest version of the Whiplash python module on
-[http://whiplash.ethz.ch](http://whiplash.ethz.ch/module)
+1. Get the latest version of the Whiplash python module from the
+scratch directory on Monch __/mnt/lnec/whiplash/rte/whiplash.py__
 
-1. Make sure the executable you want to run exists somewhere on the
-scratch directory under __/mnt/lnec/your_username/...__
+1. Make sure the executable you want to run exists somewhere on Monch
 
 1. Connect to the Whiplash server using your session token
 
            import whiplash          
-           wdb = whiplash.wdb("whiplash.ethz.ch","443","you_session_token")
+           wdb = whiplash.wdb("monchc300.cscs.ch","1337","your_session_token")
 
-1. Define your executable
+1. Commit executable
 
-          executable = {"description":"unitary evolution for Ising models","algorithm":"UE","name":"unitary evolution","version":"1.0.0","build":"O3","path":"/users/whiplash/whiplash/whiplash/python/ue_solver"}
+          executable = {"description":"unitary evolution for Ising models","algorithm":"UE","name":"unitary evolution","version":"1.0.0","build":"O3","path":"/path/to/your/executable"}
+          executable_id = wdb.executables.commit(executable)['ids'][0]['_id']
 
-1. Define your model
+1. Commit model
 
           hamiltonian = [[[1,2],1],[[2,3],1],[[3,4],-1],[[4,1],1]]
           model = {"content":{"edges": hamiltonian},"tags":{"number of spins":4,"name":"periodic Ising chain"}}
+          model_id = wdb.models.commit(model)['ids'][0]['_id']
 
-1. Define what you want computed
+1. Commit properties
 
-         props = []
-         for seed in range(N):
-             props.append({"params":{"n_sweeps":1000,"n_slices":64,"seed":seed}, "timeout":3600})
-
-1. Submit jobs
-
-          wdb.properties.submit(model,executable,props)
-
-1. Have a glass of whisky
+          properties = []
+          for i in range(10000): 
+              properties.append({"params":{"seed":i,"hx":-1,"Ttot":500,"nsteps":400},"input_model_id":model_id,"executable_id":executable_id,"timeout":600})
+          wdb.properties.commit(properties)
 
 1. Get results
 
-         data = wdb.properties.query({"params.n_sweeps":1000,"params.n_slices":64})
-
-1. Plot data
-
-         import matplotlib.pyplot as plt
-         plt.plot(range(N),data.energies)
-         plt.show()
+         results = wdb.properties.query({"params.n_sweeps":1000,"params.n_slices":64})
