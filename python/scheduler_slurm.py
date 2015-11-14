@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python3
 
 import whiplash,daemon,argparse,time,json,sys,os,random
 import subprocess as sp
@@ -8,25 +8,29 @@ def seconds2time(time_limit):
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
 
-def submit_job(args,time_limit,time_window,job_tag):
-    print('submitting job:',job_tag,' | ',time_limit,' | ',time_window)
-    job_name = args.user + "_" + str(job_tag)
-    log_dir = "log/" + job_name
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + "/" + log_dir + "\'\"",shell=True)
-    with open("run.sbatch","w") as sbatch:
+def submit_job(args,time_limit,time_window):
+    user_work_dir = '/mnt/lnec/' + args.user + '/.whiplash_run'
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_work_dir + "\'\"",shell=True)
+    user_log_dir = user_work_dir + '/logs'
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + user_log_dir + "\'\"",shell=True)
+    t = str(int(time.time()))
+    job_name = "job_" + t
+    job_file = "job_" + args.user + ".sbatch"
+    user_job_file = ".whiplash_job.sbatch"    
+    print('submitting job:',args.user,' | ',time_limit,' | ',time_window)
+    with open(job_file,"w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
-        sbatch.write("#SBATCH --job-name=" + job_name + "\n")
-        sbatch.write("#SBATCH --output=" + log_dir + "/out.o" + "\n")
-        sbatch.write("#SBATCH --error=" + log_dir + "/out.e" + "\n")
+        sbatch.write("#SBATCH --job-name=" + "whiplash_" + t + "\n")
+        sbatch.write("#SBATCH --output=" + user_log_dir + '/' + job_name + '.o' + "\n")
+        sbatch.write("#SBATCH --error=" + user_log_dir + '/' + job_name + '.e' + "\n")
         sbatch.write("#SBATCH --partition=dphys_compute" + "\n")
         sbatch.write("#SBATCH --time=" + seconds2time(time_limit) + "\n")
         sbatch.write("#SBATCH --nodes=1" + "\n")
         sbatch.write("#SBATCH --exclusive" + "\n")
         sbatch.write("#SBATCH --ntasks=1" + "\n")
-        sbatch.write("srun python /users/whiplash/rte/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + args.work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
-    sp.call("scp " + "run.sbatch" + " " + args.user + "@" + args.cluster + ":" + args.work_dir + "/",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "cd " + args.work_dir + " && source /users/whiplash/init_monch.sh && sbatch run.sbatch" + "\'\"",shell=True)
-    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "rm " + args.work_dir + "/" + "run.sbatch" + "\'\"",shell=True)
+        sbatch.write("srun python " + args.whiplash_work_dir + "/rte/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + user_work_dir + " --num_cpus " + str(args.num_cpus) + "\n")
+    sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True)
+    sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "source " + args.whiplash_work_dir + "/rte/user_init.sh && sbatch ~/" + user_job_file + "\'\"",shell=True)
 
 def get_times(wdb):
     print('getting times')
@@ -70,7 +74,6 @@ def scheduler(args):
     print('scheduler connected to wdb')
 
     if not args.test:
-        sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "mkdir -p " + args.work_dir + " && mkdir -p " + args.work_dir + "/log" + "\'\"",shell=True)
         count = 0
         while True:
             if (count % 100 == 0) and (wdb.work_batches.count({}) == 0):
@@ -78,8 +81,7 @@ def scheduler(args):
                 make_batches(wdb,time_window)
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
             if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
-                job_tag = str(int(time.time()))
-                submit_job(args,time_limit,time_window,job_tag)
+                submit_job(args,time_limit,time_window)
             time.sleep(5)
             count += 1
     else:
@@ -95,8 +97,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=20)
     parser.add_argument('--user',dest='user',required=False,type=str,default='whiplash')
     parser.add_argument('--cluster',dest='cluster',required=False,type=str,default='monch.cscs.ch')
-    parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='/mnt/lnec/whiplash/run')
-    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_slurm_' + str(int(time.time())) + '.log')
+    parser.add_argument('--whiplash_work_dir',dest='whiplash_work_dir',required=False,type=str,default='/mnt/lnec/whiplash')
+    parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
@@ -106,7 +108,7 @@ if __name__ == '__main__':
     assert args.num_cpus <= 20
 
     if args.daemonise:
-        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_dir + '/slurm/' + args.user + '_' + str(int(time.time())) + '.log', 'w+')):
             scheduler(args)
     else:
         scheduler(args)

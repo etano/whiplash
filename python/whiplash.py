@@ -101,6 +101,21 @@ class wdb:
             self.set_token(res["access_token"])
 
     #
+    # Get results
+    #
+
+    def get_results(self,fltr):
+        fltr['status'] = 3
+        result_ids = self.properties.query_fields_only(fltr,'output_model_id')['output_model_id']
+
+        tmp = self.models.query({'_id': {'$in': result_ids}})
+        results = []
+        for result in tmp:
+            results.append(result['content'])
+        return results
+
+
+    #
     # Collections
     #
     class collection:
