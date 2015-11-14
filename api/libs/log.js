@@ -1,4 +1,6 @@
 var winston = require('winston');
+var libs = process.cwd() + '/libs/';
+var config = require(libs + 'config');
 
 winston.emitErrs = true;
 
@@ -8,13 +10,11 @@ function logger(module) {
         transports : [
             new winston.transports.File({
                 level: 'info',
-                //filename: process.cwd() + '/logs/all.log',
-                //filename: '/var/log/node/all.log',
-                filename: '/mnt/lnec/whiplash/logs/node/all.log',
+                filename: process.env.LOGPATH || config.get('logpath') || process.cwd() + 'logs/all.log',
                 handleException: true,
                 json: true,
-                maxSize: 5242880, //5mb 
-                maxFiles: 2, 
+                maxSize: 5242880, //5mb
+                maxFiles: 2,
                 colorize: false
             }),
             new winston.transports.Console({
