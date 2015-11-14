@@ -225,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--time_window',dest='time_window',required=True,type=float)
     parser.add_argument('--work_dir',dest='work_dir',required=True,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
-    parser.add_argument('--log_file',dest='log_file',required=False,type=str,default='scheduler_local_' + str(int(time.time())) + '.log')
+    parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.daemonise:
-        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_file, 'w+')):
+        with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_dir + '/local/' + str(int(time.time())) + '.log', 'w+')):
             scheduler(args)
     else:
         scheduler(args)
