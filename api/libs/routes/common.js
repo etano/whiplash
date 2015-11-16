@@ -63,14 +63,15 @@ module.exports = {
     //
 
     query: function(collection,filter,res) {
+        if(!filter.hasOwnProperty('metadata')){
+            filter.owner = String(req.user._id);
+        }
         collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // TODO: Check to make sure user has READ permissions
 
             // Return object
             if (!err) {
@@ -88,14 +89,15 @@ module.exports = {
     },
 
     query_one: function(collection,filter,res) {
+        if(!filter.hasOwnProperty('metadata')){
+            filter.owner = String(req.user._id);
+        }
         collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // TODO: Check to make sure user has READ permissions
 
             // Return object
             if (!err) {
@@ -113,9 +115,10 @@ module.exports = {
     },
 
     query_count: function(collection,filter,res) {
+        if(!filter.hasOwnProperty('metadata')){
+            filter.owner = String(req.user._id);
+        }
         collection.count(filter, function (err, count) {
-
-            // TODO: Check to make sure user has READ permissions
 
             // Return object
             if (!err) {
@@ -137,14 +140,15 @@ module.exports = {
         for(var i=0; i<fields.length; i++){
             proj[fields[i]] = 1;
         }
+        if(!filter.hasOwnProperty('metadata')){
+            filter.owner = String(req.user._id);
+        }
         collection.find(filter).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // TODO: Check to make sure user has READ permissions
 
             var fields1 = [];
             for(var j=0; j<fields.length; j++){
@@ -203,7 +207,7 @@ module.exports = {
     },
 
     find_id_and_update: function(collection,req,res) {
-        var filter = {"_id": req.params.id,"owner":String(req.user._id)};
+        var filter = {"_id": req.params.id};
         req.body.filter = filter;
         return this.find_one_and_update(collection,req,res);
     },
@@ -232,7 +236,7 @@ module.exports = {
     batch_update: function(collection,req,res) {
         var arr = [];
         for(var i=0; i<req.body.length; i++) {
-            arr.push({ replaceOne: { filter: {_id:req.body[i]._id}, replacement: req.body[i]}});
+            arr.push({ replaceOne: { filter: {_id:req.body[i]._id,owner:String(req.user._id)}, replacement: req.body[i]}});
         }
         collection.bulkWrite(arr,{w:1},function(err,result) {
             if (result.ok) {

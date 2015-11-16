@@ -125,7 +125,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             filter['_id'] = req.body[key];
         }
     }
-
+    filter["metadata.owner"] = String(req.user._id);
     if (req.params.tags_only) {
         common.query(collection,filter,res);
     } else {
@@ -175,6 +175,7 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
             filter['_id'] = req.body[key];
         }
     }
+    filter["metadata.owner"] = String(req.user._id);
     if (req.params.tags_only) {
         common.query_one(collection,filter,res);
     } else {
@@ -216,6 +217,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
             filter['_id'] = req.body[key];
         }
     }
+    filter["metadata.owner"] = String(req.user._id);
     common.query_count(collection,filter,res);
 });
 
@@ -230,6 +232,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
             filter['_id'] = req.body.filter[key];
         }
     }
+    filter["metadata.owner"] = String(req.user._id);
     var fields = req.body.fields;
     for(var i=0; i <fields.length; i++)
         if(!~special.indexOf(fields[i]))
@@ -239,6 +242,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {_id:req.params.id};
+    filter["metadata.owner"] = String(req.user._id);    
     if (req.params.tags_only) {
         common.query_one(collection,filter,res);
     } else {
