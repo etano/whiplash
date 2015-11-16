@@ -63,9 +63,6 @@ module.exports = {
     //
 
     query: function(collection,filter,res) {
-        if(!filter.hasOwnProperty('metadata')){
-            filter.owner = String(req.user._id);
-        }
         collection.find(filter).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
@@ -89,9 +86,6 @@ module.exports = {
     },
 
     query_one: function(collection,filter,res) {
-        if(!filter.hasOwnProperty('metadata')){
-            filter.owner = String(req.user._id);
-        }
         collection.find(filter).limit(1).toArray(function (err, obj) {
             // Check exists
             if(!obj) {
@@ -115,9 +109,6 @@ module.exports = {
     },
 
     query_count: function(collection,filter,res) {
-        if(!filter.hasOwnProperty('metadata')){
-            filter.owner = String(req.user._id);
-        }
         collection.count(filter, function (err, count) {
 
             // Return object
@@ -140,10 +131,6 @@ module.exports = {
         for(var i=0; i<fields.length; i++){
             proj[fields[i]] = 1;
         }
-        if(!filter.hasOwnProperty('metadata')){
-            filter.owner = String(req.user._id);
-        }
-        console.log("FILTER:",filter)
         collection.find(filter).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {

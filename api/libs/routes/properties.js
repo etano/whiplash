@@ -36,27 +36,32 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = req.body;
+    filter.owner = String(req.user._id);
     common.query(collection,filter,res);
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = req.body;
+    filter.owner = String(req.user._id);
     common.query_one(collection,filter,res);
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = req.body;
+    filter.owner = String(req.user._id);
     common.query_count(collection,filter,res);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = req.body.filter;
+    filter.owner = String(req.user._id);
     var fields = req.body.fields;
     common.query_fields_only(collection,filter,fields,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {_id:req.params.id};
+    filter.owner = String(req.user._id);
     common.query_one(collection,filter,res);
 });
 
