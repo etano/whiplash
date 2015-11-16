@@ -13,7 +13,7 @@ def get_users(wdb):
     wdb_users = []
     for user in users:
         for token in tokens:
-            if str(user['_id']) == token['userId']:
+            if (str(user['_id']) == token['userId']) and (token['clientId'] != 'www-browser'):
                 cluster = "monch.cscs.ch" #TODO: dedicated collection of clusters
                 wdb_users.append({'username':user['username'],'token':token['token'],'cluster':cluster})
                 break
