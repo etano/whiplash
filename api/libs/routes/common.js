@@ -367,61 +367,6 @@ module.exports = {
                 return res.json({ error: 'Server error' });
             }
         });
-    },    
-
-    avg_per_dif: function(collection,req,res) {
-        if (!req.query.field1) {
-            req.query.field1 = req.body.field1;
-            req.query.field2 = req.body.field2;
-            req.query.filter = req.body.filter;
-        }
-        var map = function (){ emit(this.owner, {avg:(this[field1] - this[field2])/this[field2],count:1}); };
-        var reduce = function (key, values)
-        {
-            var reduced_value = {avg : 0.0, count : 0};
-            for (var i = 0; i < values.length; i++) {
-                reduced_value.avg += values[i].avg;
-                reduced_value.count += values[i].count;
-            }
-            return reduced_value;
-        };
-        var finalize = function (key, reduced_value)
-        {
-            return reduced_value.avg/reduced_value.count;
-        };
-        var o = {};
-        o.finalize = finalize;
-        req.query.filter.owner = String(req.user._id);
-        o.scope = {field1: req.query.field1, field2: req.query.field2};
-        o.query = req.query.filter;
-        o.out = {merge:'average_per_dif' + '_' + collection.collectionName};
-        collection.mapReduce(map, reduce, o, function (err, out_collection) {
-            if(!err){
-                out_collection.find().toArray(function (err, result) {
-                    if(!err){
-                        if (result.length > 0) {
-                            return res.json({
-                                status: 'OK',
-                                result: result[0].value
-                            });
-                        } else {
-                            return res.json({
-                                status: 'OK',
-                                result: 0
-                            });
-                        }
-                    } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
-                    }
-                });
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
-    },
+    }
 
 };

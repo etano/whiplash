@@ -54,7 +54,6 @@ wdb.properties.submit(model,executable,props)
 print("Check stats")
 assert wdb.properties.get_unresolved_time() == N0*t0
 assert wdb.properties.get_resolved_time() == N1*w1
-assert abs(wdb.properties.get_average_mistime()/(t1/w1-1.0) - 1.0) < 1e-08
 
 stats = wdb.properties.stats("timeout",{"status":0})
 assert stats['mean'] == t0
