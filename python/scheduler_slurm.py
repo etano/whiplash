@@ -73,6 +73,9 @@ def scheduler(args):
 
     print('scheduler connected to wdb')
 
+    [time_limit,time_window] = get_times(wdb)
+    make_batches(wdb,time_window)
+
     if not args.test:
         count = 0
         while True:
@@ -84,9 +87,6 @@ def scheduler(args):
                 submit_job(args,time_limit,time_window)
             time.sleep(5)
             count += 1
-    else:
-        [time_limit,time_window] = get_times(wdb)
-        make_batches(wdb,time_window)        
 
 if __name__ == '__main__':
 
