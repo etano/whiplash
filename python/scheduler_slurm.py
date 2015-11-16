@@ -79,7 +79,7 @@ def scheduler(args):
             if (count % 100 == 0) and (wdb.work_batches.count({}) == 0):
                 [time_limit,time_window] = get_times(wdb)
                 make_batches(wdb,time_window)
-            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | wc -l\'", shell=True))
+            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
             if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
                 submit_job(args,time_limit,time_window)
             time.sleep(5)
