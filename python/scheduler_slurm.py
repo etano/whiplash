@@ -42,7 +42,9 @@ def get_times(wdb):
 
 def make_batches(wdb,time_window):
     print('making batches')
+    print('here0')
     properties = wdb.properties.query_fields_only({"status":0,"timeout":{"$lt":time_window}},['_id','timeout'])
+    print('here1')
     ids = properties['_id']
     timeouts = properties['timeout']
 

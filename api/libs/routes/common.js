@@ -143,6 +143,7 @@ module.exports = {
         if(!filter.hasOwnProperty('metadata')){
             filter.owner = String(req.user._id);
         }
+        console.log("FILTER:",filter)
         collection.find(filter).project(proj).toArray(function (err, objs) {
             // Check exists
             if(!objs) {
