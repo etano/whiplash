@@ -305,6 +305,7 @@ var delete_by_id = function(id,req,res,cb) {
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var proj = {};
     proj._id = 1;
+    req.body["metadata.owner"] = String(req.user._id);
     collection.find(req.body).project(proj).toArray(function(err, objs) {
         // Check exists
         if(!objs) {
