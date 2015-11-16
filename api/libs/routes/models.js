@@ -360,26 +360,6 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 });
 
 //
-// GridFS
-//
-
-router.get('/file_id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    GridStore.read(db.get(), req.params.id, function(err, fileData) {
-        if(!err) {
-            log.info("Read file: %s",req.params.id);
-            return res.json({
-                status: 'OK',
-                result: fileData.toString()
-            });
-        } else {
-            res.statusCode = 500;
-            log.error("Read error: %s",err.message);
-            return res.json({ error: 'Server error' });
-        }
-    });
-});
-
-//
 // Map-reduce
 //
 
