@@ -20,6 +20,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = req.body;
+    filter.owner = String(req.user._id);
     common.query_count(collection,filter,res);
 });
 
