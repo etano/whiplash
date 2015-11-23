@@ -10,9 +10,14 @@ def start_scheduler_slurm(wdb_user):
 def get_users(wdb):
     users = wdb.users.find({})
     tokens = wdb.accesstokens.find({})
+
+    tokens_arr = []
+    for token in tokens:
+        tokens_arr.append(tokens)
+
     wdb_users = []
     for user in users:
-        for token in tokens:
+        for token in tokens_arr:
             if (str(user['_id']) == token['userId']) and (token['clientId'] != 'www-browser'):
                 cluster = "monch.cscs.ch" #TODO: dedicated collection of clusters
                 wdb_users.append({'username':user['username'],'token':token['token'],'cluster':cluster})
