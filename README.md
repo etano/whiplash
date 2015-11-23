@@ -1,5 +1,4 @@
 # Start development environment
-    export WHIPLASH=/path/to/whiplash
     docker-compose -f develop.yml up -d
 
 # Run tests (may need to export DOCKERHOST to 192.168.99.100)
