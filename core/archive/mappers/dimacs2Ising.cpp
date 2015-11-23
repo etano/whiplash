@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
           const unsigned site(std::abs(var)-1);
           if(index_tot.find(site) == index_tot.end())
             index_tot[site] = N++;
-          config.push_back(var > 0.0);
+          config.push_back(!(var > 0.0));
           index.push_back(site);
         }
         
