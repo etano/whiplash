@@ -1,0 +1,16 @@
+registry:
+  container_name: registry
+  restart: always
+  image: registry:2
+  ports:
+    - 5000:5000
+  environment:
+    REGISTRY_HTTP_TLS_CERTIFICATE: /certs/whiplash.ethz.ch.crt
+    REGISTRY_HTTP_TLS_KEY: /certs/whiplash.ethz.ch.key
+    REGISTRY_AUTH: htpasswd
+    REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+  volumes:
+    - $PWD/images:/var/lib/registry
+    - $PWD/certs:/certs
+    - $PWD/auth:/auth
