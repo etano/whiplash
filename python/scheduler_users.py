@@ -13,7 +13,7 @@ def get_users(wdb):
 
     tokens_arr = []
     for token in tokens:
-        tokens_arr.append(tokens)
+        tokens_arr.append(token)
 
     wdb_users = []
     for user in users:
