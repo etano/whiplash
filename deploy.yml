@@ -7,7 +7,7 @@ odb:
         - /data/db:/data/db
     ports:
         - 27017:27017
-api_1:
+api:
     extends:
         file: api/docker-compose.yml
         service: api
@@ -17,13 +17,4 @@ api_1:
         - odb:mongo
     restart: always
     command: sh -c "node bin/www"
-api_2:
-    extends:
-        file: api/docker-compose.yml
-        service: api
-    ports:
-        - 1338:1337
-    links:
-        - odb:mongo
-    restart: always
-    command: sh -c "node bin/www"
+
