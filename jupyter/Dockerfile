@@ -1,0 +1,1 @@
+FROM jupyter/jupyterhub:latest
