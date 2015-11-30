@@ -19,11 +19,12 @@ var models = require('./routes/models');
 var executables = require('./routes/executables');
 var properties = require('./routes/properties');
 var work_batches = require('./routes/work_batches');
+var jobs = require('./routes/jobs');
 var oauth2 = require('./auth/oauth2');
 
 var app = express();
 
-app.use(bodyParser.json({limit: '1024mb'})); //100mb
+app.use(bodyParser.json({limit: '1024mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride());
@@ -39,6 +40,7 @@ app.use('/api/models', models);
 app.use('/api/executables', executables);
 app.use('/api/properties', properties);
 app.use('/api/work_batches', work_batches);
+app.use('/api/jobs', jobs);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next){

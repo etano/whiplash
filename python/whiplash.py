@@ -137,7 +137,10 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            return self.request("POST","/api/"+self.name+"/",objs)
+            res = self.request("POST","/api/"+self.name+"/",objs)
+            if self.name == "properties":
+                self.request("POST","/api/jobs/",res)
+            return res
 
         #
         # Query

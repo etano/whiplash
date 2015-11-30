@@ -1,7 +1,6 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
-
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
