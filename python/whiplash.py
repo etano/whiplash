@@ -24,6 +24,7 @@ class wdb:
         self.executables = self.collection(self,"executables")
         self.properties = self.properties_collection(self,"properties")
         self.work_batches = self.collection(self,"work_batches")
+        self.jobs = self.collection(self,"jobs")
 
     #
     # Request
@@ -138,8 +139,9 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             res = self.request("POST","/api/"+self.name+"/",objs)
+            res = self.request("POST","/api/"+self.name+"/",objs)
             if self.name == "properties":
-                self.request("POST","/api/jobs/",res)
+                self.db.jobs.commit({"list":res['ids']})
             return res
 
         #

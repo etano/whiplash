@@ -1,6 +1,9 @@
 # Start development environment
     docker-compose -f develop.yml up -d
 
+# access to development database
+docker exec -it whiplash_odb_dev_1 mongo 127.0.0.1:27017/wdb -u pwn -p cftXzdrjheHEARuJKT39x]3sV
+
 # Run tests (may need to export DOCKERHOST to 192.168.99.100)
     docker-compose -f test.yml up --force-recreate -d
     sleep 5

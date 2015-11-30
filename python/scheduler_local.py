@@ -9,7 +9,7 @@ def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
 
     t0 = time.time()
 
-    property_ids = wdb.work_batches.request("GET","/api/work_batches/",{})
+    property_ids = wdb.work_batches.query({})
     properties = wdb.properties.query({'_id': {'$in': property_ids}})
 
     if len(properties) == 0:
