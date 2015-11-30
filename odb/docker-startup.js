@@ -5,4 +5,5 @@ db.createUser({user:"scheduler",pwd:"c93lbcp0hc[5209sebf10{3ca",roles:[{role:"re
 db.fs.files.createIndex({md5 : 1, "metadata.property_id" : 1, "metadata.owner" : 1},{unique : true});
 db.executables.createIndex({name : 1, algorithm : 1, version : 1, build : 1, owner : 1},{unique : true});
 db.properties.createIndex({input_model_id : 1, executable_id : 1, params : 1, owner : 1},{unique : true});
+db.jobs.createIndex({list : 1, owner : 1},{unique : true});
 db.setProfilingLevel(2)

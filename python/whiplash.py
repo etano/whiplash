@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math
+import sys,json,time,zlib,math,sets
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -139,9 +139,20 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             res = self.request("POST","/api/"+self.name+"/",objs)
-            res = self.request("POST","/api/"+self.name+"/",objs)
-            if self.name == "properties":
-                self.db.jobs.commit({"list":res['ids']})
+            if self.name == "properties" and len(res['ids']) > 0:
+                duplicates = []
+                for error in res['errors']:
+                    if error['code'] == 11000:
+                        duplicates.append(error['index']+1)
+                    else:
+                        print("write error:",error)
+                dulicates = sets.ImmutableSet(duplicates)
+                ids = []
+                for el in res['ids']:
+                    if el['index'] not in duplicates:
+                        ids.append(el['_id'])
+                if len(ids) > 0:
+                    self.db.jobs.commit({"ids":ids})
             return res
 
         #

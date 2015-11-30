@@ -6,12 +6,24 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('jobs');
+var ObjType = require(libs + 'schemas/job');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    for(var i=0; i<req.body.length; i++) {
-        req.body[i].owner = String(req.user._id);
-    }
-    common.commit(collection,req,res);
+    common.validate(ObjType,req,function(err){
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            } else {
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            }
+        } else {
+            common.commit(collection,req,res);
+        }
+    });
 });
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {

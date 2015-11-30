@@ -47,7 +47,7 @@ module.exports = {
                     log.info("%s new objects created", String(result.nInserted));
                     return res.json({
                         status: 'OK',
-                        result: {'n':result.nInserted,'ids':result.getInsertedIds()}
+                        result: {'n':result.nInserted,'ids':result.getInsertedIds(), 'errors':result.getWriteErrors()}
                     });
                 } else {
                     res.statusCode = 500;
