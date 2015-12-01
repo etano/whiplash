@@ -149,13 +149,7 @@ class wdb:
                     obj['commit_order'] = count
                     count += 1
 
-                #if self.name == "properties":
-                #    sys.exit(0)
-                    
                 res = self.request("POST","/api/"+self.name+"/",objs)
-
-                #if self.name == "properties":
-                #    print(res)
 
                 ids = []
                 fields = self.query_fields_only({'commit_tag':commit_tag},['commit_order','_id'])

@@ -20,6 +20,10 @@ var special = ['_id','filename','contentType','length','chunkSize','uploadDate',
 
 //TODO: fix tags_only
 
+//TODO: fix get routes
+
+//TODO: file name is string
+
 //
 // Commit
 //
@@ -98,15 +102,15 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 // Query
 //
 
-var find_by_id = function(id,cb) {
+var read_by_name = function(name,cb) {
     var data = null;
     var err = null;
-    GridStore.read(db.get(), id, function(err, fileData) {
+    GridStore.read(db.get(), name, function(err, fileData) {
         if(!err) {
             data = fileData.toString();
         } else {
             log.error("Read error: %s",err.message);
-            err = {"message":"Error reading file"+String(id)};
+            err = {"message":"Error reading file " + name};
         }
         cb(err,data);
     });
@@ -138,7 +142,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             // Put content in response
             var apply_content = function(i){
                 if (i<objs.length) {
-                    find_by_id(objs[i]['_id'],function(err,data){
+                    read_by_name(objs[i]['_id'],function(err,data){
                         objs[i]['content'] = JSON.parse(data);
                         apply_content(i+1);
                     });
@@ -177,24 +181,25 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
     if (req.params.tags_only) {
         common.query_one(collection,filter,res);
     } else {
-        collection.find(filter).limit(1).toArray(function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Put content in response
-            find_by_id(obj['_id'],function(err,data){
-                obj['content'] = data;
-            });
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    result: obj
-                });
+        collection.find(filter).limit(1).toArray(function (err, objs) {
+            if(!err) {
+                if(objs.length > 0) {
+                    read_by_name(String(objs[0]._id),function(err,data){
+                        if(!err) {
+                            return res.json({
+                                status: 'OK',
+                                result: {'content':data,'tags':objs[0].metadata}
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    res.statusCode = 404;
+                    return res.json({ error: 'Not found' });
+                }
             } else {
                 res.statusCode = 500;
                 log.error('Internal error(%d): %s',res.statusCode,err.message);
@@ -252,7 +257,7 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
             }
 
             // Put content in response
-            find_by_id(obj['_id'],function(err,data){
+            read_by_name(obj['_id'],function(err,data){
                 obj['content'] = data;
             });
 
