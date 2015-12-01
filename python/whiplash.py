@@ -139,9 +139,8 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             res = self.request("POST","/api/"+self.name+"/",objs)
-            res = self.request("POST","/api/"+self.name+"/",objs)
             if self.name == "properties":
-                self.db.jobs.commit({"list":res['ids']})
+                self.db.jobs.commit({"ids":res['ids']})
             return res
 
         #
