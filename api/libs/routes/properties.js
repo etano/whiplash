@@ -9,6 +9,9 @@ var collection = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/property');
 var ObjectID = require('mongodb').ObjectID;
 
+var crypto = require('crypto');
+function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
+
 //
 // Commit
 //
@@ -26,6 +29,9 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 return res.json({ error: err.toString() });
             }
         } else {
+            for(var i=0; i<req.body.length; i++) {
+                req.body[i]['params_md5'] = checksum(JSON.stringify(req.body[i].params));
+            }
             common.commit(collection,req,res);
         }
     });

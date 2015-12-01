@@ -45,7 +45,7 @@ module.exports = {
 
                 var fields = [];
                 if (collection.collectionName == "properties") {
-                    fields = ['input_model_id','executable_id','params','owner'];
+                    fields = ['input_model_id','executable_id','params_md5','owner'];
                 }
                 else if (collection.collectionName == "executables") {
                     fields = ['name','algorithm','version','build','owner'];

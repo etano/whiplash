@@ -7,13 +7,9 @@ var common = require(libs + 'routes/common');
 var ObjType = require(libs + 'schemas/model');
 
 var log = require(libs + 'log')(module);
+
 var crypto = require('crypto');
-function checksum (str, algorithm, encoding) {
-    return crypto
-        .createHash(algorithm || 'md5')
-        .update(str, 'utf8')
-        .digest(encoding || 'hex');
-}
+function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
 var db = require(libs + 'db/mongo');
 var GridStore = require('mongodb').GridStore;
@@ -21,6 +17,8 @@ var ObjectID = require('mongodb').ObjectID;
 var collection = db.get().collection('fs.files');
 
 var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5'];
+
+//TODO: fix tags_only
 
 //
 // Commit
@@ -45,7 +43,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     var metadata = req.body[i].tags;
                     metadata.owner = req.body[i].owner;
                     var content = JSON.stringify(req.body[i].content);
-                    var md5 = checksum(content);
+                    var md5 = checksum(content);    
                     collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
                         if(err) {
                             log.error("Error in count: %s",err.message);
