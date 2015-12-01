@@ -52,12 +52,12 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                             write_file(i+1);
                         } else if(objs.length > 0) {
                             log.error("Duplicate file with md5: %s",md5);
-                            ids.push({'index':ids.length,'_id':objs[0]._id});
+                            ids.push(objs[0]._id);
                             write_file(i+1);
                         } else {
-                            var fileId = String(new ObjectID());
+                            var fileId = new ObjectID();
                             var options = { metadata: metadata };
-                            var gridStore = new GridStore(db.get(),fileId,fileId,'w',options);
+                            var gridStore = new GridStore(db.get(),fileId,String(fileId),'w',options);
                             gridStore.open(function(err, gridStore) {
                                 if(err) {
                                     log.error("Error opening file: %s",err.message);
@@ -72,7 +72,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                                                 if(err) {
                                                     log.error("Error closing file: %s",err.message);
                                                 } else {
-                                                    ids.push({'index':ids.length,'_id':fileId});
+                                                    ids.push(String(fileId));
                                                 }
                                                 write_file(i+1);
                                             });
@@ -86,7 +86,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                     log.info("Commited %d objects",ids.length);
                     return res.json({
                         status: 'OK',
-                        result: {'ids':ids,'n':ids.length}
+                        result: ids
                     });
                 }
             };
@@ -122,7 +122,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 filter["metadata."+key] = req.body[key];
             }
         } else {
-            filter['_id'] = req.body[key];
+            filter['_id'] = new ObjectID(req.body[key]);
         }
     }
     filter["metadata.owner"] = String(req.user._id);
@@ -172,7 +172,7 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
                 filter["metadata."+key] = req.body[key];
             }
         } else {
-            filter['_id'] = req.body[key];
+            filter['_id'] = new ObjectID(req.body[key]);
         }
     }
     filter["metadata.owner"] = String(req.user._id);
@@ -214,7 +214,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
                 filter["metadata."+key] = req.body[key];
             }
         } else {
-            filter['_id'] = req.body[key];
+            filter['_id'] = new ObjectID(req.body[key]);
         }
     }
     filter["metadata.owner"] = String(req.user._id);
@@ -229,7 +229,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
                 filter["metadata."+key] = req.body.filter[key];
             }
         } else {
-            filter['_id'] = req.body.filter[key];
+            filter['_id'] = new ObjectID(req.body.filter[key]);
         }
     }
     filter["metadata.owner"] = String(req.user._id);
@@ -241,7 +241,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {_id:req.params.id};
+    var filter = {_id: new ObjectID(req.params.id)};
     filter["metadata.owner"] = String(req.user._id);    
     if (req.params.tags_only) {
         common.query_one(collection,filter,res);

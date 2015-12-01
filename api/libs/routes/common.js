@@ -1,5 +1,6 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 module.exports = {
 
@@ -13,10 +14,9 @@ module.exports = {
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
-                req.body[i]._id = obj.id; // convert object id to string
                 obj = obj.toObject();
                 for(var field in obj) {
-                    if (!req.body[i].hasOwnProperty(field)){
+                    if (!req.body[i].hasOwnProperty(field) && field != '_id'){
                         req.body[i][field] = obj[field];
                     }
                 }
@@ -38,16 +38,37 @@ module.exports = {
                 result: {'n':0,'ids':[]}
             });
         } else {
-            var batch = collection.initializeUnorderedBulkOp();
+
+            var batch = [];
             for(var i=0; i<req.body.length; i++) {
-                batch.insert(req.body[i]);
+
+                var fields = [];
+                if (collection.collectionName == "properties") {
+                    fields = ['input_model_id','executable_id','params','owner'];
+                }
+                else if (collection.collectionName == "executables") {
+                    fields = ['name','algorithm','version','build','owner'];
+                }
+                else if (collection.collectionName == "work_batches") {
+                    fields = ['ids','owner'];
+                }
+                else if (collection.collectionName == "jobs") {
+                    fields = ['ids','owner'];
+                }                                
+
+                var filter = {}
+                for (var j = 0; j < fields.length; j++) {
+                    filter[fields[j]] = req.body[i][fields[j]];
+                }
+
+                batch.push({ updateOne: { filter: filter, update: req.body[i], upsert : true}});
             }
-            batch.execute(function(err,result) {
+            collection.bulkWrite(batch,{w:1},function(err,result) {
                 if (result.ok) {
-                    log.info("%s new objects created", String(result.nInserted));
+                    log.info("%s new objects replaced", String(result.modifiedCount));
                     return res.json({
                         status: 'OK',
-                        result: {'n':result.nInserted,'ids':result.getInsertedIds(), 'errors':result.getWriteErrors()}
+                        result: result
                     });
                 } else {
                     res.statusCode = 500;
@@ -64,13 +85,10 @@ module.exports = {
 
     query: function(collection,filter,res) {
         collection.find(filter).toArray(function (err, objs) {
-            // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // Return object
             if (!err) {
                 log.info("Query objects in %s",collection.collectionName);
                 return res.json({
@@ -87,13 +105,10 @@ module.exports = {
 
     query_one: function(collection,filter,res) {
         collection.find(filter).limit(1).toArray(function (err, obj) {
-            // Check exists
             if(!obj) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // Return object
             if (!err) {
                 log.info("Query single object in %s",collection.collectionName);
                 return res.json({
@@ -110,8 +125,6 @@ module.exports = {
 
     query_count: function(collection,filter,res) {
         collection.count(filter, function (err, count) {
-
-            // Return object
             if (!err) {
                 log.info("Counting %d objects in %s",count,collection.collectionName);
                 return res.json({
@@ -132,12 +145,10 @@ module.exports = {
             proj[fields[i]] = 1;
         }
         collection.find(filter).project(proj).toArray(function (err, objs) {
-            // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
             var fields1 = [];
             for(var j=0; j<fields.length; j++){
                 if(~fields[j].indexOf('metadata.'))
@@ -157,8 +168,6 @@ module.exports = {
                         projection[fields1[j]].push(objs[i]['metadata'][fields1[j]]);
                 }
             }
-
-            // Return object
             if (!err) {
                 log.info("Querying fields in %s",collection.collectionName);
                 return res.json({
@@ -195,7 +204,7 @@ module.exports = {
     },
 
     find_id_and_update: function(collection,req,res) {
-        var filter = {"_id": req.params.id};
+        var filter = {"_id": new ObjectID(req.params.id)};
         req.body.filter = filter;
         return this.find_one_and_update(collection,req,res);
     },
@@ -211,7 +220,7 @@ module.exports = {
                 log.info("%d objects updated",result.modifiedCount);
                 return res.json({
                     status: 'OK',
-                    result: result.modifiedCount // Other options include matchedCount and upsertedCount
+                    result: result.modifiedCount
                 });
             } else {
                 res.statusCode = 500;
@@ -221,12 +230,12 @@ module.exports = {
         });
     },
 
-    batch_update: function(collection,req,res) {
-        var arr = [];
+    batch_replace: function(collection,req,res) {
+        var batch = [];
         for(var i=0; i<req.body.length; i++) {
-            arr.push({ replaceOne: { filter: {_id:req.body[i]._id,owner:String(req.user._id)}, replacement: req.body[i]}});
+            batch.push({ replaceOne: { filter: {_id: new ObjectID(req.body[i]._id),owner:String(req.user._id)}, replacement: req.body[i]}});
         }
-        collection.bulkWrite(arr,{w:1},function(err,result) {
+        collection.bulkWrite(batch,{w:1},function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
                 return res.json({
@@ -246,7 +255,7 @@ module.exports = {
     },
 
     update_id: function(collection,req,res) {
-        var filter = {"_id": req.params.id};
+        var filter = {"_id": new ObjectID(req.params.id)};
         req.body.filter = filter;
         return this.update_one(collection,req,res);
     },
@@ -257,11 +266,7 @@ module.exports = {
 
     delete: function(collection,req,res) {
         var filter = req.body;
-
-        // Enforce user can only delete own documents
         filter.owner = String(req.user._id);
-
-        // Do delete operation
         collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
                 log.info("Deleting %d objects",result.deletedCount);
@@ -278,7 +283,7 @@ module.exports = {
     },
 
     delete_id: function(collection,req,res) {
-        req.body = {"_id": req.params.id};
+        req.body = {"_id": new ObjectID(req.params.id)};
         this.delete(collection,req,res);
     },
 
@@ -356,5 +361,4 @@ module.exports = {
             }
         });
     }
-
 };

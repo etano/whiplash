@@ -7,6 +7,7 @@ var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('executables');
 var ObjType = require(libs + 'schemas/executable');
+var ObjectID = require('mongodb').ObjectID;
 
 //
 // Commit
@@ -61,7 +62,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {_id:req.params.id};
+    var filter = {_id: new ObjectID(req.params.id)};
     filter.owner = String(req.user._id);
     common.query_one(collection,filter,res);
 });
@@ -86,8 +87,8 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection,req,res);
 });
 
-router.put('/batch', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.batch_update(collection,req,res);
+router.put('/batch_replacement', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.batch_replace(collection,req,res);
 });
 
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {

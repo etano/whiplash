@@ -42,4 +42,11 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     common.query(collection,filter,res);
 });
 
+router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body.filter;
+    filter.owner = String(req.user._id);
+    var fields = req.body.fields;
+    common.query_fields_only(collection,filter,fields,res);
+});
+
 module.exports = router;

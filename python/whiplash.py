@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math,sets
+import sys,json,time,zlib,math,sets,os,base64
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -138,22 +138,29 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            res = self.request("POST","/api/"+self.name+"/",objs)
-            if self.name == "properties" and len(res['ids']) > 0:
-                duplicates = []
-                for error in res['errors']:
-                    if error['code'] == 11000:
-                        duplicates.append(error['index']+1)
-                    else:
-                        print("write error:",error)
-                dulicates = sets.ImmutableSet(duplicates)
+
+            if self.name == "models":
+                return self.request("POST","/api/"+self.name+"/",objs)
+            else:
+                commit_tag = base64.urlsafe_b64encode(os.urandom(8))[:-1]
+                count = 0
+                for obj in objs:
+                    obj['commit_tag'] = commit_tag
+                    obj['commit_order'] = count
+                    count += 1
+
+                res = self.request("POST","/api/"+self.name+"/",objs)
+
                 ids = []
-                for el in res['ids']:
-                    if el['index'] not in duplicates:
-                        ids.append(el['_id'])
-                if len(ids) > 0:
+                fields = self.query_fields_only({'commit_tag':commit_tag},['commit_order','_id'])
+
+                for field in sorted(zip(fields['commit_order'],fields['_id'])):
+                    ids.append(str(field[1]))
+
+                if self.name == "properties" and len(ids) > 0:
                     self.db.jobs.commit({"ids":ids})
-            return res
+
+                return ids
 
         #
         # Query
@@ -174,7 +181,7 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
 
         def query_id(self,ID):
-            return self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
+            return self.request("GET","/api/"+self.name+"/id/"+str(ID),{})
 
         #
         # Find and update
@@ -193,8 +200,8 @@ class wdb:
         def update(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
-        def batch_update(self,updates):
-            return self.request("PUT","/api/"+self.name+"/batch",updates)
+        def batch_replace(self,replacements):
+            return self.request("PUT","/api/"+self.name+"/batch_replacement",replacements)
 
         def update_one(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
