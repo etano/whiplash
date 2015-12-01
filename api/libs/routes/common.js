@@ -15,6 +15,7 @@ module.exports = {
             var err = obj.validateSync();
             if (!err) {
                 obj = obj.toObject();
+                delete req.body[i]['_id'];
                 for(var field in obj) {
                     if (!req.body[i].hasOwnProperty(field) && field != '_id'){
                         req.body[i][field] = obj[field];
