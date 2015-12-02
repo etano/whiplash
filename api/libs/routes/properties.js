@@ -12,6 +12,8 @@ var ObjectID = require('mongodb').ObjectID;
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
+//TODO: string instead of integer for status
+
 //
 // Commit
 //

@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math,sets,os,base64
+import sys,json,time,zlib,math,os,base64
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -232,51 +232,11 @@ class wdb:
     #
     class properties_collection(collection):
 
-        #
-        # Submit
-        #
-
-        def submit(self,model,executable,props):
-
-            if "_id" in model:
-                model_ids = [model["_id"]]
-            else:
-                self.db.models.commit(model)
-                model_ids = self.db.models.query_fields_only(model["tags"],'_id')['_id']
-                assert len(model_ids) == 1
-
-            if "_id" in executable:
-                executable_ids = [executable["_id"]]
-            else:
-                self.db.executables.commit(executable)
-                executable_ids = self.db.executables.query_fields_only(executable,'_id')['_id']
-                assert len(executable_ids) == 1
-
-            for prop in props:
-                prop["input_model_id"] = model_ids[0]
-                prop["executable_id"] = executable_ids[0]
-
-            self.commit(props)
-
-        #
-        # Statistics
-        #
-
-        def get_num_unresolved(self):
-            return self.count({'status':0})
-
         def get_unresolved_time(self):
             return self.stats("timeout",{"status":0})['sum']
 
         def get_resolved_time(self):
             return self.stats("walltime",{"status":3})['sum']
-
-        #
-        # Testing
-        #
-
-        def refresh(self):
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
 
         def check_status(self):
             print('unresolved: %d'%(self.count({"status":0})))
@@ -284,3 +244,6 @@ class wdb:
             print('timed out: %d'%(self.count({"status":2})))
             print('resolved: %d'%(self.count({"status":3})))
             print('errored: %d'%(self.count({"status":4})))
+
+        def refresh(self):
+            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})

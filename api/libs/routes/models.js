@@ -1,101 +1,92 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
-
 var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
-var ObjType = require(libs + 'schemas/model');
-
 var log = require(libs + 'log')(module);
-
-var crypto = require('crypto');
-function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
-
 var db = require(libs + 'db/mongo');
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var collection = db.get().collection('fs.files');
 
+var crypto = require('crypto');
+function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
+
+function concaternate(o1, o2) {
+    for (var key in o2) {
+        o1[key] = o2[key];
+    }
+    return o1;
+}
+
 var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5'];
 
-//TODO: fix tags_only
-
-//TODO: fix get routes
-
-//TODO: file name is string
 
 //
 // Commit
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.validate(ObjType,req,function(err) {
-        if(err) {
-            if(err.name === 'ValidationError') {
-                res.statusCode = 400;
-                log.error('Validation error(%d): %s', res.statusCode, err.message);
-                return res.json({ error: err.toString() });
-            } else {
-                res.statusCode = 500;
-                log.error('Server error(%d): %s', res.statusCode, err.message);
-                return res.json({ error: err.toString() });
+    var ids = [];
+    var write_file = function(i) {
+        if(i < req.body.length) {
+            var metadata = {};
+            for(var key in req.body[i]) {
+                if(key != 'content')
+                    metadata[key] = req.body[i][key];
             }
-        } else {
-            var ids = [];
-            var write_file = function(i) {
-                if(i < req.body.length) {
-                    var metadata = req.body[i].tags;
-                    metadata.owner = req.body[i].owner;
-                    var content = JSON.stringify(req.body[i].content);
-                    var md5 = checksum(content);    
-                    collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
+            metadata.owner = String(req.user._id);
+            if (!('property_id' in req.body[i]))
+                metadata.property_id = "";
+            if (!('content' in req.body[i]))
+                req.body[i].content = {};
+            var content = JSON.stringify(req.body[i].content);
+            var md5 = checksum(content);
+            collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
+                if(err) {
+                    log.error("Error in count: %s",err.message);
+                    write_file(i+1);
+                } else if(objs.length > 0) {
+                    log.error("Duplicate file with md5: %s",md5);
+                    ids.push(objs[0]._id);
+                    write_file(i+1);
+                } else {
+                    var fileId = new ObjectID();
+                    var options = { metadata: metadata };
+                    var gridStore = new GridStore(db.get(),fileId,String(fileId),'w',options);
+                    gridStore.open(function(err, gridStore) {
                         if(err) {
-                            log.error("Error in count: %s",err.message);
-                            write_file(i+1);
-                        } else if(objs.length > 0) {
-                            log.error("Duplicate file with md5: %s",md5);
-                            ids.push(objs[0]._id);
+                            log.error("Error opening file: %s",err.message);
                             write_file(i+1);
                         } else {
-                            var fileId = new ObjectID();
-                            var options = { metadata: metadata };
-                            var gridStore = new GridStore(db.get(),fileId,String(fileId),'w',options);
-                            gridStore.open(function(err, gridStore) {
+                            gridStore.write(content, function(err, gridStore) {
                                 if(err) {
-                                    log.error("Error opening file: %s",err.message);
+                                    log.error("Error writing file: %s",err.message);
                                     write_file(i+1);
                                 } else {
-                                    gridStore.write(content, function(err, gridStore) {
+                                    gridStore.close(function(err, result) {
                                         if(err) {
-                                            log.error("Error writing file: %s",err.message);
-                                            write_file(i+1);
+                                            log.error("Error closing file: %s",err.message);
                                         } else {
-                                            gridStore.close(function(err, result) {
-                                                if(err) {
-                                                    log.error("Error closing file: %s",err.message);
-                                                } else {
-                                                    ids.push(String(fileId));
-                                                }
-                                                write_file(i+1);
-                                            });
+                                            ids.push(String(fileId));
                                         }
+                                        write_file(i+1);
                                     });
                                 }
                             });
                         }
                     });
-                } else {
-                    log.info("Commited %d objects",ids.length);
-                    return res.json({
-                        status: 'OK',
-                        result: ids
-                    });
                 }
-            };
-            write_file(0);
+            });
+        } else {
+            log.info("Commited %d objects",ids.length);
+            return res.json({
+                status: 'OK',
+                result: ids
+            });
         }
-    });
-
+    };
+    write_file(0);
 });
 
 //
@@ -128,42 +119,44 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         }
     }
     filter["metadata.owner"] = String(req.user._id);
-    if (req.params.tags_only) {
-        common.query(collection,filter,res);
-    } else {
-        collection.find(filter).toArray(function (err, objs) {
-            // Check exists
-            if(!objs) {
-                log.error("Objects with filter %s not found",JSON.stringify(filter));
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Put content in response
-            var apply_content = function(i){
-                if (i<objs.length) {
-                    read_by_name(objs[i]['_id'],function(err,data){
-                        objs[i]['content'] = JSON.parse(data);
-                        apply_content(i+1);
-                    });
-                } else {
-                    // Return object
-                    if (!err) {
-                        log.info("Returning %d objects",objs.length);
-                        return res.json({
-                            status: 'OK',
-                            result: objs
+    collection.find(filter).toArray(function (err, objs) {
+        if(!err) {
+            if(objs.length > 0) {
+                var items = [];
+                var apply_content = function(i){
+                    if (i<objs.length) {
+                        read_by_name(String(objs[i]._id),function(err,data){
+                            if(!err) {
+                                items.push(concaternate({'content':JSON.parse(data)}, objs[i].metadata));
+                                apply_content(i+1);
+                            } else {
+                                res.statusCode = 500;
+                                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                return res.json({ error: 'Server error' });
+                            }
                         });
                     } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
+                        log.info("Returning %d objects",items.length);
+                        return res.json({
+                            status: 'OK',
+                            result: items
+                        });
                     }
-                }
-            };
-            apply_content(0);
-        });
-    }
+                };
+                apply_content(0);
+            } else {
+                log.info("Objects with filter %s not found",JSON.stringify(filter));
+                return res.json({
+                    status: 'OK',
+                    result: {}
+                });
+            }            
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
+    });
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -178,35 +171,35 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
         }
     }
     filter["metadata.owner"] = String(req.user._id);
-    if (req.params.tags_only) {
-        common.query_one(collection,filter,res);
-    } else {
-        collection.find(filter).limit(1).toArray(function (err, objs) {
-            if(!err) {
-                if(objs.length > 0) {
-                    read_by_name(String(objs[0]._id),function(err,data){
-                        if(!err) {
-                            return res.json({
-                                status: 'OK',
-                                result: {'content':data,'tags':objs[0].metadata}
-                            });
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.json({ error: 'Server error' });
-                        }
-                    });
-                } else {
-                    res.statusCode = 404;
-                    return res.json({ error: 'Not found' });
-                }
+    collection.find(filter).limit(1).toArray(function (err, objs) {
+        if(!err) {
+            if(objs.length > 0) {
+                read_by_name(String(objs[0]._id),function(err,data){
+                    if(!err) {
+                        log.info("Returning 1 object");
+                        return res.json({
+                            status: 'OK',
+                            result: concaternate({'content':JSON.parse(data)}, objs[0].metadata)
+                        });
+                    } else {
+                        res.statusCode = 500;
+                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                        return res.json({ error: 'Server error' });
+                    }
+                });
             } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
+                log.info("Object with filter %s not found",JSON.stringify(filter));
+                return res.json({
+                    status: 'OK',
+                    result: {}
+                });
             }
-        });
-    }
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
+    });
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -246,60 +239,56 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {_id: new ObjectID(req.params.id)};
     filter["metadata.owner"] = String(req.user._id);    
-    if (req.params.tags_only) {
-        common.query_one(collection,filter,res);
-    } else {
-        collection.find(filter).limit(1).toArray(function (err, obj) {
-            // Check exists
-            if(!obj) {
-                res.statusCode = 404;
-                return res.json({ error: 'Not found' });
-            }
-
-            // Put content in response
-            read_by_name(obj['_id'],function(err,data){
-                obj['content'] = data;
-            });
-
-            // Return object
-            if (!err) {
-                return res.json({
-                    status: 'OK',
-                    result: obj
+    collection.find(filter).limit(1).toArray(function (err, objs) {
+        if(!err) {
+            if(objs.length > 0) {
+                read_by_name(String(objs[0]._id),function(err,data){
+                    if(!err) {
+                        log.info("Returning 1 object");
+                        return res.json({
+                            status: 'OK',
+                            result: concaternate({'content':JSON.parse(data)}, objs[0].metadata)
+                        });
+                    } else {
+                        res.statusCode = 500;
+                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                        return res.json({ error: 'Server error' });
+                    }
                 });
             } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
+                log.info("Object with filter %s not found",JSON.stringify(filter));
+                return res.json({
+                    status: 'OK',
+                    result: {}
+                });
             }
-        });
-    }
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
+    });
 });
 
 //
 // Delete
 //
 
-var delete_by_id = function(id,req,res,cb) {
-    var err = null;
-    var data = null;
-    var gridStore = new GridStore(db.get(), id, id, 'w');
-    gridStore.open(function(open_err, gs) {
+var delete_by_id = function(id,req,cb) {
+    var gridStore = new GridStore(db.get(), id, String(id), 'w');
+    gridStore.open(function(err, gs) {
         if(err) {
-            log.error('Error opening file: %s',open_err.message);
-            err = open_err;
-            cb(err,data);
+            log.error('Error opening file: %s',err.message);
+            cb(err,gs);
         } else if(gridStore.metadata.owner !== String(req.user._id)) {
             log.error('Wrong owner: %s',String(req.user._id));
-            err = {'message':'You are not the owner of this file'};
-            cb(err,data);
+            cb({'message':'You are not the owner of this file'},gs);
         } else {
-            gridStore.unlink(function(unlink_err, result) {
-                if(unlink_err){
-                    log.error('Error deleting file: %s',unlink_err.message);
-                    err = unlink_err;
+            gridStore.unlink(function(err, result) {
+                if(err){
+                    log.error('Error deleting file: %s',err.message);
                 }
-                cb(err,data);
+                cb(err,result);
             });
         }
     });
@@ -308,52 +297,63 @@ var delete_by_id = function(id,req,res,cb) {
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var proj = {};
     proj._id = 1;
-    req.body["metadata.owner"] = String(req.user._id);
-    collection.find(req.body).project(proj).toArray(function(err, objs) {
-        // Check exists
-        if(!objs) {
-            log.error("Objects with filter %s not found",JSON.stringify(filter));
-            res.statusCode = 404;
-            return res.json({ error: 'Not found' });
-        }
-
-        // Delete objects
-        var delete_objs = function(i){
-            if (i<objs.length) {
-                delete_by_id(objs[i]._id,req,res,function(e, obj) {
-                    if (e) {
-                        err = e;
-                        i = objs.length;
-                    }
-                    delete_objs(i+1);
-                });
-            } else {
-                // Return object
-                if (!err) {
-                    log.info("Deleting %d objects",objs.length)
-                    return res.json({
-                        status: 'OK',
-                        result: objs.length
-                    });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: err.message });
-                }
+    var filter = {};
+    for(var key in req.body) {
+        if(key !== '_id') {
+            if(req.body.hasOwnProperty(key)) {
+                filter["metadata."+key] = req.body[key];
             }
-        };
-        delete_objs(0);
+        } else {
+            filter['_id'] = new ObjectID(req.body[key]);
+        }
+    }
+    filter["metadata.owner"] = String(req.user._id);
+    collection.find(filter).project(proj).toArray(function(err, objs) {
+        if(!err) {
+            if(objs.length > 0) {
+                var items = [];
+                var delete_objs = function(i){
+                    if (i<objs.length) {
+                        delete_by_id(new ObjectID(objs[i]._id),req,function(err, data) {
+                            if(!err) {
+                                delete_objs(i+1);
+                            } else {
+                                res.statusCode = 500;
+                                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                return res.json({ error: 'Server error' });
+                            }
+                        });
+                    } else {
+                        log.info("Deleting %d objects",objs.length)
+                        return res.json({
+                            status: 'OK',
+                            result: objs.length
+                        });
+                    }
+                };
+                delete_objs(0);
+            } else {
+                log.info("Objects with filter %s not found",JSON.stringify(filter));
+                return res.json({
+                    status: 'OK',
+                    result: 0
+                });
+            }            
+        } else {
+            res.statusCode = 500;
+            log.error('Internal error(%d): %s',res.statusCode,err.message);
+            return res.json({ error: 'Server error' });
+        }
     });
 });
 
 router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    delete_by_id(req.params.id,res,function(err,obj) {
-        // Return object
+    delete_by_id(new ObjectID(req.params.id),req,function(err,data) {
         if (!err) {
             log.info("Deleting object with id %s",req.params.id)
             return res.json({
                 status: 'OK',
-                result: obj
+                result: 1
             });
         } else {
             res.statusCode = 500;
