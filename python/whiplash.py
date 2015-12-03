@@ -140,9 +140,9 @@ class wdb:
                 objs = [objs]
 
             if self.name == "models":
-                return self.request("POST","/api/"+self.name+"/",objs)['_id']
+                return self.request("POST","/api/"+self.name+"/",objs)
             else:
-                ids = self.request("POST","/api/"+self.name+"/",objs)['_id']
+                ids = self.request("POST","/api/"+self.name+"/",objs)
                 if self.name == "properties" and len(ids) > 0:
                     self.db.jobs.commit({"ids":ids})
                 return ids

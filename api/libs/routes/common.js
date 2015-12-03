@@ -226,7 +226,7 @@ module.exports = {
                             log.info("Querying fields in %s",collection.collectionName);
                             return res.json({
                                 status: 'OK',
-                                result: projection
+                                result: projection['_id']
                             });
                         } else {
                             res.statusCode = 500;
