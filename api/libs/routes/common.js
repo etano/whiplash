@@ -194,8 +194,6 @@ module.exports = {
 
                     var filter = {'commit_tag':commit_tag};
                     var fields = ['_id'];
-
-                    // TODO: Use query_fields_only function somehow
                     var proj = {};
                     for(var i=0; i<fields.length; i++){
                         proj[fields[i]] = 1;
