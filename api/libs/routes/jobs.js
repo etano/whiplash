@@ -75,6 +75,17 @@ router.get('/:id/download', passport.authenticate('bearer', { session: false }),
     });
 });
 
+router.get('/:id/log', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Need to issue file transfer here
+    return res.json({
+        status: 'OK',
+        result: {
+            data: req.params.id
+        }
+    });
+});
+
 router.get('/:id/explore', passport.authenticate('bearer', { session: false }), function(req, res) {
     // TODO: backend
     return res.json({
