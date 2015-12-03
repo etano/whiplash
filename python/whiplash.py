@@ -229,3 +229,7 @@ class wdb:
             print('timed out: %d'%(self.count({"status":2})))
             print('resolved: %d'%(self.count({"status":3})))
             print('errored: %d'%(self.count({"status":4})))
+
+        def refresh(self):
+            # TODO: Make this do something
+            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
