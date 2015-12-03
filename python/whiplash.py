@@ -140,7 +140,7 @@ class wdb:
                 objs = [objs]
 
             if self.name == "models":
-                return self.request("POST","/api/"+self.name+"/",objs)
+                return self.request("POST","/api/"+self.name+"/",objs)['_id']
             else:
                 ids = self.request("POST","/api/"+self.name+"/",objs)['_id']
                 if self.name == "properties" and len(ids) > 0:
