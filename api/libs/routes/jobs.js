@@ -49,4 +49,19 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
     common.query_fields_only(collection,filter,fields,res);
 });
 
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    //TODO: backend
+    return res.json({
+        status: 'OK',
+        result: {
+            count: 3,
+            stats: [
+                       { time: "14.06.2015 10:15", done: 13, togo: 0, now: 0 },
+                       { time: "14.06.2015 9:15", done: 10, togo: 3, now: 1 },
+                       { time: "14.06.2015 8:35", done: 10, togo: 2, now: 0 }
+                   ] 
+        }
+    });
+});
+
 module.exports = router;
