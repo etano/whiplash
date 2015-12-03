@@ -50,16 +50,42 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    //TODO: backend
+    // TODO: backend
     return res.json({
         status: 'OK',
         result: {
             count: 3,
             stats: [
-                       { time: "14.06.2015 10:15", done: 13, togo: 0, now: 0 },
-                       { time: "14.06.2015 9:15", done: 10, togo: 3, now: 1 },
-                       { time: "14.06.2015 8:35", done: 10, togo: 2, now: 0 }
-                   ] 
+                       { time: "14.06.2015 10:15", done: 13, togo: 0, now: 0, batch_id: 0 },
+                       { time: "14.06.2015 9:15",  done: 10, togo: 3, now: 1, batch_id: 1 },
+                       { time: "14.06.2015 8:35",  done: 10, togo: 2, now: 0, batch_id: 2 }
+                   ]
+        }
+    });
+});
+
+router.get('/:id/download', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Need to issue file transfer here
+    return res.json({
+        status: 'OK',
+        result: {
+            data: req.params.id
+        }
+    });
+});
+
+router.get('/:id/explore', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    return res.json({
+        status: 'OK',
+        result: {
+            count: 3,
+            runs: [
+                       { id: 0, app: "xxx", model: "test", params: [ { name : "energy", value : "-5"  }, { name : "seed", value : "17" } ] },
+                       { id: 1, app: "xxx", model: "test", params: [ { name : "energy", value : "-45" } ]                                  },
+                       { id: 2, app: "xxx", model: "test", params: [ { name : "energy", value : "-7"  }, { name : "seed", value : "23" } ] }
+                  ]
         }
     });
 });
