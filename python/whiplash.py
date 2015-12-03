@@ -233,4 +233,3 @@ class wdb:
         def refresh(self):
             # TODO: Make this do something
             self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
->>>>>>> dev
