@@ -67,6 +67,7 @@ print("Querying results")
 prop_ids = wdb.properties.query_fields_only({"status":3,"params.sleep_time":1.0},'_id')['_id']
 assert len(prop_ids) == N1
 
+print("Try to commit again")
 models = []
 for ID in prop_ids:
     model1 = copy.deepcopy(model)

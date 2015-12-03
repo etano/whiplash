@@ -82,8 +82,8 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection,req,res);
 });
 
-router.put('/batch_replacement', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.batch_replace(collection,req,res);
+router.put('/replacement', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.replace_many(collection,req,res);
 });
 
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {

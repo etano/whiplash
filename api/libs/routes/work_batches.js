@@ -38,7 +38,6 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     collection.findOneAndDelete({owner:String(req.user._id)}, {projection: {ids: 1}}, function (err, result) {
-        console.log(result)
         if (!err) {
             if(result.value){
                 return res.json({
@@ -57,6 +56,13 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             return res.json({ error: 'Server error' });
         }
     });
+});
+
+router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body.filter;
+    filter.owner = String(req.user._id);
+    var fields = req.body.fields;
+    common.query_fields_only(collection,filter,fields,res);
 });
 
 module.exports = router;

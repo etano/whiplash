@@ -56,7 +56,7 @@ def commit_resolved(wdb,good_results,bad_results,pid):
         good_results['properties'][ID['index']]['output_model_id'] = ID['_id']
     t0 = time.time()
     all_properties = good_results['properties']+bad_results['properties']
-    wdb.properties.batch_replace(all_properties)
+    wdb.properties.replace_many(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)

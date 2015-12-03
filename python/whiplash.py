@@ -142,24 +142,9 @@ class wdb:
             if self.name == "models":
                 return self.request("POST","/api/"+self.name+"/",objs)
             else:
-                commit_tag = base64.urlsafe_b64encode(os.urandom(8))[:-1]
-                count = 0
-                for obj in objs:
-                    obj['commit_tag'] = commit_tag
-                    obj['commit_order'] = count
-                    count += 1
-
-                res = self.request("POST","/api/"+self.name+"/",objs)
-
-                ids = []
-                fields = self.query_fields_only({'commit_tag':commit_tag},['commit_order','_id'])
-
-                for field in sorted(zip(fields['commit_order'],fields['_id'])):
-                    ids.append(str(field[1]))
-
+                ids = self.request("POST","/api/"+self.name+"/",objs)['_id']
                 if self.name == "properties" and len(ids) > 0:
                     self.db.jobs.commit({"ids":ids})
-
                 return ids
 
         #
@@ -200,8 +185,8 @@ class wdb:
         def update(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
-        def batch_replace(self,replacements):
-            return self.request("PUT","/api/"+self.name+"/batch_replacement",replacements)
+        def replace_many(self,replacements):
+            return self.request("PUT","/api/"+self.name+"/replacement",replacements)
 
         def update_one(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
@@ -244,6 +229,3 @@ class wdb:
             print('timed out: %d'%(self.count({"status":2})))
             print('resolved: %d'%(self.count({"status":3})))
             print('errored: %d'%(self.count({"status":4})))
-
-        def refresh(self):
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
