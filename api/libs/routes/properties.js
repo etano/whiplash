@@ -7,6 +7,12 @@ var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/property');
+var ObjectID = require('mongodb').ObjectID;
+
+var crypto = require('crypto');
+function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
+
+//TODO: string instead of integer for status
 
 //
 // Commit
@@ -25,6 +31,9 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 return res.json({ error: err.toString() });
             }
         } else {
+            for(var i=0; i<req.body.length; i++) {
+                req.body[i]['params_md5'] = checksum(JSON.stringify(req.body[i].params));
+            }
             common.commit(collection,req,res);
         }
     });
@@ -60,7 +69,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {_id:req.params.id};
+    var filter = {_id: new ObjectID(req.params.id)};
     filter.owner = String(req.user._id);
     common.query_one(collection,filter,res);
 });
@@ -73,8 +82,8 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection,req,res);
 });
 
-router.put('/batch', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.batch_update(collection,req,res);
+router.put('/replacement', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.replace_many(collection,req,res);
 });
 
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {

@@ -48,7 +48,7 @@ def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
 
 def commit_resolved(wdb,good_results,bad_results,pid):
     t0 = time.time()
-    ids = wdb.models.commit(good_results['models'])['ids']
+    ids = wdb.models.commit(good_results['models'])
     t1 = time.time()
     elapsed0 = t1-t0
     print('worker',str(pid),'commited',len(good_results['models']),'models in time',elapsed0)
@@ -56,7 +56,7 @@ def commit_resolved(wdb,good_results,bad_results,pid):
         good_results['properties'][ID['index']]['output_model_id'] = ID['_id']
     t0 = time.time()
     all_properties = good_results['properties']+bad_results['properties']
-    wdb.properties.batch_update(all_properties)
+    wdb.properties.replace_many(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
@@ -102,9 +102,7 @@ def resolve_object(pid,obj,models,executables,work_dir):
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
-    if 'tags' not in result: result['tags'] = {}
-    if 'None' in result['tags']: result['tags'] = {}
-    result['tags']['property_id'] = ID
+    result['property_id'] = ID
 
     return {'property':prop,'model':result}
 

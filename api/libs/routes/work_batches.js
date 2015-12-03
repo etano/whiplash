@@ -6,12 +6,24 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('work_batches');
+var ObjType = require(libs + 'schemas/work_batch');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    for(var i=0; i<req.body.length; i++) {
-        req.body[i].owner = String(req.user._id);
-    }
-    common.commit(collection,req,res);
+    common.validate(ObjType,req,function(err){
+        if(err) {
+            if(err.name === 'ValidationError') {
+                res.statusCode = 400;
+                log.error('Validation error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            } else {
+                res.statusCode = 500;
+                log.error('Server error(%d): %s', res.statusCode, err.message);
+                return res.json({ error: err.toString() });
+            }
+        } else {
+            common.commit(collection,req,res);
+        }
+    });
 });
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -26,7 +38,6 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     collection.findOneAndDelete({owner:String(req.user._id)}, {projection: {ids: 1}}, function (err, result) {
-        console.log(result)
         if (!err) {
             if(result.value){
                 return res.json({
@@ -45,6 +56,13 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             return res.json({ error: 'Server error' });
         }
     });
+});
+
+router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = req.body.filter;
+    filter.owner = String(req.user._id);
+    var fields = req.body.fields;
+    common.query_fields_only(collection,filter,fields,res);
 });
 
 module.exports = router;

@@ -1,7 +1,22 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var ObjectID = require('mongodb').ObjectID;
 
 module.exports = {
+
+    check_for_objectid: function(filter) {
+        if ('_id' in filter) {
+            if (typeof(filter['_id']) === 'object') {
+                if ('$in' in filter['_id']) {
+                    for (var i=0; i<filter['_id']['$in'].length; i++) {
+                        filter['_id']['$in'][i] = new ObjectID(filter['_id']['$in'][i]);
+                    }
+                }
+            } else {
+                filter['_id'] = new ObjectID(filter['_id']);
+            }
+        }
+    },
 
     //
     // Validate
@@ -13,10 +28,10 @@ module.exports = {
             var obj = new ObjType(req.body[i]);
             var err = obj.validateSync();
             if (!err) {
-                req.body[i]._id = obj.id; // convert object id to string
                 obj = obj.toObject();
+                delete req.body[i]['_id'];
                 for(var field in obj) {
-                    if (!req.body[i].hasOwnProperty(field)){
+                    if (!req.body[i].hasOwnProperty(field) && field != '_id'){
                         req.body[i][field] = obj[field];
                     }
                 }
@@ -28,49 +43,16 @@ module.exports = {
     },
 
     //
-    // Commit
-    //
-
-    commit: function(collection,req,res) {
-        if(req.body.length == 0) {
-            return res.json({
-                status: 'OK',
-                result: {'n':0,'ids':[]}
-            });
-        } else {
-            var batch = collection.initializeUnorderedBulkOp();
-            for(var i=0; i<req.body.length; i++) {
-                batch.insert(req.body[i]);
-            }
-            batch.execute(function(err,result) {
-                if (result.ok) {
-                    log.info("%s new objects created", String(result.nInserted));
-                    return res.json({
-                        status: 'OK',
-                        result: {'n':result.nInserted,'ids':result.getInsertedIds()}
-                    });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                    return res.json({ error: 'Server error' });
-                }
-            });
-        }
-    },
-
-    //
     // Query
     //
 
     query: function(collection,filter,res) {
+        this.check_for_objectid(filter);
         collection.find(filter).toArray(function (err, objs) {
-            // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // Return object
             if (!err) {
                 log.info("Query objects in %s",collection.collectionName);
                 return res.json({
@@ -86,14 +68,12 @@ module.exports = {
     },
 
     query_one: function(collection,filter,res) {
+        this.check_for_objectid(filter);
         collection.find(filter).limit(1).toArray(function (err, obj) {
-            // Check exists
             if(!obj) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
-            // Return object
             if (!err) {
                 log.info("Query single object in %s",collection.collectionName);
                 return res.json({
@@ -109,9 +89,8 @@ module.exports = {
     },
 
     query_count: function(collection,filter,res) {
+        this.check_for_objectid(filter);
         collection.count(filter, function (err, count) {
-
-            // Return object
             if (!err) {
                 log.info("Counting %d objects in %s",count,collection.collectionName);
                 return res.json({
@@ -127,17 +106,16 @@ module.exports = {
     },
 
     query_fields_only: function(collection,filter,fields,res) {
+        this.check_for_objectid(filter);
         var proj = {};
         for(var i=0; i<fields.length; i++){
             proj[fields[i]] = 1;
         }
         collection.find(filter).project(proj).toArray(function (err, objs) {
-            // Check exists
             if(!objs) {
                 res.statusCode = 404;
                 return res.json({ error: 'Not found' });
             }
-
             var fields1 = [];
             for(var j=0; j<fields.length; j++){
                 if(~fields[j].indexOf('metadata.'))
@@ -157,8 +135,6 @@ module.exports = {
                         projection[fields1[j]].push(objs[i]['metadata'][fields1[j]]);
                 }
             }
-
-            // Return object
             if (!err) {
                 log.info("Querying fields in %s",collection.collectionName);
                 return res.json({
@@ -174,11 +150,106 @@ module.exports = {
     },
 
     //
+    // Commit
+    //
+
+    commit: function(collection,req,res) {
+        if(req.body.length === 0) {
+            return res.json({
+                status: 'OK',
+                result: {'n':0,'ids':[]}
+            });
+        } else {
+
+            var batch = [];
+            var unix_time = String(Math.round(new Date().getTime() / 1000));
+            var commit_tag = String(req.body[0].owner) + unix_time;
+            for(var i=0; i<req.body.length; i++) {
+
+                var fields = [];
+                if (collection.collectionName === "properties") {
+                    fields = ['input_model_id','executable_id','params_md5','owner'];
+                }
+                else if (collection.collectionName === "executables") {
+                    fields = ['name','algorithm','version','build','owner'];
+                }
+                else if (collection.collectionName === "work_batches") {
+                    fields = ['ids','owner'];
+                }
+                else if (collection.collectionName === "jobs") {
+                    fields = ['ids','owner'];
+                }
+
+                var filter = {};
+                for (var j = 0; j < fields.length; j++) {
+                    filter[fields[j]] = req.body[i][fields[j]];
+                }
+                req.body[i]['commit_tag'] = commit_tag;
+
+                batch.push({ updateOne: { filter: filter, update: req.body[i], upsert : true}});
+            }
+            collection.bulkWrite(batch,{w:1},function(err,result) {
+                if (result.ok) {
+                    log.info("%s new objects replaced", String(result.modifiedCount));
+
+                    var filter = {'commit_tag':commit_tag};
+                    var fields = ['_id'];
+                    var proj = {};
+                    for(var i=0; i<fields.length; i++){
+                        proj[fields[i]] = 1;
+                    }
+                    collection.find(filter).project(proj).toArray(function (err, objs) {
+                        if(!objs) {
+                            res.statusCode = 404;
+                            return res.json({ error: 'Not found' });
+                        }
+                        var fields1 = [];
+                        for(var j=0; j<fields.length; j++){
+                            if(~fields[j].indexOf('metadata.'))
+                                fields1.push(fields[j].split('.')[1]);
+                            else
+                                fields1.push(fields[j]);
+                        }
+                        var projection = {};
+                        for(var j=0; j<fields1.length; j++){
+                            projection[fields1[j]] = [];
+                        }
+                        for(var i=0; i<objs.length; i++) {
+                            for(var j=0; j<fields1.length; j++){
+                                if(fields1[j] == fields[j])
+                                    projection[fields1[j]].push(objs[i][fields[j]]);
+                                else
+                                    projection[fields1[j]].push(objs[i]['metadata'][fields1[j]]);
+                            }
+                        }
+                        if (!err) {
+                            log.info("Querying fields in %s",collection.collectionName);
+                            return res.json({
+                                status: 'OK',
+                                result: projection
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        }
+    },
+
+    //
     // Find and update
     //
 
     find_one_and_update: function(collection,req,res) {
         req.body.filter.owner = String(req.user._id);
+        this.check_for_objectid(req.body.filter);
         collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 log.info("Found and updated object in %s",collection.collectionName);
@@ -195,7 +266,7 @@ module.exports = {
     },
 
     find_id_and_update: function(collection,req,res) {
-        var filter = {"_id": req.params.id};
+        var filter = {"_id": new ObjectID(req.params.id)};
         req.body.filter = filter;
         return this.find_one_and_update(collection,req,res);
     },
@@ -206,12 +277,13 @@ module.exports = {
 
     update: function(collection,req,res) {
         req.body.filter.owner = String(req.user._id);
+        this.check_for_objectid(req.body.filter);
         collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
                 log.info("%d objects updated",result.modifiedCount);
                 return res.json({
                     status: 'OK',
-                    result: result.modifiedCount // Other options include matchedCount and upsertedCount
+                    result: result.modifiedCount
                 });
             } else {
                 res.statusCode = 500;
@@ -221,12 +293,14 @@ module.exports = {
         });
     },
 
-    batch_update: function(collection,req,res) {
-        var arr = [];
+    replace_many: function(collection,req,res) {
+        var batch = [];
         for(var i=0; i<req.body.length; i++) {
-            arr.push({ replaceOne: { filter: {_id:req.body[i]._id,owner:String(req.user._id)}, replacement: req.body[i]}});
+            var id = new ObjectID(req.body[i]._id);
+            delete req.body[i]._id;
+            batch.push({ replaceOne: { filter: {_id: id}, replacement: req.body[i]} });
         }
-        collection.bulkWrite(arr,{w:1},function(err,result) {
+        collection.bulkWrite(batch,{w:1},function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
                 return res.json({
@@ -236,7 +310,7 @@ module.exports = {
             } else {
                 res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return res.json({ error: 'Server error' });;
+                return res.json({ error: 'Server error' });
             }
         });
     },
@@ -246,7 +320,7 @@ module.exports = {
     },
 
     update_id: function(collection,req,res) {
-        var filter = {"_id": req.params.id};
+        var filter = {"_id": new ObjectID(req.params.id)};
         req.body.filter = filter;
         return this.update_one(collection,req,res);
     },
@@ -257,11 +331,8 @@ module.exports = {
 
     delete: function(collection,req,res) {
         var filter = req.body;
-
-        // Enforce user can only delete own documents
         filter.owner = String(req.user._id);
-
-        // Do delete operation
+        this.check_for_objectid(filter);
         collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
                 log.info("Deleting %d objects",result.deletedCount);
@@ -278,7 +349,7 @@ module.exports = {
     },
 
     delete_id: function(collection,req,res) {
-        req.body = {"_id": req.params.id};
+        req.body = {"_id": new ObjectID(req.params.id)};
         this.delete(collection,req,res);
     },
 
@@ -289,6 +360,7 @@ module.exports = {
     stats: function(collection,req,res) {
         if (!req.query.field) {
             req.query.field = req.body.field;
+            this.check_for_objectid(req.body.filter);
             req.query.filter = req.body.filter;
         }
         var map = function () {
@@ -356,5 +428,4 @@ module.exports = {
             }
         });
     }
-
 };

@@ -28,7 +28,7 @@ config.set('WebAccessToken', crypto.randomBytes(32).toString('hex'));
 
 router.use('/css', express.static( www + "/css" ));
 router.use('/scripts', express.static( www + "/scripts" ));
-router.use('/images', express.static( www + "/scripts" ));
+router.use('/images', express.static( www + "/images" ));
 router.use('/docs', express.static( www + "/docs" ));
 router.use('/favicon.ico', express.static( www + '/images/favicon.ico'));
 

@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math
+import sys,json,time,zlib,math,os,base64
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -138,10 +138,14 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-            res = self.request("POST","/api/"+self.name+"/",objs)
-            if self.name == "properties":
-                self.db.jobs.commit({"ids":res['ids']})
-            return res
+
+            if self.name == "models":
+                return self.request("POST","/api/"+self.name+"/",objs)['_id']
+            else:
+                ids = self.request("POST","/api/"+self.name+"/",objs)['_id']
+                if self.name == "properties" and len(ids) > 0:
+                    self.db.jobs.commit({"ids":ids})
+                return ids
 
         #
         # Query
@@ -162,7 +166,7 @@ class wdb:
             return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
 
         def query_id(self,ID):
-            return self.db.request("GET","/api/"+self.name+"/id/"+str(ID),{})
+            return self.request("GET","/api/"+self.name+"/id/"+str(ID),{})
 
         #
         # Find and update
@@ -181,8 +185,8 @@ class wdb:
         def update(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
-        def batch_update(self,updates):
-            return self.request("PUT","/api/"+self.name+"/batch",updates)
+        def replace_many(self,replacements):
+            return self.request("PUT","/api/"+self.name+"/replacement",replacements)
 
         def update_one(self,fltr,update):
             return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
@@ -213,51 +217,11 @@ class wdb:
     #
     class properties_collection(collection):
 
-        #
-        # Submit
-        #
-
-        def submit(self,model,executable,props):
-
-            if "_id" in model:
-                model_ids = [model["_id"]]
-            else:
-                self.db.models.commit(model)
-                model_ids = self.db.models.query_fields_only(model["tags"],'_id')['_id']
-                assert len(model_ids) == 1
-
-            if "_id" in executable:
-                executable_ids = [executable["_id"]]
-            else:
-                self.db.executables.commit(executable)
-                executable_ids = self.db.executables.query_fields_only(executable,'_id')['_id']
-                assert len(executable_ids) == 1
-
-            for prop in props:
-                prop["input_model_id"] = model_ids[0]
-                prop["executable_id"] = executable_ids[0]
-
-            self.commit(props)
-
-        #
-        # Statistics
-        #
-
-        def get_num_unresolved(self):
-            return self.count({'status':0})
-
         def get_unresolved_time(self):
             return self.stats("timeout",{"status":0})['sum']
 
         def get_resolved_time(self):
             return self.stats("walltime",{"status":3})['sum']
-
-        #
-        # Testing
-        #
-
-        def refresh(self):
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
 
         def check_status(self):
             print('unresolved: %d'%(self.count({"status":0})))
@@ -265,3 +229,8 @@ class wdb:
             print('timed out: %d'%(self.count({"status":2})))
             print('resolved: %d'%(self.count({"status":3})))
             print('errored: %d'%(self.count({"status":4})))
+
+        def refresh(self):
+            # TODO: Make this do something
+            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+>>>>>>> dev
