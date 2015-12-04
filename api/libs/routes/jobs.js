@@ -123,4 +123,16 @@ router.post('/compose', passport.authenticate('bearer', { session: false }), fun
     });
 });
 
+router.post('/script', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Accepts the source code of a script
+
+    return res.json({
+        status: 'OK',
+        result: {
+            batch_id: 1
+        }
+    });
+});
+
 module.exports = router;
