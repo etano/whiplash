@@ -101,4 +101,26 @@ router.get('/:id/explore', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+router.post('/compose', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Accepts list of params and their constraints from GUI. Returns batch id.
+    //
+    // Input example:
+    //
+    // { model : <model name>,
+    //   container : <container name>,
+    //   parameters : [
+    //                  [ { attr : "name", value : "Energy" }, { attr : <constraint name>, value : <constraint value> } ],  // parameter 0
+    //                  [ { attr : "name", value : "Seed"   }, { attr : <constraint name>, value : <constraint value> } ]   // parameter 1
+    //                ]
+    // }
+
+    return res.json({
+        status: 'OK',
+        result: {
+            batch_id: 1
+        }
+    });
+});
+
 module.exports = router;
