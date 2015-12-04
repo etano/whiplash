@@ -10,12 +10,11 @@ var collection = db.get().collection('clients');
 var crypto = require('crypto');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var client_secret = crypto.randomBytes(32).toString('hex');
-    var client = new Client({ name: req.body.client_name, clientId: req.body.client_id, clientSecret: client_secret, userId: String(req.user._id) });
+    var client = new Client({ name: req.body.client_name, clientId: req.body.client_id, clientSecret: req.body.client_secret, userId: String(req.user._id) });
     client.save(function(err, client){
         if(!err){
             log.info("New user client %s", client.clientId);
-            return res.json({ status: 'OK', obj: client_secret });
+            return res.json({ status: 'OK' });
         }else{
             log.error(err);
             res.send("Bof");

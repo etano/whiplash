@@ -5,12 +5,7 @@ import sys,whiplash,json,random,copy
 print("Login")
 host = sys.argv[1]
 port = int(sys.argv[2])
-username = sys.argv[3]
-password = sys.argv[4]
-client_id = sys.argv[5]
-client_secret = sys.argv[6]
-
-wdb = whiplash.wdb(host,port,"",username,password,client_id,client_secret)
+wdb = whiplash.wdb(host,port,username="test",password="test")
 
 print("Reset database")
 wdb.models.delete({})

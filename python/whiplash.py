@@ -10,14 +10,17 @@ except NameError: pass
 # Whiplash class
 #
 class wdb:
-    def __init__(self,server,port,access_token="",username="",password="",client_id="",client_secret=""):
+    def __init__(self,server,port,token="",username="",password=""):
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
-        if access_token == "":
-            self.create_token(username,password,client_id,client_secret)
+        if token == "":
+            if username == "":
+                self.read_config()
+            else:
+                self.create_token(username,password)
         else:
-            self.set_token(access_token)
+            self.set_token(token)
         self.check_token()
 
         self.models = self.collection(self,"models")
@@ -55,6 +58,15 @@ class wdb:
         self.access_token = access_token
         self.headers["Authorization"] = "Bearer "+self.access_token
 
+    def read_config(self):
+        try:
+            f = open(os.path.expanduser("~")+"/.whiplash_config","r")
+            token = f.readlines()[0]
+            self.set_token(token)
+        except:
+            print('Whiplash config not found. Please enter your authorization details.')
+            self.create_token()
+
     def check_token(self):
         status, reason, res = self.request("GET","/api",json.dumps({"foo":"bar"}))
         if status != 200:
@@ -62,43 +74,23 @@ class wdb:
                 print('Token not valid. Please create one.')
             sys.exit(1)
 
-    def create_token(self,username="",password="",client_id="",client_secret=""):
+    def create_token(self,username="",password=""):
         if username == "":
             username = input("username: ")
         if password == "":
             password = input("password: ")
-        if client_id == "":
-            client_id = input("client ID: ")
-        if client_secret == "":
-            client_secret = input("client secret: ")
 
-        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
+        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":username,"client_secret":password,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
                 print('Invalid login credentials. Please verify your account.')
             sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
-            print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
-            print("access token:", res["access_token"])
-            print("refresh token:", res["refresh_token"])
-            self.set_token(res["access_token"])
-
-    def refresh_token(self,refresh_token):
-        client_id = input("client ID: ")
-        client_secret = input("client secret: ")
-
-        self.headers.pop("Authorization")
-        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"refresh_token","client_id":client_id,"client_secret":client_secret,"refresh_token":refresh_token}))
-        if status != 200:
-            if ('Unauthorized' in reason) or ('Forbidden' in reason):
-                print('Invalid refresh token. Please create new tokens.')
-            sys.exit(1)
-        else:
-            res = json.loads(res.decode('utf-8'))
-            print("New tokens grant for", res["expires_in"], "seconds. Please save them.")
-            print("access token:", res["access_token"])
-            print("refresh token:", res["refresh_token"])
+            print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
+            f = open(os.path.expanduser("~")+"/.whiplash_config","w")
+            f.write(res["access_token"])
+            f.close()
             self.set_token(res["access_token"])
 
     #
