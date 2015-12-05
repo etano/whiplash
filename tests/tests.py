@@ -40,8 +40,8 @@ print("Query executable")
 assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
 print("Submit properties")
-N0 = 1000; t0 = 1.0
-N1 = 1000; t1 = 2.0; w1 = 1.0
+N0 = 2; t0 = 1.0
+N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []
 for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "input_model_id":model_id,"executable_id":executable_id,"timeout":t0})

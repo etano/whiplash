@@ -31,9 +31,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = req.body;
-    filter.owner = String(req.user._id);
-    common.query_count(collection,filter,res);
+    common.query_count(collection,req,res);
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -59,10 +57,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = req.body.filter;
-    filter.owner = String(req.user._id);
-    var fields = req.body.fields;
-    common.query_fields_only(collection,filter,fields,res);
+    common.query_fields_only(collection,req,res);
 });
 
 module.exports = router;

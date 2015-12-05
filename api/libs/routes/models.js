@@ -108,19 +108,7 @@ var read_by_name = function(name,cb) {
 };
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {};
-    for(var key in req.body) {
-        if(key !== '_id') {
-            if(req.body.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body[key];
-            }
-        } else {
-            filter['_id'] = req.body[key];
-        }
-    }
-    common.check_for_objectid(filter);
-
-    filter["metadata.owner"] = String(req.user._id);
+    var filter = common.form_filter(collection,req.body,String(req.user._id));
     collection.find(filter).toArray(function (err, objs) {
         if(!err) {
             if(objs.length > 0) {
@@ -162,17 +150,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {};
-    for(var key in req.body) {
-        if(key !== '_id') {
-            if(req.body.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body[key];
-            }
-        } else {
-            filter['_id'] = new ObjectID(req.body[key]);
-        }
-    }
-    filter["metadata.owner"] = String(req.user._id);
+    var filter = common.form_filter(collection,req.body,String(req.user._id));
     collection.find(filter).limit(1).toArray(function (err, objs) {
         if(!err) {
             if(objs.length > 0) {
@@ -205,42 +183,18 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {};
-    for(var key in req.body) {
-        if(key !== '_id') {
-            if(req.body.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body[key];
-            }
-        } else {
-            filter['_id'] = new ObjectID(req.body[key]);
-        }
-    }
-    filter["metadata.owner"] = String(req.user._id);
-    common.query_count(collection,filter,res);
+    common.query_count(collection,req,res);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {};
-    for(var key in req.body.filter) {
-        if(key !== '_id') {
-            if(req.body.filter.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body.filter[key];
-            }
-        } else {
-            filter['_id'] = new ObjectID(req.body.filter[key]);
-        }
-    }
-    filter["metadata.owner"] = String(req.user._id);
-    var fields = req.body.fields;
-    for(var i=0; i <fields.length; i++)
-        if(!~special.indexOf(fields[i]))
-            fields[i] = 'metadata.' + fields[i];
-    common.query_fields_only(collection,filter,fields,res);
+    for(var i=0; i <req.body.fields.length; i++)
+        if(!~special.indexOf(req.body.fields[i]))
+            req.body.fields[i] = 'metadata.' + req.body.fields[i];
+    common.query_fields_only(collection,req,res);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {_id: new ObjectID(req.params.id)};
-    filter["metadata.owner"] = String(req.user._id);    
+    var filter = common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id));
     collection.find(filter).limit(1).toArray(function (err, objs) {
         if(!err) {
             if(objs.length > 0) {
@@ -276,47 +230,16 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 // Delete
 //
 
-var delete_by_id = function(id,req,cb) {
-    var gridStore = new GridStore(db.get(), id, String(id), 'w');
-    gridStore.open(function(err, gs) {
-        if(err) {
-            log.error('Error opening file: %s',err.message);
-            cb(err,gs);
-        } else if(gridStore.metadata.owner !== String(req.user._id)) {
-            log.error('Wrong owner: %s',String(req.user._id));
-            cb({'message':'You are not the owner of this file'},gs);
-        } else {
-            gridStore.unlink(function(err, result) {
-                if(err){
-                    log.error('Error deleting file: %s',err.message);
-                }
-                cb(err,result);
-            });
-        }
-    });
-};
-
-router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+var delete_by_filter = function(filter,res) {
     var proj = {};
     proj._id = 1;
-    var filter = {};
-    for(var key in req.body) {
-        if(key !== '_id') {
-            if(req.body.hasOwnProperty(key)) {
-                filter["metadata."+key] = req.body[key];
-            }
-        } else {
-            filter['_id'] = new ObjectID(req.body[key]);
-        }
-    }
-    filter["metadata.owner"] = String(req.user._id);
     collection.find(filter).project(proj).toArray(function(err, objs) {
         if(!err) {
             if(objs.length > 0) {
                 var items = [];
                 var delete_objs = function(i){
                     if (i<objs.length) {
-                        delete_by_id(new ObjectID(objs[i]._id),req,function(err, data) {
+                        delete_by_id(new ObjectID(objs[i]._id), function(err, data) {
                             if(!err) {
                                 delete_objs(i+1);
                             } else {
@@ -326,7 +249,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
                             }
                         });
                     } else {
-                        log.info("Deleting %d objects",objs.length)
+                        log.info("Deleting %d objects",objs.length);
                         return res.json({
                             status: 'OK',
                             result: objs.length
@@ -340,29 +263,40 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
                     status: 'OK',
                     result: 0
                 });
-            }            
+            }
         } else {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
         }
     });
+};
+
+var delete_by_id = function(id, cb) {
+    var gridStore = new GridStore(db.get(), id, String(id), 'w');
+    gridStore.open(function(err, gs) {
+        if(err) {
+            log.error('Error opening file: %s',err.message);
+            cb(err,gs);
+        } else {
+            gridStore.unlink(function(err, result) {
+                if(err){
+                    log.error('Error deleting file: %s',err.message);
+                }
+                cb(err,result);
+            });
+        }
+    });
+};
+
+router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filter = common.form_filter(collection,req.body,String(req.user._id));
+    delete_by_filter(filter,res);
 });
 
 router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    delete_by_id(new ObjectID(req.params.id),req,function(err,data) {
-        if (!err) {
-            log.info("Deleting object with id %s",req.params.id)
-            return res.json({
-                status: 'OK',
-                result: 1
-            });
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
-    });
+    var filter = common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id));
+    delete_by_filter(filter,res);
 });
 
 //

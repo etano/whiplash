@@ -4,7 +4,8 @@ var ObjectID = require('mongodb').ObjectID;
 
 module.exports = {
 
-    check_for_objectid: function(filter) {
+    form_filter: function(collection,filter,user_id) {
+        // Regularize ids
         if ('_id' in filter) {
             if (typeof(filter['_id']) === 'object') {
                 if ('$in' in filter['_id']) {
@@ -16,6 +17,26 @@ module.exports = {
                 filter['_id'] = new ObjectID(filter['_id']);
             }
         }
+
+        // Set permissions
+        filter.owner = user_id;
+
+        // Special for models
+        if (collection.collectionName === "fs.files") {
+            var new_filter = {};
+            for(var key in filter) {
+                if(key !== '_id') {
+                    if(filter.hasOwnProperty(key)) {
+                        new_filter["metadata."+key] = filter[key];
+                    }
+                } else {
+                    new_filter['_id'] = filter[key];
+                }
+            }
+            filter = new_filter;
+        }
+
+        return filter;
     },
 
     //
@@ -46,8 +67,8 @@ module.exports = {
     // Query
     //
 
-    query: function(collection,filter,res) {
-        this.check_for_objectid(filter);
+    query: function(collection,req,res) {
+        var filter = this.form_filter(collection,req.body,String(req.user._id));
         collection.find(filter).toArray(function (err, objs) {
             if(!objs) {
                 res.statusCode = 404;
@@ -67,8 +88,8 @@ module.exports = {
         });
     },
 
-    query_one: function(collection,filter,res) {
-        this.check_for_objectid(filter);
+    query_one: function(collection,req,res) {
+        var filter = this.form_filter(collection,req.body,String(req.user._id));
         collection.find(filter).limit(1).toArray(function (err, obj) {
             if(!obj) {
                 res.statusCode = 404;
@@ -88,8 +109,13 @@ module.exports = {
         });
     },
 
-    query_count: function(collection,filter,res) {
-        this.check_for_objectid(filter);
+    query_id: function(collection,req,res) {
+        req.body = {_id: new ObjectID(req.params.id)};
+        return this.query_one(collection,req,res);
+    },
+
+    query_count: function(collection,req,res) {
+        var filter = this.form_filter(collection,req.body,String(req.user._id));
         collection.count(filter, function (err, count) {
             if (!err) {
                 log.info("Counting %d objects in %s",count,collection.collectionName);
@@ -105,8 +131,9 @@ module.exports = {
         });
     },
 
-    query_fields_only: function(collection,filter,fields,res) {
-        this.check_for_objectid(filter);
+    query_fields_only: function(collection,req,res) {
+        var filter = this.form_filter(collection,req.body.filter,String(req.user._id));
+        var fields = req.body.fields;
         var proj = {};
         for(var i=0; i<fields.length; i++){
             proj[fields[i]] = 1;
@@ -186,11 +213,11 @@ module.exports = {
                 }
                 req.body[i]['commit_tag'] = commit_tag;
 
-                batch.push({ updateOne: { filter: filter, update: req.body[i], upsert : true}});
+                batch.push({ updateOne: { filter: filter, update: req.body[i], upsert: true }});
             }
             collection.bulkWrite(batch,{w:1},function(err,result) {
                 if (result.ok) {
-                    log.info("%s new objects replaced", String(result.modifiedCount));
+                    log.info("%s objects modified", String(result.modifiedCount));
 
                     var filter = {'commit_tag':commit_tag};
                     var fields = ['_id'];
@@ -250,9 +277,8 @@ module.exports = {
     //
 
     find_one_and_update: function(collection,req,res) {
-        req.body.filter.owner = String(req.user._id);
-        this.check_for_objectid(req.body.filter);
-        collection.findOneAndUpdate(req.body.filter, req.body.update, {w:1}, function (err, result) {
+        var filter = this.form_filter(collection,req.body.filter,String(req.user._id));
+        collection.findOneAndUpdate(filter, req.body.update, {w:1}, function (err, result) {
             if (!err) {
                 log.info("Found and updated object in %s",collection.collectionName);
                 return res.json({
@@ -268,8 +294,7 @@ module.exports = {
     },
 
     find_id_and_update: function(collection,req,res) {
-        var filter = {"_id": new ObjectID(req.params.id)};
-        req.body.filter = filter;
+        req.body.filter = {"_id": new ObjectID(req.params.id)};
         return this.find_one_and_update(collection,req,res);
     },
 
@@ -278,9 +303,8 @@ module.exports = {
     //
 
     update: function(collection,req,res) {
-        req.body.filter.owner = String(req.user._id);
-        this.check_for_objectid(req.body.filter);
-        collection.updateMany(req.body.filter, {'$set':req.body.update}, {w:1}, function (err, result) {
+        var filter = this.form_filter(collection,req.body.filter,String(req.user._id));
+        collection.updateMany(filter, {'$set':req.body.update}, {w:1}, function (err, result) {
             if (!err) {
                 log.info("%d objects updated",result.modifiedCount);
                 return res.json({
@@ -322,8 +346,7 @@ module.exports = {
     },
 
     update_id: function(collection,req,res) {
-        var filter = {"_id": new ObjectID(req.params.id)};
-        req.body.filter = filter;
+        req.body.filter = {"_id": new ObjectID(req.params.id)};
         return this.update_one(collection,req,res);
     },
 
@@ -332,9 +355,7 @@ module.exports = {
     //
 
     delete: function(collection,req,res) {
-        var filter = req.body;
-        filter.owner = String(req.user._id);
-        this.check_for_objectid(filter);
+        var filter = this.form_filter(collection,req.body,String(req.user._id));
         collection.deleteMany(filter, {}, function (err, result) {
             if (!err) {
                 log.info("Deleting %d objects",result.deletedCount);
@@ -362,9 +383,10 @@ module.exports = {
     stats: function(collection,req,res) {
         if (!req.query.field) {
             req.query.field = req.body.field;
-            this.check_for_objectid(req.body.filter);
             req.query.filter = req.body.filter;
         }
+        var field = req.query.field;
+        var filter = this.form_filter(collection,req.query.filter,String(req.user._id));
         var map = function () {
             emit(this.owner,
                  {sum: this[field],
@@ -397,15 +419,14 @@ module.exports = {
         };
         var o = {};
         o.finalize = finalize;
-        req.query.filter.owner = String(req.user._id);
-        o.scope = {field: req.query.field};
-        o.query = req.query.filter;
-        o.out = {replace: 'statistics' + '_' + req.query.field + '_' + collection.collectionName};
+        o.scope = {field: field};
+        o.query = filter;
+        o.out = {replace: 'statistics' + '_' + field + '_' + collection.collectionName};
         collection.mapReduce(map, reduce, o, function (err, out_collection) {
             if(!err){
                 out_collection.find().toArray(function (err, result) {
                     if(!err) {
-                        log.info("Computing statistics for %s",req.query.field);
+                        log.info("Computing statistics for %s",field);
                         if(result.length>0) {
                             return res.json({
                                 status: 'OK',
