@@ -21,6 +21,7 @@ router.post('/', webAuth, function(req, res){
     user.save(function(err, user){
         if(!err) {
             log.info("New user: %s", user.username);
+            res.send("OK");
         } else {
             log.error(err);
             res.send("Bof");
