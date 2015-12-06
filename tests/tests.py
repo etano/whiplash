@@ -8,6 +8,8 @@ port = int(sys.argv[2])
 wdb = whiplash.wdb(host,port,username="test",password="test")
 
 print("Reset database")
+wdb.collaborations.delete({})
+assert wdb.collaborations.count({}) == 0
 wdb.models.delete({})
 assert wdb.models.count({}) == 0
 wdb.executables.delete({})
@@ -24,7 +26,7 @@ for i in range(N):
     for j in range(i+1,N):
         value = 2.0*random.random()-1.0
         hamiltonian.append([[i,j],value])
-tags = {"n_spins":N,"name":"test"}
+tags = {"n_spins":N, "name":"test"}
 model = {"content":{"edges": hamiltonian}}
 model.update(tags)
 model_id = wdb.models.commit(model)[0]
@@ -44,7 +46,7 @@ N0 = 2; t0 = 1.0
 N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []
-for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "input_model_id":model_id,"executable_id":executable_id,"timeout":t0})
+for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "input_model_id":model_id, "executable_id":executable_id, "timeout":t0})
 for i in range(N0,N0+N1): props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":3, "walltime":w1})
 wdb.properties.commit(props)
 

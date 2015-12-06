@@ -5,9 +5,8 @@ var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
-var collection = db.get().collection('executables');
-var ObjType = require(libs + 'schemas/executable');
-var ObjectID = require('mongodb').ObjectID;
+var collection = db.get().collection('collaborations');
+var ObjType = require(libs + 'schemas/collaboration');
 
 //
 // Commit
@@ -29,28 +28,16 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
     common.query_one(collection,req,res);
 });
 
+router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_id(collection,req,res);
+});
+
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_count(collection,req,res);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_fields_only(collection,req,res);
-});
-
-router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_id(collection,req,res);
-});
-
-//
-// Find and update
-//
-
-router.post('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_one_and_update(collection,req,res);
-});
-
-router.post('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_id_and_update(collection,req,res);
 });
 
 //
@@ -74,6 +61,18 @@ router.put('/id/:id', passport.authenticate('bearer', { session: false }), funct
 });
 
 //
+// Find and update
+//
+
+router.post('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_one_and_update(collection,req,res);
+});
+
+router.post('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.find_id_and_update(collection,req,res);
+});
+
+//
 // Delete
 //
 
@@ -92,5 +91,7 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.stats(collection,req,res);
 });
+
+
 
 module.exports = router;

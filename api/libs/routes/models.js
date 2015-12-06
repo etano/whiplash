@@ -108,77 +108,79 @@ var read_by_name = function(name,cb) {
 };
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.form_filter(collection,req.body,String(req.user._id));
-    collection.find(filter).toArray(function (err, objs) {
-        if(!err) {
-            if(objs.length > 0) {
-                var items = [];
-                var apply_content = function(i){
-                    if (i<objs.length) {
-                        read_by_name(String(objs[i]._id),function(err,data){
-                            if(!err) {
-                                items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
-                                apply_content(i+1);
-                            } else {
-                                res.statusCode = 500;
-                                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                return res.json({ error: 'Server error' });
-                            }
-                        });
-                    } else {
-                        log.info("Returning %d objects",items.length);
-                        return res.json({
-                            status: 'OK',
-                            result: items
-                        });
-                    }
-                };
-                apply_content(0);
+    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+        collection.find(filter).toArray(function (err, objs) {
+            if(!err) {
+                if(objs.length > 0) {
+                    var items = [];
+                    var apply_content = function(i){
+                        if (i<objs.length) {
+                            read_by_name(String(objs[i]._id),function(err,data){
+                                if(!err) {
+                                    items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
+                                    apply_content(i+1);
+                                } else {
+                                    res.statusCode = 500;
+                                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                    return res.json({ error: 'Server error' });
+                                }
+                            });
+                        } else {
+                            log.info("Returning %d objects",items.length);
+                            return res.json({
+                                status: 'OK',
+                                result: items
+                            });
+                        }
+                    };
+                    apply_content(0);
+                } else {
+                    log.info("Objects with filter %s not found",JSON.stringify(filter));
+                    return res.json({
+                        status: 'OK',
+                        result: {}
+                    });
+                }
             } else {
-                log.info("Objects with filter %s not found",JSON.stringify(filter));
-                return res.json({
-                    status: 'OK',
-                    result: {}
-                });
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
             }
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
+        });
     });
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.form_filter(collection,req.body,String(req.user._id));
-    collection.find(filter).limit(1).toArray(function (err, objs) {
-        if(!err) {
-            if(objs.length > 0) {
-                read_by_name(String(objs[0]._id),function(err,data){
-                    if(!err) {
-                        log.info("Returning 1 object");
-                        return res.json({
-                            status: 'OK',
-                            result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
-                        });
-                    } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
-                    }
-                });
+    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, objs) {
+            if(!err) {
+                if(objs.length > 0) {
+                    read_by_name(String(objs[0]._id),function(err,data){
+                        if(!err) {
+                            log.info("Returning 1 object");
+                            return res.json({
+                                status: 'OK',
+                                result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    log.info("Object with filter %s not found",JSON.stringify(filter));
+                    return res.json({
+                        status: 'OK',
+                        result: {}
+                    });
+                }
             } else {
-                log.info("Object with filter %s not found",JSON.stringify(filter));
-                return res.json({
-                    status: 'OK',
-                    result: {}
-                });
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
             }
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
+        });
     });
 });
 
@@ -194,35 +196,36 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id));
-    collection.find(filter).limit(1).toArray(function (err, objs) {
-        if(!err) {
-            if(objs.length > 0) {
-                read_by_name(String(objs[0]._id),function(err,data){
-                    if(!err) {
-                        log.info("Returning 1 object");
-                        return res.json({
-                            status: 'OK',
-                            result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
-                        });
-                    } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
-                    }
-                });
+    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, objs) {
+            if(!err) {
+                if(objs.length > 0) {
+                    read_by_name(String(objs[0]._id),function(err,data){
+                        if(!err) {
+                            log.info("Returning 1 object");
+                            return res.json({
+                                status: 'OK',
+                                result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    log.info("Object with filter %s not found",JSON.stringify(filter));
+                    return res.json({
+                        status: 'OK',
+                        result: {}
+                    });
+                }
             } else {
-                log.info("Object with filter %s not found",JSON.stringify(filter));
-                return res.json({
-                    status: 'OK',
-                    result: {}
-                });
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
             }
-        } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
-        }
+        });
     });
 });
 
@@ -290,13 +293,15 @@ var delete_by_id = function(id, cb) {
 };
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.form_filter(collection,req.body,String(req.user._id));
-    delete_by_filter(filter,res);
+    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+        delete_by_filter(filter,res);
+    });
 });
 
 router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id));
-    delete_by_filter(filter,res);
+    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
+        delete_by_filter(filter,res);
+    });
 });
 
 //
