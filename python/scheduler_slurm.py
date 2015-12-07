@@ -67,9 +67,9 @@ def make_batches(wdb,time_window):
 def scheduler(args):
 
     if args.test:
-        wdb = whiplash.wdb(args.test_host,args.test_port,"","test","test","test","test")
+        wdb = whiplash.wdb(args.test_host,args.test_port)
     else:
-        wdb = whiplash.wdb(args.host,args.port,args.token)
+        wdb = whiplash.wdb(args.host,args.port,token=args.token)
 
     print('scheduler connected to wdb')
 

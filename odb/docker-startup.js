@@ -4,6 +4,7 @@ db.createUser({user:"pwn",pwd:"cftXzdrjheHEARuJKT39x]3sV",roles:[{role:"dbOwner"
 db.createUser({user:"scheduler",pwd:"c93lbcp0hc[5209sebf10{3ca",roles:[{role:"read",db:"wdb"}]});
 db.fs.files.createIndex({md5 : 1, "metadata.property_id" : 1, "metadata.owner" : 1},{unique : true});
 db.executables.createIndex({name : 1, algorithm : 1, version : 1, build : 1, owner : 1},{unique : true});
-db.properties.createIndex({input_model_id : 1, executable_id : 1, params_md5 : 1, owner : 1},{unique : true});
+db.properties.createIndex({input_model_id : 1, executable_id : 1, md5 : 1, owner : 1},{unique : true});
 db.jobs.createIndex({ids : 1, owner : 1},{unique : true});
-db.setProfilingLevel(2)
+db.collaborations.createIndex({name : 1},{unique : true});
+db.setProfilingLevel(2);
