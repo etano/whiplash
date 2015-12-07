@@ -228,9 +228,9 @@ module.exports = {
                    var unix_time = String(Math.round(new Date().getTime() / 1000));
                    var commit_tag = String(req.body[0].owner) + unix_time;
                    for(var i=0; i<req.body.length; i++) {
-                       req.body[i]['md5'] = checksum(JSON.stringify(req.body[i]));
                        var fields = [];
                        if (collection.collectionName === "properties") {
+                           req.body[i]['md5'] = checksum(JSON.stringify(req.body[i].params));
                            fields = ['input_model_id','executable_id','md5','owner','collaboration'];
                        }
                        else if (collection.collectionName === "executables") {
@@ -240,7 +240,8 @@ module.exports = {
                            fields = ['ids','owner','collaboration'];
                        }
                        else if (collection.collectionName === "jobs") {
-                           fields = ['ids','owner','collaboration'];
+                           req.body[i]['md5'] = checksum(JSON.stringify(req.body[i].ids));
+                           fields = ['name','ids','owner','md5','collaboration'];
                        }
                        var filter = {};
                        for (var j = 0; j < fields.length; j++) {
