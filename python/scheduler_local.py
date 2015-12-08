@@ -9,6 +9,7 @@ def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
 
     t0 = time.time()
 
+    # TODO: should not be "query" but something like "pull"
     property_ids = wdb.work_batches.query({})
     properties = wdb.properties.query({'_id': {'$in': property_ids}})
 
@@ -152,15 +153,15 @@ def worker(pid,wdb,args,end_time):
                     thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
                     thread.start()
                     threads.append(thread)
-            elif time_left() < args.time_window:
-                print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
-                time.sleep(2)
             elif not is_work[0]:
                 if num_alive() == 0:
-                    print('worker',str(pid),'has no live threads, shutting down')
+                    print('worker',str(pid),'has no live threads. no unresolved properties. shutting down')
                     sys.exit(0)
                 else:
                     print('no unresolved properties.',str(num_alive()),'threads alive on worker',str(pid))
+                time.sleep(2)
+            elif time_left() < args.time_window:
+                print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
                 time.sleep(2)
         else:
             break
