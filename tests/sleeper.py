@@ -1,9 +1,12 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python
 
 import os,json,sys,time
 
 # input
-data = json.loads(sys.stdin.readline())
+f = open(sys.argv[1],'r')
+data = json.load(f)
+f.close()
+
 content_in = data['content']
 params = data['params']
 
@@ -11,6 +14,7 @@ params = data['params']
 time.sleep(params['sleep_time'])
 
 # output
-tags_out = {'feels':'good to sleep'}
 content_out = {'time':int(time.time())}
-sys.stdout.write(json.dumps({'tags':tags_out,'content':content_out}))
+f = open(sys.argv[1],'w')
+f.write(json.dumps({'feels':'good to sleep','content':content_out}))
+f.close()

@@ -73,6 +73,7 @@ class wdb:
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
+                self.create_token()
             sys.exit(1)
 
     def create_token(self,username="",password=""):
