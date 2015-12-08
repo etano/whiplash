@@ -38,7 +38,7 @@ def get_times(wdb):
     if timeouts['count'] == 0:
         return [0,0]
     else:
-        return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(timeouts['min'],601)]
+        return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(1.2*timeouts['min'],601)]
 
 def make_batches(wdb,time_window):
     print('making batches')

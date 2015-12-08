@@ -13,8 +13,64 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     common.commit(ObjType,collection,req,res);
 });
 
+router.post('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    req.body = {'_id':req.params.id};
+    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, objs) {
+            if (!err) {
+                if (objs.length > 0) {
+                    delete objs[0].submitted;
+                    delete objs[0]._id;
+                    delete objs[0].timestamp;
+                    objs[0].name = objs[0].name + '_copy';
+                    req.body = objs;
+                    common.validate(ObjType,req, function(err) {
+                        if(err) {
+                            if(err.name === 'ValidationError') {
+                                log.error('Validation error(%d): %s', 400, err.message);
+                                return res.json({ status: 400, error: err.toString() });
+                            } else {
+                                log.error('Server error(%d): %s', 500, err.message);
+                                return res.json({ status: 500, error: err.toString() });
+                            }
+                        } else {
+                            collection.insertOne(req.body[0], function(err, r) {
+                                if (!err) {
+                                    return res.json({
+                                        status: 'OK',
+                                        result: {
+                                            name: req.body[0].name,
+                                            time: req.body[0].timestamp.toLocaleString(),
+                                            batch_id: r.insertedId,
+                                            script: req.body[0].script,
+                                            submitted: req.body[0].submitted
+                                        }
+                                    });
+                                } else {
+                                    log.error('Write error: %s', err.toString());
+                                    return res.json({ status: 500, error: 'Server error' });
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    log.error('Not found error: %s', err.toString());
+                    return res.json({ status: 404, error: err.toString() });
+                }
+            } else {
+                log.error('Server error: %s', err.toString());
+                return res.json({ status: 500, error: 'Server error' });
+            }
+        });
+    });
+});
+
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.delete(collection,req,res);
+});
+
+router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.delete_id(collection,req,res);
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -43,27 +99,25 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
                         for (var j=0; j<objs[i]['ids'].length; j++) {
                             ids.push(new ObjectID(objs[i]['ids'][j]));
                         }
-                        db.get().collection('properties').group({'status':1},{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
-                            var stats_i = {time: objs[i].timestamp.toLocaleString(), batch_id: objs[i]._id};
-                            for (var k=0; k<counts.length; k++) {
-                                if (counts[k].status === 0) {
-                                    stats_i.togo = counts[k].count;
-                                } else if (counts[k].status === 3) {
-                                    stats_i.done = counts[k].count;
-                                } else {
-                                    if (stats_i.now) {
-                                        stats_i.now += counts[k].count;
+                        var stats_i = {name: objs[i].name, time: objs[i].timestamp.toLocaleString(), batch_id: objs[i]._id, togo: 0, done: 0, now: 0, submitted: objs[i].submitted};
+                        if(ids.length > 0) {
+                            db.get().collection('properties').group({'status':1},{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
+                                for (var k=0; k<counts.length; k++) {
+                                    if (counts[k].status === 0) {
+                                        stats_i.togo += counts[k].count;
+                                    } else if (counts[k].status === 3) {
+                                        stats_i.done += counts[k].count;
                                     } else {
-                                        stats_i.now = counts[k].count;
+                                        stats_i.now += counts[k].count;
                                     }
                                 }
-                                if (!stats_i.now) {
-                                    stats_i.now = 0;
-                                }
-                            }
+                                stats.push(stats_i);
+                                get_stats(i+1);
+                            });
+                        } else {
                             stats.push(stats_i);
                             get_stats(i+1);
-                        });
+                        }
                     } else {
                         // Return counts
                         return res.json({
