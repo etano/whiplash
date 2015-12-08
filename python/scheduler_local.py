@@ -53,8 +53,8 @@ def commit_resolved(wdb,good_results,bad_results,pid):
     t1 = time.time()
     elapsed0 = t1-t0
     print('worker',str(pid),'commited',len(good_results['models']),'models in time',elapsed0)
-    for ID in ids:
-        good_results['properties'][ID['index']]['output_model_id'] = ID['_id']
+    for i in range(len(ids)):
+        good_results['properties'][i]['output_model_id'] = ids[i]
     t0 = time.time()
     all_properties = good_results['properties']+bad_results['properties']
     wdb.properties.replace_many(all_properties)
@@ -158,7 +158,7 @@ def worker(pid,wdb,args,end_time):
                     print('worker',str(pid),'has no live threads. no unresolved properties. shutting down')
                     sys.exit(0)
                 else:
-                    print('no unresolved properties.',str(num_alive()),'threads alive on worker',str(pid))
+                    print('worker',str(pid),'no unresolved properties.',str(num_alive()),'threads alive.')
                 time.sleep(2)
             elif time_left() < args.time_window:
                 print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')

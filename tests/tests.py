@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys,whiplash,json,random,copy
+import sys,os,whiplash,json,random,copy
 
 print("Login")
 host = sys.argv[1]
@@ -37,14 +37,14 @@ print("Query model")
 assert model_id == wdb.models.query_fields_only(tags,'_id')['_id'][0]
 
 print("Commit executable")
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":"./tests/sleeper.py", "description":"test"}
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test"}
 executable_id = wdb.executables.commit(executable)[0]
 
 print("Query executable")
 assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
 print("Submit properties")
-N0 = 2; t0 = 1.0
+N0 = 2; t0 = 1.2
 N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []

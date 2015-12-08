@@ -73,6 +73,7 @@ class wdb:
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
+                self.create_token()
             sys.exit(1)
 
     def create_token(self,username="",password=""):
@@ -131,14 +132,10 @@ class wdb:
         def commit(self,objs):
             if not isinstance(objs, list):
                 objs = [objs]
-
-            if self.name == "models":
-                return self.request("POST","/api/"+self.name+"/",objs)
-            else:
-                ids = self.request("POST","/api/"+self.name+"/",objs)
-                if self.name == "properties" and len(ids) > 0:
-                    self.db.jobs.commit({"ids":ids,"submitted":1,"name":"default"})
-                return ids
+            ids = self.request("POST","/api/"+self.name+"/",objs)
+            if self.name == "properties" and len(ids) > 0:
+                self.db.jobs.commit({"ids":ids,"submitted":1,"name":"default"})
+            return ids
 
         #
         # Query
