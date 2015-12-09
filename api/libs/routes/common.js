@@ -2,7 +2,7 @@ var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-var collaborations = db.get().collection('collaborations');
+
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
@@ -24,38 +24,44 @@ module.exports = {
 
         // Set permissions
         if (!('collaboration' in filter)) {
-            collaborations.find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
-                if(!err) {
-                    var ids = [];
-                    for(var i=0; i<objs.length; i++) {
-                        ids.push(objs[i]['_id']);
-                    }
-                    if (ids.length > 0) {
-                        filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
-                    } else {
-                        filter.owner = user_id;
-                    }
-                } else {
-                    filter.owner = user_id;
-                }
-
-                // Prepend metadata for models
-                if (collection.collectionName === "fs.files") {
-                    var new_filter = {};
-                    for(var key in filter) {
-                        if(key !== '_id') {
-                            if(filter.hasOwnProperty(key)) {
-                                new_filter["metadata."+key] = filter[key];
+            db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
+                db.get().collection('users').find({"_id":new ObjectID(user_id)}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
+                    if(objs2) {
+                        if(objs2[0]['username'] !== "scheduler") { // scheduler is god
+                            if(!err) {
+                                var ids = [];
+                                for(var i=0; i<objs.length; i++) {
+                                    ids.push(objs[i]['_id']);
+                                }
+                                if (ids.length > 0) {
+                                    filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
+                                } else {
+                                    filter.owner = user_id;
+                                }
+                            } else {
+                                filter.owner = user_id;
                             }
-                        } else {
-                            new_filter['_id'] = filter[key];
                         }
                     }
-                    filter = new_filter;
-                }
 
-                // Callback with filter
-                cb(filter);
+                    // Prepend metadata for models
+                    if (collection.collectionName === "fs.files") {
+                        var new_filter = {};
+                        for(var key in filter) {
+                            if(key !== '_id') {
+                                if(filter.hasOwnProperty(key)) {
+                                    new_filter["metadata."+key] = filter[key];
+                                }
+                            } else {
+                                new_filter['_id'] = filter[key];
+                            }
+                        }
+                        filter = new_filter;
+                    }
+
+                    // Callback with filter
+                    cb(filter);
+                });
             });
         }
     },
@@ -96,7 +102,7 @@ module.exports = {
                     return res.json({ error: 'Not found' });
                 }
                 if (!err) {
-                    log.info("Query objects in %s",collection.collectionName);
+                    log.info("Found %d objects in %s",objs.length,collection.collectionName);
                     return res.json({
                         status: 'OK',
                         result: objs

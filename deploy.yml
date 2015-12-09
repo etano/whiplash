@@ -16,5 +16,5 @@ api:
     links:
         - odb:mongo
     restart: always
-    command: sh -c "node bin/www"
+    command: sh -c "node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/www"
 

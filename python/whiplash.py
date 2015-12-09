@@ -29,6 +29,8 @@ class wdb:
         self.work_batches = self.collection(self,"work_batches")
         self.jobs = self.collection(self,"jobs")
         self.collaborations = self.collection(self,"collaborations")
+        self.users = self.collection(self,"users")
+        self.accesstokens = self.collection(self,"accesstokens")
 
     #
     # Request
@@ -76,24 +78,30 @@ class wdb:
                 self.create_token()
             sys.exit(1)
 
-    def create_token(self,username="",password=""):
+    def create_token(self,username="",password="",client_id="",client_secret="",save_token=True):
         if username == "":
             username = input("username: ")
         if password == "":
             password = input("password: ")
+        if client_id == "":
+            client_id = username+"-python"
+        if client_secret == "":
+            client_secret = password
 
-        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":username,"client_secret":password,"username":username,"password":password}))
+
+        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
                 print('Invalid login credentials. Please verify your account.')
             sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
-            print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
-            f = open(os.path.expanduser("~")+"/.whiplash_config","w")
-            f.write(res["access_token"])
-            f.close()
-            self.set_token(res["access_token"])
+            if save_token:
+                print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
+                f = open(os.path.expanduser("~")+"/.whiplash_config","w")
+                f.write(res["access_token"])
+                f.close()
+                self.set_token(res["access_token"])
 
     #
     # Get results
