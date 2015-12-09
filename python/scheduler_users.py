@@ -38,7 +38,7 @@ def scheduler(args):
     users = []
     count = 0
     while True:
-        if arg.test:
+        if args.test:
             if count > 1:
                 break
             else:
