@@ -4,8 +4,11 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var common = require(libs + 'routes/common');
 var config = require(libs + 'config');
 var User = require(libs + 'schemas/user');
+var db = require(libs + 'db/mongo');
+var collection = db.get().collection('users');
 
 var webAuth = function(req, res, next){
     var token = req.body.server_token;
@@ -27,6 +30,10 @@ router.post('/', webAuth, function(req, res){
             res.send("Bof");
         }
     });
+});
+
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query(collection,req,res);
 });
 
 module.exports = router;
