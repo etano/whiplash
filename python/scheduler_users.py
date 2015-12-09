@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import daemon,argparse,time,os,whiplash
+import daemon,argparse,time,sys,os,whiplash
 import subprocess as sp
 import multiprocessing as mp
 
@@ -31,11 +31,12 @@ def get_users(wdb):
 def scheduler(args):
     wdb = whiplash.wdb(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca")
 
-    print('scheduler connected to wdb')
+    print('user scheduler connected to wdb')
 
     context = mp.get_context('fork')
 
     users = []
+    schedulers = []
     count = 0
     while True:
         if args.test:
@@ -47,10 +48,15 @@ def scheduler(args):
             user = wdb_user['username']
             if user not in users:
                 print('starting slurm scheduler for user',user)
-                context.Process(target=start_scheduler_slurm, args=(args,wdb_user,)).start()
+                p = context.Process(target=start_scheduler_slurm, args=(args,wdb_user,))
+                p.start()
+                schedulers.append(p)
                 users.append(user)
         time.sleep(60)
 
+    print('user scheduler shutting down')
+    for p in schedulers:
+        p.join()
     sys.exit(0)
 
 if __name__ == '__main__':

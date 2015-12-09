@@ -169,13 +169,13 @@ def worker(pid,wdb,args,end_time):
 def scheduler(args):
     start_time = time.time()
     end_time = time.time() + args.time_limit
-    print('scheduler started at',str(int(start_time)))
+    print('local scheduler started at',str(int(start_time)))
 
     if args.test:
         wdb = whiplash.wdb(args.test_host,args.test_port)
     else:
         wdb = whiplash.wdb(args.host,args.port,token=args.token)
-    print('scheduler connected to wdb')
+    print('local scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -212,7 +212,7 @@ def scheduler(args):
 
         time.sleep(2)
 
-    print('shutting down')
+    print('local scheduler shutting down')
 
 if __name__ == '__main__':
 

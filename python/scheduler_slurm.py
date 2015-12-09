@@ -72,13 +72,16 @@ def scheduler(args):
 
     wdb = whiplash.wdb(args.host,args.port,token=args.token)
 
-    print('scheduler connected to wdb')
+    print('slurm scheduler connected to wdb')
 
     [time_limit,time_window] = get_times(wdb)
     make_batches(wdb,time_window)
 
     count = 0
     while True:
+        if args.test and count > 1:
+           break
+
         if (count % 10 == 0) and (wdb.work_batches.count({}) == 0):
             [time_limit,time_window] = get_times(wdb)
             make_batches(wdb,time_window)
@@ -91,6 +94,8 @@ def scheduler(args):
             submit_job(args,time_limit,time_window)
         time.sleep(6)
         count += 1
+
+    print('slurm scheduler shutting down')
 
 if __name__ == '__main__':
 
