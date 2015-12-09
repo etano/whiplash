@@ -36,14 +36,20 @@ def scheduler(args):
     context = mp.get_context('fork')
 
     users = []
+    count = 0
     while True:
+        if arg.test:
+            if count > 1:
+                break
+            else:
+                count += 1
         for wdb_user in get_users(wdb):
             user = wdb_user['username']
             if user not in users:
                 print('starting slurm scheduler for user',user)
                 context.Process(target=start_scheduler_slurm, args=(args,wdb_user,)).start()
                 users.append(user)
-        time.sleep(4)
+        time.sleep(60)
 
 if __name__ == '__main__':
 
