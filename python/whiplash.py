@@ -18,7 +18,7 @@ class wdb:
             if username == "":
                 self.read_config()
             else:
-                self.create_token(username,password)
+                self.create_token(username,password,save_token=True)
         else:
             self.set_token(token)
         self.check_token()
@@ -68,7 +68,7 @@ class wdb:
             self.set_token(token)
         except:
             print('Whiplash config not found. Please enter your authorization details.')
-            self.create_token()
+            self.create_token(save_token=True)
 
     def check_token(self):
         status, reason, res = self.request("GET","/api",json.dumps({"foo":"bar"}))
@@ -78,7 +78,7 @@ class wdb:
                 self.create_token()
             sys.exit(1)
 
-    def create_token(self,username="",password="",client_id="",client_secret="",save_token=True):
+    def create_token(self,username="",password="",client_id="",client_secret="",save_token=False):
         if username == "":
             username = input("username: ")
         if password == "":
