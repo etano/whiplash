@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math,os,base64
+import sys,json,time,zlib,math,os
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
