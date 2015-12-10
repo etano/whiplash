@@ -42,6 +42,7 @@ def get_times(wdb):
     if timeouts['count'] == 0:
         return [0,0]
     else:
+        # FIXME: This next line is the source of many issues. Maybe best to set time_limit to 24 hours and keep time_window as it is
         return [min(24*3600,max(3600,1.5*min(timeouts['max'],max(timeouts['min'],random.normalvariate(timeouts['mean'],timeouts['stddev']))))),max(1.2*timeouts['min'],601)]
 
 def make_batches(wdb,time_window):
