@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math,os
+import sys,json,time,zlib,math,os,getpass
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -81,7 +81,7 @@ class wdb:
         if username == "":
             username = input("username: ")
         if password == "":
-            password = input("password: ")
+            password = getpass.getpass("password: ")
         if client_id == "":
             client_id = username+"-python"
         if client_secret == "":
