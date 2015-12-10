@@ -143,9 +143,6 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
             }
         });
     });
-
-
-
 });
 
 router.get('/:id/download', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -239,8 +236,9 @@ router.get('/:id/download', passport.authenticate('bearer', { session: false }),
 });
 
 router.get('/:id/log', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // TODO: backend
-    // Need to issue file transfer here
+
+    //TODO: use property id to directly query properties collection for log of
+    //specific property 
 
     common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
         collection.find(filter).limit(1).toArray(function (err, obj) {
@@ -271,17 +269,58 @@ router.get('/:id/log', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/:id/explore', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // TODO: backend
-    return res.json({
-        status: 'OK',
-        result: {
-            count: 3,
-            runs: [
-                       { id: 0, app: "xxx", model: "test", params: [ { name : "energy", value : "-5"  }, { name : "seed", value : "17" } ] },
-                       { id: 1, app: "xxx", model: "test", params: [ { name : "energy", value : "-45" } ]                                  },
-                       { id: 2, app: "xxx", model: "test", params: [ { name : "energy", value : "-7"  }, { name : "seed", value : "23" } ] }
-                  ]
-        }
+    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
+            if(!obj) {
+                log.info('Job with id %s not found',res.params.id);
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+            if (!err) {
+                var property_ids = obj[0].ids
+                var properties_collection = db.get().collection('properties');
+                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':3},String(req.user._id), function(filter) {
+                    properties_collection.find(filter).toArray(function (err, objs) {
+                        if(!objs) {
+                            log.info('Properties with ids %s not found',JSON.stringify(property_ids));
+                            res.statusCode = 404;
+                            return res.json({ error: 'Not found' });
+                        }
+                        if (!err) {
+
+                            log.info("Exploring job " + req.params.id);
+
+                            var runs = [];
+
+                            //TODO: send property id rather than just index
+
+                            for(var i = 0; i < objs.length; i++) {
+                                var run = {};
+
+                                run.id = i;
+                                run.app = objs[i].executable_id;
+                                run.model = objs[i].input_model_id;
+
+                                var params = [];
+                                for(var key in objs[i].params)
+                                    params.push({'name' : key, 'value' : objs[i].params[key]});
+                                run.params = params;
+
+                                runs.push(run);
+                            }
+
+                            return res.json({
+                                status: 'OK',
+                                result: {
+                                    count: runs.length,
+                                    runs: runs
+                                }
+                            });
+                        }
+                    });
+                });
+            }
+        });
     });
 });
 
