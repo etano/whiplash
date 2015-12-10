@@ -17,6 +17,7 @@ def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
         is_work[0] = False
         unresolved = []
     else:
+        is_work[0] = True
         model_ids = set()
         executable_ids = set()
         for prop in properties:
@@ -191,7 +192,7 @@ def scheduler(args):
         procs.append([pid,p])
 
     while True:
-        is_work = wdb.work_batches.count({})
+        is_work = (wdb.work_batches.count({}) > 0)
 
         n_alive = 0
         for [pid,p] in procs:
