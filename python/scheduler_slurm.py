@@ -38,12 +38,13 @@ def submit_job(args,time_limit,time_window):
 
 def get_times(wdb):
     print('getting times')
+    th = int(11.8*3600)
     timeouts = wdb.properties.stats("timeout",{"status":0})
-    if timeouts['count'] == 0:
+    if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
     else:
-        time_window = min(int(11.8*3600),max(1.2*timeouts['min'],601))
-        time_limit = 24
+        time_window = min(th,max(1.2*timeouts['min'],601))
+        time_limit = 24*3600
         return [time_limit,time_window]
 
 def make_batches(wdb,time_window):
