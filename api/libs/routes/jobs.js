@@ -242,15 +242,31 @@ router.get('/:id/log', passport.authenticate('bearer', { session: false }), func
     // TODO: backend
     // Need to issue file transfer here
 
-    // var properties_collection = db.get().collection('properties');
-
-    // common.query_fields_only(collection,req,res);
-
-    return res.json({
-        status: 'OK',
-        result: {
-            data: req.params.id
-        }
+    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
+            if(!obj) {
+                log.info('Job with id %s not found',res.params.id);
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+            if (!err) {
+                var property_id = obj[0].ids[req.query.id];
+                var properties_collection = db.get().collection('properties');
+                common.form_filter(properties_collection,{'_id': property_id,'status':3},String(req.user._id), function(filter) {
+                    properties_collection.find(filter).project({'log':1}).toArray(function (err, objs) {
+                        if(!objs) {
+                            log.info('Properties with ids %s not found',JSON.stringify(property_ids));
+                            res.statusCode = 404;
+                            return res.json({ error: 'Not found' });
+                        }
+                        if (!err) {
+                            log.info("Fetching log of property " + property_id);
+                            return res.send(objs[0]['log']);
+                        }
+                    });
+                });
+            }
+        });
     });
 });
 
