@@ -1,4 +1,4 @@
-import sys,json,time,zlib,math,os,base64
+import sys,json,time,zlib,math,os
 
 if sys.version_info[0] < 3: import httplib
 else: import http.client as httplib
@@ -64,7 +64,7 @@ class wdb:
     def read_config(self):
         try:
             f = open(os.path.expanduser("~")+"/.whiplash_config","r")
-            token = f.readlines()[0]
+            token = f.readlines()[0].strip("\n")
             self.set_token(token)
         except:
             print('Whiplash config not found. Please enter your authorization details.')
@@ -75,8 +75,7 @@ class wdb:
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
-                self.create_token()
-            sys.exit(1)
+                self.create_token(save_token=True)
 
     def create_token(self,username="",password="",client_id="",client_secret="",save_token=False):
         if username == "":

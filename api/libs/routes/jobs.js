@@ -8,6 +8,7 @@ var db = require(libs + 'db/mongo');
 var collection = db.get().collection('jobs');
 var ObjType = require(libs + 'schemas/job');
 var ObjectID = require('mongodb').ObjectID;
+var GridStore = require('mongodb').GridStore;
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.commit(ObjType,collection,req,res);
@@ -85,6 +86,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
     common.query_fields_only(collection,req,res);
 });
 
+
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get all jobs submitted by user
     req.body = {};
@@ -147,19 +149,103 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/:id/download', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // TODO: backend
-    // Need to issue file transfer here
-    return res.json({
-        status: 'OK',
-        result: {
-            data: req.params.id
-        }
-    });
+    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
+        collection.find(filter).limit(1).toArray(function (err, obj) {
+            if(!obj) {
+                log.info('Job with id %s not found',res.params.id);
+                res.statusCode = 404;
+                return res.json({ error: 'Not found' });
+            }
+            if (!err) {
+                var property_ids = obj[0].ids;
+                var properties_collection = db.get().collection('properties');
+                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':3},String(req.user._id), function(filter) {
+                    properties_collection.find(filter).project({'output_model_id':1}).toArray(function (err, objs) {
+                        if(!objs) {
+                            log.info('Properties with ids %s not found',JSON.stringify(property_ids));
+                            res.statusCode = 404;
+                            return res.json({ error: 'Not found' });
+                        }
+                        if (!err) {
+                            var model_ids = []
+                            for(var i=0; i<objs.length; i++) {
+                                model_ids.push(objs[i]['output_model_id'])
+                            }
+                            var models_collection = db.get().collection('fs.files');
+                            common.form_filter(models_collection,{_id: {'$in': model_ids}},String(req.user._id), function(filter) {
+                                models_collection.find(filter).toArray(function (err, objs) {
+                                    if(!err) {
+                                        if(objs.length > 0) {
+                                            var items = [];
+                                            var apply_content = function(i){
+                                                if (i<objs.length) {
+                                                    GridStore.read(db.get(), String(objs[i]._id), function(err, data) {
+                                                        if(!err) {
+                                                            var tmp = {'content':JSON.parse(data.toString()),'_id':objs[i]._id};
+                                                            for (var key in objs[i].metadata) {
+                                                                tmp[key] = objs[i].metadata[key];
+                                                            }
+                                                            items.push(tmp);
+                                                            apply_content(i+1);
+                                                        } else {
+                                                            res.statusCode = 500;
+                                                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                                            return res.json({ error: 'Server error' });
+                                                        }
+                                                    });
+                                                } else {
+                                                    var file_name = 'models.json';
+                                                    require("fs").writeFile(file_name,JSON.stringify(items),function (err) {
+                                                        if(!err){
+                                                            log.info("Downloading %d objects",items.length);
+                                                            return res.download(file_name);
+                                                        } else {
+                                                            res.statusCode = 500;
+                                                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                                            return res.json({ error: 'Server error' });
+                                                        }
+                                                    });
+                                                }
+                                            };
+                                            apply_content(0);
+                                        } else {
+                                            log.info("Models with filter %s not found",JSON.stringify(filter));
+                                            return res.json({
+                                                status: 'OK',
+                                                result: {}
+                                            });
+                                        }
+                                    } else {
+                                        res.statusCode = 500;
+                                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                        return res.json({ error: 'Server error' });
+                                    }
+                                });
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    });    
 });
 
 router.get('/:id/log', passport.authenticate('bearer', { session: false }), function(req, res) {
     // TODO: backend
     // Need to issue file transfer here
+
+    // var properties_collection = db.get().collection('properties');
+
+    // common.query_fields_only(collection,req,res);
+
     return res.json({
         status: 'OK',
         result: {
