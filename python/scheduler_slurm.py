@@ -89,9 +89,6 @@ def scheduler(args):
 
     print('slurm scheduler connected to wdb')
 
-    [time_limit,time_window] = get_times(wdb)
-    make_batches(wdb,time_window)
-
     count = 0
     while True:
         if args.test and count > 1:
@@ -105,8 +102,10 @@ def scheduler(args):
         else:
             num_pending = 0
         if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
-            assert (time_limit > 0 and time_window > 0)
-            submit_job(args,time_limit,time_window)
+            if (time_limit > 0 and time_window > 0):
+                submit_job(args,time_limit,time_window)
+            else:
+                print('time_limit',time_limit,'time_window',time_window)
         time.sleep(6)
         count += 1
 
