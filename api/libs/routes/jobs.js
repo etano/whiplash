@@ -344,6 +344,20 @@ router.get('/:id/table', passport.authenticate('bearer', { session: false }), fu
     });
 });
 
+router.get('/:id/script', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Return query-script of the batch.
+    //
+    var example_code = { value : "for i in range(10000): wdb.queue({\"params\": {\"seed\": i, \"hx\": -1, \"Ttot\": 500, \"nsteps\": 400}, \"input_model_id\": model_id, \"container_name\": container_name, \"timeout\": 666})" };
+
+    return res.json({
+        status: 'OK',
+        result: {
+            query: example_code
+        }
+    });
+});
+
 router.post('/compose', passport.authenticate('bearer', { session: false }), function(req, res) {
     // TODO: backend
     // Accepts list of params and their constraints from GUI. Returns batch id.

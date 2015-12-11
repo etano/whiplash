@@ -57,22 +57,31 @@ def make_batches(wdb,time_window):
     print('building batches')
     batches = []
     times_left = []
+    ids_in_batches = []
     for i in range(len(ids)):
+        if len(batches)==100:
+            break
         found = False
         for j in range(len(batches)):
             if timeouts[i] < times_left[j]:
                 times_left[j] -= timeouts[i]
                 batches[j]['ids'].append(ids[i])
                 found = True
+                ids_in_batches.append(ids[i])
                 break
         if not found:
             if timeouts[i] <= time_window:
                 batches.append({'ids':[ids[i]]})
                 times_left.append(time_window-timeouts[i])
+                ids_in_batches.append(ids[i])
 
-    print('committing batches')
-    wdb.properties.update({'_id': {'$in': ids}},{'status':1})
-    wdb.work_batches.commit(batches)
+    if len(batches) > 0:
+        print('committing batches')
+        wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':1})
+        wdb.work_batches.commit(batches)
+        print('done')
+    else:
+        print('no suitable work')
 
 def scheduler(args):
 
@@ -80,15 +89,12 @@ def scheduler(args):
 
     print('slurm scheduler connected to wdb')
 
-    [time_limit,time_window] = get_times(wdb)
-    make_batches(wdb,time_window)
-
     count = 0
     while True:
         if args.test and count > 1:
            break
 
-        if (count % 10 == 0) and (wdb.work_batches.count({}) == 0):
+        if (count % 10 == 0):
             [time_limit,time_window] = get_times(wdb)
             make_batches(wdb,time_window)
         if not args.test:
@@ -96,8 +102,10 @@ def scheduler(args):
         else:
             num_pending = 0
         if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
-            assert (time_limit > 0 and time_window > 0)
-            submit_job(args,time_limit,time_window)
+            if (time_limit > 0 and time_window > 0):
+                submit_job(args,time_limit,time_window)
+            else:
+                print('time_limit',time_limit,'time_window',time_window)
         time.sleep(6)
         count += 1
 
