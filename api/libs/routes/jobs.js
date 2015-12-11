@@ -324,6 +324,26 @@ router.get('/:id/explore', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+router.get('/:id/table', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Return table configuration of the batch.
+    //
+    var example_query = { model : "asian",
+        container : "ethz_uevol",
+        parameters : [
+            [ { attr : "name", value : "Energy" }, { attr : "value", value : "41.5" } ],  // parameter Energy
+            [ { attr : "name", value : "Seed"   }, { attr : "value", value : "39"   } ],  // parameter Seed
+        ]
+    };
+
+    return res.json({
+        status: 'OK',
+        result: {
+            query: example_query
+        }
+    });
+});
+
 router.post('/compose', passport.authenticate('bearer', { session: false }), function(req, res) {
     // TODO: backend
     // Accepts list of params and their constraints from GUI. Returns batch id.
