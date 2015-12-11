@@ -75,10 +75,13 @@ def make_batches(wdb,time_window):
                 times_left.append(time_window-timeouts[i])
                 ids_in_batches.append(ids[i])
 
-    print('committing batches')
-    wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':1})
-    wdb.work_batches.commit(batches)
-    print('done')
+    if len(batches) > 0:
+        print('committing batches')
+        wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':1})
+        wdb.work_batches.commit(batches)
+        print('done')
+    else:
+        print('no suitable work')
 
 def scheduler(args):
 
