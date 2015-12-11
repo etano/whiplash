@@ -64,7 +64,7 @@ for i in range(N0,N0+N1):
     model.update(tags)
     model_id = wdb.models.commit(model)[0]
 
-    props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":3, "walltime":w1})
+    props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":3, "walltime":w1, "log":"some kind of output"})
 wdb.properties.commit(props)
 
 print("Check property stats")

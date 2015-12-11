@@ -172,10 +172,7 @@ def scheduler(args):
     end_time = time.time() + args.time_limit
     print('local scheduler started at',str(int(start_time)))
 
-    if args.test:
-        wdb = whiplash.wdb(args.test_host,args.test_port)
-    else:
-        wdb = whiplash.wdb(args.host,args.port,token=args.token)
+    wdb = whiplash.wdb(args.host,args.port,token=args.token)
     print('local scheduler connected to wdb')
 
     num_cpus = mp.cpu_count()
@@ -227,9 +224,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
-    parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
-    parser.add_argument('--test_host',dest='test_host',required=False,type=str,default='192.168.99.100')
-    parser.add_argument('--test_port',dest='test_port',required=False,type=int,default=7357)
     args = parser.parse_args()
 
     if args.daemonise:

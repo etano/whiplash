@@ -13,7 +13,7 @@ docker exec -it whiplash_api_dev_1 tail logs/all.log
 # Run tests (may need to export DOCKERHOST to 192.168.99.100)
     docker-compose -f test.yml up --force-recreate -d
     sleep 5
-    PYTHONPATH=$PWD/python:$PYTHONPATH python ./python/tests.py ${DOCKERHOST:?"localhost"} 7357
+    PYTHONPATH=$PWD/python:$PYTHONPATH python ./tests/tests.py ${DOCKERHOST:-192.168.99.100} 1337
 
 # Start deployment environment
     docker-compose -f deploy.yml up -d
