@@ -6,7 +6,7 @@ import multiprocessing as mp
 
 def start_scheduler_slurm(args,wdb_user):
     if not args.test:
-        sp.call("./python/scheduler_slurm.py" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
+        sp.call("./python/scheduler_slurm.py --daemonise" + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
     else:
         sp.call("./python/scheduler_slurm.py --test " + " --user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --host " + args.host + " --port " + str(args.port),shell=True)
 
