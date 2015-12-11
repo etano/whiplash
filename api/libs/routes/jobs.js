@@ -324,6 +324,40 @@ router.get('/:id/explore', passport.authenticate('bearer', { session: false }), 
     });
 });
 
+router.get('/:id/table', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Return table configuration of the batch.
+    //
+    var example_query = { model : "asian",
+        container : "ethz_uevol",
+        parameters : [
+            [ { attr : "name", value : "Energy" }, { attr : "value", value : "41.5" } ],  // parameter Energy
+            [ { attr : "name", value : "Seed"   }, { attr : "value", value : "39"   } ],  // parameter Seed
+        ]
+    };
+
+    return res.json({
+        status: 'OK',
+        result: {
+            query: example_query
+        }
+    });
+});
+
+router.get('/:id/script', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO: backend
+    // Return query-script of the batch.
+    //
+    var example_code = { value : "for i in range(10000): wdb.queue({\"params\": {\"seed\": i, \"hx\": -1, \"Ttot\": 500, \"nsteps\": 400}, \"input_model_id\": model_id, \"container_name\": container_name, \"timeout\": 666})" };
+
+    return res.json({
+        status: 'OK',
+        result: {
+            query: example_code
+        }
+    });
+});
+
 router.post('/compose', passport.authenticate('bearer', { session: false }), function(req, res) {
     // TODO: backend
     // Accepts list of params and their constraints from GUI. Returns batch id.
