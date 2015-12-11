@@ -40,21 +40,21 @@ def get_times(wdb):
     print('getting times')
     th = int(11.8*3600)
     timeouts = wdb.properties.stats("timeout",{"status":0})
+    print(timeouts)
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
     else:
-        time_window = min(th,max(1.2*timeouts['min'],601))
+        time_window = min(th,max(1.2*timeouts['max'],601))
         time_limit = 24*3600
         return [time_limit,time_window]
 
 def make_batches(wdb,time_window):
-    print('making batches')
+    print('querying properties')
     properties = wdb.properties.query_fields_only({"status":0,"timeout":{"$lt":time_window}},['_id','timeout'])
     ids = properties['_id']
     timeouts = properties['timeout']
 
-    wdb.properties.update({'_id': {'$in': ids}},{'status':1})
-
+    print('building batches')
     batches = []
     times_left = []
     for i in range(len(ids)):
@@ -66,9 +66,12 @@ def make_batches(wdb,time_window):
                 found = True
                 break
         if not found:
-            batches.append({'ids':[ids[i]]})
-            times_left.append(time_window-timeouts[i])
+            if timeouts[i] <= time_window:
+                batches.append({'ids':[ids[i]]})
+                times_left.append(time_window-timeouts[i])
 
+    print('committing batches')
+    wdb.properties.update({'_id': {'$in': ids}},{'status':1})
     wdb.work_batches.commit(batches)
 
 def scheduler(args):
