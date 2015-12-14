@@ -127,7 +127,7 @@ module.exports = {
                     log.info("Query single object in %s",collection.collectionName);
                     return res.json({
                         status: 'OK',
-                        result: obj
+                        result: obj[0]
                     });
                 } else {
                     res.statusCode = 500;
