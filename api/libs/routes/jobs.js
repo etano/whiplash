@@ -331,7 +331,7 @@ router.get('/:id/table', passport.authenticate('bearer', { session: false }), fu
     var example_query = { model : "asian",
         container : "ethz_uevol",
         parameters : [
-            [ { attr : "name", value : "Energy" }, { attr : "value", value : "41.5" } ],  // parameter Energy
+            [ { attr : "name", value : "Energy" }, { attr : "min",   value : "41.5" } ],  // parameter Energy
             [ { attr : "name", value : "Seed"   }, { attr : "value", value : "39"   } ],  // parameter Seed
         ]
     };
