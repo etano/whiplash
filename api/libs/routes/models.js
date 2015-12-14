@@ -233,6 +233,23 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 // Delete
 //
 
+var delete_by_id = function(id, cb) {
+    var gridStore = new GridStore(db.get(), id, String(id), 'w');
+    gridStore.open(function(err, gs) {
+        if(err) {
+            log.error('Error opening file: %s',err.message);
+            cb(err,gs);
+        } else {
+            gridStore.unlink(function(err, result) {
+                if(err){
+                    log.error('Error deleting file: %s',err.message);
+                }
+                cb(err,result);
+            });
+        }
+    });
+};
+
 var delete_by_filter = function(filter,res) {
     var proj = {};
     proj._id = 1;
@@ -271,23 +288,6 @@ var delete_by_filter = function(filter,res) {
             res.statusCode = 500;
             log.error('Internal error(%d): %s',res.statusCode,err.message);
             return res.json({ error: 'Server error' });
-        }
-    });
-};
-
-var delete_by_id = function(id, cb) {
-    var gridStore = new GridStore(db.get(), id, String(id), 'w');
-    gridStore.open(function(err, gs) {
-        if(err) {
-            log.error('Error opening file: %s',err.message);
-            cb(err,gs);
-        } else {
-            gridStore.unlink(function(err, result) {
-                if(err){
-                    log.error('Error deleting file: %s',err.message);
-                }
-                cb(err,result);
-            });
         }
     });
 };

@@ -96,3 +96,8 @@ for ID in prop_ids:
 model_ids = wdb.models.commit(models)
 assert len(model_ids) == N1
 assert len(wdb.models.query({'property_id': {'$in': prop_ids}})) == N1
+
+print(len(wdb.models.query({})))
+print(wdb.models.delete({}))
+
+sys.exit(0)
