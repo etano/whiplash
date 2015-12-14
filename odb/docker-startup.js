@@ -7,4 +7,6 @@ db.executables.createIndex({name : 1, algorithm : 1, version : 1, build : 1, own
 db.properties.createIndex({input_model_id : 1, executable_id : 1, md5 : 1, owner : 1},{unique : true});
 db.jobs.createIndex({name : 1, owner : 1, md5 : 1},{unique : true});
 db.collaborations.createIndex({name : 1},{unique : true});
+db.users.createIndex({username : 1},{unique : true});
+db.clients.createIndex({name : 1},{unique : true});
 db.setProfilingLevel(2);
