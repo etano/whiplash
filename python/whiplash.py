@@ -126,14 +126,17 @@ class wdb:
     # Get results
     #
 
-    def get_results(self,fltr):
+    def get_results(self,tags,params):
         '''
-        fetches output models corresponding to the properties found by the filter
+        fetches output models corresponding to the models and properties found by their respective filters
         '''
-        fltr['status'] = "resolved"
-        result_ids = self.properties.query_fields_only(fltr,'output_model_id')['output_model_id']
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
+        for key in params:
+            filter["params."+key] = params[key]
+        out_model_ids = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
 
-        tmp = self.models.query({'_id': {'$in': result_ids}})
+        tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
         for result in tmp:
             results.append(result['content'])
