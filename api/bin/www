@@ -7,7 +7,6 @@ var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
 
 var throng = require('throng');
-
 throng(start, {
     workers: process.env.NWORKERS || config.get('n_workers') || 1,
     lifetime: Infinity,
