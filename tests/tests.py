@@ -52,19 +52,20 @@ N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []
 for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "input_model_id":model_id, "executable_id":executable_id,"timeout":t0})
-for i in range(N0,N0+N1):
+for k in range(N0,N0+N1):
 
+    print('here')
     hamiltonian = []
     for i in range(N):
         for j in range(i+1,N):
             value = 2.0*random.random()-1.0
             hamiltonian.append([[i,j],value])
-    tags = {"n_spins":N, "name":"test"}
+    tags = {"n_spins":N, "name":"test"+str(k)}
     model = {"content":{"edges": hamiltonian}}
     model.update(tags)
     model_id = wdb.models.commit(model)[0]
 
-    props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":"resolved", "walltime":w1, "log":"some kind of output"})
+    props.append({"params":{"sleep_time":1.0, "seed":k}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":"resolved", "walltime":w1, "log":"some kind of output"})
 wdb.properties.commit(props)
 
 print("Check property stats")
@@ -96,8 +97,3 @@ for ID in prop_ids:
 model_ids = wdb.models.commit(models)
 assert len(model_ids) == N1
 assert len(wdb.models.query({'property_id': {'$in': prop_ids}})) == N1
-
-print(len(wdb.models.query({})))
-print(wdb.models.delete({}))
-
-sys.exit(0)
