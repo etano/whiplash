@@ -54,7 +54,6 @@ props = []
 for i in range(N0): props.append({"params":{"sleep_time":1.0,"seed":i}, "input_model_id":model_id, "executable_id":executable_id,"timeout":t0})
 for k in range(N0,N0+N1):
 
-    print('here')
     hamiltonian = []
     for i in range(N):
         for j in range(i+1,N):
