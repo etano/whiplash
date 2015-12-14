@@ -107,7 +107,7 @@ class wdb:
     #
 
     def get_results(self,fltr):
-        fltr['status'] = 3
+        fltr['status'] = "resolved"
         result_ids = self.properties.query_fields_only(fltr,'output_model_id')['output_model_id']
 
         tmp = self.models.query({'_id': {'$in': result_ids}})
@@ -215,18 +215,18 @@ class wdb:
     class properties_collection(collection):
 
         def get_unresolved_time(self):
-            return self.stats("timeout",{"status":0})['sum']
+            return self.stats("timeout",{"status":"unresolved"})['sum']
 
         def get_resolved_time(self):
-            return self.stats("walltime",{"status":3})['sum']
+            return self.stats("walltime",{"status":"resolved"})['sum']
 
         def check_status(self):
-            print('unresolved: %d'%(self.count({"status":0})))
-            print('pulled: %d'%(self.count({"status":1})))
-            print('timed out: %d'%(self.count({"status":2})))
-            print('resolved: %d'%(self.count({"status":3})))
-            print('errored: %d'%(self.count({"status":4})))
+            print('unresolved: %d'%(self.count({"status":"unresolved"})))
+            print('pulled: %d'%(self.count({"status":"pulled"})))
+            print('timed out: %d'%(self.count({"status":"timed out"})))
+            print('resolved: %d'%(self.count({"status":"resolved"})))
+            print('errored: %d'%(self.count({"status":"errored"})))
 
         def refresh(self):
             # TODO: Make this do something
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+            self.update({'status':"pulled",'resolve_by':{'$lt':math.ceil(time.time())}},{'status':"unresolved",'resolve_by':-1})

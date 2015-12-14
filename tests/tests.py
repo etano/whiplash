@@ -64,14 +64,14 @@ for i in range(N0,N0+N1):
     model.update(tags)
     model_id = wdb.models.commit(model)[0]
 
-    props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":3, "walltime":w1, "log":"some kind of output"})
+    props.append({"params":{"sleep_time":1.0, "seed":i}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":"resolved", "walltime":w1, "log":"some kind of output"})
 wdb.properties.commit(props)
 
 print("Check property stats")
 assert wdb.properties.get_unresolved_time() == N0*t0
 assert wdb.properties.get_resolved_time() == N1*w1
 
-stats = wdb.properties.stats("timeout",{"status":0})
+stats = wdb.properties.stats("timeout",{"status":"unresolved"})
 assert stats['mean'] == t0
 assert stats['variance'] == 0.0
 assert stats['stddev'] == 0.0
@@ -84,7 +84,7 @@ assert job_stats['stats'][0]['togo'] == N0
 assert job_stats['stats'][0]['done'] == N1
 
 print("Querying results")
-prop_ids = wdb.properties.query_fields_only({"status":3,"params.sleep_time":1.0},'_id')['_id']
+prop_ids = wdb.properties.query_fields_only({"status":"resolved","params.sleep_time":1.0},'_id')['_id']
 assert len(prop_ids) == N1
 
 print("Try to commit again")
