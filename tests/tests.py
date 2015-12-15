@@ -37,14 +37,14 @@ model.update(tags)
 model_id = wdb.models.commit(model)[0]
 
 print("Query model")
-assert model_id == wdb.models.query_fields_only(tags,'_id')['_id'][0]
+assert model_id == wdb.models.query_fields_only(tags,'_id')[0]['_id']
 
 print("Commit executable")
 executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test"}
 executable_id = wdb.executables.commit(executable)[0]
 
 print("Query executable")
-assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
+assert executable_id == wdb.executables.query_fields_only(executable,'_id')[0]['_id']
 
 print("Submit properties")
 N0 = 2; t0 = 1.2
@@ -84,7 +84,12 @@ assert job_stats['stats'][0]['togo'] == N0
 assert job_stats['stats'][0]['done'] == N1
 
 print("Querying results")
-prop_ids = wdb.properties.query_fields_only({"status":"resolved","params.sleep_time":1.0},'_id')['_id']
+
+tmp = wdb.properties.query_fields_only({"status":"resolved","params.sleep_time":1.0},'_id')
+prop_ids = []
+for el in tmp:
+    prop_ids.append(el['_id'])
+
 assert len(prop_ids) == N1
 
 print("Try to commit again")

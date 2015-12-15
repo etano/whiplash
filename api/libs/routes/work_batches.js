@@ -30,7 +30,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 }
                 db.get().collection('properties').updateMany({'_id':{'$in':result.value.ids}}, {'$set':{"status":"running"}}, {w:1}, function (err2, result2) {
                     if (!err2) {
-                        log.info("%d properties set to status 5",result2.modifiedCount);
+                        log.info("%d properties are running",result2.modifiedCount);
                         return res.json({
                             status: 'OK',
                             result: result.value.ids

@@ -130,11 +130,18 @@ class wdb:
         '''
         fetches output models corresponding to the models and properties found by their respective filters
         '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        tmp = self.models.query_fields_only(tags,"_id")
+        in_model_ids = []
+        for el in tmp:
+            in_model_ids.append(el['_id'])
         filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
         for key in params:
             filter["params."+key] = params[key]
-        out_model_ids = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
+
+        tmp = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
+        out_model_ids = []
+        for el in tmp:
+            out_model_ids.append(el['_id'])
 
         tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
