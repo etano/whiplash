@@ -9,24 +9,32 @@ function constraintSelect(){
 
 function addParam(){
     var parameters = $(this).prev(".parameters");
-    $("<div class='param'>"+
+    parameters.find("div.table > div.row").append("<div class='param'>"+
           "<div class='row'>"+
-              "<div class='label'><select disabled><option value='name'>Name</option></select></div><div class='value'><input type='text' value=''></div>"+
+              "<div class='label'><select disabled><option value='name'>Name</option></select></div><div class='value'><input type='text' value=''></div><div class='remove'>×</div>"+
           "</div>"+
           "<div class='row'>"+
               "<div class='label'>"+constraintSelect()+
-              "</div><div class='value'><input type='text' value=''></div>"+
+              "</div><div class='value'><input type='text' value=''></div><div class='remove'>×</div>"+
           "</div>"+
           "<div class='button add-constraint'>Add constraint</div>"+
-      "</div>").insertAfter(parameters.find("div.param:last"));
+      "</div>");
     parameters.animate({scrollLeft: parameters.find("div.table").width(), scrollTop: 0 });
+}
+
+function removeParam(e){
+    $(this).parent().parent().remove();
 }
 
 function addConstraint(){
     $("<div class='row'>"+
-          "<div class='label'>"+constraintSelect()+"</div><div class='value'><input type='text' value=''></div>"+
+          "<div class='label'>"+constraintSelect()+"</div><div class='value'><input type='text' value=''></div><div class='remove'>×</div>"+
       "</div>").insertAfter($(this).prev());
 }
+
+function removeConstraint(){
+    $(this).parent().remove();
+} 
 
 function submitQTable(){
     var widget = $(this).closest("widget.qtable");
