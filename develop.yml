@@ -23,4 +23,4 @@ www_dev:
         - 80:80
     volumes:
         - $PWD/www/libs:/src/libs
-    command: sh -c "node bin/www"
+    command: sh -c "cp config.dev.json config.json; node bin/www"
