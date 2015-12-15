@@ -103,11 +103,11 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
                         }
                         var stats_i = {name: objs[i].name, time: objs[i].timestamp.toLocaleString(), batch_id: objs[i]._id, togo: 0, done: 0, now: 0, submitted: objs[i].submitted};
                         if(ids.length > 0) {
-                            db.get().collection('properties').group({'status':1},{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
+                            db.get().collection('properties').group({'status':"pulled"},{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
                                 for (var k=0; k<counts.length; k++) {
-                                    if (counts[k].status === 0) {
+                                    if (counts[k].status === "unresolved") {
                                         stats_i.togo += counts[k].count;
-                                    } else if (counts[k].status === 3) {
+                                    } else if (counts[k].status === "resolved") {
                                         stats_i.done += counts[k].count;
                                     } else {
                                         stats_i.now += counts[k].count;
@@ -156,7 +156,7 @@ router.get('/:id/download', passport.authenticate('bearer', { session: false }),
             if (!err) {
                 var property_ids = obj[0].ids;
                 var properties_collection = db.get().collection('properties');
-                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':3},String(req.user._id), function(filter) {
+                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':"resolved"},String(req.user._id), function(filter) {
                     properties_collection.find(filter).project({'output_model_id':1}).toArray(function (err, objs) {
                         if(!objs) {
                             log.info('Properties with ids %s not found',JSON.stringify(property_ids));
@@ -250,7 +250,7 @@ router.get('/:id/log', passport.authenticate('bearer', { session: false }), func
             if (!err) {
                 var property_id = obj[0].ids[req.query.id];
                 var properties_collection = db.get().collection('properties');
-                common.form_filter(properties_collection,{'_id': property_id,'status':3},String(req.user._id), function(filter) {
+                common.form_filter(properties_collection,{'_id': property_id,'status':"resolved"},String(req.user._id), function(filter) {
                     properties_collection.find(filter).project({'log':1}).toArray(function (err, objs) {
                         if(!objs) {
                             log.info('Properties with ids %s not found',JSON.stringify(property_ids));
@@ -279,7 +279,7 @@ router.get('/:id/explore', passport.authenticate('bearer', { session: false }), 
             if (!err) {
                 var property_ids = obj[0].ids
                 var properties_collection = db.get().collection('properties');
-                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':3},String(req.user._id), function(filter) {
+                common.form_filter(properties_collection,{_id:{'$in':property_ids},'status':"resolved"},String(req.user._id), function(filter) {
                     properties_collection.find(filter).toArray(function (err, objs) {
                         if(!objs) {
                             log.info('Properties with ids %s not found',JSON.stringify(property_ids));
@@ -331,7 +331,7 @@ router.get('/:id/table', passport.authenticate('bearer', { session: false }), fu
     var example_query = { model : "asian",
         container : "ethz_uevol",
         parameters : [
-            [ { attr : "name", value : "Energy" }, { attr : "value", value : "41.5" } ],  // parameter Energy
+            [ { attr : "name", value : "Energy" }, { attr : "min",   value : "41.5" } ],  // parameter Energy
             [ { attr : "name", value : "Seed"   }, { attr : "value", value : "39"   } ],  // parameter Seed
         ]
     };

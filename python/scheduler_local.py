@@ -81,17 +81,17 @@ def resolve_object(pid,obj,models,executables,work_dir):
 
     try:
         prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
-        prop['status'] = 3
+        prop['status'] = "resolved"
 
         with open(file_name, 'r') as propfile:
             result = json.load(propfile)
     except sp.TimeoutExpired as e:
         prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
-        prop['status'] = 2
+        prop['status'] = "timed out"
         result = {}
     except sp.CalledProcessError as e:
         prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
-        prop['status'] = 4
+        prop['status'] = "errored"
         result = {}
 
     t1 = time.time()
@@ -140,7 +140,7 @@ def worker(pid,wdb,args,end_time):
                 for obj in objs:
                     if time_left() > obj['property']['timeout']:
                         resolved = resolve_object(pid,obj,models,executables,args.work_dir)
-                        if resolved['property']['status'] == 3:
+                        if resolved['property']['status'] == "resolved":
                             good_results['properties'].append(resolved['property'])
                             good_results['models'].append(resolved['model'])
                         else:

@@ -39,7 +39,7 @@ def submit_job(args,time_limit,time_window):
 def get_times(wdb):
     print('getting times')
     th = int(11.8*3600)
-    timeouts = wdb.properties.stats("timeout",{"status":0})
+    timeouts = wdb.properties.stats("timeout",{"status":"unresolved"})
     print(timeouts)
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
@@ -50,7 +50,7 @@ def get_times(wdb):
 
 def make_batches(wdb,time_window):
     print('querying properties')
-    properties = wdb.properties.query_fields_only({"status":0,"timeout":{"$lt":time_window}},['_id','timeout'])
+    properties = wdb.properties.query_fields_only({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
     ids = properties['_id']
     timeouts = properties['timeout']
 
@@ -70,14 +70,13 @@ def make_batches(wdb,time_window):
                 ids_in_batches.append(ids[i])
                 break
         if not found:
-            if timeouts[i] <= time_window:
-                batches.append({'ids':[ids[i]]})
-                times_left.append(time_window-timeouts[i])
-                ids_in_batches.append(ids[i])
+            batches.append({'ids':[ids[i]]})
+            times_left.append(time_window-timeouts[i])
+            ids_in_batches.append(ids[i])
 
     if len(batches) > 0:
         print('committing batches')
-        wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':1})
+        wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
         wdb.work_batches.commit(batches)
         print('done')
     else:

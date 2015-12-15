@@ -10,7 +10,13 @@ except NameError: pass
 # Whiplash class
 #
 class wdb:
+    '''
+    interface to the whiplash database
+    '''
     def __init__(self,server,port,token="",username="",password=""):
+        '''
+        initialises the whiplash class. server and port required
+        '''
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
@@ -37,6 +43,9 @@ class wdb:
     #
 
     def request(self,protocol,uri,payload,zip=False):
+        '''
+        makes http request to the whiplash API server
+        '''
         if zip:
             payload = zlib.compress(payload)
             self.headers["Content-type"] = "gzip"
@@ -58,10 +67,16 @@ class wdb:
     #
 
     def set_token(self,access_token):
+        '''
+        sets the access token
+        '''
         self.access_token = access_token
         self.headers["Authorization"] = "Bearer "+self.access_token
 
     def read_config(self):
+        '''
+        reads access token from file if it exists
+        '''
         try:
             f = open(os.path.expanduser("~")+"/.whiplash_config","r")
             token = f.readlines()[0].strip("\n")
@@ -71,6 +86,9 @@ class wdb:
             self.create_token(save_token=True)
 
     def check_token(self):
+        '''
+        checks if token in valid 
+        '''
         status, reason, res = self.request("GET","/api",json.dumps({"foo":"bar"}))
         if status != 200:
             if 'Unauthorized' in reason:
@@ -78,6 +96,9 @@ class wdb:
                 self.create_token(save_token=True)
 
     def create_token(self,username="",password="",client_id="",client_secret="",save_token=False):
+        '''
+        creates an access token using the username and password
+        '''
         if username == "":
             username = input("username: ")
         if password == "":
@@ -86,7 +107,6 @@ class wdb:
             client_id = username+"-python"
         if client_secret == "":
             client_secret = password
-
 
         status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
@@ -106,11 +126,17 @@ class wdb:
     # Get results
     #
 
-    def get_results(self,fltr):
-        fltr['status'] = 3
-        result_ids = self.properties.query_fields_only(fltr,'output_model_id')['output_model_id']
+    def get_results(self,tags,params):
+        '''
+        fetches output models corresponding to the models and properties found by their respective filters
+        '''
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
+        for key in params:
+            filter["params."+key] = params[key]
+        out_model_ids = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
 
-        tmp = self.models.query({'_id': {'$in': result_ids}})
+        tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
         for result in tmp:
             results.append(result['content'])
@@ -121,22 +147,34 @@ class wdb:
     # Collections
     #
     class collection:
+        '''
+        base class for models, executables and properties collections
+        '''
         def __init__(self,db,name):
+            '''
+            initialises a collection with the database and collection name
+            '''
             self.name = name
             self.db = db
 
         def request(self,protocol,uri,payload):
+            '''
+            wrappers http request to the API server with some convenience
+            '''
             status, reason, res = self.db.request(protocol,uri,json.dumps(payload))
             if status == 200:
                 return json.loads(res.decode('utf-8'))["result"]
             else:
                 print(status,reason,res)
-                sys.exit(0)
+                sys.exit(1)
         #
         # Commit
         #
 
         def commit(self,objs):
+            '''
+            commits a single or multiple objects to collection
+            '''
             if not isinstance(objs, list):
                 objs = [objs]
             ids = self.request("POST","/api/"+self.name+"/",objs)
@@ -149,20 +187,35 @@ class wdb:
         #
 
         def count(self,fltr):
+            '''
+            counts the number of objects in the colleciton which satisfy the filter
+            '''
             return self.request("GET","/api/"+self.name+"/count/",fltr)
 
         def query(self,fltr):
+            '''
+            fetches objects in the collection which satisfy the filter
+            '''
             return self.request("GET","/api/"+self.name+"/",fltr)
 
         def query_one(self,fltr):
+            '''
+            fetches a single object in the collection which satisfies the filter
+            '''
             return self.request("GET","/api/"+self.name+"/one/",fltr)
 
         def query_fields_only(self,fltr,fields):
+            '''
+            fetches only specified fields of objects which satisfy the filter
+            '''
             if not isinstance(fields, list):
                 fields = [fields]
             return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
 
         def query_id(self,ID):
+            '''
+            fetches the object in the collection which has the id
+            '''
             return self.request("GET","/api/"+self.name+"/id/"+str(ID),{})
 
         #
@@ -170,9 +223,17 @@ class wdb:
         #
 
         def find_one_and_update(self,fltr,update):
+            '''
+            fetches a single object in the collection which satisfies the filter and updates 
+            it as specified in the update
+            '''
             return self.request("POST","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
 
         def find_id_and_update(self,ID,update):
+            '''
+            fetches the object in the collection which has the id and updates it as 
+            specified in the update
+            '''
             return self.request("POST","/api/"+self.name+"/id/"+str(ID),update)
 
         #
@@ -180,15 +241,30 @@ class wdb:
         #
 
         def update(self,fltr,update):
+            '''
+            updates the objects in the collection which satisfy the filter as specified in 
+            the update
+            '''
             return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
         def replace_many(self,replacements):
+            '''
+            replaces objects in the collection with the replacements
+            '''
             return self.request("PUT","/api/"+self.name+"/replacement",replacements)
 
         def update_one(self,fltr,update):
+            '''
+            updates a single object in the collection which satisfies the filter as specified
+            in the update
+            '''
             return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
 
         def update_id(self,ID,update):
+            '''
+            updates the object in the collection which has the id as specified in the
+            update
+            '''
             return self.request("PUT","/api/"+self.name+"/id/"+str(ID),update)
 
         #
@@ -196,9 +272,15 @@ class wdb:
         #
 
         def delete(self,fltr):
+            '''
+            deletes the objects in the collection which satisfy the filter
+            '''
             return self.request("DELETE","/api/"+self.name+"/",fltr)
 
         def delete_id(self,ID):
+            '''
+            deletes the object in the collection which has the id 
+            '''
             return self.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
 
         #
@@ -206,6 +288,10 @@ class wdb:
         #
 
         def stats(self,field,fltr):
+            '''
+            computes the {sum, max, min, count, mean, standard deviation, variance} of the 
+            specified fields of objects in the collection which satisfy the filter 
+            '''
             return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
 
@@ -215,18 +301,30 @@ class wdb:
     class properties_collection(collection):
 
         def get_unresolved_time(self):
-            return self.stats("timeout",{"status":0})['sum']
+            '''
+            computes the sum of timeouts of all unresolved properties
+            '''
+            return self.stats("timeout",{"status":"unresolved"})['sum']
 
         def get_resolved_time(self):
-            return self.stats("walltime",{"status":3})['sum']
+            '''
+            computes the sum of timeouts of all resolved properties
+            '''
+            return self.stats("walltime",{"status":"resolved"})['sum']
 
         def check_status(self):
-            print('unresolved: %d'%(self.count({"status":0})))
-            print('pulled: %d'%(self.count({"status":1})))
-            print('timed out: %d'%(self.count({"status":2})))
-            print('resolved: %d'%(self.count({"status":3})))
-            print('errored: %d'%(self.count({"status":4})))
+            '''
+            checks how many properties are {unresolved, pulled, timed out, resolved, errored}
+            '''
+            print('unresolved: %d'%(self.count({"status":"unresolved"})))
+            print('pulled: %d'%(self.count({"status":"pulled"})))
+            print('timed out: %d'%(self.count({"status":"timed out"})))
+            print('resolved: %d'%(self.count({"status":"resolved"})))
+            print('errored: %d'%(self.count({"status":"errored"})))
 
         def refresh(self):
+            '''
+            revertes the statuses of pulled properties which never started for whatever reason
+            '''
             # TODO: Make this do something
-            self.update({'status':1,'resolve_by':{'$lt':math.ceil(time.time())}},{'status':0,'resolve_by':-1})
+            self.update({'status':"pulled",'resolve_by':{'$lt':math.ceil(time.time())}},{'status':"unresolved",'resolve_by':-1})
