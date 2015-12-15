@@ -1,0 +1,39 @@
+section#explore {
+    border: 0;
+    width: 50%;
+    max-width: 800px;
+}
+section#explore > div#info {
+    display: table;
+    width: 100%;
+    margin-top: 45px;
+}
+section#explore > div#info > div.record {
+    display: table-row;
+    height: 35px;
+}
+section#explore > div#info > div.record > div {
+    display: table-cell;
+}
+section#explore div.view, section#explore div.button, section#explore div.submit {
+    display: inline-block;
+    color: rgb(50,210,210);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 5px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 3px;
+    margin-left: 5px;
+    border: 1px solid #AAA;
+}
+section#explore div.shortcuts, section#explore div.number {
+    width: 1%;
+    padding-right: 20px;
+}
+
+section#explore > div.back {
+    position: absolute; right: 0px;
+    cursor: pointer;
+}
+

@@ -51,15 +51,19 @@ def get_times(wdb):
 def make_batches(wdb,time_window):
     print('querying properties')
     properties = wdb.properties.query_fields_only({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
-    ids = properties['_id']
-    timeouts = properties['timeout']
+
+    ids = []
+    timeouts = []
+    for prop in properties:
+        ids.append(prop['_id'])
+        timeouts.append(prop['timeout'])
 
     print('building batches')
     batches = []
     times_left = []
     ids_in_batches = []
     for i in range(len(ids)):
-        if len(batches)==100:
+        if len(batches)==1000:
             break
         found = False
         for j in range(len(batches)):

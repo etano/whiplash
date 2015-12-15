@@ -173,30 +173,11 @@ module.exports = {
                     res.statusCode = 404;
                     return res.json({ error: 'Not found' });
                 }
-                var fields1 = [];
-                for(var j=0; j<fields.length; j++){
-                    if(~fields[j].indexOf('metadata.'))
-                        fields1.push(fields[j].split('.')[1]);
-                    else
-                        fields1.push(fields[j]);
-                }
-                var projection = {};
-                for(var j=0; j<fields1.length; j++){
-                    projection[fields1[j]] = [];
-                }
-                for(var i=0; i<objs.length; i++) {
-                    for(var j=0; j<fields1.length; j++){
-                        if(fields1[j] == fields[j])
-                            projection[fields1[j]].push(objs[i][fields[j]]);
-                        else
-                            projection[fields1[j]].push(objs[i]['metadata'][fields1[j]]);
-                    }
-                }
                 if (!err) {
                     log.info("Querying fields in %s",collection.collectionName);
                     return res.json({
                         status: 'OK',
-                        result: projection
+                        result: objs
                     });
                 } else {
                     res.statusCode = 500;
@@ -256,7 +237,8 @@ module.exports = {
                             }
                        }
                        req.body[i]['commit_tag'] = commit_tag;
-                       batch.push({ updateOne: { filter: filter, update: req.body[i], upsert: true }});
+                       batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                       batch.push({ insertOne: { document : req.body[i] } });
                    }
                    collection.bulkWrite(batch,{w:1},function(err,result) {
                        if (result.ok) {

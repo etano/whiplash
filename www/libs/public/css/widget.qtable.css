@@ -1,0 +1,85 @@
+widget.qtable div.row {
+    display: table-row;
+    height: 40px;
+}
+widget.qtable div.row > div {
+    display: table-cell;
+}
+widget.qtable div.row > div.value {
+    width: 1%;
+    padding-left: 10px;
+}
+widget.qtable div.row > div.label {
+    vertical-align: top;
+    padding-top: 5px;
+}
+widget.qtable div.param {
+    display: table-cell;
+    width: 227px;
+    min-width: 227px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+widget.qtable div.param:not(:first-child) {
+    padding-left: 20px;
+}
+widget.qtable div.param > div.row:first-child input {
+    color: rgb(205,50,50);
+}
+widget.qtable div.value > input[type=text] {
+    display: inline-block;
+    vertical-align: bottom;
+    float: right;
+    margin-top: 2px;
+    width: 145px;
+}
+widget.qtable div.label > input[type=text] {
+    margin-top: -2px;
+    float: right;
+    width: 145px;
+}
+widget.qtable div.label > select {
+    width: 100%;
+}
+widget.qtable div.label > select.container {
+    float: right;
+    width: 151px;
+}
+widget.qtable div.submit {
+    margin-top: 30px;
+    margin-left: 0px;
+}
+widget.qtable div.save {
+    margin-top: 30px;
+}
+widget.qtable div.add-param {
+    vertical-align: top;
+    margin-top: 19px;
+    margin-left: 14px;
+}
+widget.qtable div.add-constraint {
+    margin-right: 37px; float: right;
+}
+widget.qtable div.parameters {
+    display: inline-block;
+    width: max-content;
+    max-width: 100%;
+    max-height: 300px;
+    overflow: auto;
+    border-bottom: 1px dotted black;
+    margin-left: 1px;
+}
+
+
+widget.qtable.readonly div.load, 
+widget.qtable.readonly div.add-model,
+widget.qtable.readonly div.add-param,
+widget.qtable.readonly div.add-constraint,
+widget.qtable.readonly div.submit
+{
+    display: none;
+}
+
+widget.qtable.readonly input[type=text] {
+    border: 1px solid #EFEFEF;
+}

@@ -1,0 +1,99 @@
+section#api {
+    border: 0;
+    width: 50%;
+    max-width: 800px;
+}
+section#api div.hidden {
+    display: none !important;
+}
+section#api div.header > div {
+    font-weight: bold !important;
+}
+section#api div.header > div.host {
+    position: relative; left: -20px;
+}
+section#api > div#info {
+    display: table;
+    width: 100%;
+}
+section#api > div#info > div.record {
+    display: table-row;
+    height: 50px;
+}
+section#api > div#info > div.record > div {
+    display: table-cell;
+    cursor: pointer;
+    padding: 5px;
+}
+section#api div.delete, section#api div.auth, section#api div.add {
+    display: inline-block;
+    color: rgb(50,210,210);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 5px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 3px;
+    margin-left: 18px;
+    border: 1px solid #AAA;
+}
+section#api div.status {
+    width: 10px;
+    text-align: left;
+}
+section#api div.online, section#api div.offline {
+    width: 10px; height: 10px;
+    border-radius: 10px;
+    background-color: rgb(0,235,100);
+}
+section#api div.offline {
+    background-color: rgb(235,0,100);
+}
+section#api div.auth-online {
+    display: none;
+}
+section#api div.actions {
+    width: 1%; padding-left: 10px;
+}
+section#api div.access_value {
+    width: 50%;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+section#api div.add {
+    position: absolute;
+    margin-top: 10px;
+    left: 0px;
+    margin-left: 5px;
+}
+
+section#create-client {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border-radius: 6px;
+    width: 350px;
+    padding: 30px;
+    box-shadow: 0px 0px 105px black;
+}
+
+section#create-client label {
+    display: inline-block;
+    width: 130px; 
+}
+
+section#create-client input {
+    display: inline;
+    margin-bottom: 10px;
+    width: 215px;
+    border: 0;
+    border-bottom: 1px solid #999;
+    outline: none;
+}
+section#create-client input.submit {
+    width: 100%;
+    padding-top: 30px;
+    border: 0;
+}
