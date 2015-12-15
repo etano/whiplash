@@ -17,8 +17,6 @@ www_test:
     extends:
         file: www/docker-compose.yml
         service: www
-    ports:
-        - 80:80
     volumes:
         - $PWD/www/libs:/src/libs
     command: sh -c "node bin/www"
