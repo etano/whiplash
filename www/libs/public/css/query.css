@@ -1,0 +1,10 @@
+section#compose-query, section#edit-query {
+    border: 0;
+    width: 50%;
+    max-width: 800px;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding-left: 10px;
+    padding-top: 30px;
+    padding-bottom: 20px;
+}
