@@ -24,16 +24,22 @@ var work_batches = require('./routes/work_batches');
 var jobs = require('./routes/jobs');
 var oauth2 = require('./auth/oauth2');
 
-var app = express();
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+}
 
+var app = express();
 app.use(bodyParser.json({limit: '1024mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride());
+app.use(allowCrossDomain);
 app.use(passport.initialize());
 
-app.use('/', www);
-app.use('/docs', express.static( www + "/docs" ));
+app.use('/www', www);
 app.use('/api', api);
 app.use('/api/users', users);
 app.use('/api/accesstokens', accesstokens);

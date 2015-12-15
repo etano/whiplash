@@ -21,19 +21,13 @@ if(!err) {
     log.error(err);
 }
 
-var www = process.cwd() + '/libs/public/';
-var cached_index = fs.readFileSync( www + 'index.html' );
-
-router.use('/css', express.static( www + "/css" ));
-router.use('/scripts', express.static( www + "/scripts" ));
-router.use('/images', express.static( www + "/images" ));
-router.use('/docs', express.static( www + "/docs" ));
-router.use('/favicon.ico', express.static( www + '/images/favicon.ico'));
-
 router.get('/', function (req, res){
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Set-Cookie', 'server_token='+config.get('WebAccessToken'));
-    res.send( cached_index );
+    return res.json({
+        status: 'OK',
+        result: {
+            token: config.get('WebAccessToken')
+        }
+    });
 });
 
 module.exports = router;

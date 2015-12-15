@@ -2,6 +2,7 @@ FROM node
 RUN apt-get update
 RUN apt-get install -y libkrb5-dev
 RUN apt-get install -y python-dev libyaml-dev python-pip
+RUN pip install mkdocs
 
 # workdir
 WORKDIR /src
@@ -15,5 +16,9 @@ COPY bin /src/bin
 RUN mkdir /src/logs
 COPY libs /src/libs
 
+# building docs
+COPY docs /src/docs
+RUN mv docs/mkdocs.yml . && mkdocs build
+
 # expose port
-EXPOSE 1337
+EXPOSE 80

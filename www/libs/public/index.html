@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Whiplash API</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,700,300" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/common.css" type="text/css" />
+    <link rel="stylesheet" href="/css/view_queries.css" type="text/css" />
+    <link rel="stylesheet" href="/css/explore.css" type="text/css" />
+    <link rel="stylesheet" href="/css/api.css" type="text/css" />
+    <link rel="stylesheet" href="/css/query.css" type="text/css" />
+    <link rel="stylesheet" href="/css/widget.qtable.css" type="text/css" />
+    <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
+    <script src="/scripts/utils/cookie.js"></script>
+    <script src="/scripts/utils/clipboard.js"></script>
+    <script src="/scripts/general.js"></script>
+    <script src="/scripts/login.js"></script>
+    <script src="/scripts/view_queries.js"></script>
+    <script src="/scripts/widget.qtable.js"></script>
+    <script src="/scripts/query.js"></script>
+    <script src="/scripts/explore.js"></script>
+    <script src="/scripts/api.js"></script>
+</head>
+<body>
+
+<widget class="qtable prototype" constructor="initQTable">
+    <div class="table">
+        <div class="row">
+            <div class="label" style="width: 227px;"><input class="model" type="text" value="">Model:</div><div class='add-model' style="padding-top: 5px; padding-left: 9px;">or create one</div>
+        </div>
+        <div class="row">
+            <div class="label"><select class="container">
+                                   <option value="ethz_uevol" selected>ethz_uevol (defunct)</option>
+                                   <option value="ethz_sqa">ethz_sqa</option>
+                                   <option value="ethz_sa">ethz_sa</option>
+                               </select>Executable:
+            </div>
+        </div>
+    </div>
+    <div style="margin-top: 20px;">Parameters:&nbsp;&nbsp; <div class='button load'>Load</div></div>
+
+    <!-- {{{ Variable number of parameters -->
+    <div class="parameters">
+        <div class="table"><div class="row">
+
+                <div class="param">
+                    <div class="row">
+                        <div class="label" constraint="name"><select disabled><option value='name'>Name</option></select></div><div class="value"><input type="text" value=""></div>
+                    </div>
+                    <div class="row">
+                        <div class="label" constraint="value">
+                            <select>
+                               <option value='value'>Value</option>
+                               <option value='min'>Min Value</option>
+                               <option value='max'>Max Value</option>
+                               <option value='step'>Step</option>
+                            </select>
+                        </div><div class="value"><input type="text" value=""></div>
+                    </div>
+                    <div class="button add-constraint">Add constraint</div>
+                </div>
+
+        </div></div>
+    </div>
+    <div class="button add-param">Add Parameter</div>
+    <!-- }}} -->
+    <div>
+        <div class="button submit">Submit Query</div>
+        <div class="button save">Save as Schema</div>
+    </div>
+</widget>
+
+<screen>
+    <div id="title">Whiplash<img src="https://www.ethz.ch/img/header/eth_logo.png"></div>
+    <section id="tagline">
+        <div>the power of a cluster in your lap</div>
+    </section>
+    <section id="menu">
+        <div id="logout" class="hidden">Sign out</div>
+        <div id="docs" class="hidden">Docs</div>
+        <div id="register">Sign up</div>
+        <div id="login">Login</div>
+        <div id="view-queries" class="hidden">View Queries</div>
+        <div id="compose-query" class="hidden">New Query</div>
+        <div id="cscs-connect"><img src="/images/cscs.png">Login with CSCS account</div>
+    </section>
+    <section id="register" class="content centered transit">
+        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username">
+        <input type="password" class="passwd" placeholder="Password">
+        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Email">
+        <input type="button" value="Sign up" class="submit">
+    </section>
+    <section id="cscs-connect" class="content centered transit">
+        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username on Monch">
+        <input type="password" name="user_password" class="passwd" placeholder="Password">
+        <input type="submit" name="login" value="Knock-knock" class="submit">
+    </section>
+    <section id="login" class="content centered transit">
+        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username">
+        <input type="password" name="user_password" class="passwd" placeholder="Password">
+        <input type="submit" name="login" value="Knock-knock" class="submit">
+        <div id="forgot">Forgot your password?</div>
+    </section>
+    <section id="forgot" class="content centered transit">
+        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Email">
+        <input type="password" class="passwd" placeholder="Create a new password">
+        <input type="button" value="Request password change" class="submit">
+    </section>
+    <section id="quickstart" class="content centered transit">
+        <h2>Quick Start</h2>
+        <!-- {{{ copy-paste from mkdocs -->
+<ol>
+<li>
+<p>Apply for an account on Monch at
+<a href="http://www.cscs.ch/user_lab/becoming_a_user/new_user_of_existing_project/index.html">http://www.cscs.ch</a>
+and choose <strong>Matthias Troyer, p501a</strong> in the <strong>Select PI</strong> dropdown</p>
+</li>
+<li>
+<p>Make a Whiplash account on
+<a href="http://whiplash.ethz.ch">http://whiplash.ethz.ch</a>. Note your session
+token</p>
+</li>
+<li>
+<p>Add Whiplash's public key to ~/.ssh/authorized_keys on your account</p>
+<pre><code class="hljs groovy">   ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2bjz1D8<span class="hljs-regexp">/BIxumZnKp42ERDwtpTKEVK1iXu6+JUrBR86SK24S2uyxxARJDDQFZ8k1JL3FVc7b2k4di2WP6y3N8AImgGxclyXuJEiR2orbC/</span>ij0PeN1ReyO<span class="hljs-regexp">/NHsIQZVvVt31AnnRA8nyfcnabIUas9c2zPXp5jWddz2dEijINffcQv0rgPVcm0bLAf3gM1ZG3QVD+6/</span>dDaa7984Ebtif<span class="hljs-regexp">/kThi8EzOjtiK7ZM2Bqmp2HQBNhOvqCDiItjk6wSbdk/</span>o96w4hZZ6D4ueqn4hTXUQnkH5j3L7PBanMQhIv8kn8OLEbtyuDsWG/iTV07fet9hhsDgihyOilio5CKOySCrRnQ== whiplash<span class="hljs-annotation">@cscs</span>.ch
+</code></pre>
+</li>
+<li>
+<p>Get the latest version of the Whiplash python module from the
+scratch directory on Monch <strong>/mnt/lnec/whiplash/rte/whiplash.py</strong></p>
+</li>
+<li>
+<p>Make sure the executable you want to run exists somewhere on Monch</p>
+</li>
+<li>
+<p>Connect to the Whiplash server using your session token</p>
+<pre><code class="hljs stylus">   import whiplash          
+   wdb = whiplash.<span class="hljs-function"><span class="hljs-title">wdb</span><span class="hljs-params">(<span class="hljs-string">"monchc300.cscs.ch"</span>,<span class="hljs-string">"1337"</span>,<span class="hljs-string">"your_session_token"</span>)</span></span>
+</code></pre>
+</li>
+<li>
+<p>Commit executable</p>
+<pre><code class="hljs prolog">  <span class="hljs-atom">executable</span> = {<span class="hljs-string">"description"</span>:<span class="hljs-string">"unitary evolution for Ising models"</span>,<span class="hljs-string">"algorithm"</span>:<span class="hljs-string">"UE"</span>,<span class="hljs-string">"name"</span>:<span class="hljs-string">"unitary evolution"</span>,<span class="hljs-string">"version"</span>:<span class="hljs-string">"1.0.0"</span>,<span class="hljs-string">"build"</span>:<span class="hljs-string">"O3"</span>,<span class="hljs-string">"path"</span>:<span class="hljs-string">"/path/to/your/executable"</span>}
+  <span class="hljs-atom">executable_id</span> = <span class="hljs-atom">wdb</span>.<span class="hljs-atom">executables</span>.<span class="hljs-atom">commit</span>(<span class="hljs-atom">executable</span>)[<span class="hljs-string">'ids'</span>][<span class="hljs-number">0</span>][<span class="hljs-string">'_id'</span>]
+</code></pre>
+</li>
+<li>
+<p>Commit model</p>
+<pre><code class="hljs prolog">  <span class="hljs-atom">hamiltonian</span> = [[[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>],<span class="hljs-number">1</span>],[[<span class="hljs-number">2</span>,<span class="hljs-number">3</span>],<span class="hljs-number">1</span>],[[<span class="hljs-number">3</span>,<span class="hljs-number">4</span>],-<span class="hljs-number">1</span>],[[<span class="hljs-number">4</span>,<span class="hljs-number">1</span>],<span class="hljs-number">1</span>]]
+  <span class="hljs-atom">model</span> = {<span class="hljs-string">"content"</span>:{<span class="hljs-string">"edges"</span>: <span class="hljs-atom">hamiltonian</span>},<span class="hljs-string">"tags"</span>:{<span class="hljs-string">"number of spins"</span>:<span class="hljs-number">4</span>,<span class="hljs-string">"name"</span>:<span class="hljs-string">"periodic Ising chain"</span>}}
+  <span class="hljs-atom">model_id</span> = <span class="hljs-atom">wdb</span>.<span class="hljs-atom">models</span>.<span class="hljs-atom">commit</span>(<span class="hljs-atom">model</span>)[<span class="hljs-string">'ids'</span>][<span class="hljs-number">0</span>][<span class="hljs-string">'_id'</span>]
+</code></pre>
+</li>
+<li>
+<p>Commit properties</p>
+<pre><code class="hljs stylus">  properties = []
+  <span class="hljs-keyword">for</span> <span class="hljs-tag">i</span> <span class="hljs-keyword">in</span> <span class="hljs-function"><span class="hljs-title">range</span><span class="hljs-params">(<span class="hljs-number">10000</span>)</span></span>: 
+      properties.<span class="hljs-function"><span class="hljs-title">append</span><span class="hljs-params">({<span class="hljs-string">"params"</span>:{<span class="hljs-string">"seed"</span>:i,<span class="hljs-string">"hx"</span>:-<span class="hljs-number">1</span>,<span class="hljs-string">"Ttot"</span>:<span class="hljs-number">500</span>,<span class="hljs-string">"nsteps"</span>:<span class="hljs-number">400</span>},<span class="hljs-string">"input_model_id"</span>:model_id,<span class="hljs-string">"executable_id"</span>:executable_id,<span class="hljs-string">"timeout"</span>:<span class="hljs-number">600</span>})</span></span>
+  wdb<span class="hljs-class">.properties</span><span class="hljs-class">.commit</span>(properties)
+</code></pre>
+</li>
+<li>
+<p>Get results</p>
+<pre><code class="hljs aspectj"> results = wdb.get_results({<span class="hljs-string">'params.seed'</span>:{<span class="hljs-string">'$in'</span>: list(range(10,40))}})
+</code></pre>
+</li>
+</ol>
+        <!-- }}} -->
+    </section>
+    <section id="view-queries" class="content transit">
+        <div id="info">
+        </div>
+    </section>
+    <section id="explore" class="content centered transit">
+        <div class='button back'>Done</div>
+        <div class='button explore'>Explore</div>
+        <div class='button view'>View Query</div>
+        <div class='button download'>Download Results</div>
+        <div id="info">
+        </div>
+    </section>
+    <section id="compose-query" class="content centered transit">
+        <widget class="qtable"></widget>
+    </section>
+    <section id="edit-query" class="content centered transit">
+        <widget class="qtable"></widget>
+    </section>
+    <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
+</screen>
+
+</body>
+</html>
