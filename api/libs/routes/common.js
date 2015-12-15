@@ -256,7 +256,8 @@ module.exports = {
                             }
                        }
                        req.body[i]['commit_tag'] = commit_tag;
-                       batch.push({ updateOne: { filter: filter, update: req.body[i], upsert: true }});
+                       batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                       batch.push({ insertOne: { document : req.body[i] } });
                    }
                    collection.bulkWrite(batch,{w:1},function(err,result) {
                        if (result.ok) {
