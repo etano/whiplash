@@ -17,6 +17,4 @@ www_test:
     extends:
         file: www/docker-compose.yml
         service: www
-    volumes:
-        - $PWD/www/libs:/src/libs
-    command: sh -c "node bin/www"
+    command: sh -c "cp config.dev.json config.json; node bin/www"
