@@ -28,7 +28,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 for(var i=0;i<result.value.ids.length;i++){
                     result.value.ids[i] = new ObjectID(result.value.ids[i]);
                 }
-                db.get().collection('properties').updateMany({'_id':{'$in':result.value.ids}}, {'$set':{"status":"5"}}, {w:1}, function (err2, result2) {
+                db.get().collection('properties').updateMany({'_id':{'$in':result.value.ids}}, {'$set':{"status":"running"}}, {w:1}, function (err2, result2) {
                     if (!err2) {
                         log.info("%d properties set to status 5",result2.modifiedCount);
                         return res.json({

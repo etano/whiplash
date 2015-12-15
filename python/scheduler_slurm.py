@@ -59,7 +59,7 @@ def make_batches(wdb,time_window):
     times_left = []
     ids_in_batches = []
     for i in range(len(ids)):
-        if len(batches)==100:
+        if len(batches)==1000:
             break
         found = False
         for j in range(len(batches)):

@@ -318,6 +318,7 @@ class wdb:
             '''
             print('unresolved: %d'%(self.count({"status":"unresolved"})))
             print('pulled: %d'%(self.count({"status":"pulled"})))
+            print('running: %d'%(self.count({"status":"running"})))
             print('timed out: %d'%(self.count({"status":"timed out"})))
             print('resolved: %d'%(self.count({"status":"resolved"})))
             print('errored: %d'%(self.count({"status":"errored"})))
