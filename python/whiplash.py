@@ -138,10 +138,10 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        tmp = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
+        tmp = self.properties.query_fields_only(filter,'output_model_id')
         out_model_ids = []
         for el in tmp:
-            out_model_ids.append(el['_id'])
+            out_model_ids.append(el['output_model_id'])
 
         tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
