@@ -23,6 +23,7 @@ function addParam(){
 }
 
 function removeParam(e){
+    if($(this).closest("widget.qtable").hasClass("readonly")) return;
     $(this).parent().parent().remove();
 }
 
@@ -33,6 +34,7 @@ function addConstraint(){
 }
 
 function removeConstraint(){
+    if($(this).closest("widget.qtable").hasClass("readonly")) return;
     $(this).parent().remove();
 } 
 

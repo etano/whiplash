@@ -41,11 +41,11 @@ widget.qtable div.param div.remove {
     width: 10px;
     color: transparent;
 }
-widget.qtable div.param > div.row:hover > div.remove {
+widget.qtable:not(.readonly) div.param > div.row:hover > div.remove {
     cursor: pointer;
     color: rgb(60,50,50);
 }
-widget.qtable div.param > div.row:first-of-type:hover > div.remove {
+widget.qtable:not(.readonly) div.param > div.row:first-of-type:hover > div.remove {
     cursor: pointer;
     color: red;
 }
