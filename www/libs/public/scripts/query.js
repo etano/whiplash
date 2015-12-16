@@ -29,5 +29,9 @@ $(document).ready(function(){
     $(document).on("click", "widget.qtable div.param > div:first-child div.remove", removeParam);
     $(document).on("click", "widget.qtable div.add-constraint", addConstraint);
     $(document).on("click", "widget.qtable div.param > div:not(:first-child) div.remove", removeConstraint);
+    $(document).on("click", "widget.qtable div.add-model", registerModel);
+    $(document).on("click", "widget.qtable div.add-container", registerContainer);
     $(document).on("click", "widget.qtable div.submit", submitQTable);
+    $(document).on("click", "section#compose-model div.submit", composeQuery); // should go back instead
+    $(document).on("click", "section#compose-container div.submit", composeQuery); // should go back instead
 });

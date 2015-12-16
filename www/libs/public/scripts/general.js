@@ -86,7 +86,7 @@ function viewMain(){
     $("section#menu > div#login").addClass("hidden");
     $("section#menu > div#register").addClass("hidden");
     $("section#menu > div#cscs-connect").addClass("hidden");
-    viewQueries();
+    composeQuery();
 }
 
 function roundCentering(){

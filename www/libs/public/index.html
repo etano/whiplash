@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="/css/explore.css" type="text/css" />
     <link rel="stylesheet" href="/css/api.css" type="text/css" />
     <link rel="stylesheet" href="/css/query.css" type="text/css" />
+    <link rel="stylesheet" href="/css/model.css" type="text/css" />
+    <link rel="stylesheet" href="/css/container.css" type="text/css" />
     <link rel="stylesheet" href="/css/widget.qtable.css" type="text/css" />
     <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
     <script src="/scripts/utils/cookie.js"></script>
@@ -30,15 +32,17 @@
     <div class='button duplicate'>Duplicate</div>
     <div class="table">
         <div class="row">
-            <div class="label" style="width: 227px;"><input class="model" type="text" value="">Model:</div><div class='add-model' style="padding-top: 5px; padding-left: 9px;">or create one</div>
+            <div class="label" style="width: 227px;"><input class="model" type="text" value="">Model:</div>
+            <div class='add-model' style="padding-left: 9px;"><div class="button">Add Model</div></div>
         </div>
         <div class="row">
             <div class="label"><select class="container">
-                                   <option value="ethz_uevol" selected>ethz_uevol (defunct)</option>
+                                   <option value="ethz_uevol" selected>ethz_uevol</option>
                                    <option value="ethz_sqa">ethz_sqa</option>
                                    <option value="ethz_sa">ethz_sa</option>
                                </select>Executable:
             </div>
+            <div class='add-container' style="padding-left: 9px;"><div class="button">Add Executable</div></div>
         </div>
     </div>
     <div style="margin-top: 20px;">Parameters:</div>
@@ -199,6 +203,30 @@ scratch directory on Monch <strong>/mnt/lnec/whiplash/rte/whiplash.py</strong></
     </section>
     <section id="edit-query" class="content centered transit">
         <widget class="qtable"></widget>
+    </section>
+    <section id="compose-container" class="content centered transit">
+        <div class="table">
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Container Name:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Owner:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Description:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Algorithm:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Version:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Build:</div> </div>
+        </div>
+        <div>
+            <div class="button submit">Register Container</div>
+        </div>
+    </section>
+    <section id="compose-model" class="content centered transit">
+        <div class="table">
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">File path:</div> </div>
+            <div class="row"> <div class="label"><input class="model" type="text" value="">Custom tag #0:</div> </div>
+        </div>
+        <div>
+            <div class="button submit">Commit Model</div>
+        </div>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
 </screen>

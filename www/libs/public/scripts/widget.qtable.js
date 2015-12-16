@@ -105,3 +105,13 @@ function initQTable(widget){
         widget.find('input:text, select').prop("disabled", true);
     }
 }
+
+function registerContainer(){
+    var widget = $(this).closest("widget.qtable");
+    transition($("section#compose-container"));
+}
+
+function registerModel(){
+    var widget = $(this).closest("widget.qtable");
+    transition($("section#compose-model"));
+}
