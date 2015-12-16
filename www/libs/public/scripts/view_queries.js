@@ -25,7 +25,7 @@ function loadQueries(){
                     }
                     if(submitted){
                         $("section#view-queries div#info").append("<div class='record' batch='" + batch_id + "'>" +
-                                                                "<div class='shortcuts'><div class='copy'><img src='/images/copy.svg'></div><div class='delete'>&#xd7;</div></div>" +
+                                                                "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
                                                                 "<div class='name'>" + name + "</div>" +
                                                                 "<div class='date'>" + time + "</div>" +
                                                                 "<div class='progress'><progress max='100' value='" + progress + "'></progress></div>" +
@@ -33,7 +33,7 @@ function loadQueries(){
                                                              "</div>");
                     }else{
                         $("section#view-queries div#info").append("<div class='record mock' batch='" + batch_id + "'>" +
-                                                                "<div class='shortcuts'><div class='copy'><img src='/images/copy.svg'></div><div class='delete'>&#xd7;</div></div>" +
+                                                                "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
                                                                 "<div class='name'>" + name + "</div>" +
                                                                 "<div class='date'>" + time + "</div>" +
                                                                 "<div class='progress'>Not submitted</div>" +
@@ -50,26 +50,14 @@ function loadQueries(){
 }
 
 function copyQuery(){
-    var batch_id = $(this).parent().parent().attr("batch");
+    var batch_id = last_batch;
 
     $.ajax({
         type: 'POST',
         url: api_addr+"/api/jobs/"+batch_id,
         data: { "access_token"  : session_token },
         success: function(data){
-            if(!data.result) return;
-            var name = data.result.name;
-            var time = data.result.time;
-            var new_batch_id = data.result.batch_id;
-            var submitted = data.result.submitted;
-            $("section#view-queries div#info").append("<div class='record mock' batch='" + new_batch_id + "'>" +
-                                                     "<div class='shortcuts'><div class='copy'><img src='/images/copy.svg'></div><div class='delete'>&#xd7;</div></div>" +
-                                                     "<div class='name'>" + name + "</div>" +
-                                                     "<div class='date'>" + time + "</div>" +
-                                                     "<div class='progress'>Not submitted</div>" +
-                                                     "<div class='status'></div>" +
-                                                 "</div>");
-
+            duplicateQuery(data.result.batch_id);
         },
         error: function(request, status, err){
             alert(err);
@@ -95,7 +83,6 @@ function deleteQuery(){
 }
 
 $(document).ready(function(){
-    $(document).on("click", "section#view-queries div.copy", copyQuery);
     $(document).on("click", "section#view-queries div.delete", deleteQuery);
     $(document).on("click", "section#view-queries div.name", loadExplore);
 });

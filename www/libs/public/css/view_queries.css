@@ -23,7 +23,7 @@ section#view-queries > div#info > div.record > div {
     text-align: left;
 }
 
-section#view-queries div.copy, section#view-queries div.delete {
+section#view-queries div.delete {
     display: inline-block;
     color: rgb(50,210,210);
     cursor: pointer;
@@ -40,13 +40,6 @@ section#view-queries div.delete {
     padding-top: 0px !important;
     color: black;
     font-size: 16px;
-}
-section#view-queries div.copy {
-    border: 0;
-    width: auto;
-}
-section#view-queries div.copy > img {
-    height: 14px;
 }
 section#view-queries div.date {
     width: 150px;

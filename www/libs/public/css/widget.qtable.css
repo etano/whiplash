@@ -87,7 +87,6 @@ widget.qtable div.parameters {
 }
 
 
-widget.qtable.readonly div.load, 
 widget.qtable.readonly div.add-model,
 widget.qtable.readonly div.add-param,
 widget.qtable.readonly div.add-constraint,
@@ -98,4 +97,10 @@ widget.qtable.readonly div.submit
 
 widget.qtable.readonly input[type=text] {
     border: 1px solid #EFEFEF;
+}
+
+widget.qtable div.duplicate {
+    position: absolute;
+    right: 10px;
+    top: 10px;
 }

@@ -5,15 +5,26 @@ function composeQuery(){
     readonly = false;
     transition($("section#compose-query"));
     indicateMenu("compose-query");
+    $("div.duplicate").css({display: "none"});
 }
 
 function loadQuery(batch_id, r){
     last_batch = batch_id; readonly = r;
     transition($("section#edit-query"));
     loadQTable($("section#edit-query widget.qtable"), batch_id);
+    $("div.duplicate").css({display: "block"});
+}
+
+function duplicateQuery(batch_id){
+    readonly = false;
+    transition($("section#compose-query"));
+    loadQTable($("section#compose-query widget.qtable"), batch_id);
+    indicateMenu("compose-query");
+    $("div.duplicate").css({display: "none"});
 }
 
 $(document).ready(function(){
+    $(document).on("click", "widget.qtable div.duplicate", copyQuery);
     $(document).on("click", "widget.qtable div.add-param", addParam);
     $(document).on("click", "widget.qtable div.param > div:first-child div.remove", removeParam);
     $(document).on("click", "widget.qtable div.add-constraint", addConstraint);
