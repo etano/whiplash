@@ -12,8 +12,8 @@
     <link rel="stylesheet" href="/css/explore.css" type="text/css" />
     <link rel="stylesheet" href="/css/api.css" type="text/css" />
     <link rel="stylesheet" href="/css/query.css" type="text/css" />
-    <link rel="stylesheet" href="/css/model.css" type="text/css" />
-    <link rel="stylesheet" href="/css/container.css" type="text/css" />
+    <link rel="stylesheet" href="/css/widget.qmodel.css" type="text/css" />
+    <link rel="stylesheet" href="/css/widget.qcontainer.css" type="text/css" />
     <link rel="stylesheet" href="/css/widget.qtable.css" type="text/css" />
     <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
     <script src="/scripts/utils/cookie.js"></script>
@@ -21,6 +21,8 @@
     <script src="/scripts/general.js"></script>
     <script src="/scripts/login.js"></script>
     <script src="/scripts/view_queries.js"></script>
+    <script src="/scripts/widget.qmodel.js"></script>
+    <script src="/scripts/widget.qcontainer.js"></script>
     <script src="/scripts/widget.qtable.js"></script>
     <script src="/scripts/query.js"></script>
     <script src="/scripts/explore.js"></script>
@@ -86,6 +88,37 @@
     <!-- }}} -->
     <div>
         <div class="button submit">Submit Query</div>
+    </div>
+</widget>
+<widget class="qmodel prototype" constructor="initQModel">
+    <div style="padding-left: 15px;">
+        Model name:  <input class="model-name" type="text" value="">
+    </div>
+    <div class="table">
+        <div class="row">
+                          <div class="label"><input type="text" value="" placeholder="Tag name"></div><div class="value"><input type="text" value="tag value"></div>
+                          <div class="remove">×</div>
+        </div>
+
+        <div class="button add-constraint">Add tag</div>
+    </div>
+    <div>
+        <input type="file" id="fileinput">
+        <div class="button submit">Commit Model</div>
+    </div>
+</widget>
+<widget class="qcontainer prototype" constructor="initQContainer">
+    <div class="table">
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Version:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Build:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Owner:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Description:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Algorithm:</div> </div>
+        <div class="row"> <div class="label"><input class="model" type="text" value="">Docker Container:</div> </div>
+    </div>
+    <div>
+        <div class="button submit">Register Container</div>
     </div>
 </widget>
 
@@ -205,28 +238,10 @@ scratch directory on Monch <strong>/mnt/lnec/whiplash/rte/whiplash.py</strong></
         <widget class="qtable"></widget>
     </section>
     <section id="compose-container" class="content centered transit">
-        <div class="table">
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Container Name:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Owner:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Description:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Algorithm:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Version:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Build:</div> </div>
-        </div>
-        <div>
-            <div class="button submit">Register Container</div>
-        </div>
+        <widget class="qcontainer"></widget>
     </section>
     <section id="compose-model" class="content centered transit">
-        <div class="table">
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">File path:</div> </div>
-            <div class="row"> <div class="label"><input class="model" type="text" value="">Custom tag #0:</div> </div>
-        </div>
-        <div>
-            <div class="button submit">Commit Model</div>
-        </div>
+        <widget class="qmodel"></widget>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
 </screen>
