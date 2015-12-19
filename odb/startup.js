@@ -9,4 +9,5 @@ db.jobs.createIndex({name : 1, owner : 1, md5 : 1},{unique : true});
 db.collaborations.createIndex({name : 1},{unique : true});
 db.users.createIndex({username : 1},{unique : true});
 db.clients.createIndex({name : 1},{unique : true});
+db.work_batches.createIndex({timestamp : 1});
 db.setProfilingLevel(2);
