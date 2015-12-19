@@ -130,18 +130,12 @@ class wdb:
         '''
         fetches output models corresponding to the models and properties found by their respective filters
         '''
-        tmp = self.models.query_fields_only(tags,"_id")
-        in_model_ids = []
-        for el in tmp:
-            in_model_ids.append(el['_id'])
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
         filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
         for key in params:
             filter["params."+key] = params[key]
 
-        tmp = self.properties.query_fields_only(filter,'output_model_id')
-        out_model_ids = []
-        for el in tmp:
-            out_model_ids.append(el['output_model_id'])
+        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
 
         tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
@@ -217,7 +211,16 @@ class wdb:
             '''
             if not isinstance(fields, list):
                 fields = [fields]
-            return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
+            res = {}
+            tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
+            for o in tmp:
+                for field in o:
+                    try:
+                        res[field].append(o[field])
+                    except:
+                        res[field] = [o[field]]
+            return res
+
 
         def query_id(self,ID):
             '''
