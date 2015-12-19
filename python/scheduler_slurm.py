@@ -39,7 +39,7 @@ def submit_job(args,time_limit,time_window):
 def get_times(wdb):
     print('getting times')
     th = int(11.8*3600)
-    timeouts = wdb.properties.stats("timeout",{"status":["unresolved","pulled"]})
+    timeouts = wdb.properties.stats("timeout",{"status":{"$in":["unresolved","pulled"]}})
     print(timeouts)
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
@@ -94,7 +94,8 @@ def scheduler(args):
            break
 
         [time_limit,time_window] = get_times(wdb)
-        make_batches(wdb,time_window)
+        if (time_limit > 0 and time_window > 0):
+            make_batches(wdb,time_window)
         if not args.test:
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
         else:

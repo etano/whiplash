@@ -39,11 +39,6 @@ def scheduler(args):
     schedulers = []
     count = 0
     while True:
-        if args.test:
-            if count > 1:
-                break
-            else:
-                count += 1
         for wdb_user in get_users(wdb):
             user = wdb_user['username']
             if user not in users:
@@ -52,7 +47,11 @@ def scheduler(args):
                 p.start()
                 schedulers.append(p)
                 users.append(user)
-        time.sleep(60)
+        if args.test:
+            break
+        else:
+            time.sleep(60)
+            count += 1
 
     print('user scheduler shutting down')
     for p in schedulers:
