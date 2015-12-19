@@ -1,20 +1,13 @@
 #!/usr/bin/env python
 
-import os,json,sys,time
+import json,sys,time
 
-# input
-f = open(sys.argv[1],'r')
-data = json.load(f)
-f.close()
+file_name = sys.argv[1]
 
-content_in = data['content']
-params = data['params']
+time.sleep(2.0)
 
-# sleep
-time.sleep(params['sleep_time'])
+with open(file_name, 'r') as infile:
+    data = json.load(infile)
 
-# output
-content_out = {'time':int(time.time())}
-f = open(sys.argv[1],'w')
-f.write(json.dumps({'feels':'good to sleep','content':content_out}))
-f.close()
+with open(file_name, 'w') as outfile:
+    json.dump({"number":8}, outfile)
