@@ -32,62 +32,25 @@
 
 <widget class="qtable prototype" constructor="initQTable">
     <div class='button duplicate'>Duplicate</div>
-    <div class="table">
-        <div class="row">
-            <div class="label" style="width: 227px;"><input class="model" type="text" value="">Model:</div>
-            <div class='add-model' style="padding-left: 9px;"><div class="button">Add Model</div></div>
-        </div>
+    <div class="table" style="margin: 0 auto;">
         <div class="row">
             <div class="label"><select class="container">
-                                   <option value="ethz_uevol" selected>ethz_uevol</option>
+                                   <option value="none" selected>none</option>
+                                   <option value="ethz_uevol">ethz_uevol</option>
                                    <option value="ethz_sqa">ethz_sqa</option>
                                    <option value="ethz_sa">ethz_sa</option>
                                </select>Executable:
             </div>
-            <div class='add-container' style="padding-left: 9px;"><div class="button">Add Executable</div></div>
+            <!--div class='add-container' style="padding-left: 9px;"><div class="button">Another Executable</div></div-->
         </div>
-    </div>
-    <div style="margin-top: 20px;">Parameters:</div>
-
+        <div class="row">
+            <div class="label" style="width: 227px;"><input class="model" type="text" value="" placeholder="filter (empty)">Model:</div>
+        </div>
     <!-- {{{ Variable number of parameters -->
-    <div class="parameters">
-        <div class="table"><div class="row">
-
-                <div class="param">
-                    <div class="row">
-                        <div class="label" constraint="name">
-                            <select disabled>
-                                <option value='name'>Name</option>
-                            </select>
-                        </div>
-                        <div class="value">
-                            <input type="text" value="">
-                        </div>
-                        <div class="remove">×</div>
-                    </div>
-                    <div class="row">
-                        <div class="label" constraint="value">
-                            <select>
-                               <option value='value'>Value</option>
-                               <option value='min'>Min Value</option>
-                               <option value='max'>Max Value</option>
-                               <option value='step'>Step</option>
-                            </select>
-                        </div>
-                        <div class="value">
-                            <input type="text" value="">
-                        </div>
-                        <div class="remove">×</div>
-                    </div>
-                    <div class="button add-constraint">Add constraint</div>
-                </div>
-
-        </div></div>
-    </div>
-    <div class="button add-param">Add Parameter</div>
     <!-- }}} -->
-    <div>
-        <div class="button submit">Submit Query</div>
+        <div class="row">
+            <div class="button submit">Search</div>
+        </div>
     </div>
 </widget>
 <widget class="qmodel prototype" constructor="initQModel">
@@ -96,7 +59,7 @@
     </div>
     <div class="table">
         <div class="row">
-                          <div class="label"><input type="text" value="" placeholder="Tag name"></div><div class="value"><input type="text" value="tag value"></div>
+                          <div class="label"><input type="text" value="" placeholder="tag name"></div><div class="value"><input type="text" value="tag value"></div>
                           <div class="remove">×</div>
         </div>
 
@@ -108,6 +71,7 @@
     </div>
 </widget>
 <widget class="qcontainer prototype" constructor="initQContainer">
+    <center>Attributes</center>
     <div class="table">
         <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
         <div class="row"> <div class="label"><input class="model" type="text" value="">Version:</div> </div>
@@ -116,6 +80,10 @@
         <div class="row"> <div class="label"><input class="model" type="text" value="">Description:</div> </div>
         <div class="row"> <div class="label"><input class="model" type="text" value="">Algorithm:</div> </div>
         <div class="row"> <div class="label"><input class="model" type="text" value="">Docker Container:</div> </div>
+    </div>
+    <center>Input/Output Parameters</center>
+    <div class="table">
+        <div class="button add-param">Add Parameter</div>
     </div>
     <div>
         <div class="button submit">Register Container</div>
@@ -132,9 +100,9 @@
         <div id="docs" class="hidden">Docs</div>
         <div id="register">Sign up</div>
         <div id="login">Login</div>
-        <div id="view-queries" class="hidden">View Queries</div>
-        <div id="compose-query" class="hidden">New Query</div>
-        <div id="cscs-connect"><img src="/images/cscs.png">Login with CSCS account</div>
+        <div id="view-queries" class="hidden">Submissions</div>
+        <div id="compose-query" class="hidden">Browse</div>
+        <!--div id="cscs-connect"><img src="/images/cscs.png">Login with CSCS account</div-->
     </section>
     <section id="register" class="content centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username">
@@ -224,10 +192,6 @@ scratch directory on Monch <strong>/mnt/lnec/whiplash/rte/whiplash.py</strong></
         </div>
     </section>
     <section id="explore" class="content centered transit">
-        <div class='button back'>Done</div>
-        <div class='button explore'>Explore</div>
-        <div class='button view'>View Query</div>
-        <div class='button download'>Download Results</div>
         <div id="info">
         </div>
     </section>

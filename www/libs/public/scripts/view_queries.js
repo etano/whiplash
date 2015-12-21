@@ -49,22 +49,6 @@ function loadQueries(){
     });
 }
 
-function copyQuery(){
-    var batch_id = last_batch;
-
-    $.ajax({
-        type: 'POST',
-        url: api_addr+"/api/jobs/"+batch_id,
-        data: { "access_token"  : session_token },
-        success: function(data){
-            duplicateQuery(data.result.batch_id);
-        },
-        error: function(request, status, err){
-            alert(err);
-        }
-    });
-}
-
 function deleteQuery(){
     var query = $(this).parent().parent();
     var batch_id = query.attr("batch");
@@ -84,5 +68,5 @@ function deleteQuery(){
 
 $(document).ready(function(){
     $(document).on("click", "section#view-queries div.delete", deleteQuery);
-    $(document).on("click", "section#view-queries div.name", loadExplore);
+    $(document).on("click", "section#view-queries div.name", downloadBatch);
 });

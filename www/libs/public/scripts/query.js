@@ -24,7 +24,6 @@ function duplicateQuery(batch_id){
 }
 
 $(document).ready(function(){
-    $(document).on("click", "widget.qtable div.duplicate", copyQuery);
     $(document).on("click", "widget.qtable div.add-param", addParam);
     $(document).on("click", "widget.qtable div.param > div:first-child div.remove", removeParam);
     $(document).on("click", "widget.qtable div.add-constraint", addConstraint);

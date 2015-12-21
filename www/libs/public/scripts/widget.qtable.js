@@ -8,7 +8,7 @@ function constraintSelect(){
 }
 
 function addParam(){
-    var parameters = $(this).prev(".parameters");
+    var parameters = $(this).next(".parameters");
     parameters.find("div.table > div.row").append("<div class='param'>"+
           "<div class='row'>"+
               "<div class='label'><select disabled><option value='name'>Name</option></select></div><div class='value'><input type='text' value=''></div><div class='remove'>×</div>"+
@@ -37,36 +37,6 @@ function removeConstraint(){
     if($(this).closest("widget.qtable").hasClass("readonly")) return;
     $(this).parent().remove();
 } 
-
-function submitQTable(){
-    var widget = $(this).closest("widget.qtable");
-    var query = { model : widget.find("input.model").val(),
-                  container : widget.find("select.container").val(),
-                  parameters : [ ]
-                };
-    widget.find("div.parameters div.param").each(function(i){
-        var constraints = [];
-        $(this).find("div.row").each(function(k){
-            constraints.push({ attr  : $(this).find("div.label > select").val(),
-                               value : $(this).find("div.value > input").val() });
-        });
-        query.parameters.push(constraints);
-    });
-
-    alert(JSON.stringify(query));
-    return;
-    $.ajax({
-        type: 'POST',
-        url: api_addr+"/api/jobs/compose",
-        data: { "access_token"  : session_token, "query" : query },
-        success: function(data){
-            alert(data);
-        },
-        error: function(request, status, err){
-            alert(err);
-        }
-    });
-}
 
 function loadQTable(widget, batch){
     $.ajax({
@@ -115,3 +85,57 @@ function registerModel(){
     var widget = $(this).closest("widget.qtable");
     transition($("section#compose-model"));
 }
+
+function loadParameters(){
+    var widget = $(this).closest("widget.qtable");
+    widget.find("div.parameter").remove();
+
+    $.ajax({
+        type: 'GET',
+        url: api_addr+"/api/jobs/13/table", // replace me with the real back-end hook
+        data: { "access_token"  : session_token },
+        success: function(data){
+            var query = data.result.query;
+
+            for(var i = 0; i < query.parameters.length; i++){
+                var param = $("<div class='row parameter'></div>");
+                param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ query.parameters[i][0].value +":</div>");
+                param.insertBefore(widget.find("div.table div.submit").parent());
+            }
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function submitQTable(){
+    var widget = $(this).closest("widget.qtable");
+    var query = { model : widget.find("input.model").val(),
+                  container : widget.find("select.container").val(),
+                  parameters : [ ]
+                };
+    widget.find("div.table div.parameter").each(function(i){
+        query.parameters.push({ name  : $(this).find("div.label").text(),
+                                value : $(this).find("div.label > input").val() });
+    });
+
+    loadExplore();
+    return;
+    alert(JSON.stringify(query));
+    $.ajax({
+        type: 'POST',
+        url: api_addr+"/api/search", // implement me
+        data: { "access_token"  : session_token, "query" : query },
+        success: function(data){
+            alert(data);
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+$(document).ready(function(){
+    $(document).on("change", "widget.qtable select.container", loadParameters);
+});
