@@ -61,4 +61,5 @@ function downloadBatch(){
 
 $(document).ready(function(){
     $(document).on("click", "section#explore div.log", downloadLog);
+    $(document).on("click", "section#view-queries div.name", downloadBatch);
 });

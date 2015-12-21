@@ -68,5 +68,4 @@ function deleteQuery(){
 
 $(document).ready(function(){
     $(document).on("click", "section#view-queries div.delete", deleteQuery);
-    $(document).on("click", "section#view-queries div.name", downloadBatch);
 });
