@@ -130,18 +130,12 @@ class wdb:
         '''
         fetches output models corresponding to the models and properties found by their respective filters
         '''
-        tmp = self.models.query_fields_only(tags,"_id")
-        in_model_ids = []
-        for el in tmp:
-            in_model_ids.append(el['_id'])
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
         filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
         for key in params:
             filter["params."+key] = params[key]
 
-        tmp = self.properties.query_fields_only(filter,'output_model_id')['output_model_id']
-        out_model_ids = []
-        for el in tmp:
-            out_model_ids.append(el['_id'])
+        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
 
         tmp = self.models.query({'_id': {'$in': out_model_ids}})
         results = []
@@ -217,7 +211,16 @@ class wdb:
             '''
             if not isinstance(fields, list):
                 fields = [fields]
-            return self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
+            tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
+            res = {}
+            for field in fields:
+                res[field] = []
+                for o in tmp:
+                    tmp0 = o
+                    for f in field.split('.'):
+                        tmp0 = tmp0[f]
+                    res[field].append(tmp0)
+            return res
 
         def query_id(self,ID):
             '''
@@ -329,6 +332,7 @@ class wdb:
             print('timed out: %d'%(self.count({"status":"timed out"})))
             print('resolved: %d'%(self.count({"status":"resolved"})))
             print('errored: %d'%(self.count({"status":"errored"})))
+            print('not found: %d'%(self.count({"status":"not found"})))
 
         def refresh(self):
             '''

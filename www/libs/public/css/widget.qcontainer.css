@@ -1,0 +1,18 @@
+section#compose-container {
+    border: 0;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    padding-left: 10px;
+    padding-top: 30px;
+    padding-bottom: 20px;
+}
+widget.qcontainer div.label > input[type=text] {
+    margin-top: -2px;
+    margin-left: 30px;
+    float: right;
+    width: 145px;
+}
+widget.qcontainer div.submit {
+    margin-top: 30px;
+}
+

@@ -22,7 +22,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    collection.findOneAndDelete({owner:String(req.user._id)}, {projection: {ids: 1}}, function (err, result) {
+    collection.findOneAndDelete({owner:String(req.user._id)}, {sort: {timestamp: 1}, projection: {ids: 1}}, function (err, result) {
         if (!err) {
             if(result.value){
                 for(var i=0;i<result.value.ids.length;i++){

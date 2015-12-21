@@ -39,7 +39,7 @@ def submit_job(args,time_limit,time_window):
 def get_times(wdb):
     print('getting times')
     th = int(11.8*3600)
-    timeouts = wdb.properties.stats("timeout",{"status":"unresolved"})
+    timeouts = wdb.properties.stats("timeout",{"status":{"$in":["unresolved","pulled"]}})
     print(timeouts)
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
@@ -51,12 +51,8 @@ def get_times(wdb):
 def make_batches(wdb,time_window):
     print('querying properties')
     properties = wdb.properties.query_fields_only({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
-
-    ids = []
-    timeouts = []
-    for prop in properties:
-        ids.append(prop['_id'])
-        timeouts.append(prop['timeout'])
+    ids = properties['_id']
+    timeouts = properties['timeout']
 
     print('building batches')
     batches = []
@@ -97,8 +93,8 @@ def scheduler(args):
         if args.test and count > 1:
            break
 
-        if (count % 10 == 0):
-            [time_limit,time_window] = get_times(wdb)
+        [time_limit,time_window] = get_times(wdb)
+        if (time_limit > 0 and time_window > 0):
             make_batches(wdb,time_window)
         if not args.test:
             num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))

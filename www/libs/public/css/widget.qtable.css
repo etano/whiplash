@@ -15,8 +15,8 @@ widget.qtable div.row > div.label {
 }
 widget.qtable div.param {
     display: table-cell;
-    width: 227px;
-    min-width: 227px;
+    width: 242px;
+    min-width: 242px;
     padding-top: 20px;
     padding-bottom: 20px;
 }
@@ -32,6 +32,22 @@ widget.qtable div.value > input[type=text] {
     float: right;
     margin-top: 2px;
     width: 145px;
+}
+widget.qtable div.param div.remove {
+    display: table-cell;
+    position: relative; left: -18px;
+    padding-top: 5px; padding-left: 5px;
+    vertical-align: top;
+    width: 10px;
+    color: transparent;
+}
+widget.qtable:not(.readonly) div.param > div.row:hover > div.remove {
+    cursor: pointer;
+    color: rgb(60,50,50);
+}
+widget.qtable:not(.readonly) div.param > div.row:first-of-type:hover > div.remove {
+    cursor: pointer;
+    color: red;
 }
 widget.qtable div.label > input[type=text] {
     margin-top: -2px;
@@ -71,8 +87,8 @@ widget.qtable div.parameters {
 }
 
 
-widget.qtable.readonly div.load, 
 widget.qtable.readonly div.add-model,
+widget.qtable.readonly div.add-container,
 widget.qtable.readonly div.add-param,
 widget.qtable.readonly div.add-constraint,
 widget.qtable.readonly div.submit
@@ -82,4 +98,10 @@ widget.qtable.readonly div.submit
 
 widget.qtable.readonly input[type=text] {
     border: 1px solid #EFEFEF;
+}
+
+widget.qtable div.duplicate {
+    position: absolute;
+    right: 10px;
+    top: 10px;
 }
