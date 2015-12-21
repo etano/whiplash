@@ -332,6 +332,7 @@ class wdb:
             print('timed out: %d'%(self.count({"status":"timed out"})))
             print('resolved: %d'%(self.count({"status":"resolved"})))
             print('errored: %d'%(self.count({"status":"errored"})))
+            print('not found: %d'%(self.count({"status":"not found"})))
 
         def refresh(self):
             '''

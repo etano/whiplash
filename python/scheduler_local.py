@@ -93,6 +93,10 @@ def resolve_object(pid,obj,models,executables,work_dir):
         prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         prop['status'] = "errored"
         result = {}
+    except FileNotFoundError as e:
+        prop['log'] = e
+        prop['status'] = "not found"
+        result = {}        
 
     t1 = time.time()
 
