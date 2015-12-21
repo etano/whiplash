@@ -211,16 +211,16 @@ class wdb:
             '''
             if not isinstance(fields, list):
                 fields = [fields]
-            res = {}
             tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
-            for o in tmp:
-                for field in o:
-                    try:
-                        res[field].append(o[field])
-                    except:
-                        res[field] = [o[field]]
+            res = {}
+            for field in fields:
+                res[field] = []
+                for o in tmp:
+                    tmp0 = o
+                    for f in field.split('.'):
+                        tmp0 = tmp0[f]
+                    res[field].append(tmp0)
             return res
-
 
         def query_id(self,ID):
             '''
