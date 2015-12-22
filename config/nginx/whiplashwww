@@ -7,12 +7,12 @@
 #
 
 # set search paths for pure Lua external libraries (';;' is the default path):
-lua_package_path '/etc/nginx/lua/?.lua;;';
+#lua_package_path '/etc/nginx/lua/?.lua;;';
  
 # NodeJS instances
-upstream whiplashapi {
+upstream whiplashwww {
   least_conn;
-  server 127.0.0.1:1337;
+  server 127.0.0.1:880;
 }
 
 server {
@@ -41,7 +41,7 @@ server {
   # Split off traffic to Node.js backends, and make sure that websockets
   # are managed correctly.
   location / {
-    proxy_pass http://whiplashapi;
+    proxy_pass http://whiplashwww;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -49,7 +49,7 @@ server {
     proxy_cache_bypass $http_upgrade;
     proxy_read_timeout 3600s;
  
-    rewrite_by_lua_file inflate_body.lua;
+    #rewrite_by_lua_file inflate_body.lua;
   }
  
   # Send everything else to a local webroot.
