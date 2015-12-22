@@ -8,6 +8,6 @@ ssh -t whiplash@monch.cscs.ch "ssh monchc300 'source /etc/profile && cd whiplash
 /usr/bin/docker-compose -f www.yml rm -f
 /usr/bin/docker-compose -f www.yml build
 /usr/bin/docker-compose -f www.yml up -d --force-recreate
-cp config/nginx/whiplashwww /etc/nginx/sites-available/
-cp config/nginx/whiplashapi /etc/nginx/sites-available/
+cp -f config/nginx/whiplashwww /etc/nginx/sites-available/
+cp -f config/nginx/whiplashapi /etc/nginx/sites-available/
 service nginx restart
