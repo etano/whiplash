@@ -10,6 +10,7 @@ var Executable = new Schema({
     version: { type: String, required: true },
     build: { type: String, required: true },
     path: { type: String, required: true },
+    params: { type: Object, required: true },
     timestamp: { type: Date, default: Date.now, required: true }
 });
 
