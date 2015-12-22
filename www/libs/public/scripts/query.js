@@ -1,37 +1,76 @@
-var readonly = false;
-var last_batch;
+var executables;
+
+function fetchQParams(){
+    if(executables) return;
+    $("widget.qtable select").attr("disabled", "true");
+    $.ajax({
+        type: 'GET',
+        url: api_addr+"/api/executables/info",
+        data: { "access_token"  : session_token },
+        success: function(data){
+            executables = data.result;
+            for(var i = 0; i < executables.count; i++)
+                $("widget.qtable select").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
+            $("widget.qtable select").removeAttr("disabled");
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function loadQParams(){
+    var widget = $(this).closest("widget.qtable");
+    var executable = $(this).val();
+    var parameters = $.grep(executables, function(e){ return e.name == executable; })[0].params;
+
+    widget.find("div.parameter").remove();
+    for(var i = 0; i < parameters.length; i++){
+        var param = $("<div class='row parameter'></div>");
+        param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ parameters[i] +":</div>");
+        param.insertBefore(widget.find("div.table div.submit").parent());
+    }
+}
+
+function submitQTable(){
+    var widget = $(this).closest("widget.qtable");
+    var query = { model : widget.find("input.model").val(),
+                  container : widget.find("select.container").val(),
+                  parameters : [ ]
+                };
+    widget.find("div.table div.parameter").each(function(i){
+        query.parameters.push({ name  : $(this).find("div.label").text(),
+                                value : $(this).find("div.label > input").val() });
+    });
+
+    loadExplore();
+    alert(JSON.stringify(query));
+    return;
+
+    $.ajax({
+        type: 'POST',
+        url: api_addr+"/api/search", // implement me
+        data: { "access_token"  : session_token, "query" : query },
+        success: function(data){
+            alert(data);
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function initQTable(widget){
+    fetchQParams();
+    roundCentering();
+}
 
 function composeQuery(){
-    readonly = false;
     transition($("section#compose-query"));
     indicateMenu("compose-query");
-    $("div.duplicate").css({display: "none"});
-}
-
-function loadQuery(batch_id, r){
-    last_batch = batch_id; readonly = r;
-    transition($("section#edit-query"));
-    loadQTable($("section#edit-query widget.qtable"), batch_id);
-    $("div.duplicate").css({display: "block"});
-}
-
-function duplicateQuery(batch_id){
-    readonly = false;
-    transition($("section#compose-query"));
-    loadQTable($("section#compose-query widget.qtable"), batch_id);
-    indicateMenu("compose-query");
-    $("div.duplicate").css({display: "none"});
 }
 
 $(document).ready(function(){
-    $(document).on("click", "widget.qtable div.duplicate", copyQuery);
-    $(document).on("click", "widget.qtable div.add-param", addParam);
-    $(document).on("click", "widget.qtable div.param > div:first-child div.remove", removeParam);
-    $(document).on("click", "widget.qtable div.add-constraint", addConstraint);
-    $(document).on("click", "widget.qtable div.param > div:not(:first-child) div.remove", removeConstraint);
-    $(document).on("click", "widget.qtable div.add-model", registerModel);
-    $(document).on("click", "widget.qtable div.add-container", registerContainer);
+    $(document).on("change", "widget.qtable select.container", loadQParams);
     $(document).on("click", "widget.qtable div.submit", submitQTable);
-    $(document).on("click", "section#compose-model div.submit", composeQuery); // should go back instead
-    $(document).on("click", "section#compose-container div.submit", composeQuery); // should go back instead
 });

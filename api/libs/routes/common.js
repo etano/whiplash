@@ -8,6 +8,10 @@ function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').dig
 
 module.exports = {
 
+    //
+    // Permissions
+    //
+
     form_filter: function(collection,filter,user_id,cb) {
         // Regularize ids
         if ('_id' in filter) {
@@ -23,6 +27,9 @@ module.exports = {
         }
 
         // Set permissions
+        //
+        // scheduler is god
+        // whiplash user is open to everyone
         if (!('collaboration' in filter)) {
             db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
                 db.get().collection('users').find({"_id":new ObjectID(user_id)}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
@@ -34,12 +41,12 @@ module.exports = {
                                     ids.push(objs[i]['_id']);
                                 }
                                 if (ids.length > 0) {
-                                    filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
+                                    filter['$or'] = {'owner': {'$in': [user_id,'whiplash']}, 'collaboration': {'$in': ids}};
                                 } else {
-                                    filter.owner = user_id;
+                                    filter.owner = {'$in': [user_id,'whiplash']};
                                 }
                             } else {
-                                filter.owner = user_id;
+                                filter.owner = {'$in': [user_id,'whiplash']};
                             }
                         }
                     }
@@ -70,17 +77,17 @@ module.exports = {
     // Validate
     //
 
-    validate: function(ObjType,req,cb) {
-        for(var i=0; i<req.body.length; i++) {
-            req.body[i].owner = String(req.user._id);
-            var obj = new ObjType(req.body[i]);
+    validate: function(ObjType, objs, user_id, cb) {
+        for(var i=0; i<objs.length; i++) {
+            objs[i].owner = user_id;
+            var obj = new ObjType(objs[i]);
             var err = obj.validateSync();
             if (!err) {
                 obj = obj.toObject();
-                delete req.body[i]['_id'];
+                delete objs[i]['_id'];
                 for(var field in obj) {
-                    if (!req.body[i].hasOwnProperty(field) && field != '_id'){
-                        req.body[i][field] = obj[field];
+                    if (!objs[i].hasOwnProperty(field) && field !== '_id'){
+                        objs[i][field] = obj[field];
                     }
                 }
             } else {
@@ -91,79 +98,74 @@ module.exports = {
     },
 
     //
+    // Return
+    //
+
+    return: function(res,err,obj) {
+        if (!err) {
+            return res.json({status: 'OK', result: obj});
+        } else {
+            return res.json({status: res.statusCode, error: JSON.stringify(err)});
+        }
+    },
+
+    //
     // Query
     //
 
-    query: function(collection,req,res) {
-        this.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    query: function(collection, filter, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).toArray(function (err, objs) {
                 if(!objs) {
                     res.statusCode = 404;
-                    return res.json({ error: 'Not found' });
-                }
-                if (!err) {
+                    cb(res,"Not found",0);
+                } else if (!err) {
                     log.info("Found %d objects in %s",objs.length,collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: objs
-                    });
+                    cb(res,0,objs);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
     },
 
-    query_one: function(collection,req,res) {
-        this.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    query_one: function(collection, filter, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).limit(1).toArray(function (err, obj) {
                 if(!obj) {
                     res.statusCode = 404;
-                    return res.json({ error: 'Not found' });
-                }
-                if (!err) {
+                    cb(res,"Not found",0);
+                } else if (!err) {
                     log.info("Query single object in %s",collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: obj[0]
-                    });
+                    cb(res,0,obj[0]);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
     },
 
-    query_id: function(collection,req,res) {
-        req.body = {_id: new ObjectID(req.params.id)};
-        return this.query_one(collection,req,res);
-    },
-
-    query_count: function(collection,req,res) {
-        this.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    query_count: function(collection, filter, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.info("Counting %d objects in %s",count,collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: count
-                    });
+                    cb(res,0,count);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
     },
 
-    query_fields_only: function(collection,req,res) {
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            var fields = req.body.fields;
+    query_fields_only: function(collection, filter, fields, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             var proj = {};
             for(var i=0; i<fields.length; i++){
                 proj[fields[i]] = 1;
@@ -171,18 +173,14 @@ module.exports = {
             collection.find(filter).project(proj).toArray(function (err, objs) {
                 if(!objs) {
                     res.statusCode = 404;
-                    return res.json({ error: 'Not found' });
-                }
-                if (!err) {
+                    cb(res,"Not found",0);
+                } else if (!err) {
                     log.info("Querying fields in %s",collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: objs
-                    });
+                    cb(res,0,objs);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
@@ -192,211 +190,140 @@ module.exports = {
     // Commit
     //
 
-    commit: function(ObjType,collection,req,res) {
-       this.validate(ObjType,req, function(err) {
-           if(err) {
-               if(err.name === 'ValidationError') {
-                   res.statusCode = 400;
-                   log.error('Validation error(%d): %s', res.statusCode, err.message);
-                   return res.json({ error: err.toString() });
-               } else {
-                   res.statusCode = 500;
-                   log.error('Server error(%d): %s', res.statusCode, err.message);
-                   return res.json({ error: err.toString() });
-               }
-           } else {
-               if(req.body.length === 0) {
-                   return res.json({
-                       status: 'OK',
-                       result: []
-                   });
-               } else {
-                   var batch = [];
-                   var unix_time = String(Math.round(new Date().getTime() / 1000));
-                   var commit_tag = String(req.body[0].owner) + unix_time;
-                   for(var i=0; i<req.body.length; i++) {
-                       var fields = [];
-                       if (collection.collectionName === "properties") {
-                           req.body[i]['md5'] = checksum(JSON.stringify(req.body[i].params));
-                           fields = ['input_model_id','executable_id','md5','owner','collaboration'];
-                       }
-                       else if (collection.collectionName === "executables") {
-                           fields = ['name','algorithm','version','build','owner','collaboration'];
-                       }
-                       else if (collection.collectionName === "work_batches") {
-                           fields = ['ids','owner','collaboration'];
-                       }
-                       else if (collection.collectionName === "jobs") {
-                           req.body[i]['md5'] = checksum(JSON.stringify(req.body[i].ids));
-                           fields = ['name','ids','owner','md5','collaboration'];
-                       }
-                       var filter = {};
-                       for (var j = 0; j < fields.length; j++) {
-                           if(req.body[i][fields[j]]) {
-                               filter[fields[j]] = req.body[i][fields[j]];
-                            }
-                       }
-                       req.body[i]['commit_tag'] = commit_tag;
-                       batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                       batch.push({ insertOne: { document : req.body[i] } });
-                   }
-                   collection.bulkWrite(batch,{w:1},function(err,result) {
-                       if (result.ok) {
-                           log.info("%s objects modified", String(result.modifiedCount));
-                           var tag_filter = {'commit_tag':commit_tag};
-                           var fields = ['_id'];
-                           //TODO: just use this, but for some reason isn't a function
-                           //return this.query_fields_only(collection,tag_filter,fields,res);
-                           var proj = {};
-                           for(var i=0; i<fields.length; i++){
-                               proj[fields[i]] = 1;
-                           }
-                           collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                               if(!objs) {
-                                   res.statusCode = 404;
-                                   return res.json({ error: 'Not found' });
-                               }
-                               var fields1 = [];
-                               for(var j=0; j<fields.length; j++){
-                                   fields1.push(fields[j]);
-                               }
-                               var projection = {};
-                               for(var j=0; j<fields1.length; j++){
-                                   projection[fields1[j]] = [];
-                               }
-                               for(var i=0; i<objs.length; i++) {
-                                   for(var j=0; j<fields1.length; j++){
-                                       projection[fields1[j]].push(objs[i][fields[j]]);
-                                   }
-                               }
-                               if (!err) {
-                                   log.info("Querying fields in %s",collection.collectionName);
-                                   return res.json({
-                                       status: 'OK',
-                                       result: projection['_id']
-                                   });
-                               } else {
-                                   res.statusCode = 500;
-                                   log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                   return res.json({ error: 'Server error' });
-                               }
-                           });
-                       } else {
-                           res.statusCode = 500;
-                           log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                           return res.json({ error: 'Server error' });
-                       }
-                   });
-               }
-            }
-        });
-    },
-
-    //
-    // Find and update
-    //
-
-    find_one_and_update: function(collection,req,res) {
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            collection.findOneAndUpdate(filter, req.body.update, {w:1}, function (err, result) {
-                if (!err) {
-                    log.info("Found and updated object in %s",collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: result.value
-                    });
+    commit: function(ObjType, collection, objs, user_id, res, cb) {
+        this.validate(ObjType, objs, user_id, function(err) {
+            if(err) {
+                if(err.name === 'ValidationError') {
+                    res.statusCode = 400;
+                    log.error('Validation error(%d): %s', res.statusCode, err.message);
+                    cb(res,err.message,0);
                 } else {
                     res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    log.error('Server error(%d): %s', res.statusCode, err.message);
+                    cb(res,err.message,0);
                 }
-            });
+            } else {
+                if(objs.length === 0) {
+                    cb(res,0,[]);
+                } else {
+                    var batch = [];
+                    var unix_time = String(Math.round(new Date().getTime() / 1000));
+                    var commit_tag = user_id + unix_time;
+                    for(var i=0; i<objs.length; i++) {
+                        if (collection.collectionName === "properties") {
+                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                        }
+                        objs[i]['commit_tag'] = commit_tag;
+                        batch.push({ updateOne: { filter: objs[i], update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                        batch.push({ insertOne: { document : objs[i] } });
+                    }
+                    collection.bulkWrite(batch,{w:1},function(err,result) {
+                        if (result.ok) {
+                            log.info("%s objects modified", String(result.modifiedCount));
+                            log.info("%s objects inserted", String(result.insertedCount));
+                            var tag_filter = {'commit_tag':commit_tag};
+                            var proj = {'_id':1};
+                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                if(!objs) {
+                                    res.statusCode = 404;
+                                    cb(res,"Not found",0);
+                                } else if (!err) {
+                                    var ids = [];
+                                    for(var j=0; j<objs.length; j++) {
+                                        ids.push(objs[j]['_id']);
+                                    }
+                                    log.info("Querying fields in %s",collection.collectionName);
+                                    cb(res,0,ids);
+                                } else {
+                                    res.statusCode = 500;
+                                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                    cb(res,err.message,0);
+                                }
+                            });
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                            cb(res,err.message,0);
+                        }
+                    });
+                }
+            }
         });
-    },
-
-    find_id_and_update: function(collection,req,res) {
-        req.body.filter = {"_id": new ObjectID(req.params.id)};
-        return this.find_one_and_update(collection,req,res);
     },
 
     //
     // Update
     //
 
-    update: function(collection,req,res) {
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            collection.updateMany(filter, {'$set':req.body.update}, {w:1}, function (err, result) {
+    update: function(collection, filter, update, user_id, res, cb) {
+        // FIXME: user can inadvertantly give access to someone else
+        this.form_filter(collection, filter, user_id, function(filter) {
+            collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.info("%d objects updated",result.modifiedCount);
-                    return res.json({
-                        status: 'OK',
-                        result: result.modifiedCount
-                    });
+                    cb(res,0,result.modifiedCount);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
     },
 
-    replace_many: function(collection,req,res) {
+    replace: function(ObjType, collection, objs, user_id, res, cb) {
+        // FIXME: user can inadvertantly give access to someone else
         var batch = [];
-        for(var i=0; i<req.body.length; i++) {
-            var id = new ObjectID(req.body[i]._id);
-            delete req.body[i]._id;
-            batch.push({ replaceOne: { filter: {_id: id}, replacement: req.body[i]} });
+        for(var i=0; i<objs.length; i++) {
+            var id = new ObjectID(objs[i]._id);
+            delete objs[i]._id;
+            batch.push({ replaceOne: { filter: {_id: id}, replacement: objs[i] } });
         }
-        collection.bulkWrite(batch,{w:1},function(err,result) {
+        collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
                 log.info("%s new objects replaced", String(result.modifiedCount));
-                return res.json({
-                    status: 'OK',
-                    result: result.modifiedCount
-                });
+                cb(res,0,result.modifiedCount);
             } else {
                 res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                return res.json({ error: 'Server error' });
+                cb(res,err.message,0);
             }
         });
     },
 
-    update_one: function(collection,req,res) {
-        return this.update(collection,req,res);
-    },
-
-    update_id: function(collection,req,res) {
-        req.body.filter = {"_id": new ObjectID(req.params.id)};
-        return this.update_one(collection,req,res);
+    find_one_and_update: function(collection, filter, update, user_id, res, cb) {
+        // FIXME: user can inadvertantly give access to someone else
+        this.form_filter(collection, filter, user_id, function(filter) {
+            collection.findOneAndUpdate(filter, update, {w:1}, function (err, result) {
+                if (!err) {
+                    log.info("Found and updated object in %s",collection.collectionName);
+                    cb(res,0,result.value);
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    cb(res,err.message,0);
+                }
+            });
+        });
     },
 
     //
     // Delete
     //
 
-    delete: function(collection,req,res) {
-        this.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    delete: function(collection, filter, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
                     log.info("Deleting %d objects from %s",result.deletedCount,collection.collectionName);
-                    return res.json({
-                        status: 'OK',
-                        result: result.deletedCount
-                    });
+                    cb(res,0,result.deletedCount);
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    cb(res,err.message,0);
                 }
             });
         });
-    },
-
-    delete_id: function(collection,req,res) {
-        req.body = {"_id": new ObjectID(req.params.id)};
-        this.delete(collection,req,res);
     },
 
     //

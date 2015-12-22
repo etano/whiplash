@@ -143,6 +143,18 @@ class wdb:
             results.append(result['content'])
         return results
 
+    #
+    # Submit query
+    #
+
+    def submit_query(self,model_filter,executable_filter,params):
+        '''
+        submits a query to the database
+        '''
+        status, reason, res = self.request("POST","/api/query",json.dumps({"model_filter":model_filter,"executable_filter":executable_filter,"params":params}))
+        print(status)
+        print(reason)
+        print(res)
 
     #
     # Collections
@@ -232,48 +244,22 @@ class wdb:
         # Find and update
         #
 
-        def find_one_and_update(self,fltr,update):
-            '''
-            fetches a single object in the collection which satisfies the filter and updates 
-            it as specified in the update
-            '''
-            return self.request("POST","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
-
-        def find_id_and_update(self,ID,update):
-            '''
-            fetches the object in the collection which has the id and updates it as 
-            specified in the update
-            '''
-            return self.request("POST","/api/"+self.name+"/id/"+str(ID),update)
-
-        #
-        # Update
-        #
-
         def update(self,fltr,update):
             '''
-            updates the objects in the collection which satisfy the filter as specified in 
-            the update
+            updates the objects in the collection which satisfy the filter as specified in the update
             '''
             return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
 
-        def replace_many(self,replacements):
-            '''
-            replaces objects in the collection with the replacements
-            '''
-            return self.request("PUT","/api/"+self.name+"/replacement",replacements)
 
-        def update_one(self,fltr,update):
+        def find_one_and_update(self,fltr,update):
             '''
-            updates a single object in the collection which satisfies the filter as specified
-            in the update
+            fetches a single object in the collection which satisfies the filter and updates it as specified in the update
             '''
             return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
 
-        def update_id(self,ID,update):
+        def find_id_and_update(self,ID,update):
             '''
-            updates the object in the collection which has the id as specified in the
-            update
+            fetches the object in the collection which has the id and updates it as specified in the update
             '''
             return self.request("PUT","/api/"+self.name+"/id/"+str(ID),update)
 
@@ -334,9 +320,8 @@ class wdb:
             print('errored: %d'%(self.count({"status":"errored"})))
             print('not found: %d'%(self.count({"status":"not found"})))
 
-        def refresh(self):
+        def replace(self,replacements):
             '''
-            revertes the statuses of pulled properties which never started for whatever reason
+            replaces objects in the collection with the replacements
             '''
-            # TODO: Make this do something
-            self.update({'status':"pulled",'resolve_by':{'$lt':math.ceil(time.time())}},{'status':"unresolved",'resolve_by':-1})
+            return self.request("PUT","/api/"+self.name+"/replace",replacements)

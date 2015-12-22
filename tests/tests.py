@@ -40,7 +40,7 @@ print("Query model")
 assert model_id == wdb.models.query_fields_only(tags,'_id')['_id'][0]
 
 print("Commit executable")
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test"}
+executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test", "params":{"required":["sleep_time"],"optional":[]}}
 executable_id = wdb.executables.commit(executable)[0]
 
 print("Query executable")

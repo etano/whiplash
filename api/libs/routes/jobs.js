@@ -11,7 +11,7 @@ var ObjectID = require('mongodb').ObjectID;
 var GridStore = require('mongodb').GridStore;
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType,collection,req,res);
+    common.commit(ObjType, collection, req.body, String(req.user._id), res, common.return);
 });
 
 router.post('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -66,26 +66,41 @@ router.post('/:id', passport.authenticate('bearer', { session: false }), functio
     });
 });
 
+//
+// Delete
+//
+
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection,req,res);
+    common.delete(collection, req.body, String(req.user._id), res, common.return);
 });
 
 router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete_id(collection,req,res);
+    common.delete(collection, {"_id": new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
+});
+
+//
+// Query
+//
+
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query(collection, req.body, String(req.user._id), res, common.return);
+});
+
+router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_one(collection, req.body, String(req.user._id), res, common.return);
+});
+
+router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection,req,res);
-});
-
-router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection,req,res);
+    common.query_count(collection, req.body, String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_fields_only(collection,req,res);
+    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
 });
-
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get all jobs submitted by user

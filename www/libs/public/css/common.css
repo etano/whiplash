@@ -37,7 +37,7 @@ section {
     -webkit-transform: translateX(-50%) translateY(-50%);
 }
 
-section div, div.button, input, h2, label {
+section div, div.button, input, h2, label, center {
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     font-size: 13px;

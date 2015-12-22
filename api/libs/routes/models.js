@@ -108,124 +108,82 @@ var read_by_name = function(name,cb) {
 };
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
-        collection.find(filter).toArray(function (err, objs) {
-            if(!err) {
-                if(objs.length > 0) {
-                    var items = [];
-                    var apply_content = function(i){
-                        if (i<objs.length) {
-                            read_by_name(String(objs[i]._id),function(err,data){
-                                if(!err) {
-                                    items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
-                                    apply_content(i+1);
-                                } else {
-                                    res.statusCode = 500;
-                                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                    return res.json({ error: 'Server error' });
-                                }
-                            });
+    common.query(collection, req.body, String(req.user._id), res, function(res, err, objs) {
+        if(!err) {
+            var items = [];
+            var apply_content = function(i){
+                if (i<objs.length) {
+                    read_by_name(String(objs[i]._id),function(err,data){
+                        if(!err) {
+                            items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
+                            apply_content(i+1);
                         } else {
-                            log.info("Returning %d objects",items.length);
-                            return res.json({
-                                status: 'OK',
-                                result: items
-                            });
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
                         }
-                    };
-                    apply_content(0);
-                } else {
-                    log.info("Objects with filter %s not found",JSON.stringify(filter));
-                    return res.json({
-                        status: 'OK',
-                        result: {}
                     });
+                } else {
+                    log.info("Returning %d objects",items.length);
+                    return res.json({ status: 'OK', result: items });
                 }
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+            };
+            apply_content(0);
+        } else {
+            return res.json(err);
+        }
     });
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
-        collection.find(filter).limit(1).toArray(function (err, objs) {
-            if(!err) {
-                if(objs.length > 0) {
-                    read_by_name(String(objs[0]._id),function(err,data){
-                        if(!err) {
-                            log.info("Returning 1 object");
-                            return res.json({
-                                status: 'OK',
-                                result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
-                            });
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.json({ error: 'Server error' });
-                        }
-                    });
+    common.query_one(collection, req.body, String(req.user._id), res, function(res, err, obj) {
+        if(!err) {
+            read_by_name(String(obj._id),function(err,data){
+                if(!err) {
+                    log.info("Returning 1 object");
+                    return res.json({ status: 'OK', result: concaternate({'content':JSON.parse(data),'_id':obj._id}, obj.metadata) });
                 } else {
-                    log.info("Object with filter %s not found",JSON.stringify(filter));
-                    return res.json({
-                        status: 'OK',
-                        result: {}
-                    });
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
                 }
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+            });
+        } else {
+            return res.json(err);
+        }
     });
 });
 
+
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection,req,res);
+    common.query_count(collection, req.body, String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    for(var i=0; i <req.body.fields.length; i++)
-        if(!~special.indexOf(req.body.fields[i]))
+    for(var i=0; i <req.body.fields.length; i++) {
+        if(!~special.indexOf(req.body.fields[i])) {
             req.body.fields[i] = 'metadata.' + req.body.fields[i];
-    common.query_fields_only(collection,req,res);
+        }
+    }
+    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
-        collection.find(filter).limit(1).toArray(function (err, objs) {
-            if(!err) {
-                if(objs.length > 0) {
-                    read_by_name(String(objs[0]._id),function(err,data){
-                        if(!err) {
-                            log.info("Returning 1 object");
-                            return res.json({
-                                status: 'OK',
-                                result: concaternate({'content':JSON.parse(data),'_id':objs[0]._id}, objs[0].metadata)
-                            });
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.json({ error: 'Server error' });
-                        }
-                    });
+    common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, function(res, err, obj) {
+        if(!err) {
+            read_by_name(String(obj._id),function(err,data){
+                if(!err) {
+                    log.info("Returning 1 object");
+                    return res.json({ status: 'OK', result: concaternate({'content':JSON.parse(data),'_id':obj._id}, obj.metadata) });
                 } else {
-                    log.info("Object with filter %s not found",JSON.stringify(filter));
-                    return res.json({
-                        status: 'OK',
-                        result: {}
-                    });
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
                 }
-            } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
-            }
-        });
+            });
+        } else {
+            return res.json(err);
+        }
     });
 });
 
