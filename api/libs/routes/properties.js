@@ -64,6 +64,16 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
     common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
 });
 
+router.get('/id/:id/log', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, function(res, err, obj) {
+        if (!err) {
+            return res.json({status: 'OK', result: obj["log"]});
+        } else {
+            return res.json({status: res.statusCode, error: JSON.stringify(err)});
+        }
+    });
+});
+
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_count(collection, req.body, String(req.user._id), res, common.return);
 });

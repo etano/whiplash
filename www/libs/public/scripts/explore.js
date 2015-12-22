@@ -50,12 +50,12 @@ function loadExplore(){
 
 function downloadLog(){
     var pid = $(this).parent().parent().attr("pid");
-    window.location = "/api/properties/"+pid+"/log?access_token="+session_token;
+    window.location = api_addr+"/api/properties/id/"+pid+"/log?access_token="+session_token;
 }
 
 function downloadBatch(){
     var batch_id = $(this).parent().attr("batch");
-    window.location = "/api/jobs/"+batch_id+"/download?access_token="+session_token;
+    window.location = api_addr+"/api/jobs/"+batch_id+"/download?access_token="+session_token;
 }
 
 $(document).ready(function(){
