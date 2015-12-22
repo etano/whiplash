@@ -85,7 +85,6 @@ function viewMain(){
     $("section#menu > div.hidden").removeClass("hidden");
     $("section#menu > div#login").addClass("hidden");
     $("section#menu > div#register").addClass("hidden");
-    $("section#menu > div#cscs-connect").addClass("hidden");
     composeQuery();
 }
 
@@ -105,7 +104,6 @@ $(document).ready(function(){
     $(document).on("click", "div#title, section#tagline",     function(){ transition($("section#quickstart"));   });
     $(document).on("click", "section#login div#forgot",       function(){ transition($("section#forgot"));       });
     $(document).on("click", "section#menu div#login",         function(){ transition($("section#login"));        });
-    $(document).on("click", "section#menu div#cscs-connect",  function(){ transition($("section#cscs-connect")); });
     $(document).on("click", "section#menu div#register",      function(){ transition($("section#register"));     });
     $(document).on("click", "section#menu div#view-queries",  viewQueries);
     $(document).on("click", "section#menu div#compose-query", composeQuery);
@@ -113,7 +111,6 @@ $(document).ready(function(){
 
     $(document).on("click", "section#menu div#logout", logout);
     $(document).on("click", "section#login input.submit", login);
-    $(document).on("click", "section#cscs-connect input.submit", cscsConnect);
     $(document).on("click", "section#register input.submit", register);
     $(document).on("click", "section#forgot input.submit", forgot);
 

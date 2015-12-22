@@ -62,13 +62,18 @@ widget.qtable div.label > select.container {
     width: 151px;
 }
 widget.qtable div.submit {
-    margin-top: 30px;
+    display: block !important;
+    margin-top: 15px;
+    margin-bottom: 5px;
     margin-left: 0px;
+    padding: 9px;
+    text-align: center;
 }
 widget.qtable div.save {
     margin-top: 30px;
 }
 widget.qtable div.add-param {
+    display: inline-block;
     vertical-align: top;
     margin-top: 19px;
     margin-left: 14px;
@@ -77,9 +82,9 @@ widget.qtable div.add-constraint {
     margin-right: 37px; float: right;
 }
 widget.qtable div.parameters {
-    display: inline-block;
+    display: block;
     width: max-content;
-    max-width: 100%;
+    max-width: 99%;
     max-height: 300px;
     overflow: auto;
     border-bottom: 1px dotted black;

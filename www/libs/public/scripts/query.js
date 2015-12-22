@@ -1,37 +1,63 @@
-var readonly = false;
-var last_batch;
+function loadQParams(){
+    var widget = $(this).closest("widget.qtable");
+    widget.find("div.parameter").remove();
+
+    $.ajax({
+        type: 'GET',
+        url: api_addr+"/api/jobs/13/table", // replace me with the real back-end hook
+        data: { "access_token"  : session_token },
+        success: function(data){
+            var query = data.result.query;
+
+            for(var i = 0; i < query.parameters.length; i++){
+                var param = $("<div class='row parameter'></div>");
+                param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ query.parameters[i][0].value +":</div>");
+                param.insertBefore(widget.find("div.table div.submit").parent());
+            }
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function submitQTable(){
+    var widget = $(this).closest("widget.qtable");
+    var query = { model : widget.find("input.model").val(),
+                  container : widget.find("select.container").val(),
+                  parameters : [ ]
+                };
+    widget.find("div.table div.parameter").each(function(i){
+        query.parameters.push({ name  : $(this).find("div.label").text(),
+                                value : $(this).find("div.label > input").val() });
+    });
+
+    loadExplore();
+    return;
+    alert(JSON.stringify(query));
+    $.ajax({
+        type: 'POST',
+        url: api_addr+"/api/search", // implement me
+        data: { "access_token"  : session_token, "query" : query },
+        success: function(data){
+            alert(data);
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
+
+function initQTable(widget){
+    roundCentering();
+}
 
 function composeQuery(){
-    readonly = false;
     transition($("section#compose-query"));
     indicateMenu("compose-query");
-    $("div.duplicate").css({display: "none"});
-}
-
-function loadQuery(batch_id, r){
-    last_batch = batch_id; readonly = r;
-    transition($("section#edit-query"));
-    loadQTable($("section#edit-query widget.qtable"), batch_id);
-    $("div.duplicate").css({display: "block"});
-}
-
-function duplicateQuery(batch_id){
-    readonly = false;
-    transition($("section#compose-query"));
-    loadQTable($("section#compose-query widget.qtable"), batch_id);
-    indicateMenu("compose-query");
-    $("div.duplicate").css({display: "none"});
 }
 
 $(document).ready(function(){
-    $(document).on("click", "widget.qtable div.duplicate", copyQuery);
-    $(document).on("click", "widget.qtable div.add-param", addParam);
-    $(document).on("click", "widget.qtable div.param > div:first-child div.remove", removeParam);
-    $(document).on("click", "widget.qtable div.add-constraint", addConstraint);
-    $(document).on("click", "widget.qtable div.param > div:not(:first-child) div.remove", removeConstraint);
-    $(document).on("click", "widget.qtable div.add-model", registerModel);
-    $(document).on("click", "widget.qtable div.add-container", registerContainer);
+    $(document).on("change", "widget.qtable select.container", loadQParams);
     $(document).on("click", "widget.qtable div.submit", submitQTable);
-    $(document).on("click", "section#compose-model div.submit", composeQuery); // should go back instead
-    $(document).on("click", "section#compose-container div.submit", composeQuery); // should go back instead
 });

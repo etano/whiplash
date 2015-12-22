@@ -36,36 +36,6 @@ function login(){
     });
 }
 
-function cscsConnect(){
-    var user = $("section#cscs-connect > input.login").val();
-    var pass = $("section#cscs-connect > input.passwd").val();
-
-    $.ajax({
-        type: 'POST',
-        url: api_addr+"/api/users/token", // TODO: change me for CSCS handler
-        data: { "grant_type"    : "password",
-                "username"      : user,
-                "password"      : pass,
-                "client_id"     : www_client_id,
-                "client_secret" : www_client_secret
-              },
-        success: function(data){
-            if(data.error){
-                inputFailFeedback($("section#cscs-connect"));
-            }else{
-                session_token = data.access_token;
-                refresh_token = data.refresh_token;
-                setCookie("session_token", session_token);
-                setCookie("refresh_token", refresh_token);
-                viewMain();
-            }
-        },
-        error: function(request, status, err){
-            inputFailFeedback($("section#cscs-connect"));
-        }
-    });
-}
-
 function register(){
     var user = $("section#register > input.login").val();
     var pass = $("section#register > input.passwd").val();

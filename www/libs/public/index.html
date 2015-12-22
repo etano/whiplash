@@ -8,22 +8,17 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,700,300" rel="stylesheet" type="text/css">
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/common.css" type="text/css" />
-    <link rel="stylesheet" href="/css/view_queries.css" type="text/css" />
+    <link rel="stylesheet" href="/css/submissions.css" type="text/css" />
     <link rel="stylesheet" href="/css/explore.css" type="text/css" />
     <link rel="stylesheet" href="/css/api.css" type="text/css" />
     <link rel="stylesheet" href="/css/query.css" type="text/css" />
-    <link rel="stylesheet" href="/css/widget.qmodel.css" type="text/css" />
-    <link rel="stylesheet" href="/css/widget.qcontainer.css" type="text/css" />
     <link rel="stylesheet" href="/css/widget.qtable.css" type="text/css" />
     <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
     <script src="/scripts/utils/cookie.js"></script>
     <script src="/scripts/utils/clipboard.js"></script>
     <script src="/scripts/general.js"></script>
     <script src="/scripts/login.js"></script>
-    <script src="/scripts/view_queries.js"></script>
-    <script src="/scripts/widget.qmodel.js"></script>
-    <script src="/scripts/widget.qcontainer.js"></script>
-    <script src="/scripts/widget.qtable.js"></script>
+    <script src="/scripts/submissions.js"></script>
     <script src="/scripts/query.js"></script>
     <script src="/scripts/explore.js"></script>
     <script src="/scripts/api.js"></script>
@@ -31,94 +26,22 @@
 <body>
 
 <widget class="qtable prototype" constructor="initQTable">
-    <div class='button duplicate'>Duplicate</div>
-    <div class="table">
-        <div class="row">
-            <div class="label" style="width: 227px;"><input class="model" type="text" value="">Model:</div>
-            <div class='add-model' style="padding-left: 9px;"><div class="button">Add Model</div></div>
-        </div>
+    <div class="table" style="margin: 0 auto;">
         <div class="row">
             <div class="label"><select class="container">
-                                   <option value="ethz_uevol" selected>ethz_uevol</option>
+                                   <option value="none" selected>none</option>
+                                   <option value="ethz_uevol">ethz_uevol</option>
                                    <option value="ethz_sqa">ethz_sqa</option>
                                    <option value="ethz_sa">ethz_sa</option>
                                </select>Executable:
             </div>
-            <div class='add-container' style="padding-left: 9px;"><div class="button">Add Executable</div></div>
         </div>
-    </div>
-    <div style="margin-top: 20px;">Parameters:</div>
-
-    <!-- {{{ Variable number of parameters -->
-    <div class="parameters">
-        <div class="table"><div class="row">
-
-                <div class="param">
-                    <div class="row">
-                        <div class="label" constraint="name">
-                            <select disabled>
-                                <option value='name'>Name</option>
-                            </select>
-                        </div>
-                        <div class="value">
-                            <input type="text" value="">
-                        </div>
-                        <div class="remove">×</div>
-                    </div>
-                    <div class="row">
-                        <div class="label" constraint="value">
-                            <select>
-                               <option value='value'>Value</option>
-                               <option value='min'>Min Value</option>
-                               <option value='max'>Max Value</option>
-                               <option value='step'>Step</option>
-                            </select>
-                        </div>
-                        <div class="value">
-                            <input type="text" value="">
-                        </div>
-                        <div class="remove">×</div>
-                    </div>
-                    <div class="button add-constraint">Add constraint</div>
-                </div>
-
-        </div></div>
-    </div>
-    <div class="button add-param">Add Parameter</div>
-    <!-- }}} -->
-    <div>
-        <div class="button submit">Submit Query</div>
-    </div>
-</widget>
-<widget class="qmodel prototype" constructor="initQModel">
-    <div style="padding-left: 15px;">
-        Model name:  <input class="model-name" type="text" value="">
-    </div>
-    <div class="table">
         <div class="row">
-                          <div class="label"><input type="text" value="" placeholder="Tag name"></div><div class="value"><input type="text" value="tag value"></div>
-                          <div class="remove">×</div>
+            <div class="label" style="width: 227px;"><input class="model" type="text" value="" placeholder="filter (empty)">Model:</div>
         </div>
-
-        <div class="button add-constraint">Add tag</div>
-    </div>
-    <div>
-        <input type="file" id="fileinput">
-        <div class="button submit">Commit Model</div>
-    </div>
-</widget>
-<widget class="qcontainer prototype" constructor="initQContainer">
-    <div class="table">
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Name:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Version:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Build:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Owner:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Description:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Algorithm:</div> </div>
-        <div class="row"> <div class="label"><input class="model" type="text" value="">Docker Container:</div> </div>
-    </div>
-    <div>
-        <div class="button submit">Register Container</div>
+        <div class="row">
+            <div class="button submit">Search</div>
+        </div>
     </div>
 </widget>
 
@@ -132,20 +55,14 @@
         <div id="docs" class="hidden">Docs</div>
         <div id="register">Sign up</div>
         <div id="login">Login</div>
-        <div id="view-queries" class="hidden">View Queries</div>
-        <div id="compose-query" class="hidden">New Query</div>
-        <div id="cscs-connect"><img src="/images/cscs.png">Login with CSCS account</div>
+        <div id="view-queries" class="hidden">Submissions</div>
+        <div id="compose-query" class="hidden">Browse</div>
     </section>
     <section id="register" class="content centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username">
         <input type="password" class="passwd" placeholder="Password">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Email">
         <input type="button" value="Sign up" class="submit">
-    </section>
-    <section id="cscs-connect" class="content centered transit">
-        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username on Monch">
-        <input type="password" name="user_password" class="passwd" placeholder="Password">
-        <input type="submit" name="login" value="Knock-knock" class="submit">
     </section>
     <section id="login" class="content centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Username">
@@ -224,24 +141,11 @@ scratch directory on Monch <strong>/mnt/lnec/whiplash/rte/whiplash.py</strong></
         </div>
     </section>
     <section id="explore" class="content centered transit">
-        <div class='button back'>Done</div>
-        <div class='button explore'>Explore</div>
-        <div class='button view'>View Query</div>
-        <div class='button download'>Download Results</div>
         <div id="info">
         </div>
     </section>
     <section id="compose-query" class="content centered transit">
         <widget class="qtable"></widget>
-    </section>
-    <section id="edit-query" class="content centered transit">
-        <widget class="qtable"></widget>
-    </section>
-    <section id="compose-container" class="content centered transit">
-        <widget class="qcontainer"></widget>
-    </section>
-    <section id="compose-model" class="content centered transit">
-        <widget class="qmodel"></widget>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
 </screen>
