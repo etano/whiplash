@@ -21,6 +21,19 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 // Query
 //
 
+router.get('/info', passport.authenticate('bearer', { session: false }), function(req, res) {
+    // TODO
+    return res.json({
+        status: 'OK',
+        result: [
+            { name: "none",       params: []                 }, // keep me!
+            { name: "ethz_uevol", params: ["Energy", "Seed"] },
+            { name: "ethz_sqa",   params: ["Energy"]         },
+            { name: "ethz_sa",    params: ["Satan", "Seed"]  }
+        ]
+    });
+});
+
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query(collection, req.body, String(req.user._id), res, common.return);
 });

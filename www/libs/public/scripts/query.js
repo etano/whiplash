@@ -1,18 +1,29 @@
+var executables;
+
+function fetchQParams(){
+    if(executables) return;
+    $("widget.qtable select").attr("disabled", "true");
+    $.ajax({
+        type: 'GET',
+        url: api_addr+"/api/executables/info",
+        data: { "access_token"  : session_token },
+        success: function(data){
+            executables = data.result;
+            for(var i = 0; i < executables.count; i++)
+                $("widget.qtable select").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
+            $("widget.qtable select").removeAttr("disabled");
+        },
+        error: function(request, status, err){
+            alert(err);
+        }
+    });
+}
 
 function loadQParams(){
     var widget = $(this).closest("widget.qtable");
     var executable = $(this).val();
-
-    // load me from the ajax
-    var executables = [ 
-                          { name: "none",       params: []                 }, 
-                          { name: "ethz_uevol", params: ["Energy", "Seed"] }, 
-                          { name: "ethz_sqa",   params: ["Energy"]         }, 
-                          { name: "ethz_sa",    params: ["Satan", "Seed"] }
-                      ];
-    // load me from the ajax
-
     var parameters = $.grep(executables, function(e){ return e.name == executable; })[0].params;
+
     widget.find("div.parameter").remove();
     for(var i = 0; i < parameters.length; i++){
         var param = $("<div class='row parameter'></div>");
@@ -50,6 +61,7 @@ function submitQTable(){
 }
 
 function initQTable(widget){
+    fetchQParams();
     roundCentering();
 }
 
