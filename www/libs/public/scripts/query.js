@@ -51,7 +51,6 @@ function submitQTable(){
                 $("section#explore div#info").html("No details to explore at the moment.");
             } else {
                 $("section#explore div#info").empty();
-                alert(data.result.count);
                 for(var i = 0; i < data.result.count; i++){
                     var record = "<div class='record'>" +
                                  "<div class='shortcuts'><div class='button log'>Log</div></div>" +
