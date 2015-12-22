@@ -251,7 +251,6 @@ var delete_by_filter = function(filter,res) {
 };
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-
     common.form_filter(collection,req.body,String(req.user._id), function(filter) {
         delete_by_filter(filter,res);
     });
