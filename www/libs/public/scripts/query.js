@@ -52,9 +52,8 @@ function submitQTable(){
             } else {
                 $("section#explore div#info").empty();
                 for(var i = 0; i < data.result.count; i++){
-                    var record = "<div class='record'>" +
+                    var record = "<div class='record' pid='" + data.result.runs[i].id + "'>" +
                                  "<div class='shortcuts'><div class='button log'>Log</div></div>" +
-                                 "<div class='number'>"      + data.result.runs[i].id    + "</div>" +
                                  "<div class='app'>App: "     + data.result.runs[i].app   + "</div>" +
                                  "<div class='model'>Model: " + data.result.runs[i].model + "</div>";
     

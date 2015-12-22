@@ -33,7 +33,7 @@ router.get('/search/', passport.authenticate('bearer', { session: false }), func
             for(var i = 0; i < objs.length; i++) {
                 var run = {};
 
-                run.id = i;
+                run.id = objs[i]._id;
                 run.app = objs[i].executable_id;
                 run.model = objs[i].input_model_id;
 
