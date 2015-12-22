@@ -49,14 +49,13 @@ function loadExplore(){
 }
 
 function downloadLog(){
-    var batch_id = $("section#explore div#info").attr("batch");
-    var log_id = $(this).parent().parent().find("div.number").text();
-    window.location = "/api/jobs/"+batch_id+"/log?id="+log_id+"&access_token="+session_token;
+    var pid = $(this).parent().parent().attr("pid");
+    window.location = api_addr+"/api/properties/id/"+pid+"/log?access_token="+session_token;
 }
 
 function downloadBatch(){
     var batch_id = $(this).parent().attr("batch");
-    window.location = "/api/jobs/"+batch_id+"/download?access_token="+session_token;
+    window.location = api_addr+"/api/jobs/"+batch_id+"/download?access_token="+session_token;
 }
 
 $(document).ready(function(){
