@@ -25,6 +25,37 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     common.query(collection, req.body, String(req.user._id), res, common.return);
 });
 
+router.get('/search/', passport.authenticate('bearer', { session: false }), function(req, res) {
+
+    common.form_filter(collection,{'status':"resolved"},String(req.user._id), function(filter){
+        collection.find(filter).toArray(function (err, objs) {
+            var runs = [];
+            for(var i = 0; i < objs.length; i++) {
+                var run = {};
+
+                run.id = i;
+                run.app = objs[i].executable_id;
+                run.model = objs[i].input_model_id;
+
+                var params = [];
+                for(var key in objs[i].params)
+                    params.push({'name' : key, 'value' : objs[i].params[key]});
+                run.params = params;
+
+                runs.push(run);
+            }
+
+            return res.json({
+                status: 'OK',
+                result: {
+                    count: runs.length,
+                    runs: runs
+                }
+            });
+        });
+    });
+});
+
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_one(collection, req.body, String(req.user._id), res, common.return);
 });
