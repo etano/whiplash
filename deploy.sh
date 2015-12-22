@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # monchc300
-ssh -t whiplash@monch.cscs.ch "ssh monchc300 'cd whiplash && source ./scripts/init_monch.sh && git pull && sh ./scripts/restart_all_monch.sh'"
+ssh -t whiplash@monch.cscs.ch "ssh monchc300 'source ~/whiplash/scripts/init_monch.sh && cd ~/whiplash/ && /apps/monch/git/1.8.4.1/bin/git pull && sh ~/whiplash/scripts/restart_all_monch.sh'"
 
 # whiplash.ethz.ch
 /usr/bin/docker-compose -f www.yml stop
