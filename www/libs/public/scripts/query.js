@@ -1,24 +1,24 @@
+
 function loadQParams(){
     var widget = $(this).closest("widget.qtable");
+    var executable = $(this).val();
+
+    // load me from the ajax
+    var executables = [ 
+                          { name: "none",       params: []                 }, 
+                          { name: "ethz_uevol", params: ["Energy", "Seed"] }, 
+                          { name: "ethz_sqa",   params: ["Energy"]         }, 
+                          { name: "ethz_sa",    params: ["Satan", "Seed"] }
+                      ];
+    // load me from the ajax
+
+    var parameters = $.grep(executables, function(e){ return e.name == executable; })[0].params;
     widget.find("div.parameter").remove();
-
-    $.ajax({
-        type: 'GET',
-        url: api_addr+"/api/jobs/13/table", // replace me with the real back-end hook
-        data: { "access_token"  : session_token },
-        success: function(data){
-            var query = data.result.query;
-
-            for(var i = 0; i < query.parameters.length; i++){
-                var param = $("<div class='row parameter'></div>");
-                param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ query.parameters[i][0].value +":</div>");
-                param.insertBefore(widget.find("div.table div.submit").parent());
-            }
-        },
-        error: function(request, status, err){
-            alert(err);
-        }
-    });
+    for(var i = 0; i < parameters.length; i++){
+        var param = $("<div class='row parameter'></div>");
+        param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ parameters[i] +":</div>");
+        param.insertBefore(widget.find("div.table div.submit").parent());
+    }
 }
 
 function submitQTable(){
@@ -33,8 +33,9 @@ function submitQTable(){
     });
 
     loadExplore();
-    return;
     alert(JSON.stringify(query));
+    return;
+
     $.ajax({
         type: 'POST',
         url: api_addr+"/api/search", // implement me
