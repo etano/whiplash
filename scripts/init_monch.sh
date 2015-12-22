@@ -15,6 +15,8 @@ export PYTHONPATH=/users/whiplash/python_packages:/users/whiplash/whiplash/pytho
 export NODE_HOME=/users/whiplash/node-v4.2.2-linux-x64
 export PATH=$NODE_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$NODE_HOME/lib:$LD_LIBRARY_PATH
+export NWORKERS=8
+export LOGPATH=/mnt/lnec/whiplash/logs/node/all.log
 
 # Mongo
 export MONGO_HOME=/users/whiplash/mongodb-linux-x86_64-3.0.7
