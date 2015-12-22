@@ -9,7 +9,7 @@ function fetchQParams(){
         data: { "access_token"  : session_token },
         success: function(data){
             executables = data.result;
-            for(var i = 0; i < executables.count; i++)
+            for(var i = 0; i < executables.length; i++)
                 $("widget.qtable select").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
             $("widget.qtable select").removeAttr("disabled");
         },
