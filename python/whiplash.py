@@ -135,12 +135,16 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
+        all_ids = self.properties.query_fields_only(filter,["input_model_id","output_model_id","_id"])
+        out_model_ids = all_ids["output_model_id"]
+        prop_ids = all_ids["_id"]
 
-        tmp = self.models.query({'_id': {'$in': out_model_ids}})
-        results = []
-        for result in tmp:
-            results.append(result['content'])
+        out_models = self.models.query({'_id': {'$in': out_model_ids}})
+        results = [{} for i in range(len(out_models))]
+        for out_model in out_models:
+            for i in range(len(prop_ids)):
+                if out_model["property_id"] == prop_ids[i]:
+                    results[i] = out_model['content']
         return results
 
     #
