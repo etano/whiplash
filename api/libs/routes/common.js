@@ -385,7 +385,7 @@ module.exports = {
                             } else {
                                 return res.json({
                                     status: 'OK',
-                                    result: {'count':0}
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
                                 });
                             }
                         } else {
