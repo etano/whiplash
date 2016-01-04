@@ -62,7 +62,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection, req.body.filter, req.body.update, String(req.user._id), res, common.return);
 });
 
-router.put('/replace', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/replace/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.replace(ObjType, collection, req.body, String(req.user._id), res, common.return);
 });
 

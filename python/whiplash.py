@@ -328,4 +328,10 @@ class wdb:
             '''
             replaces objects in the collection with the replacements
             '''
-            return self.request("PUT","/api/"+self.name+"/replace",replacements)
+            return self.request("PUT","/api/properties/replace/",replacements)
+
+        def refresh(self):
+            '''
+            relaunches the properties which are timed out with double the timeout
+            '''
+            print(self.request("PUT","/api/properties/refresh/",{}))
