@@ -123,8 +123,67 @@ class wdb:
                 self.set_token(res["access_token"])
 
     #
+    # Check status
+    #
+
+    def check_status(self,tags={},params={}):
+        '''
+        checks how many properties are {unresolved, pulled, timed out, resolved, errored}
+        '''
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        filter = {"input_model_id":{"$in":in_model_ids}}
+        for key in params:
+            filter["params."+key] = params[key]
+        filter["status"] = "unresolved"
+        print('unresolved: %d'%(self.properties.count(filter)))
+        filter["status"] = "pulled"
+        print('pulled: %d'%(self.properties.count(filter)))
+        filter["status"] = "running"
+        print('running: %d'%(self.properties.count(filter)))
+        filter["status"] = "timed out"
+        print('timed out: %d'%(self.properties.count(filter)))
+        filter["status"] = "resolved"
+        print('resolved: %d'%(self.properties.count(filter)))
+        filter["status"] = "errored"
+        print('errored: %d'%(self.properties.count(filter)))
+        filter["status"] = "not found"
+        print('not found: %d'%(self.properties.count(filter)))
+
+    #
     # Get results
     #
+
+    def get_inputs_outputs(self,tags,params):
+        '''
+        fetches input and output models corresponding to the models and properties found by their respective filters
+        '''
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
+        for key in params:
+            filter["params."+key] = params[key]
+
+        all_ids = self.properties.query_fields_only(filter,["input_model_id","output_model_id","_id"])
+        in_model_ids = all_ids["input_model_id"]
+        out_model_ids = all_ids["output_model_id"]
+
+        in_models = self.models.query({'_id': {'$in': in_model_ids}})
+        out_models = self.models.query({'_id': {'$in': out_model_ids}})
+        inputs = []
+        outputs = []
+        for j in range(len(in_model_ids)):
+            in_model = {}
+            for i in range(len(in_models)):
+                if in_models[i]['_id'] == in_model_ids[j]:
+                    in_model = in_models[i]
+                    break
+            inputs.append(in_model)
+            out_model = {}
+            for i in range(len(out_models)):
+                if out_models[i]['_id'] == out_model_ids[j]:
+                    out_model = out_models[i]
+                    break
+            outputs.append(out_model)
+        return inputs,outputs
 
     def get_results(self,tags,params):
         '''
@@ -136,15 +195,22 @@ class wdb:
             filter["params."+key] = params[key]
 
         all_ids = self.properties.query_fields_only(filter,["input_model_id","output_model_id","_id"])
+        in_model_ids = all_ids["input_model_id"]
         out_model_ids = all_ids["output_model_id"]
         prop_ids = all_ids["_id"]
 
         out_models = self.models.query({'_id': {'$in': out_model_ids}})
-        results = [{} for i in range(len(out_models))]
-        for out_model in out_models:
+        results = [{} for i in range(len(out_model_ids))]
+        for out_model_id in out_model_ids:
+            out_model = {}
+            for i in range(len(out_models)):
+                if out_models[i]['_id'] == out_model_id:
+                    out_model = out_models[i]
+                    break
             for i in range(len(prop_ids)):
                 if out_model["property_id"] == prop_ids[i]:
                     results[i] = out_model['content']
+                    break
         return results
 
     #
@@ -311,18 +377,6 @@ class wdb:
             computes the sum of timeouts of all resolved properties
             '''
             return self.stats("walltime",{"status":"resolved"})['sum']
-
-        def check_status(self):
-            '''
-            checks how many properties are {unresolved, pulled, timed out, resolved, errored}
-            '''
-            print('unresolved: %d'%(self.count({"status":"unresolved"})))
-            print('pulled: %d'%(self.count({"status":"pulled"})))
-            print('running: %d'%(self.count({"status":"running"})))
-            print('timed out: %d'%(self.count({"status":"timed out"})))
-            print('resolved: %d'%(self.count({"status":"resolved"})))
-            print('errored: %d'%(self.count({"status":"errored"})))
-            print('not found: %d'%(self.count({"status":"not found"})))
 
         def replace(self,replacements):
             '''
