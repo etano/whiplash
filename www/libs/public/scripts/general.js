@@ -60,7 +60,6 @@ function makeWidgets(view){
 function transition(target){
     if(target.position().left > 0) return;
     indicateMenu(target.attr("id"));
-    makeWidgets(target);
     $(".transit").css("left", "-50%");
 
     target.addClass('notransition');

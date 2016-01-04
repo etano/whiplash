@@ -70,6 +70,24 @@ module.exports = {
                     cb(filter);
                 });
             });
+        } else {
+            // Prepend metadata for models
+            if (collection.collectionName === "fs.files") {
+                var new_filter = {};
+                for(var key in filter) {
+                    if(key !== '_id') {
+                        if(filter.hasOwnProperty(key)) {
+                            new_filter["metadata."+key] = filter[key];
+                        }
+                    } else {
+                        new_filter['_id'] = filter[key];
+                    }
+                }
+                filter = new_filter;
+            }
+
+            // Callback with filter
+            cb(filter);
         }
     },
 

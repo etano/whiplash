@@ -1,17 +1,18 @@
 var executables;
 
-function fetchQParams(){
+function setQExecutables(){
     if(executables) return;
-    $("widget.qtable select").attr("disabled", "true");
+    $("section#compose-query select#container").attr("disabled", "true");
     $.ajax({
         type: 'GET',
-        url: api_addr+"/api/executables/info",
+        url: api_addr+"/api/executables/",
         data: { "access_token"  : session_token },
         success: function(data){
             executables = data.result;
             for(var i = 0; i < executables.length; i++)
-                $("widget.qtable select").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
-            $("widget.qtable select").removeAttr("disabled");
+                $("section#compose-query select#container").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
+            $("section#compose-query select#container").removeAttr("disabled");
+            loadQParams();
         },
         error: function(request, status, err){
             alert(err);
@@ -20,67 +21,92 @@ function fetchQParams(){
 }
 
 function loadQParams(){
-    var widget = $(this).closest("widget.qtable");
-    var executable = $(this).val();
-    var parameters = $.grep(executables, function(e){ return e.name == executable; })[0].params;
+    var executable = $("section#compose-query select#container").val();
+    var executable_json = $.grep(executables, function(e){ return e.name == executable; })[0];
+    var parameters = executable_json.params.optional.concat(executable_json.params.required);
 
-    widget.find("div.parameter").remove();
+    var param_json = {};
     for(var i = 0; i < parameters.length; i++){
-        var param = $("<div class='row parameter'></div>");
-        param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ parameters[i] +":</div>");
-        param.insertBefore(widget.find("div.table div.submit").parent());
+        param_json[parameters[i]] = "";
+    }
+    $("section#compose-query textarea#parameters").val(JSON.stringify(param_json));
+}
+
+function getQFilters(cb){
+    var widget = $("section#compose-query");
+    var executable = widget.find("select#container");
+    var model = widget.find("textarea#model");
+    var params = widget.find("textarea#parameters");
+    var filters = {'executable':JSON.stringify({"name": executable.val()}), 'model': model.val(), 'params': params.val()};
+
+    // Check filters are proper JSON
+    var bad_filters = false;
+    for (var key in filters) {
+        try {
+            filters[key] = JSON.parse(filters[key]);
+            eval(key+".css('color','black')");
+        } catch(e) {
+            eval(key+".css('color','red')");
+            bad_filters = true;
+        }
+    }
+
+    if (bad_filters) {
+        widget.find("span#n_queries").text(0);
+        widget.find("span#n_results").text(0);
+        widget.find("div#view_download").addClass("hidden");
+    } else {
+        cb(filters);
     }
 }
 
-function submitQTable(){
-    var widget = $(this).closest("widget.qtable");
-    var query = { model : widget.find("input.model").val(), container : widget.find("select.container").val(), parameters : [ ] };
-    widget.find("div.table div.parameter").each(function(i){
-        query.parameters.push({ name  : $(this).find("div.label").text(), value : $(this).find("div.label > input").val() });
-    });
-
-    //alert(JSON.stringify(query));
-    transition($("section#explore"));
-
-    $.ajax({
-        type: 'GET',
-        url: api_addr+"/api/properties/search",
-        data: { "access_token"  : session_token, "query" : query },
-        success: function(data){
-            if(data.result.count == 0) {
-                $("section#explore div#info").html("No details to explore at the moment.");
-            } else {
-                $("section#explore div#info").empty();
-                for(var i = 0; i < data.result.count; i++){
-                    var record = "<div class='record' pid='" + data.result.runs[i].id + "'>" +
-                                 "<div class='shortcuts'><div class='button log'>Log</div></div>" +
-                                 "<div class='app'>App: "     + data.result.runs[i].app   + "</div>" +
-                                 "<div class='model'>Model: " + data.result.runs[i].model + "</div>";
-    
-                    for(var p = 0; p < data.result.runs[i].params.length; p++) record += "<div class='param'>" + data.result.runs[i].params[p].name + ": " +
-                                                                                                                 data.result.runs[i].params[p].value + "</div>";
-                    record += "</div>";
-                    $("section#explore div#info").append(record);
-                }
+function updateQCount(){
+    var widget = $("section#compose-query");
+    getQFilters(function(filters) {
+        // Count matching properties
+        $.ajax({
+            type: 'GET',
+            url: api_addr+"/api/queries/stats",
+            data: { "access_token"  : session_token,
+                    "filters" : JSON.stringify(filters)
+            },
+            success: function(data){
+                var stats = data.result;
+                widget.find("span#n_queries").text(stats.total);
+                widget.find("span#n_results").text(stats.resolved);
+            },
+            error: function(request, status, err){
+                alert(err);
             }
-        },
-        error: function(request, status, err){
-            alert(err);
-        }
+        });
     });
 }
 
-function initQTable(widget){
-    fetchQParams();
-    roundCentering();
+function viewQ(){
+    getQFilters(function(filters) {
+        var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
+        window.location = api_addr+"/api/queries?"+$.param(data);
+    });
+}
+
+function downloadQResults(){
+    getQFilters(function(filters) {
+        var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
+        window.location = api_addr+"/api/queries/results?"+$.param(data);
+    });
 }
 
 function composeQuery(){
     transition($("section#compose-query"));
     indicateMenu("compose-query");
+    setQExecutables();
+    roundCentering();
 }
 
 $(document).ready(function(){
-    $(document).on("change", "widget.qtable select.container", loadQParams);
-    $(document).on("click", "widget.qtable div.submit", submitQTable);
+    $(document).on("change", "section#compose-query select#container", loadQParams);
+    $(document).on("change", "section#compose-query select#container", updateQCount);
+    $(document).on("change", "section#compose-query textarea", updateQCount);
+    $(document).on("click", "section#compose-query div#queries_results div#queries", viewQ);
+    $(document).on("click", "section#compose-query div#queries_results div#results", downloadQResults);
 });
