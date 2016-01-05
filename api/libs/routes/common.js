@@ -6,6 +6,27 @@ var db = require(libs + 'db/mongo');
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
+function add_metadata(filter)
+{
+    var special = ['$or','$and','$not','$nor'];
+    var new_filter = {};
+    for(var key in filter) {
+        if(key === '_id')
+            new_filter['_id'] = filter[key];
+        else if(~special.indexOf(key)){
+            new_filter[key] = []
+            for(var i = 0; i < filter[key].length; i++)
+                new_filter[key].push(add_metadata(filter[key][i]));
+        }
+        else{
+            if(filter.hasOwnProperty(key)) {
+                new_filter["metadata."+key] = filter[key];
+            }
+        }
+    }
+    return new_filter;
+}
+
 module.exports = {
 
     //
@@ -53,17 +74,7 @@ module.exports = {
 
                     // Prepend metadata for models
                     if (collection.collectionName === "fs.files") {
-                        var new_filter = {};
-                        for(var key in filter) {
-                            if(key !== '_id') {
-                                if(filter.hasOwnProperty(key)) {
-                                    new_filter["metadata."+key] = filter[key];
-                                }
-                            } else {
-                                new_filter['_id'] = filter[key];
-                            }
-                        }
-                        filter = new_filter;
+                        filter = add_metadata(filter);
                     }
 
                     // Callback with filter
