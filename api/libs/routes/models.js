@@ -159,15 +159,6 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
     common.query_count(collection, req.body, String(req.user._id), res, common.return);
 });
 
-// router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-//     for(var i=0; i <req.body.fields.length; i++) {
-//         if(!~special.indexOf(req.body.fields[i])) {
-//             req.body.fields[i] = 'metadata.' + req.body.fields[i];
-//         }
-//     }
-//     common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
-// });
-
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var content_fields = []
     var metadata_fields = []
