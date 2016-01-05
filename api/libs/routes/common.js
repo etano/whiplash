@@ -402,4 +402,54 @@ module.exports = {
             });
         });
     }
+
+
+    stats_general: function(collection,req,res) {
+        if (!req.query.field) {
+            req.query.field = req.body.field;
+            req.query.filter = req.body.filter;
+	    req.query.map = req.body.map;
+	    req.query.reduce=req.body.reduce;
+	    req.query.finalize=req.body.finalize;
+        }
+        var field = req.query.field;
+        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+            eval(String(req.query.map))
+            eval(String(req.query.reduce))
+            eval(String(req.query.finalize))
+            var o = {};
+            o.finalize = finalize;
+            o.scope = {field: field};
+            o.query = filter;
+            o.out = {replace: 'statistics' + '_' + field + '_' + collection.collectionName};
+            collection.mapReduce(map, reduce, o, function (err, out_collection) {
+                if(!err){
+                    out_collection.find().toArray(function (err, result) {
+                        if(!err) {
+                            log.info("Computing statistics for %s",field);
+                            if(result.length>0) {
+                                return res.json({
+                                    status: 'OK',
+                                    result: result[0].value
+                                });
+                            } else {
+                                return res.json({
+                                    status: 'OK',
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
+                                });
+                            }
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        });
+    }
 };

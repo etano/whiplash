@@ -360,6 +360,50 @@ class wdb:
             '''
             return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
+        def stats_general(self,field,fltr,mapper="",reducer=""):
+            '''
+            computes the {sum, max, min, count, mean, standard deviation, variance} of the
+            specified fields of objects in the collection which satisfy the filter.
+            Optional arguments are strings that contain custom map(key,value), reduce(key,value) and finalize functions written in JS.
+            For usage of MongoDB mapreduce see mongeDB Documentation
+
+            '''
+            if(mapper==""):
+                mapper="""var map = function () {
+                emit(this.owner,
+                     {sum: this[field],
+                      max: this[field],
+                      min: this[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };"""
+            if(reducer==""):
+                reducer="""var reduce = function (key, values) {
+                var a = values[0];
+                for (var i=1; i < values.length; i++){
+                    var b = values[i];
+                    var delta = a.sum/a.count - b.sum/b.count;
+                    var weight = (a.count * b.count)/(a.count + b.count);
+                    a.diff += b.diff + delta*delta*weight;
+                    a.sum += b.sum;
+                    a.count += b.count;
+                    a.min = Math.min(a.min, b.min);
+                    a.max = Math.max(a.max, b.max);
+                }
+                return a;
+            };"""
+            if(finalizer==""):
+                finalizer="""var finalize = function (key, value)
+               {
+                    value.mean = value.sum / value.count;
+                    value.variance = value.diff / value.count;
+                    value.stddev = Math.sqrt(value.variance);
+                    return value;
+                };
+                """
+            return self.request("GET","/api/"+self.name+"/stats_general/",{"field":field,"filter":fltr,"map":mapper,"reduce":reducer,"finalize":finalizer})
+
 
     #
     # Special helper functions, only for properties

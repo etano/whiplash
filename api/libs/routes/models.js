@@ -270,4 +270,9 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
     common.stats(collection,req,res);
 });
 
+router.get('/stats_general/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.stats_general(collection,req,res);
+});
+
+
 module.exports = router;
