@@ -224,8 +224,8 @@ module.exports = {
                         if (collection.collectionName === "properties") {
                             objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
                         }
-                        objs[i]['commit_tag'] = commit_tag;
                         batch.push({ updateOne: { filter: objs[i], update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                        objs[i]['commit_tag'] = commit_tag;
                         batch.push({ insertOne: { document : objs[i] } });
                     }
                     collection.bulkWrite(batch,{w:1},function(err,result) {
