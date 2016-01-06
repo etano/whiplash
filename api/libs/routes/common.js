@@ -395,30 +395,25 @@ module.exports = {
     },
 
 
-    stats_general: function(collection,req,res) {
+    mapreduce: function(collection,req,res) {
         if (!req.query.field) {
-            req.query.field = req.body.field;
             req.query.filter = req.body.filter;
 	    req.query.map = req.body.map;
 	    req.query.reduce=req.body.reduce;
 	    req.query.finalize=req.body.finalize;
         }
-	var map=map
-        var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
 	    eval(String(req.query.map));
             eval(String(req.query.reduce));
             eval(String(req.query.finalize));
             var o = {};
             o.finalize = finalize;
-            o.scope = {field: field};
             o.query = filter;
-            o.out = {replace: 'statistics' + '_' + field + '_' + collection.collectionName};
+            o.out = {replace: 'mapreduce' + '_' + collection.collectionName};
             collection.mapReduce(map, reduce, o, function (err, out_collection) {
                 if(!err){
                     out_collection.find().toArray(function (err, result) {
                         if(!err) {
-                            log.info("Computing statistics for %s",field);
                             if(result.length>0) {
                                 return res.json({
                                     status: 'OK',

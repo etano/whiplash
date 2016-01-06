@@ -148,4 +148,8 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
    common.stats(collection,req,res,map);
 });
 
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+   common.mapreduce(collection,req,res);
+});
+
 module.exports = router;

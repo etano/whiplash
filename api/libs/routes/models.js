@@ -281,8 +281,8 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
 });
 
 
-router.get('/stats_general/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.stats_general(collection,req,res);
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.mapreduce(collection,req,res);
 });
 
 

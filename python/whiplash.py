@@ -360,10 +360,9 @@ class wdb:
             '''
             return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
-        def stats_general(self,field,fltr,mapper="",reducer="",finalizer=""):
+        def mapreduce(self,fltr,mapper,reducer,finalizer):
             '''
             Performs a custom computation on the data, by performing a mapreduce operation.
-            It has the same behavior as stats if no mapper reducer and finalizer is specified.
             Custom map(), reduce(key,value) and finalize(key,value) functions have to be a string of a JS function.
             
             For usage of MongoDB mapreduce see mongoDB Documentation: https://docs.mongodb.org/manual/reference/command/mapReduce/#dbcmd.mapReduce
@@ -371,9 +370,9 @@ class wdb:
             Sample mapper:
             var map = function () {
                 emit(this.owner,
-                     {sum: this[field],
-                      max: this[field],
-                      min: this[field],
+                     {sum: this["walltime"],
+                      max: this["walltime"],
+                      min: this["walltime"],
                       count: 1,
                       diff: 0
                      });
@@ -400,41 +399,7 @@ class wdb:
                 return value;
             };
             '''
-            if(mapper==""):
-                mapper="""var map = function () {
-                emit(this.owner,
-                     {sum: this[field],
-                      max: this[field],
-                      min: this[field],
-                      count: 1,
-                      diff: 0
-                     });
-            };"""
-            if(reducer==""):
-                reducer="""var reduce = function (key, values) {
-                var a = values[0];
-                for (var i=1; i < values.length; i++){
-                    var b = values[i];
-                    var delta = a.sum/a.count - b.sum/b.count;
-                    var weight = (a.count * b.count)/(a.count + b.count);
-                    a.diff += b.diff + delta*delta*weight;
-                    a.sum += b.sum;
-                    a.count += b.count;
-                    a.min = Math.min(a.min, b.min);
-                    a.max = Math.max(a.max, b.max);
-                }
-                return a;
-            };"""
-            if(finalizer==""):
-                finalizer="""var finalize = function (key, value)
-               {
-                    value.mean = value.sum / value.count;
-                    value.variance = value.diff / value.count;
-                    value.stddev = Math.sqrt(value.variance);
-                    return value;
-                };
-                """
-            return self.request("GET","/api/"+self.name+"/stats_general/",{"field":field,"filter":fltr,"map":mapper,"reduce":reducer,"finalize":finalizer})
+            return self.request("GET","/api/"+self.name+"/mapreduce/",{"filter":fltr,"map":mapper,"reduce":reducer,"finalize":finalizer})
 
 
     #
