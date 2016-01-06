@@ -401,7 +401,7 @@ module.exports = {
                 }
             });
         });
-    }
+    },
 
 
     stats_general: function(collection,req,res) {
@@ -414,9 +414,9 @@ module.exports = {
         }
         var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            eval(String(req.query.map))
-            eval(String(req.query.reduce))
-            eval(String(req.query.finalize))
+            eval(String(req.query.map));
+            eval(String(req.query.reduce));
+            eval(String(req.query.finalize));
             var o = {};
             o.finalize = finalize;
             o.scope = {field: field};

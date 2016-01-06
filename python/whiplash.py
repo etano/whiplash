@@ -360,7 +360,7 @@ class wdb:
             '''
             return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
-        def stats_general(self,field,fltr,mapper="",reducer=""):
+        def stats_general(self,field,fltr,mapper="",reducer="",finalizer=""):
             '''
             computes the {sum, max, min, count, mean, standard deviation, variance} of the
             specified fields of objects in the collection which satisfy the filter.
