@@ -330,22 +330,13 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res) {
+    stats: function(collection,req,res,map) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
         }
         var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            var map = function () {
-                emit(this.owner,
-                     {sum: this[field],
-                      max: this[field],
-                      min: this[field],
-                      count: 1,
-                      diff: 0
-                     });
-            };
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -412,9 +403,10 @@ module.exports = {
 	    req.query.reduce=req.body.reduce;
 	    req.query.finalize=req.body.finalize;
         }
+	var map=map
         var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            eval(String(req.query.map));
+	    eval(String(req.query.map));
             eval(String(req.query.reduce));
             eval(String(req.query.finalize));
             var o = {};

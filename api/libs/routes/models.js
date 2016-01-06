@@ -267,8 +267,19 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.stats(collection,req,res);
+    var map = function () {
+                emit(this.owner,
+                     {sum: this.metadata[field],
+                      max: this.metadata[field],
+                      min: this.metadata[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+
+    common.stats(collection,req,res,map);
 });
+
 
 router.get('/stats_general/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.stats_general(collection,req,res);

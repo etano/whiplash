@@ -136,7 +136,16 @@ router.delete('/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.stats(collection,req,res);
+     var map = function () {
+                emit(this.owner,
+                     {sum: this[field],
+                      max: this[field],
+                      min: this[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+   common.stats(collection,req,res,map);
 });
 
 module.exports = router;
