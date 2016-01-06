@@ -86,4 +86,26 @@ router.delete('/:id', passport.authenticate('bearer', { session: false }), funct
     common.delete(collection, {"_id": new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
 });
 
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var map = function () {
+                emit(this.owner,
+                     {sum: this[field],
+                      max: this[field],
+                      min: this[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+    common.stats(collection,req,res,map);
+});
+
+
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.mapreduce(collection,req,res);
+});
+
+
+
+
+
 module.exports = router;

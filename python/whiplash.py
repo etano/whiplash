@@ -360,6 +360,47 @@ class wdb:
             '''
             return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
 
+        def mapreduce(self,fltr,mapper,reducer,finalizer):
+            '''
+            Performs a custom computation on the data, by performing a mapreduce operation.
+            Custom map(), reduce(key,value) and finalize(key,value) functions have to be a string of a JS function.
+            
+            For usage of MongoDB mapreduce see mongoDB Documentation: https://docs.mongodb.org/manual/reference/command/mapReduce/#dbcmd.mapReduce
+
+            Sample mapper:
+            var map = function () {
+                emit(this.owner,
+                     {sum: this["walltime"],
+                      max: this["walltime"],
+                      min: this["walltime"],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+            Sample reducer:
+            var reduce = function (key, values) {
+                var a = values[0];
+                for (var i=1; i < values.length; i++){
+                    var b = values[i];
+                    var delta = a.sum/a.count - b.sum/b.count;
+                    var weight = (a.count * b.count)/(a.count + b.count);
+                    a.diff += b.diff + delta*delta*weight;
+                    a.sum += b.sum;
+                    a.count += b.count;
+                    a.min = Math.min(a.min, b.min);
+                    a.max = Math.max(a.max, b.max);
+                }
+                return a;
+            };
+            var finalize = function (key, value){
+                value.mean = value.sum / value.count;
+                value.variance = value.diff / value.count;
+                value.stddev = Math.sqrt(value.variance);
+                return value;
+            };
+            '''
+            return self.request("GET","/api/"+self.name+"/mapreduce/",{"filter":fltr,"map":mapper,"reduce":reducer,"finalize":finalizer})
+
 
     #
     # Special helper functions, only for properties
