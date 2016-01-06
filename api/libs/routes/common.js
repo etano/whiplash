@@ -221,10 +221,45 @@ module.exports = {
                     var unix_time = String(Math.round(new Date().getTime() / 1000));
                     var commit_tag = user_id + unix_time + crypto.randomBytes(8).toString('hex');
                     for(var i=0; i<objs.length; i++) {
-                        if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                        var filter = {};
+                        if (collection.collectionName === "fs.files") {
+                            filter['md5'] = objs[i]['md5'];
+                            filter['metadata'] = {};
+                            filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
+                            filter['metadata']['owner'] = objs[i]['metadata']['owner'];
                         }
-                        batch.push({ updateOne: { filter: objs[i], update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                        else if(collection.collectionName === "executables") {
+                            filter['name'] = objs[i]['name'];
+                            filter['algorithm'] = objs[i]['algorithm'];
+                            filter['version'] = objs[i]['version'];
+                            filter['build'] = objs[i]['build'];
+                            filter['owner'] = objs[i]['owner'];
+                        }
+                        else if (collection.collectionName === "properties") {
+                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                            filter['input_model_id'] = objs[i]['input_model_id'];
+                            filter['executable_id'] = objs[i]['executable_id'];
+                            filter['md5'] = objs[i]['md5'];
+                            filter['owner'] = objs[i]['owner'];
+                        }
+                        else if (collection.collectionName === "jobs") {
+                            filter['name'] = objs[i]['name'];
+                            filter['owner'] = objs[i]['owner'];
+                            filter['md5'] = objs[i]['md5'];
+                        }
+                        else if (collection.collectionName === "collaborations") {
+                            filter['name'] = objs[i]['name'];
+                        }
+                        else if (collection.collectionName === "users") {
+                            filter['username'] = objs[i]['username'];
+                        }
+                        else if (collection.collectionName === "clients") {
+                            filter['name'] = objs[i]['name'];
+                        }
+                        else if (collection.collectionName === "work_batches") {
+                            filter['timestamp'] = objs[i]['timestamp'];
+                        }
+                        batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                         objs[i]['commit_tag'] = commit_tag;
                         batch.push({ insertOne: { document : objs[i] } });
                     }
