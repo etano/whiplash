@@ -219,7 +219,7 @@ module.exports = {
                 } else {
                     var batch = [];
                     var unix_time = String(Math.round(new Date().getTime() / 1000));
-                    var commit_tag = user_id + unix_time;
+                    var commit_tag = user_id + unix_time + crypto.randomBytes(8).toString('hex');
                     for(var i=0; i<objs.length; i++) {
                         if (collection.collectionName === "properties") {
                             objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
