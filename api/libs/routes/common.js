@@ -230,8 +230,9 @@ module.exports = {
                     }
                     collection.bulkWrite(batch,{w:1},function(err,result) {
                         if (result.ok) {
-                            log.info("%s objects modified", String(result.modifiedCount));
-                            log.info("%s objects inserted", String(result.insertedCount));
+                            log.info("%s objects modified", String(result.nModified));
+                            log.info("%s objects inserted", String(result.nInserted));
+                            log.info("%s objects upserted", String(result.nUpserted));
                             var tag_filter = {'commit_tag':commit_tag};
                             var proj = {'_id':1};
                             collection.find(tag_filter).project(proj).toArray(function (err, objs) {
