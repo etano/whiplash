@@ -19,7 +19,7 @@ function concaternate(o1, o2) {
     return o1;
 }
 
-var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5'];
+var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
 
 
 //
@@ -172,12 +172,54 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var content_fields = []
+    var metadata_fields = []
     for(var i=0; i <req.body.fields.length; i++) {
-        if(!~special.indexOf(req.body.fields[i])) {
+        if(~req.body.fields[i].indexOf('content.')) {
+            content_fields.push(req.body.fields[i].replace('content.',''));
+        } else if(!~special.indexOf(req.body.fields[i])) {
+            metadata_fields.push(req.body.fields[i]);
             req.body.fields[i] = 'metadata.' + req.body.fields[i];
         }
     }
-    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
+    //TODO: nested fields
+    if(content_fields.length > 0) {
+        common.query(collection, req.body.filter, String(req.user._id), res, function(res, err, objs) {
+            if(!err) {
+                var items = [];
+                var apply_content = function(i){
+                    if (i<objs.length) {
+                        read_by_name(String(objs[i]._id),function(err,data){
+                            if(!err) {
+                                item = {'_id':objs[i]._id,'content':{}};
+                                var content = JSON.parse(data);
+                                for(var j = 0; j < content_fields.length; j++){
+                                    item['content'][content_fields[j]] = content[content_fields[j]];
+                                }
+                                for(var j = 0; j < metadata_fields.length; j++){
+                                    item[metadata_fields[j]] = objs[i].metadata[metadata_fields[j]];
+                                }
+                                items.push(item);
+                                apply_content(i+1);
+                            } else {
+                                res.statusCode = 500;
+                                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                return res.json({ error: 'Server error' });
+                            }
+                        });
+                    } else {
+                        log.info("Returning %d objects",items.length);
+                        return res.json({ status: 'OK', result: items });
+                    }
+                };
+                apply_content(0);
+            } else {
+                return res.json(err);
+            }
+        });
+    } else {
+        common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
+    }
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -279,7 +321,23 @@ router.delete('/id/:id', passport.authenticate('bearer', { session: false }), fu
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.stats(collection,req,res);
+    var map = function () {
+                emit(this.owner,
+                     {sum: this.metadata[field],
+                      max: this.metadata[field],
+                      min: this.metadata[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+
+    common.stats(collection,req,res,map);
 });
+
+
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.mapreduce(collection,req,res);
+});
+
 
 module.exports = router;

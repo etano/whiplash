@@ -6,6 +6,27 @@ var db = require(libs + 'db/mongo');
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
+function add_metadata(filter)
+{
+    var special = ['$or','$and','$not','$nor'];
+    var new_filter = {};
+    for(var key in filter) {
+        if(key === '_id')
+            new_filter['_id'] = filter[key];
+        else if(~special.indexOf(key)){
+            new_filter[key] = []
+            for(var i = 0; i < filter[key].length; i++)
+                new_filter[key].push(add_metadata(filter[key][i]));
+        }
+        else{
+            if(filter.hasOwnProperty(key)) {
+                new_filter["metadata."+key] = filter[key];
+            }
+        }
+    }
+    return new_filter;
+}
+
 module.exports = {
 
     //
@@ -53,17 +74,7 @@ module.exports = {
 
                     // Prepend metadata for models
                     if (collection.collectionName === "fs.files") {
-                        var new_filter = {};
-                        for(var key in filter) {
-                            if(key !== '_id') {
-                                if(filter.hasOwnProperty(key)) {
-                                    new_filter["metadata."+key] = filter[key];
-                                }
-                            } else {
-                                new_filter['_id'] = filter[key];
-                            }
-                        }
-                        filter = new_filter;
+                        filter = add_metadata(filter);
                     }
 
                     // Callback with filter
@@ -226,19 +237,55 @@ module.exports = {
                 } else {
                     var batch = [];
                     var unix_time = String(Math.round(new Date().getTime() / 1000));
-                    var commit_tag = user_id + unix_time;
+                    var commit_tag = user_id + unix_time + crypto.randomBytes(8).toString('hex');
                     for(var i=0; i<objs.length; i++) {
-                        if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                        var filter = {};
+                        if (collection.collectionName === "fs.files") {
+                            filter['md5'] = objs[i]['md5'];
+                            filter['metadata'] = {};
+                            filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
+                            filter['metadata']['owner'] = objs[i]['metadata']['owner'];
                         }
+                        else if(collection.collectionName === "executables") {
+                            filter['name'] = objs[i]['name'];
+                            filter['algorithm'] = objs[i]['algorithm'];
+                            filter['version'] = objs[i]['version'];
+                            filter['build'] = objs[i]['build'];
+                            filter['owner'] = objs[i]['owner'];
+                        }
+                        else if (collection.collectionName === "properties") {
+                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                            filter['input_model_id'] = objs[i]['input_model_id'];
+                            filter['executable_id'] = objs[i]['executable_id'];
+                            filter['md5'] = objs[i]['md5'];
+                            filter['owner'] = objs[i]['owner'];
+                        }
+                        else if (collection.collectionName === "jobs") {
+                            filter['name'] = objs[i]['name'];
+                            filter['owner'] = objs[i]['owner'];
+                            filter['md5'] = objs[i]['md5'];
+                        }
+                        else if (collection.collectionName === "collaborations") {
+                            filter['name'] = objs[i]['name'];
+                        }
+                        else if (collection.collectionName === "users") {
+                            filter['username'] = objs[i]['username'];
+                        }
+                        else if (collection.collectionName === "clients") {
+                            filter['name'] = objs[i]['name'];
+                        }
+                        else if (collection.collectionName === "work_batches") {
+                            filter['timestamp'] = objs[i]['timestamp'];
+                        }
+                        batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                         objs[i]['commit_tag'] = commit_tag;
-                        batch.push({ updateOne: { filter: objs[i], update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                         batch.push({ insertOne: { document : objs[i] } });
                     }
                     collection.bulkWrite(batch,{w:1},function(err,result) {
                         if (result.ok) {
-                            log.info("%s objects modified", String(result.modifiedCount));
-                            log.info("%s objects inserted", String(result.insertedCount));
+                            log.info("%s objects modified", String(result.nModified));
+                            log.info("%s objects inserted", String(result.nInserted));
+                            log.info("%s objects upserted", String(result.nUpserted));
                             var tag_filter = {'commit_tag':commit_tag};
                             var proj = {'_id':1};
                             collection.find(tag_filter).project(proj).toArray(function (err, objs) {
@@ -348,22 +395,13 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res) {
+    stats: function(collection,req,res,map) {
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
         }
         var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            var map = function () {
-                emit(this.owner,
-                     {sum: this[field],
-                      max: this[field],
-                      min: this[field],
-                      count: 1,
-                      diff: 0
-                     });
-            };
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -403,7 +441,53 @@ module.exports = {
                             } else {
                                 return res.json({
                                     status: 'OK',
-                                    result: {'count':0}
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
+                                });
+                            }
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        });
+    },
+
+
+    mapreduce: function(collection,req,res) {
+        if (!req.query.field) {
+            req.query.filter = req.body.filter;
+	    req.query.map = req.body.map;
+	    req.query.reduce=req.body.reduce;
+	    req.query.finalize=req.body.finalize;
+        }
+        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+	    eval(String(req.query.map));
+            eval(String(req.query.reduce));
+            eval(String(req.query.finalize));
+            var o = {};
+            o.finalize = finalize;
+            o.query = filter;
+            o.out = {replace: 'mapreduce' + '_' + collection.collectionName};
+            collection.mapReduce(map, reduce, o, function (err, out_collection) {
+                if(!err){
+                    out_collection.find().toArray(function (err, result) {
+                        if(!err) {
+                            if(result.length>0) {
+                                return res.json({
+                                    status: 'OK',
+                                    result: result[0].value
+                                });
+                            } else {
+                                return res.json({
+                                    status: 'OK',
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
                                 });
                             }
                         } else {
