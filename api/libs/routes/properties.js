@@ -59,7 +59,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection, req.body.filter, req.body.update, String(req.user._id), res, common.return);
 });
 
-router.put('/replace', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/replace/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.replace(ObjType, collection, req.body, String(req.user._id), res, common.return);
 });
 
@@ -69,6 +69,23 @@ router.put('/one/', passport.authenticate('bearer', { session: false }), functio
 
 router.put('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.find_one_and_update(collection, {"_id": new ObjectID(req.params.id)}, req.body.update, String(req.user._id), res, common.return);
+});
+
+router.put('/refresh/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.form_filter(collection,{"status":"timed out"},String(req.user._id), function(filter){
+        collection.find(filter).forEach(function(doc) {
+            collection.updateOne({"_id":new ObjectID(doc._id)},{"$set":{"timeout":2*doc.timeout,"status":"unresolved"}});
+        }, function(err) {
+            if(!err) {
+                log.info("Refreshed properties");
+                return res.json({ status: 'OK', result: 'done' });
+            } else {
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.json({ error: 'Server error' });
+            }
+        });
+    });
 });
 
 //
@@ -88,7 +105,20 @@ router.delete('/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.stats(collection,req,res);
+     var map = function () {
+                emit(this.owner,
+                     {sum: this[field],
+                      max: this[field],
+                      min: this[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+   common.stats(collection,req,res,map);
+});
+
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+   common.mapreduce(collection,req,res);
 });
 
 module.exports = router;

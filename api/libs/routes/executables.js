@@ -62,7 +62,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
     common.update(collection, req.body.filter, req.body.update, String(req.user._id), res, common.return);
 });
 
-router.put('/replace', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.put('/replace/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.replace(ObjType, collection, req.body, String(req.user._id), res, common.return);
 });
 
@@ -85,5 +85,27 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.delete(collection, {"_id": new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
 });
+
+router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var map = function () {
+                emit(this.owner,
+                     {sum: this[field],
+                      max: this[field],
+                      min: this[field],
+                      count: 1,
+                      diff: 0
+                     });
+            };
+    common.stats(collection,req,res,map);
+});
+
+
+router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.mapreduce(collection,req,res);
+});
+
+
+
+
 
 module.exports = router;
