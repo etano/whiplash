@@ -299,6 +299,10 @@ class wdb:
                 res[field] = []
                 for o in tmp:
                     tmp0 = o
+                    if 'metadata' in tmp0:
+                        tmp00 = tmp0['metadata']
+                        tmp0.pop('metadata',None)
+                        tmp0.update(tmp00)
                     for f in field.split('.'):
                         tmp0 = tmp0[f]
                     res[field].append(tmp0)
