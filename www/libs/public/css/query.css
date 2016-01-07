@@ -6,13 +6,15 @@ section#compose-query, section#edit-query {
     padding-bottom: 20px;
 }
 
-div#queries_results {
-    display: block;
-    float: right;
+div.button_row {
+    display: table;
+    margin: 25px 0;
+    width: 100%;
 }
 
-div#queries_results div.button {
+div.button_row div.button {
     display: inline-block;
+    float: right;
     color: rgb(50,210,210);
     cursor: pointer;
     margin-left: 25px;

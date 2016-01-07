@@ -30,6 +30,7 @@ function loadQParams(){
         param_json[parameters[i]] = "";
     }
     $("section#compose-query textarea#parameters").val(JSON.stringify(param_json));
+    updateCounts();
 }
 
 function getQFilters(cb){
@@ -52,47 +53,92 @@ function getQFilters(cb){
     }
 
     if (bad_filters) {
-        widget.find("span#n_queries").text(0);
-        widget.find("span#n_results").text(0);
-        widget.find("div#view_download").addClass("hidden");
+        cb(0,bad_filters);
     } else {
-        cb(filters);
+        cb(filters,0);
     }
 }
 
 function updateQCount(){
     var widget = $("section#compose-query");
-    getQFilters(function(filters) {
-        // Count matching properties
-        $.ajax({
-            type: 'GET',
-            url: api_addr+"/api/queries/stats",
-            data: { "access_token"  : session_token,
-                    "filters" : JSON.stringify(filters)
-            },
-            success: function(data){
-                var stats = data.result;
-                widget.find("span#n_queries").text(stats.total);
-                widget.find("span#n_results").text(stats.resolved);
-            },
-            error: function(request, status, err){
-                alert(err);
-            }
-        });
+    getQFilters(function(filters,err) {
+        if (!err) {
+            // Count matching properties
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/queries/stats",
+                data: { "access_token"  : session_token,
+                        "filters" : JSON.stringify(filters)
+                },
+                success: function(data){
+                    var stats = data.result;
+                    widget.find("span#n_queries").text(stats.total);
+                    widget.find("span#n_results").text(stats.resolved);
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
+            widget.find("span#n_queries").text(0);
+            widget.find("span#n_results").text(0);
+        }
+    });
+}
+
+function updateModelCount(){
+    var widget = $("section#compose-query");
+    getQFilters(function(filters,err) {
+        if (!err) {
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/models/count",
+                data: { "access_token"  : session_token,
+                        "filter" : JSON.stringify(filters['model'])
+                },
+                success: function(data){
+                    var n_models = data.result;
+                    widget.find("span#n_models").text(n_models);
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
+            widget.find("span#n_models").text(0);
+        }
+    });
+}
+
+function updateCounts(){
+    updateQCount();
+    updateModelCount();
+}
+
+function viewModels(){
+    getQFilters(function(filters,err) {
+        if (!err) {
+            var data = {"access_token":session_token, "filters":JSON.stringify(filters['model'])};
+            window.location = api_addr+"/api/models?"+$.param(data);
+        }
     });
 }
 
 function viewQ(){
-    getQFilters(function(filters) {
-        var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
-        window.location = api_addr+"/api/queries?"+$.param(data);
+    getQFilters(function(filters,err) {
+        if (!err) {
+            var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
+            window.location = api_addr+"/api/queries?"+$.param(data);
+        }
     });
 }
 
 function downloadQResults(){
-    getQFilters(function(filters) {
-        var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
-        window.location = api_addr+"/api/queries/results?"+$.param(data);
+    getQFilters(function(filters,err) {
+        if (!err) {
+            var data = {"access_token":session_token, "filters":JSON.stringify(filters)};
+            window.location = api_addr+"/api/queries/results?"+$.param(data);
+        }
     });
 }
 
@@ -105,8 +151,9 @@ function composeQuery(){
 
 $(document).ready(function(){
     $(document).on("change", "section#compose-query select#container", loadQParams);
-    $(document).on("change", "section#compose-query select#container", updateQCount);
-    $(document).on("change", "section#compose-query textarea", updateQCount);
-    $(document).on("click", "section#compose-query div#queries_results div#queries", viewQ);
-    $(document).on("click", "section#compose-query div#queries_results div#results", downloadQResults);
+    $(document).on("change", "section#compose-query select#container", updateCounts);
+    $(document).on("change", "section#compose-query textarea", updateCounts);
+    $(document).on("click", "section#compose-query div.button_row div#models", viewModels);
+    $(document).on("click", "section#compose-query div.button_row div#queries", viewQ);
+    $(document).on("click", "section#compose-query div.button_row div#results", downloadQResults);
 });

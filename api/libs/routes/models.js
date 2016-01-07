@@ -108,7 +108,13 @@ var read_by_name = function(name,cb) {
 };
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, req.body, String(req.user._id), res, function(res, err, objs) {
+    var filter = {};
+    if (!req.query.filter) {
+        filter = req.body;
+    } else {
+        filter = JSON.parse(req.query.filter);
+    }
+    common.query(collection, filter, String(req.user._id), res, function(res, err, objs) {
         if(!err) {
             var items = [];
             var apply_content = function(i){
@@ -156,7 +162,13 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
 
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, req.body, String(req.user._id), res, common.return);
+    var filter = {}
+    if (!req.query.filter) {
+        filter = req.body;
+    } else {
+        filter = JSON.parse(req.query.filter);
+    }
+    common.query_count(collection, filter, String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
