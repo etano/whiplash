@@ -268,7 +268,7 @@ module.exports = {
                         }
                         batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                     }
-                    collection.bulkWrite(batch,{w:1},function(err,result) {
+                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
                         if (result.ok) {
                             log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
                             log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
@@ -277,7 +277,7 @@ module.exports = {
                             for(var i=0; i<objs.length; i++) {
                                 batch.push({ insertOne: { document : objs[i] } });
                             }
-                            collection.bulkWrite(batch,{w:1},function(err,result) {
+                            collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
                                 if (result.ok) {
                                     log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
                                     log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
