@@ -235,9 +235,17 @@ module.exports = {
                 if(objs.length === 0) {
                     cb(res,0,[]);
                 } else {
+                    var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
+                    for(var i=0; i<objs.length; i++) {
+                        objs[i]['commit_tag'] = commit_tag;
+                        if (collection.collectionName === "properties") {
+                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                        }
+                        else if (collection.collectionName === "jobs") {
+                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].ids));
+                        }
+                    }
                     var batch = [];
-                    var unix_time = String(Math.round(new Date().getTime() / 1000));
-                    var commit_tag = user_id + unix_time + crypto.randomBytes(8).toString('hex');
                     for(var i=0; i<objs.length; i++) {
                         var filter = {};
                         if (collection.collectionName === "fs.files") {
@@ -254,7 +262,6 @@ module.exports = {
                             filter['owner'] = objs[i]['owner'];
                         }
                         else if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
                             filter['input_model_id'] = objs[i]['input_model_id'];
                             filter['executable_id'] = objs[i]['executable_id'];
                             filter['md5'] = objs[i]['md5'];
@@ -278,36 +285,49 @@ module.exports = {
                             filter['timestamp'] = objs[i]['timestamp'];
                         }
                         batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                        objs[i]['commit_tag'] = commit_tag;
-                        batch.push({ insertOne: { document : objs[i] } });
                     }
-                    collection.bulkWrite(batch,{w:1},function(err,result) {
+                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
                         if (result.ok) {
-                            log.info("%s objects modified", String(result.nModified));
-                            log.info("%s objects inserted", String(result.nInserted));
-                            log.info("%s objects upserted", String(result.nUpserted));
-                            var tag_filter = {'commit_tag':commit_tag};
-                            var proj = {'_id':1};
-                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                                if(!objs) {
-                                    res.statusCode = 404;
-                                    cb(res,"Not found",0);
-                                } else if (!err) {
-                                    var ids = [];
-                                    for(var j=0; j<objs.length; j++) {
-                                        ids.push(objs[j]['_id']);
-                                    }
-                                    log.info("Querying fields in %s",collection.collectionName);
-                                    cb(res,0,ids);
+                            log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
+                            log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
+                            log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
+                            var batch = [];
+                            for(var i=0; i<objs.length; i++) {
+                                batch.push({ insertOne: { document : objs[i] } });
+                            }
+                            collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
+                                if (result.ok) {
+                                    log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
+                                    log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
+                                    log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
+                                    var tag_filter = {'commit_tag':commit_tag};
+                                    var proj = {'_id':1};
+                                    collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                        if(!objs) {
+                                            res.statusCode = 404;
+                                            cb(res,"Not found",0);
+                                        } else if (!err) {
+                                            var ids = [];
+                                            for(var j=0; j<objs.length; j++) {
+                                                ids.push(objs[j]['_id']);
+                                            }
+                                            log.info("Querying fields in %s",collection.collectionName);
+                                            cb(res,0,ids);
+                                        } else {
+                                            res.statusCode = 500;
+                                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                            cb(res,err.message,0);
+                                        }
+                                    });
                                 } else {
                                     res.statusCode = 500;
-                                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
                                     cb(res,err.message,0);
                                 }
                             });
                         } else {
                             res.statusCode = 500;
-                            log.error('Write error: %s %s', err.message, result.getWriteErrors());
+                            log.error('Error updating commit tags: %s %s', err.message, result.getWriteErrors());
                             cb(res,err.message,0);
                         }
                     });
