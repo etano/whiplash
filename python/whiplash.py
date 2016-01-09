@@ -55,9 +55,9 @@ class wdb:
             res = requests.request(protocol,'http://' + self.server + ':' + str(self.port) + uri,data=payload,headers=self.headers)
 
         if res.status_code != 200:
-            print(res.status_code, res.reason, res.text)
+            print(res.status_code, res.reason, res.content)
 
-        return res.status_code, res.reason, res.text
+        return res.status_code, res.reason, res.content
 
     #
     # Tokens
