@@ -68,26 +68,30 @@
         <input type="button" value="Request password change" class="submit">
     </section>
     <section id="view-queries" class="content transit">
-        <div id="info">
-        </div>
+        <div id="info"></div>
     </section>
     <section id="explore" class="content centered transit">
-        <div id="info">
-        </div>
+        <div id="info"></div>
     </section>
     <section id="compose-query" class="content centered transit">
         <div class="label">Filter models:</div>
-        <textarea id="model" value="" placeholder="{'n_spins':10, 'couplings':'gaussian', etc...}">{}</textarea>
+        <textarea id="models_filter">{}</textarea>
         <div class="button_row">
             <div id="models" class="button"><span id="n_models">0</span> models</div>
         </div>
         <div class="label">Select executable:</div>
-        <select id="container"></select>
+        <select id="executable_name"></select>
         <div class="label" id="parameters_label">Filter running parameters:</div>
-        <textarea id="parameters">{}</textarea>
+        <textarea id="parameters_filter">{}</textarea>
+        <div class="button_row">
+            <div id="queries" class="button"><span id="n_queries">0</span> queries</div>
+        </div>
+        <div class="label" id="results_label">Filter results:</div>
+        <textarea id="results_filter">{}</textarea>
+        <div class="label" id="fields_label">Target fields (leave blank for all fields):</div>
+        <textarea id="results_fields"></textarea>
         <div class="button_row">
             <div id="results" class="button"><span id="n_results">0</span> results</div>
-            <div id="queries" class="button"><span id="n_queries">0</span> queries</div>
         </div>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>

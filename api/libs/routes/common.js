@@ -1,5 +1,6 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
 
@@ -84,17 +85,7 @@ module.exports = {
         } else {
             // Prepend metadata for models
             if (collection.collectionName === "fs.files") {
-                var new_filter = {};
-                for(var key in filter) {
-                    if(key !== '_id') {
-                        if(filter.hasOwnProperty(key)) {
-                            new_filter["metadata."+key] = filter[key];
-                        }
-                    } else {
-                        new_filter['_id'] = filter[key];
-                    }
-                }
-                filter = new_filter;
+                filter = add_metadata(filter);
             }
 
             // Callback with filter
@@ -148,6 +139,7 @@ module.exports = {
                 if(!objs) {
                     res.statusCode = 404;
                     cb(res,"Not found",0);
+
                 } else if (!err) {
                     log.info("Found %d objects in %s",objs.length,collection.collectionName);
                     cb(res,0,objs);
@@ -483,12 +475,12 @@ module.exports = {
     mapreduce: function(collection,req,res) {
         if (!req.query.field) {
             req.query.filter = req.body.filter;
-	    req.query.map = req.body.map;
-	    req.query.reduce=req.body.reduce;
-	    req.query.finalize=req.body.finalize;
+            req.query.map = req.body.map;
+            req.query.reduce=req.body.reduce;
+            req.query.finalize=req.body.finalize;
         }
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-	    eval(String(req.query.map));
+            eval(String(req.query.map));
             eval(String(req.query.reduce));
             eval(String(req.query.finalize));
             var o = {};
@@ -523,5 +515,61 @@ module.exports = {
                 }
             });
         });
+    },
+
+    //
+    // GridFS helpers
+    //
+
+    concaternate: function(o1, o2) {
+        for (var key in o2) {
+            o1[key] = o2[key];
+        }
+        return o1;
+    },
+
+    get_paylod: function(req, key) {
+        if (!req.query[key]) {
+            return req.body;
+        } else {
+            return JSON.parse(req.query[key]);
+        }
+    },
+
+    read_by_name: function(name, cb) {
+        var data = null;
+        var err = null;
+        GridStore.read(db.get(), name, function(err, fileData) {
+            if(!err) {
+                data = fileData.toString();
+            } else {
+                log.error("Read error: %s",err.message);
+                err = {"message":"Error reading file " + name};
+            }
+            cb(err,data);
+        });
+    },
+
+    get_gridfs_objs: function(res, err, objs, cb) {
+        var items = [];
+        var apply_content = function(i){
+            if (i<objs.length) {
+                this.read_by_name(String(objs[i]._id),function(err,data){
+                    if(!err) {
+                        items.push(this.concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
+                        apply_content(i+1);
+                    } else {
+                        res.statusCode = 500;
+                        log.error('Internal error(%d): %s',res.statusCode,err.message);
+                        cb(res,err.message,0);
+                    }
+                });
+            } else {
+                log.info("Returning %d objects",items.length);
+                cb(res,0,items);
+            }
+        };
+        apply_content(0);
     }
+
 };

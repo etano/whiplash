@@ -12,13 +12,6 @@ var collection = db.get().collection('fs.files');
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
-function concaternate(o1, o2) {
-    for (var key in o2) {
-        o1[key] = o2[key];
-    }
-    return o1;
-}
-
 var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
 
 
@@ -93,82 +86,27 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 // Query
 //
 
-var read_by_name = function(name,cb) {
-    var data = null;
-    var err = null;
-    GridStore.read(db.get(), name, function(err, fileData) {
-        if(!err) {
-            data = fileData.toString();
-        } else {
-            log.error("Read error: %s",err.message);
-            err = {"message":"Error reading file " + name};
-        }
-        cb(err,data);
-    });
-};
-
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {};
-    if (!req.query.filter) {
-        filter = req.body;
-    } else {
-        filter = JSON.parse(req.query.filter);
-    }
-    common.query(collection, filter, String(req.user._id), res, function(res, err, objs) {
-        if(!err) {
-            var items = [];
-            var apply_content = function(i){
-                if (i<objs.length) {
-                    read_by_name(String(objs[i]._id),function(err,data){
-                        if(!err) {
-                            items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
-                            apply_content(i+1);
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.json({ error: 'Server error' });
-                        }
-                    });
-                } else {
-                    log.info("Returning %d objects",items.length);
-                    return res.json({ status: 'OK', result: items });
-                }
-            };
-            apply_content(0);
-        } else {
-            return res.json(err);
-        }
+    common.query(collection, common.get_payload(req,'filter'), user_id, res, function(res, err, objs) {
+        common.get_gridfs_objs(res, err, objs, common.return);
     });
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(collection, req.body, String(req.user._id), res, function(res, err, obj) {
-        if(!err) {
-            read_by_name(String(obj._id),function(err,data){
-                if(!err) {
-                    log.info("Returning 1 object");
-                    return res.json({ status: 'OK', result: concaternate({'content':JSON.parse(data),'_id':obj._id}, obj.metadata) });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
-                }
-            });
-        } else {
-            return res.json(err);
-        }
+    common.query_one(collection, common.get_payload(req,'filter'), String(req.user._id), res, function(res, err, obj) {
+        common.get_gridfs_objs(res, err, [obj], function(res, err, objs) {
+            if (!err) {
+                return res.json({status: 'OK', result: objs[0]});
+            } else {
+                return res.json({status: res.statusCode, error: JSON.stringify(err)});
+            }
+        });
     });
 });
 
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = {}
-    if (!req.query.filter) {
-        filter = req.body;
-    } else {
-        filter = JSON.parse(req.query.filter);
-    }
-    common.query_count(collection, filter, String(req.user._id), res, common.return);
+    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -189,7 +127,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
                 var items = [];
                 var apply_content = function(i){
                     if (i<objs.length) {
-                        read_by_name(String(objs[i]._id),function(err,data){
+                        common.read_by_name(String(objs[i]._id),function(err,data){
                             if(!err) {
                                 item = {'_id':objs[i]._id,'content':{}};
                                 var content = JSON.parse(data);
@@ -225,10 +163,10 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, function(res, err, obj) {
         if(!err) {
-            read_by_name(String(obj._id),function(err,data){
+            common.read_by_name(String(obj._id),function(err,data){
                 if(!err) {
                     log.info("Returning 1 object");
-                    return res.json({ status: 'OK', result: concaternate({'content':JSON.parse(data),'_id':obj._id}, obj.metadata) });
+                    return res.json({ status: 'OK', result: common.concaternate({'content':JSON.parse(data),'_id':obj._id}, obj.metadata) });
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);

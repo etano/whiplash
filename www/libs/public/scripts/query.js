@@ -2,7 +2,7 @@ var executables;
 
 function setQExecutables(){
     if(executables) return;
-    $("section#compose-query select#container").attr("disabled", "true");
+    $("section#compose-query select#executable_name").attr("disabled", "true");
     $.ajax({
         type: 'GET',
         url: api_addr+"/api/executables/",
@@ -10,8 +10,8 @@ function setQExecutables(){
         success: function(data){
             executables = data.result;
             for(var i = 0; i < executables.length; i++)
-                $("section#compose-query select#container").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
-            $("section#compose-query select#container").removeAttr("disabled");
+                $("section#compose-query select#executable_name").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
+            $("section#compose-query select#executable_name").removeAttr("disabled");
             loadQParams();
         },
         error: function(request, status, err){
@@ -21,33 +21,37 @@ function setQExecutables(){
 }
 
 function loadQParams(){
-    var executable = $("section#compose-query select#container").val();
-    var executable_json = $.grep(executables, function(e){ return e.name == executable; })[0];
-    var parameters = executable_json.params.optional.concat(executable_json.params.required);
+    var executable_name = $("section#compose-query select#executable_name").val();
+    var executable_json = $.grep(executables, function(e){ return e.name === executable_name; })[0];
+    var params = executable_json.params.optional.concat(executable_json.params.required);
 
     var param_json = {};
-    for(var i = 0; i < parameters.length; i++){
-        param_json[parameters[i]] = "";
+    for(var i = 0; i < params.length; i++){
+        param_json[params[i]] = "";
     }
-    $("section#compose-query textarea#parameters").val(JSON.stringify(param_json));
+    $("section#compose-query textarea#parameters_filter").val(JSON.stringify(param_json));
     updateCounts();
 }
 
 function getQFilters(cb){
     var widget = $("section#compose-query");
-    var executable = widget.find("select#container");
-    var model = widget.find("textarea#model");
-    var params = widget.find("textarea#parameters");
-    var filters = {'executable':JSON.stringify({"name": executable.val()}), 'model': model.val(), 'params': params.val()};
+    var inputs = {'executable': widget.find("select#executable_name"),
+                  'model': widget.find("textarea#models_filter"),
+                  'params': widget.find("textarea#parameters_filter"),
+                  'results': widget.find("textarea#results_filter")};
+    var filters = {'executable': JSON.stringify({"name": inputs['executable'].val()}),
+                   'model': inputs['model'].val(),
+                   'params': inputs['params'].val(),
+                   'results': inputs['results'].val()};
 
     // Check filters are proper JSON
     var bad_filters = false;
     for (var key in filters) {
         try {
             filters[key] = JSON.parse(filters[key]);
-            eval(key+".css('color','black')");
+            inputs[key].css('color','black');
         } catch(e) {
-            eval(key+".css('color','red')");
+            inputs[key].css('color','red');
             bad_filters = true;
         }
     }
@@ -59,7 +63,7 @@ function getQFilters(cb){
     }
 }
 
-function updateQCount(){
+function updateQueryCount(){
     var widget = $("section#compose-query");
     getQFilters(function(filters,err) {
         if (!err) {
@@ -73,7 +77,6 @@ function updateQCount(){
                 success: function(data){
                     var stats = data.result;
                     widget.find("span#n_queries").text(stats.total);
-                    widget.find("span#n_results").text(stats.resolved);
                 },
                 error: function(request, status, err){
                     alert(err);
@@ -81,7 +84,6 @@ function updateQCount(){
             });
         } else {
             widget.find("span#n_queries").text(0);
-            widget.find("span#n_results").text(0);
         }
     });
 }
@@ -110,9 +112,35 @@ function updateModelCount(){
     });
 }
 
+function updateResultCount(){
+    var widget = $("section#compose-query");
+    getQFilters(function(filters,err) {
+        if (!err) {
+            // Count matching properties
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/queries/results/count",
+                data: { "access_token"  : session_token,
+                        "filters" : JSON.stringify(filters)
+                },
+                success: function(data){
+                    var n_results = data.result;
+                    widget.find("span#n_results").text(n_results);
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
+            widget.find("span#n_results").text(0);
+        }
+    });
+}
+
 function updateCounts(){
-    updateQCount();
+    updateQueryCount();
     updateModelCount();
+    updateResultCount();
 }
 
 function viewModels(){
@@ -150,8 +178,8 @@ function composeQuery(){
 }
 
 $(document).ready(function(){
-    $(document).on("change", "section#compose-query select#container", loadQParams);
-    $(document).on("change", "section#compose-query select#container", updateCounts);
+    $(document).on("change", "section#compose-query select#executable_name", loadQParams);
+    $(document).on("change", "section#compose-query select#executable_name", updateCounts);
     $(document).on("change", "section#compose-query textarea", updateCounts);
     $(document).on("click", "section#compose-query div.button_row div#models", viewModels);
     $(document).on("click", "section#compose-query div.button_row div#queries", viewQ);

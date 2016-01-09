@@ -22,17 +22,17 @@ var properties = db.get().collection('properties');
 //
 
 function form_property_filter(filters, user_id, res, cb) {
-    // Find executable
-    common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, result) {
+    // Find models
+    common.query_fields_only(models, filters['model'], ['_id'], user_id, res, function(res, err, result) {
         if (!err) {
-            var executable_id = String(result[0]['_id']);
-            // Find models
-            common.query_fields_only(models, filters['model'], ['_id'], user_id, res, function(res, err, result) {
+            var model_ids = [];
+            for (var i=0; i<result.length; i++) {
+                model_ids.push(String(result[i]['_id']));
+            }
+            // Find executable
+            common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, result) {
                 if (!err) {
-                    var model_ids = [];
-                    for (var i=0; i<result.length; i++) {
-                        model_ids.push(String(result[i]['_id']));
-                    }
+                    var executable_id = String(result[0]['_id']);
                     // Form property filter
                     var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
                     for (var key in filters['params']) {
@@ -102,8 +102,8 @@ function concaternate(o1, o2) {
     return o1;
 }
 
-router.get('/results', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(property_filter, user_id, res) {
+function form_results_filter(filters, user_id, res, cb) {
+    form_property_filter(filters, user_id, res, function(property_filter, user_id, res) {
         property_filter["status"] = "resolved";
         // Get output model ids
         common.query_fields_only(properties, property_filter, ['output_model_id'], user_id, res, function(res, err, result) {
@@ -112,39 +112,27 @@ router.get('/results', passport.authenticate('bearer', { session: false }), func
                 for (var i=0; i<result.length; i++) {
                     model_ids.push(result[i]['output_model_id']);
                 }
-                // Get models
-                common.query(models, {"_id":{"$in":model_ids}}, user_id, res, function(res, err, objs) {
-                    if(!err) {
-                        var items = [];
-                        var apply_content = function(i){
-                            if (i<objs.length) {
-                                var data = null;
-                                var err = null;
-                                GridStore.read(db.get(), String(objs[i]._id), function(err, fileData) {
-                                    if(!err) {
-                                        data = fileData.toString();
-                                        items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
-                                        apply_content(i+1);
-                                    } else {
-                                        res.statusCode = 500;
-                                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                        return res.json({ error: 'Server error' });
-                                    }
-                                });
-                            } else {
-                                log.info("Returning %d objects",items.length);
-                                return res.json({ status: 'OK', result: items });
-                            }
-                        };
-                        apply_content(0);
-                    } else {
-                        return res.json(err);
-                    }
-                });
+                var results_filter = filters['results'];
+                results_filter['_id'] = {"$in":model_ids};
+                cb(results_filter, user_id, res);
             } else {
-                return res.json(err);
+                return res.json({status: res.statusCode, error: JSON.stringify(err)});
             }
         });
+    });
+}
+
+router.get('/results', passport.authenticate('bearer', { session: false }), function(req, res) {
+    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, user_id, res) {
+        // Get models
+        models_routes.query(results_filter, user_id, res, common.return);
+    });
+});
+
+router.get('/results/count', passport.authenticate('bearer', { session: false }), function(req, res) {
+    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, user_id, res) {
+        // Get models
+        common.query_count(models, results_filter, user_id, res, common.return);
     });
 });
 
