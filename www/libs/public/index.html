@@ -16,6 +16,7 @@
     <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
     <script src="/scripts/utils/cookie.js"></script>
     <script src="/scripts/utils/clipboard.js"></script>
+    <script src="/scripts/utils/fixture.js"></script>
     <script src="/scripts/general.js"></script>
     <script src="/scripts/login.js"></script>
     <script src="/scripts/submissions.js"></script>
@@ -25,23 +26,33 @@
 </head>
 <body>
 
-<widget class="qtable prototype" constructor="initQTable">
-    <div class="table" style="margin: 0 auto;">
-        <div class="row">
-            <div class="label"><select class="container"></select>Executable:
-            </div>
-        </div>
-        <div class="row">
-            <div class="label" style="width: 227px;"><input class="model" type="text" value="" placeholder="filter (empty)">Model:</div>
-        </div>
-        <div class="row">
-            <div class="button submit">Search</div>
-        </div>
+<widget class="qtable prototype" constructor="new QTable">
+    <div class="label">Filter models:</div>
+    <textarea id="models_filter">{}</textarea>
+    <div class="button_row">
+        <div id="models" class="button"><span id="n_models">0</span> models</div>
+    </div>
+    <div class="label">Select executable:</div>
+    <select id="executable_name"></select>
+    <div class="label" id="parameters_label">Filter running parameters:</div>
+    <textarea id="parameters_filter">{}</textarea>
+    <div class="button_row">
+        <div id="queries" class="button"><span id="n_queries">0</span> queries</div>
+    </div>
+    <div class="label" id="results_label">Filter results:</div>
+    <textarea id="results_filter">{}</textarea>
+    <div class="label" id="fields_label">Target fields (leave blank for all fields):</div>
+    <textarea id="results_fields"></textarea>
+    <div class="button_row">
+        <div id="results" class="button"><span id="n_results">0</span> results</div>
     </div>
 </widget>
 
 <screen>
     <div id="title">Whiplash<img src="https://www.ethz.ch/img/header/eth_logo.png"></div>
+    <section id="tagline">
+        <div>the power of a cluster in your lap</div>
+    </section>
     <section id="menu">
         <div id="logout" class="hidden">Sign out</div>
         <div id="docs" class="hidden">Docs</div>
@@ -67,6 +78,8 @@
         <input type="password" class="passwd" placeholder="Create a new password">
         <input type="button" value="Request password change" class="submit">
     </section>
+    <section id="quickstart" class="content centered transit">
+    </section>
     <section id="view-queries" class="content transit">
         <div id="info"></div>
     </section>
@@ -74,25 +87,7 @@
         <div id="info"></div>
     </section>
     <section id="compose-query" class="content centered transit">
-        <div class="label">Filter models:</div>
-        <textarea id="models_filter">{}</textarea>
-        <div class="button_row">
-            <div id="models" class="button"><span id="n_models">0</span> models</div>
-        </div>
-        <div class="label">Select executable:</div>
-        <select id="executable_name"></select>
-        <div class="label" id="parameters_label">Filter running parameters:</div>
-        <textarea id="parameters_filter">{}</textarea>
-        <div class="button_row">
-            <div id="queries" class="button"><span id="n_queries">0</span> queries</div>
-        </div>
-        <div class="label" id="results_label">Filter results:</div>
-        <textarea id="results_filter">{}</textarea>
-        <div class="label" id="fields_label">Target fields (leave blank for all fields):</div>
-        <textarea id="results_fields"></textarea>
-        <div class="button_row">
-            <div id="results" class="button"><span id="n_results">0</span> results</div>
-        </div>
+        <widget class="qtable"></widget>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
 </screen>
