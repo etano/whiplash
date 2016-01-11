@@ -10,7 +10,7 @@ var db = require(libs + 'db/mongo');
 var collection = db.get().collection('accesstokens');
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, req.body, String(req.user._id), res, common.return);
+    common.query(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 module.exports = router;

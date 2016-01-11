@@ -38,21 +38,29 @@ function getQFilters(cb){
     var inputs = {'executable': widget.find("select#executable_name"),
                   'model': widget.find("textarea#models_filter"),
                   'params': widget.find("textarea#parameters_filter"),
-                  'results': widget.find("textarea#results_filter")};
+                  'results': widget.find("textarea#results_filter"),
+                  'fields': widget.find("textarea#results_fields")};
+    var fields = inputs['fields'].val().replace(/\s/g,'');
+    if (fields !== '') {
+        fields = fields.split(',');
+    }
     var filters = {'executable': JSON.stringify({"name": inputs['executable'].val()}),
                    'model': inputs['model'].val(),
                    'params': inputs['params'].val(),
-                   'results': inputs['results'].val()};
+                   'results': inputs['results'].val(),
+                   'fields': fields};
 
     // Check filters are proper JSON
     var bad_filters = false;
     for (var key in filters) {
-        try {
-            filters[key] = JSON.parse(filters[key]);
-            inputs[key].css('color','black');
-        } catch(e) {
-            inputs[key].css('color','red');
-            bad_filters = true;
+        if (key !== 'fields') {
+            try {
+                filters[key] = JSON.parse(filters[key]);
+                inputs[key].css('color','black');
+            } catch(e) {
+                inputs[key].css('color','red');
+                bad_filters = true;
+            }
         }
     }
 

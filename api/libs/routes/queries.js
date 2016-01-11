@@ -114,7 +114,12 @@ function form_results_filter(filters, user_id, res, cb) {
                 }
                 var results_filter = filters['results'];
                 results_filter['_id'] = {"$in":model_ids};
-                cb(results_filter, user_id, res);
+                var results_fields = [];
+                if(filters['fields']) {
+                    results_fields = filters['fields'];
+                }
+                console.log(results_fields);
+                cb(results_filter, results_fields, user_id, res);
             } else {
                 return res.json({status: res.statusCode, error: JSON.stringify(err)});
             }
@@ -123,15 +128,29 @@ function form_results_filter(filters, user_id, res, cb) {
 }
 
 router.get('/results', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, user_id, res) {
-        // Get models
-        models_routes.query(results_filter, user_id, res, common.return);
+    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
+        if (results_fields.length > 0) {
+            common.query_fields_only(models, results_filter, results_fields, user_id, res, function(res, err, objs) {
+                if (!err) {
+                    common.get_gridfs_field_objs(objs, results_fields, res, common.return);
+                } else {
+                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
+                }
+            });
+        } else {
+            common.query(models, results_filter, user_id, res, function(res, err, objs) {
+                if (!err) {
+                    common.get_gridfs_objs(objs, res, common.return);
+                } else {
+                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
+                }
+            });
+        }
     });
 });
 
 router.get('/results/count', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, user_id, res) {
-        // Get models
+    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
         common.query_count(models, results_filter, user_id, res, common.return);
     });
 });
