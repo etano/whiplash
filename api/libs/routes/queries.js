@@ -32,7 +32,12 @@ function form_property_filter(filters, user_id, res, cb) {
             // Find executable
             common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, result) {
                 if (!err) {
-                    var executable_id = String(result[0]['_id']);
+                    var executable_id;
+                    if (result.length > 0) {
+                        executable_id = String(result[0]['_id']);
+                    } else {
+                        executable_id = "NO_SUCH_EXECUTABLE";
+                    }
                     // Form property filter
                     var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
                     for (var key in filters['params']) {
@@ -117,7 +122,6 @@ function form_results_filter(filters, user_id, res, cb) {
                 if(filters['fields']) {
                     results_fields = filters['fields'];
                 }
-                console.log(results_fields);
                 cb(results_filter, results_fields, user_id, res);
             } else {
                 return res.json({status: res.statusCode, error: JSON.stringify(err)});

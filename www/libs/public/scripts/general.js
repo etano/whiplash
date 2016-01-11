@@ -93,7 +93,6 @@ function viewLogin(){
     $("section#menu > div#logout").addClass("hidden");
     $("section#menu > div#view-queries").addClass("hidden");
     $("section#menu > div#compose-query").addClass("hidden");
-    $("section#menu > div#docs").addClass("hidden");
     transition($("section#login"));
 }
 

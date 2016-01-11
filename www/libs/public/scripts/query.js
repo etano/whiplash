@@ -1,8 +1,8 @@
 var QTableFixture = fixture(function(){
     //$(document).on("change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
     //$(document).on("click",  $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
-    $(document).on("blur change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
-    $(document).on("blur change", $("widget.qtable textarea"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+    $(document).on("change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+    $(document).on("change", $("widget.qtable textarea"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
 });
 
 var QTable = function(widget){
@@ -37,15 +37,17 @@ QTable.prototype.showFilters = function(){
         select.append("<option value='"+QTable.executables[i].name+"'>"+QTable.executables[i].name+"</option>");
     select.removeAttr("disabled");
 
-    var executable_name = select.val();
-    var executable_json = $.grep(QTable.executables, function(e){ return e.name == executable_name; })[0];
-    var params = executable_json.params.optional.concat(executable_json.params.required);
+    if (QTable.executables.length > 0) {
+        var executable_name = select.val();
+        var executable_json = $.grep(QTable.executables, function(e){ return e.name == executable_name; })[0];
+        var params = executable_json.params.optional.concat(executable_json.params.required);
 
-    var param_json = {};
-    for(var i = 0; i < params.length; i++){
-        param_json[params[i]] = "";
+        var param_json = {};
+        for(var i = 0; i < params.length; i++){
+            param_json[params[i]] = "";
+        }
+        this.widget.find("textarea#parameters_filter").val(JSON.stringify(param_json));
     }
-    this.widget.find("textarea#parameters_filter").val(JSON.stringify(param_json));
     this.updateCounts();
 };
 

@@ -182,11 +182,7 @@ module.exports = {
     query: function(collection, filter, user_id, res, cb) {
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-
-                } else if (!err) {
+                if (!err) {
                     log.info("Found %d objects in %s",objs.length,collection.collectionName);
                     cb(res,0,objs);
                 } else {
@@ -201,10 +197,7 @@ module.exports = {
     query_one: function(collection, filter, user_id, res, cb) {
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).limit(1).toArray(function (err, obj) {
-                if(!obj) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
+                if (!err) {
                     log.info("Query single object in %s",collection.collectionName);
                     cb(res,0,obj[0]);
                 } else {
@@ -242,10 +235,7 @@ module.exports = {
                 proj[new_fields[i]] = 1;
             }
             collection.find(filter).project(proj).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
+                if (!err) {
                     log.info("Querying fields in %s",collection.collectionName);
                     cb(res,0,objs);
                 } else {
@@ -345,10 +335,7 @@ module.exports = {
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                                        if(!objs) {
-                                            res.statusCode = 404;
-                                            cb(res,"Not found",0);
-                                        } else if (!err) {
+                                        if (!err) {
                                             var ids = [];
                                             for(var j=0; j<objs.length; j++) {
                                                 ids.push(objs[j]['_id']);
