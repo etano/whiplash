@@ -1,24 +1,25 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
 
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
-function add_metadata(filter)
+function get_gridfs_filter(filter)
 {
     var special = ['$or','$and','$not','$nor'];
     var new_filter = {};
     for(var key in filter) {
-        if(key === '_id')
+        if(key === '_id') {
             new_filter['_id'] = filter[key];
-        else if(~special.indexOf(key)){
-            new_filter[key] = []
-            for(var i = 0; i < filter[key].length; i++)
-                new_filter[key].push(add_metadata(filter[key][i]));
-        }
-        else{
+        } else if(~special.indexOf(key)) {
+            new_filter[key] = [];
+            for (var i = 0; i < filter[key].length; i++) {
+                new_filter[key].push(get_gridfs_filter(filter[key][i]));
+            }
+        } else {
             if(filter.hasOwnProperty(key)) {
                 new_filter["metadata."+key] = filter[key];
             }
@@ -27,7 +28,53 @@ function add_metadata(filter)
     return new_filter;
 }
 
+function get_gridfs_metadata_fields(fields) {
+    var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
+    var metadata_fields = [];
+    for(var i=0; i<fields.length; i++) {
+        if((!~special.indexOf(fields[i])) && (!~fields[i].indexOf('content.'))) {
+            metadata_fields.push('metadata.' + fields[i]);
+        } else {
+            metadata_fields.push(fields[i]);
+        }
+    }
+    return metadata_fields;
+}
+
+function get_gridfs_content_fields(fields) {
+    var content_fields = [];
+    for(var i=0; i<fields.length; i++) {
+        if((fields[i] === 'content') || (~fields[i].indexOf('content.'))) {
+            content_fields.push(fields[i]);
+        }
+    }
+    return content_fields;
+}
+
+function concaternate(o1, o2) {
+    for (var key in o2) {
+        o1[key] = o2[key];
+    }
+    return o1;
+}
+
 module.exports = {
+
+    //
+    // Get payload
+    //
+
+    get_payload: function(req, key) {
+        if (!req.query[key]) {
+            if (!req.body[key]) {
+                return req.body;
+            } else {
+                return req.body[key];
+            }
+        } else {
+            return JSON.parse(req.query[key]);
+        }
+    },
 
     //
     // Permissions
@@ -74,13 +121,21 @@ module.exports = {
 
                     // Prepend metadata for models
                     if (collection.collectionName === "fs.files") {
-                        filter = add_metadata(filter);
+                        filter = get_gridfs_filter(filter);
                     }
 
                     // Callback with filter
                     cb(filter);
                 });
             });
+        } else {
+            // Prepend metadata for models
+            if (collection.collectionName === "fs.files") {
+                filter = get_gridfs_filter(filter);
+            }
+
+            // Callback with filter
+            cb(filter);
         }
     },
 
@@ -127,10 +182,7 @@ module.exports = {
     query: function(collection, filter, user_id, res, cb) {
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
+                if (!err) {
                     log.info("Found %d objects in %s",objs.length,collection.collectionName);
                     cb(res,0,objs);
                 } else {
@@ -145,10 +197,7 @@ module.exports = {
     query_one: function(collection, filter, user_id, res, cb) {
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.find(filter).limit(1).toArray(function (err, obj) {
-                if(!obj) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
+                if (!err) {
                     log.info("Query single object in %s",collection.collectionName);
                     cb(res,0,obj[0]);
                 } else {
@@ -177,15 +226,16 @@ module.exports = {
 
     query_fields_only: function(collection, filter, fields, user_id, res, cb) {
         this.form_filter(collection, filter, user_id, function(filter) {
+            var new_fields = fields;
+            if (collection.collectionName === "fs.files") {
+                new_fields = get_gridfs_metadata_fields(fields);
+            }
             var proj = {};
-            for(var i=0; i<fields.length; i++){
-                proj[fields[i]] = 1;
+            for(var i=0; i<new_fields.length; i++){
+                proj[new_fields[i]] = 1;
             }
             collection.find(filter).project(proj).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
+                if (!err) {
                     log.info("Querying fields in %s",collection.collectionName);
                     cb(res,0,objs);
                 } else {
@@ -285,10 +335,7 @@ module.exports = {
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                                        if(!objs) {
-                                            res.statusCode = 404;
-                                            cb(res,"Not found",0);
-                                        } else if (!err) {
+                                        if (!err) {
                                             var ids = [];
                                             for(var j=0; j<objs.length; j++) {
                                                 ids.push(objs[j]['_id']);
@@ -465,12 +512,12 @@ module.exports = {
     mapreduce: function(collection,req,res) {
         if (!req.query.field) {
             req.query.filter = req.body.filter;
-	    req.query.map = req.body.map;
-	    req.query.reduce=req.body.reduce;
-	    req.query.finalize=req.body.finalize;
+            req.query.map = req.body.map;
+            req.query.reduce=req.body.reduce;
+            req.query.finalize=req.body.finalize;
         }
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-	    eval(String(req.query.map));
+            eval(String(req.query.map));
             eval(String(req.query.reduce));
             eval(String(req.query.finalize));
             var o = {};
@@ -505,5 +552,73 @@ module.exports = {
                 }
             });
         });
-    }
+    },
+
+    //
+    // GridFS helpers
+    //
+
+    get_gridfs_objs: function(objs, res, cb) {
+        var items = [];
+        var apply_content = function(i){
+            if (i<objs.length) {
+                GridStore.read(db.get(), String(objs[i]._id), function(err, fileData) {
+                    if(!err) {
+                        var data = fileData.toString();
+                        items.push(concaternate({'content':JSON.parse(data),'_id':objs[i]._id}, objs[i].metadata));
+                        apply_content(i+1);
+                    } else {
+                        res.statusCode = 500;
+                        err = {"message":"Error reading file " + name};
+                        log.error("Read error: %s",err.message);
+                        cb(res,err.message,0);
+                    }
+                });
+            } else {
+                log.info("Returning %d objects",items.length);
+                cb(res,0,items);
+            }
+        };
+        apply_content(0);
+    },
+
+    get_gridfs_field_objs: function(objs, fields, res, cb) {
+        var content_fields = get_gridfs_content_fields(fields);
+        var apply_content = function(i){
+            if (i<objs.length) {
+                var name = String(objs[i]._id);
+                GridStore.read(db.get(), name, function(err, fileData) {
+                    if(!err) {
+                        var data = JSON.parse(fileData.toString());
+                        for(var j=0; j<content_fields.length; j++) {
+                            var subfields = content_fields[j].split('.');
+                            var obj = data;
+                            for(var k=1; k<subfields.length; k++) {
+                                if (obj[subfields[k]]) {
+                                    obj = obj[subfields[k]];
+                                } else {
+                                    res.statusCode = 404;
+                                    err = {"message":"Field " + content_fields[j] + " not found in " + name};
+                                    log.error("Read error: %s",err.message);
+                                    cb(res,err.message,0);
+                                }
+                            }
+                            objs[i][content_fields[j]] = obj;
+                        }
+                        apply_content(i+1);
+                    } else {
+                        res.statusCode = 500;
+                        err = {"message":"Error reading file " + name};
+                        log.error("Read error: %s",err.message);
+                        cb(res,err.message,0);
+                    }
+                });
+            } else {
+                log.info("Returning %d objects",objs.length);
+                cb(res,0,objs);
+            }
+        };
+        apply_content(0);
+    },
+
 };

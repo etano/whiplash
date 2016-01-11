@@ -14,7 +14,7 @@ var ObjectID = require('mongodb').ObjectID;
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, req.body, String(req.user._id), res, common.return);
+    common.commit(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 //
@@ -22,42 +22,11 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, req.body, String(req.user._id), res, common.return);
-});
-
-router.get('/search/', passport.authenticate('bearer', { session: false }), function(req, res) {
-
-    common.form_filter(collection,{'status':"resolved"},String(req.user._id), function(filter){
-        collection.find(filter).toArray(function (err, objs) {
-            var runs = [];
-            for(var i = 0; i < objs.length; i++) {
-                var run = {};
-
-                run.id = objs[i]._id;
-                run.app = objs[i].executable_id;
-                run.model = objs[i].input_model_id;
-
-                var params = [];
-                for(var key in objs[i].params)
-                    params.push({'name' : key, 'value' : objs[i].params[key]});
-                run.params = params;
-
-                runs.push(run);
-            }
-
-            return res.json({
-                status: 'OK',
-                result: {
-                    count: runs.length,
-                    runs: runs
-                }
-            });
-        });
-    });
+    common.query(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(collection, req.body, String(req.user._id), res, common.return);
+    common.query_one(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -75,11 +44,11 @@ router.get('/id/:id/log', passport.authenticate('bearer', { session: false }), f
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, req.body, String(req.user._id), res, common.return);
+    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
+    common.query_fields_only(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 //
@@ -87,23 +56,23 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 //
 
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.update(collection, req.body.filter, req.body.update, String(req.user._id), res, common.return);
+    common.update(collection, common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
 });
 
 router.put('/replace/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.replace(ObjType, collection, req.body, String(req.user._id), res, common.return);
+    common.replace(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 router.put('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_one_and_update(collection, req.body.filter, req.body.update, String(req.user._id), res, common.return);
+    common.find_one_and_update(collection, common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
 });
 
 router.put('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.find_one_and_update(collection, {"_id": new ObjectID(req.params.id)}, req.body.update, String(req.user._id), res, common.return);
+    common.find_one_and_update(collection, {"_id": new ObjectID(req.params.id)}, common.get_payload(req,'update'), String(req.user._id), res, common.return);
 });
 
 router.put('/refresh/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.form_filter(collection,{"status":"timed out"},String(req.user._id), function(filter){
+    common.form_filter(collection, {"status":"timed out"}, String(req.user._id), function(filter){
         collection.find(filter).forEach(function(doc) {
             collection.updateOne({"_id":new ObjectID(doc._id)},{"$set":{"timeout":2*doc.timeout,"status":"unresolved"}});
         }, function(err) {
@@ -124,7 +93,7 @@ router.put('/refresh/', passport.authenticate('bearer', { session: false }), fun
 //
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, req.body, String(req.user._id), res, common.return);
+    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -136,15 +105,15 @@ router.delete('/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-     var map = function () {
-                emit(this.owner,
+   var map = function () {
+                 emit(this.owner,
                      {sum: this[field],
                       max: this[field],
                       min: this[field],
                       count: 1,
                       diff: 0
                      });
-            };
+             };
    common.stats(collection,req,res,map);
 });
 

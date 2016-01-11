@@ -37,11 +37,41 @@ section {
     -webkit-transform: translateX(-50%) translateY(-50%);
 }
 
-section div, div.button, input, h2, label, center {
+section div, div.button, input, h2, label, center, select, textarea {
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     font-size: 13px;
     transition: color 500ms;
+}
+
+select {
+    display: block;
+    margin: 1em 0;
+    outline: none;
+    padding: 1em;
+    font-size: 14px;
+    width: 100%;
+    background-color: rgba(0,0,0,0);
+    text-align: left;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    border: 1px solid #C5C5C5;
+    width: 100%;
+}
+
+textarea {
+    display: block;
+    margin: 1em 0;
+    outline: none;
+    padding: 1em;
+    font-size: 14px;
+    width: 100%;
+    background-color: rgba(0,0,0,0);
+    text-align: left;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    border: 1px solid #C5C5C5;
+    width: 100%;
 }
 
 section#quickstart {
@@ -140,7 +170,7 @@ section#menu div.active {
     border: 1px solid rgb(50,210,210);
 }
 
-div.hidden {
+div.hidden, span.hidden {
     display: none !important;
 }
 

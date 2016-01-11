@@ -11,12 +11,12 @@ var ObjectID = require('mongodb').ObjectID;
 var GridStore = require('mongodb').GridStore;
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, req.body, String(req.user._id), res, common.return);
+    common.commit(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 router.post('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    req.body = {'_id':req.params.id};
-    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    var filter = {'_id':req.params.id};
+    common.form_filter(collection, filter, String(req.user._id), function(filter) {
         collection.find(filter).limit(1).toArray(function (err, objs) {
             if (!err) {
                 if (objs.length > 0) {
@@ -24,8 +24,7 @@ router.post('/:id', passport.authenticate('bearer', { session: false }), functio
                     delete objs[0]._id;
                     delete objs[0].timestamp;
                     objs[0].name = objs[0].name + '_copy';
-                    req.body = objs;
-                    common.validate(ObjType,req, function(err) {
+                    common.validate(ObjType, objs, function(err) {
                         if(err) {
                             if(err.name === 'ValidationError') {
                                 log.error('Validation error(%d): %s', 400, err.message);
@@ -35,16 +34,16 @@ router.post('/:id', passport.authenticate('bearer', { session: false }), functio
                                 return res.json({ status: 500, error: err.toString() });
                             }
                         } else {
-                            collection.insertOne(req.body[0], function(err, r) {
+                            collection.insertOne(objs[0], function(err, r) {
                                 if (!err) {
                                     return res.json({
                                         status: 'OK',
                                         result: {
-                                            name: req.body[0].name,
-                                            time: req.body[0].timestamp.toLocaleString(),
+                                            name: objs[0].name,
+                                            time: objs[0].timestamp.toLocaleString(),
                                             batch_id: r.insertedId,
-                                            script: req.body[0].script,
-                                            submitted: req.body[0].submitted
+                                            script: objs[0].script,
+                                            submitted: objs[0].submitted
                                         }
                                     });
                                 } else {
@@ -71,7 +70,7 @@ router.post('/:id', passport.authenticate('bearer', { session: false }), functio
 //
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, req.body, String(req.user._id), res, common.return);
+    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -83,11 +82,11 @@ router.delete('/:id', passport.authenticate('bearer', { session: false }), funct
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, req.body, String(req.user._id), res, common.return);
+    common.query(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(collection, req.body, String(req.user._id), res, common.return);
+    common.query_one(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
@@ -95,17 +94,17 @@ router.get('/id/:id', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, req.body, String(req.user._id), res, common.return);
+    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
+    common.query_fields_only(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get all jobs submitted by user
-    req.body = {};
-    common.form_filter(collection,req.body,String(req.user._id), function(filter) {
+    var filter = {};
+    common.form_filter(collection, filter, String(req.user._id), function(filter) {
         collection.find(filter).toArray(function (err, objs) {
             if (!err) {
                 // Count properties of different statuses for each job

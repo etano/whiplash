@@ -14,7 +14,7 @@ var ObjectID = require('mongodb').ObjectID;
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, req.body, String(req.user._id), res, common.return);
+    common.commit(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 //
@@ -50,11 +50,11 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, req.body, String(req.user._id), res, common.return);
+    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
+    common.query_fields_only(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 
@@ -63,7 +63,7 @@ router.get('/fields/', passport.authenticate('bearer', { session: false }), func
 //
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, req.body, String(req.user._id), res, common.return);
+    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
