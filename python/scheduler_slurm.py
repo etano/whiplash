@@ -91,11 +91,12 @@ def scheduler(args):
     if args.local:
         while True:
             [time_limit,time_window] = get_times(wdb)
+            time_window = 8
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
                 make_batches(wdb,time_window)
                 print('starting local scheduler')
-                sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window 8 --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+                sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
             time.sleep(10)
     else:
         count = 0
