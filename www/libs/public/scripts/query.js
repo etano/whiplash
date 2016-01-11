@@ -132,29 +132,38 @@ QTable.prototype.getFilters = function(callback){
     var inputs = {'executable': this.widget.find("select#executable_name"),
                   'model': this.widget.find("textarea#models_filter"),
                   'params': this.widget.find("textarea#parameters_filter"),
-                  'results': this.widget.find("textarea#results_filter")};
+                  'results': this.widget.find("textarea#results_filter"),
+                  'fields': this.widget.find("textarea#results_fields")};
+    var fields = inputs['fields'].val().replace(/\s/g,'');
+    if (fields !== '') {
+        fields = fields.split(',');
+    }
     var filters = {'executable': JSON.stringify({"name": inputs['executable'].val()}),
                    'model': inputs['model'].val(),
                    'params': inputs['params'].val(),
-                   'results': inputs['results'].val()};
+                   'results': inputs['results'].val(),
+                   'fields': fields};
 
     // Check filters are proper JSON
     var bad_filters = false;
     for (var key in filters) {
-        try {
-            filters[key] = JSON.parse(filters[key]);
-            inputs[key].css('color','black');
-        } catch(e) {
-            inputs[key].css('color','red');
-            bad_filters = true;
+        if (key !== 'fields') {
+            try {
+                filters[key] = JSON.parse(filters[key]);
+                inputs[key].css('color','black');
+            } catch(e) {
+                inputs[key].css('color','red');
+                bad_filters = true;
+            }
         }
     }
 
-    if(bad_filters){
-        callback(0,bad_filters);
-    }else{
-        callback(filters,0);
+    if (bad_filters) {
+        cb(0,bad_filters);
+    } else {
+        cb(filters,0);
     }
+
 };
 
 function viewModels(){
