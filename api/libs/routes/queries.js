@@ -39,7 +39,6 @@ function form_property_filter(filters, user_id, res, cb) {
                         property_filter['params.'+key] = filters['params'][key];
                     }
                     cb(property_filter, user_id, res);
-
                 } else {
                     return res.json({status: res.statusCode, error: JSON.stringify(err)});
                 }

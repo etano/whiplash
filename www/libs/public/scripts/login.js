@@ -4,7 +4,7 @@ var www_client_secret = "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb
 function logout(){
     removeCookie("session_token");
     removeCookie("refresh_token");
-    redirect("/");
+    viewLogin();
 }
 
 function login(){

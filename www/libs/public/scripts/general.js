@@ -88,6 +88,15 @@ function viewMain(){
     composeQuery();
 }
 
+function viewLogin(){
+    $("section#menu > div.hidden").removeClass("hidden");
+    $("section#menu > div#logout").addClass("hidden");
+    $("section#menu > div#view-queries").addClass("hidden");
+    $("section#menu > div#compose-query").addClass("hidden");
+    $("section#menu > div#docs").addClass("hidden");
+    transition($("section#login"));
+}
+
 function roundCentering(){
     $("section.centered").each(function(i){
         var y = Math.ceil($(this).height()/2),
@@ -101,7 +110,7 @@ function roundCentering(){
 $(document).ready(function(){
     roundCentering();
 
-    $(document).on("click", "div#title, section#tagline",     function(){ transition($("section#quickstart"));   });
+    $(document).on("click", "div#title, section#tagline",     function(){ redirect("/"); });
     $(document).on("click", "section#login div#forgot",       function(){ transition($("section#forgot"));       });
     $(document).on("click", "section#menu div#login",         function(){ transition($("section#login"));        });
     $(document).on("click", "section#menu div#register",      function(){ transition($("section#register"));     });
@@ -120,5 +129,6 @@ $(document).ready(function(){
     session_token = getCookie("session_token");
     refresh_token = getCookie("refresh_token");
     if(session_token) setTimeout(function(){ viewMain(); }, 1000);
+    else setTimeout(function(){ viewLogin(); }, 100);
     //viewMain();
 });

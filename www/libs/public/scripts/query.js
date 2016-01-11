@@ -1,9 +1,8 @@
 var QTableFixture = fixture(function(){
-    $(document).on("change", $("widget.qtable select.executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
-    $(document).on("click",  $("widget.qtable select.executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
-
-    $(document).on("keyup keypress blur change", $("widget.qtable select.executable_name"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
-    $(document).on("keyup keypress blur change", $("widget.qtable textarea"),         attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+    //$(document).on("change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
+    //$(document).on("click",  $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
+    $(document).on("blur change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+    $(document).on("blur change", $("widget.qtable textarea"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
 });
 
 var QTable = function(widget){
@@ -13,7 +12,7 @@ var QTable = function(widget){
     if(QTable.executables){
         instance.showFilters();
     }else{
-        instance.widget.find("select.executable_name").attr("disabled", "true");
+        instance.widget.find("select#executable_name").attr("disabled", "true");
         $.ajax({
             type: 'GET',
             url: api_addr+"/api/executables/",
@@ -32,14 +31,14 @@ var QTable = function(widget){
 };
 
 QTable.prototype.showFilters = function(){
-    var select = this.widget.find("select.executable_name");
+    var select = this.widget.find("select#executable_name");
     select.empty();
     for(var i = 0; i < QTable.executables.length; i++)
         select.append("<option value='"+QTable.executables[i].name+"'>"+QTable.executables[i].name+"</option>");
     select.removeAttr("disabled");
 
-    var executable = select.val();
-    var executable_json = $.grep(QTable.executables, function(e){ return e.name == executable; })[0];
+    var executable_name = select.val();
+    var executable_json = $.grep(QTable.executables, function(e){ return e.name == executable_name; })[0];
     var params = executable_json.params.optional.concat(executable_json.params.required);
 
     var param_json = {};
@@ -105,6 +104,7 @@ QTable.prototype.updateModelCount = function(){
 };
 
 QTable.prototype.updateResultCount = function(){
+    var widget = this.widget;
     this.getFilters(function(filters,err) {
         if (!err) {
             // Count matching properties
@@ -116,24 +116,25 @@ QTable.prototype.updateResultCount = function(){
                 },
                 success: function(data){
                     var n_results = data.result;
-                    this.widget.find("span#n_results").text(n_results);
+                    widget.find("span#n_results").text(n_results);
                 },
                 error: function(request, status, err){
                     alert(err);
                 }
             });
         } else {
-            this.widget.find("span#n_results").text(0);
+            widget.find("span#n_results").text(0);
         }
     });
 };
 
 QTable.prototype.getFilters = function(callback){
-    var inputs = {'executable': this.widget.find("select#executable_name"),
-                  'model': this.widget.find("textarea#models_filter"),
-                  'params': this.widget.find("textarea#parameters_filter"),
-                  'results': this.widget.find("textarea#results_filter"),
-                  'fields': this.widget.find("textarea#results_fields")};
+    var widget = this.widget;
+    var inputs = {'executable': widget.find("select#executable_name"),
+                  'model': widget.find("textarea#models_filter"),
+                  'params': widget.find("textarea#parameters_filter"),
+                  'results': widget.find("textarea#results_filter"),
+                  'fields': widget.find("textarea#results_fields")};
     var fields = inputs['fields'].val().replace(/\s/g,'');
     if (fields !== '') {
         fields = fields.split(',');
@@ -159,9 +160,9 @@ QTable.prototype.getFilters = function(callback){
     }
 
     if (bad_filters) {
-        cb(0,bad_filters);
+        callback(0,bad_filters);
     } else {
-        cb(filters,0);
+        callback(filters,0);
     }
 
 };
