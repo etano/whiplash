@@ -1,7 +1,4 @@
-import sys,json,time,zlib,math,os,getpass
-
-if sys.version_info[0] < 3: import httplib
-else: import http.client as httplib
+import sys,json,time,zlib,math,os,getpass,requests
 
 try: input = raw_input
 except NameError: pass
@@ -51,16 +48,16 @@ class wdb:
             self.headers["Content-type"] = "gzip"
         else:
             self.headers["Content-type"] = "application/json"
-        conn = httplib.HTTPSConnection(self.server,self.port)
+
         try:
-            conn.request(protocol,uri,payload,self.headers)
+            res = requests.request(protocol,'https://' + self.server + ':' + str(self.port) + uri,data=payload,headers=self.headers)
         except:
-            conn = httplib.HTTPConnection(self.server,self.port)
-            conn.request(protocol,uri,str(payload),self.headers)
-        res = conn.getresponse()
-        if res.status != 200:
-            print(res.status, res.reason, res.read())
-        return res.status, res.reason, res.read()
+            res = requests.request(protocol,'http://' + self.server + ':' + str(self.port) + uri,data=payload,headers=self.headers)
+
+        if res.status_code != 200:
+            print(res.status_code, res.reason, res.content)
+
+        return res.status_code, res.reason, res.content
 
     #
     # Tokens
