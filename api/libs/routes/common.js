@@ -237,6 +237,17 @@ module.exports = {
             collection.find(filter).project(proj).toArray(function (err, objs) {
                 if (!err) {
                     log.info("Querying fields in %s",collection.collectionName);
+                    if (collection.collectionName === "fs.files") {
+                        for(var i=0; i<objs.length; i++){
+                            if(objs[i].hasOwnProperty('metadata')) {
+                                var metadata = objs[i].metadata;
+                                delete objs[i].metadata;
+                                for(var key in metadata){
+                                    objs[i][key] = metadata[key];
+                                }
+                            }
+                        }
+                    }
                     cb(res,0,objs);
                 } else {
                     res.statusCode = 500;
