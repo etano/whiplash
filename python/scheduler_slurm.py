@@ -88,25 +88,35 @@ def scheduler(args):
 
     print('slurm scheduler connected to wdb')
 
-    count = 0
-    while True:
-        if args.test and count > 1:
-           break
-
-        [time_limit,time_window] = get_times(wdb)
-        if (time_limit > 0 and time_window > 0):
-            make_batches(wdb,time_window)
-        if not args.test:
-            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
-        else:
-            num_pending = 0
-        if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
+    if args.local:
+        while True:
+            [time_limit,time_window] = get_times(wdb)
+            time_window = 8
+            print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
-                submit_job(args,time_limit,time_window)
+                make_batches(wdb,time_window)
+                print('starting local scheduler')
+                sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+            time.sleep(10)
+    else:
+        count = 0
+        while True:
+            if args.test and count > 1:
+               break
+            [time_limit,time_window] = get_times(wdb)
+            if (time_limit > 0 and time_window > 0):
+                make_batches(wdb,time_window)
+            if not args.test:
+                num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
             else:
-                print('time_limit',time_limit,'time_window',time_window)
-        time.sleep(6)
-        count += 1
+                num_pending = 0
+            if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
+                if (time_limit > 0 and time_window > 0):
+                    submit_job(args,time_limit,time_window)
+                else:
+                    print('time_limit:',time_limit,'time_window:',time_window)
+            time.sleep(6)
+            count += 1
 
     print('slurm scheduler shutting down')
 
@@ -123,6 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
+    parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')    
     args = parser.parse_args()
 
     assert args.num_cpus <= 20

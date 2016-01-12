@@ -35,18 +35,21 @@ def scheduler(args):
 
     context = mp.get_context('fork')
 
-    users = []
+    running_users = []
     schedulers = []
     count = 0
     while True:
         for wdb_user in get_users(wdb):
             user = wdb_user['username']
-            if user not in users:
-                print('starting slurm scheduler for user',user)
-                p = context.Process(target=start_scheduler_slurm, args=(args,wdb_user,))
-                p.start()
-                schedulers.append(p)
-                users.append(user)
+            if user not in running_users:
+                if sp.call("ssh -o BatchMode=yes " + user + "@" + wdb_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255:
+                    print('access denied for user',user)
+                else:
+                    print('starting slurm scheduler for user',user)
+                    p = context.Process(target=start_scheduler_slurm, args=(args,wdb_user,))
+                    p.start()
+                    schedulers.append(p)
+                    running_users.append(user)
         if args.test:
             break
         else:

@@ -5,7 +5,7 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def get_unresolved(wdb,time_limit,pid,unresolved,is_work):
+def get_unresolved(wdb,pid,unresolved,is_work):
 
     t0 = time.time()
 
@@ -132,7 +132,7 @@ def worker(pid,wdb,args,end_time):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
                 if (time_left() > 2*args.time_window):
-                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,args.time_window,pid,unresolved0,is_work,))
+                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,pid,unresolved0,is_work,))
                     fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
