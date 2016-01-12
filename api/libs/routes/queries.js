@@ -7,21 +7,17 @@ var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var models_routes = require(libs + 'routes/models');
 //var collection = db.get().collection('properties');
-//var ObjType = require(libs + 'schemas/property');
+var property = require(libs + 'schemas/property');
 var GridStore = require('mongodb').GridStore;
 var executables = db.get().collection('executables');
 var models = db.get().collection('fs.files');
 var properties = db.get().collection('properties');
 
 //
-// Submit
+// Helper functions
 //
 
-//
-// Retrieve
-//
-
-function form_property_filter(filters, user_id, res, cb) {
+function get_ids(filters, user_id, res, cb) {
     // Find models
     common.query_fields_only(models, filters['model'], ['_id'], user_id, res, function(res, err, result) {
         if (!err) {
@@ -32,18 +28,11 @@ function form_property_filter(filters, user_id, res, cb) {
             // Find executable
             common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, result) {
                 if (!err) {
-                    var executable_id;
+                    var executable_id = -1;
                     if (result.length > 0) {
                         executable_id = String(result[0]['_id']);
-                    } else {
-                        executable_id = "NO_SUCH_EXECUTABLE";
                     }
-                    // Form property filter
-                    var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
-                    for (var key in filters['params']) {
-                        property_filter['params.'+key] = filters['params'][key];
-                    }
-                    cb(property_filter, user_id, res);
+                    cb(model_ids, executable_id, user_id, res);
                 } else {
                     return res.json({status: res.statusCode, error: JSON.stringify(err)});
                 }
@@ -54,20 +43,83 @@ function form_property_filter(filters, user_id, res, cb) {
     });
 }
 
+function form_property_filter(filters, user_id, res, cb) {
+    get_ids(filters, user_id, res, function(model_ids, executable_id, user_id, res) {
+        // Form property filter
+        var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
+        for (var key in filters['params']) {
+            property_filter['params.'+key] = filters['params'][key];
+        }
+        cb(property_filter, user_id, res);
+    });
+}
+
+function form_results_filter(filters, user_id, res, cb) {
+    form_property_filter(filters, user_id, res, function(property_filter, user_id, res) {
+        property_filter["status"] = "resolved";
+        // Get output model ids
+        common.query_fields_only(properties, property_filter, ['output_model_id'], user_id, res, function(res, err, result) {
+            if(!err) {
+                var model_ids = [];
+                for (var i=0; i<result.length; i++) {
+                    model_ids.push(result[i]['output_model_id']);
+                }
+                var results_filter = filters['results'];
+                results_filter['_id'] = {"$in":model_ids};
+                var results_fields = [];
+                if(filters['fields']) {
+                    results_fields = filters['fields'];
+                }
+                cb(results_filter, results_fields, user_id, res);
+            } else {
+                return res.json({status: res.statusCode, error: JSON.stringify(err)});
+            }
+        });
+    });
+}
+
+//
+// Submit
+//
+
+router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filters = common.get_payload(req,'filters');
+    get_ids(filters, String(req.user._id), res, function(model_ids, executable_id, user_id, res) {
+        var props = [];
+        // Form properties
+        for (var i=0; i<model_ids.length; i++) {
+            for (var j=0; j<filters['n_rep']; j++) {
+                var prop = {'executable_id':executable_id,'input_model_id':model_ids[i],'timeout':3600,'params':{}}; // FIXME: Hard-coded timeout
+                for(var key in filters['params']) {
+                    prop['params'][key] = filters['params'][key];
+                }
+                prop['params']['seed'] = j;
+                props.push(prop);
+            }
+        }
+        // Commit properties
+        common.commit(property, properties, props, user_id, res, common.return);
+    });
+});
+
+//
+// Retrieve
+//
+
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(property_filter, user_id, res) {
+    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
         common.query(properties, property_filter, user_id, res, common.return);
     });
 });
 
 router.get('/count', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(property_filter, user_id, res) {
+    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
         common.query_count(properties, property_filter, user_id, res, common.return);
     });
 });
 
 router.get('/stats', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(property_filter, user_id, res) {
+    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
         common.query_fields_only(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
             if (!err) {
                 var ids = [];
@@ -99,39 +151,8 @@ router.get('/stats', passport.authenticate('bearer', { session: false }), functi
     });
 });
 
-function concaternate(o1, o2) {
-    for (var key in o2) {
-        o1[key] = o2[key];
-    }
-    return o1;
-}
-
-function form_results_filter(filters, user_id, res, cb) {
-    form_property_filter(filters, user_id, res, function(property_filter, user_id, res) {
-        property_filter["status"] = "resolved";
-        // Get output model ids
-        common.query_fields_only(properties, property_filter, ['output_model_id'], user_id, res, function(res, err, result) {
-            if(!err) {
-                var model_ids = [];
-                for (var i=0; i<result.length; i++) {
-                    model_ids.push(result[i]['output_model_id']);
-                }
-                var results_filter = filters['results'];
-                results_filter['_id'] = {"$in":model_ids};
-                var results_fields = [];
-                if(filters['fields']) {
-                    results_fields = filters['fields'];
-                }
-                cb(results_filter, results_fields, user_id, res);
-            } else {
-                return res.json({status: res.statusCode, error: JSON.stringify(err)});
-            }
-        });
-    });
-}
-
 router.get('/results', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
+    form_results_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
         if (results_fields.length > 0) {
             common.query_fields_only(models, results_filter, results_fields, user_id, res, function(res, err, objs) {
                 if (!err) {
@@ -153,7 +174,7 @@ router.get('/results', passport.authenticate('bearer', { session: false }), func
 });
 
 router.get('/results/count', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(JSON.parse(req.query.filters), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
+    form_results_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
         common.query_count(models, results_filter, user_id, res, common.return);
     });
 });

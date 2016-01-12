@@ -46,6 +46,11 @@ executable_id = wdb.executables.commit(executable)[0]
 print("Query executable")
 assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
+print("Query for some results")
+wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10)
+
+sys.exit(0)
+
 print("Submit properties")
 N0 = 2; t0 = 1.2
 N1 = 3; t1 = 2.0; w1 = 1.0

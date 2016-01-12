@@ -135,7 +135,6 @@ QTable.prototype.getFilters = function(callback){
     var inputs = {'executable': widget.find("select#executable_name"),
                   'model': widget.find("textarea#models_filter"),
                   'params': widget.find("textarea#parameters_filter"),
-                  'results': widget.find("textarea#results_filter"),
                   'fields': widget.find("textarea#results_fields")};
     var fields = inputs['fields'].val().replace(/\s/g,'');
     if (fields !== '') {
@@ -144,7 +143,6 @@ QTable.prototype.getFilters = function(callback){
     var filters = {'executable': JSON.stringify({"name": inputs['executable'].val()}),
                    'model': inputs['model'].val(),
                    'params': inputs['params'].val(),
-                   'results': inputs['results'].val(),
                    'fields': fields};
 
     // Check filters are proper JSON
@@ -160,6 +158,9 @@ QTable.prototype.getFilters = function(callback){
             }
         }
     }
+
+    // Fix results filters for now
+    filters['results'] = {};
 
     if (bad_filters) {
         callback(0,bad_filters);

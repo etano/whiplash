@@ -214,14 +214,16 @@ class wdb:
     # Submit query
     #
 
-    def submit_query(self,model_filter,executable_filter,params):
+    def query(self,model_filter,executable_filter,params,n_rep=1):
         '''
         submits a query to the database
         '''
-        status, reason, res = self.request("POST","/api/query",json.dumps({"model_filter":model_filter,"executable_filter":executable_filter,"params":params}))
-        print(status)
-        print(reason)
-        print(res)
+        status, reason, res = self.request("POST","/api/queries",json.dumps({"model":model_filter,"executable":executable_filter,"params":params,"n_rep":n_rep}))
+        if status == 200 or status == 'OK':
+            return json.loads(res.decode('utf-8'))["result"]
+        else:
+            print(status,reason,res)
+            sys.exit(1)
 
     #
     # Collections
