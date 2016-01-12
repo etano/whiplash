@@ -5,10 +5,19 @@ import sys,os,whiplash,json,random,copy
 print("Login")
 host = sys.argv[1]
 port = int(sys.argv[2])
+
+###
+
 wdb = whiplash.wdb(host,port,username="test",password="test")
 
-print("Create scheduler token")
-wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
+#print("Create scheduler token")
+#wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
+
+#wdb = whiplash.wdb(host,port)
+
+sys.exit(0)
+
+###
 
 print("Reset database")
 wdb.collaborations.delete({})
@@ -52,7 +61,7 @@ print(wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10))
 sys.exit(0)
 
 print("Submit properties")
-N0 = 2; t0 = 1.2
+N0 = 1000; t0 = 1.2
 N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []
