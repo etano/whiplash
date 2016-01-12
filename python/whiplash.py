@@ -209,7 +209,7 @@ class wdb:
                     break
         return results
 
-    def get_results_fields(self,tags,params,fields):
+    def get_results_fields(self,tags,params,model_fields,property_fields):
         '''
         fetches output models corresponding to the models and properties found by their respective filters
         '''
@@ -218,9 +218,32 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
+        if not isinstance(property_fields, list):
+            property_fields = [property_fields]
 
-        return self.models.query_fields_only({'_id': {'$in': out_model_ids}},fields)
+        props = self.properties.query_fields_only(filter,property_fields + ['output_model_id'])
+
+        if not isinstance(model_fields, list):
+            model_fields = [model_fields]
+
+        models = self.models.query_fields_only({'_id': {'$in': props['output_model_id']}},model_fields + ['_id'])
+
+        results = {}
+        for field in property_fields:
+            results['property.' + field] = props[field]
+
+        for field in model_fields:
+            results['model.' + field] = []
+
+        index = {}
+        for i in range(len(models['_id'])):
+            index[models['_id'][i]] = i
+
+        for i in range(len(props['output_model_id'])):
+            for field in model_fields:
+                results['model.' + field].append(models[field][index[props['output_model_id'][i]]])
+
+        return results
 
     #
     # Submit query
