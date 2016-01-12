@@ -218,7 +218,7 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
+        out_model_ids = self.properties.query_fields_only(filter,["output_model_id"])["output_model_id"]
 
         return self.models.query_fields_only({'_id': {'$in': out_model_ids}},fields)
 
@@ -305,23 +305,12 @@ class wdb:
             if not isinstance(fields, list):
                 fields = [fields]
             tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
-            if self.name == 'models':
-                res = {}
-                for field in fields:
-                    res[field] = []
-                    for o in tmp:
-                        res[field].append(o[field])
-                return res
-            else:
-                res = {}
-                for field in fields:
-                    res[field] = []
-                    for o in tmp:
-                        tmp0 = o
-                        for f in field.split('.'):
-                            tmp0 = tmp0[f]
-                        res[field].append(tmp0)
-                return res                        
+            res = {}
+            for field in fields:
+                res[field] = []
+                for o in tmp:
+                    res[field].append(o[field])
+            return res
 
         def query_id(self,ID):
             '''

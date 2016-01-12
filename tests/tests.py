@@ -5,19 +5,10 @@ import sys,os,whiplash,json,random,copy
 print("Login")
 host = sys.argv[1]
 port = int(sys.argv[2])
-
-###
-
 wdb = whiplash.wdb(host,port,username="test",password="test")
 
-#print("Create scheduler token")
-#wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
-
-#wdb = whiplash.wdb(host,port)
-
-sys.exit(0)
-
-###
+print("Create scheduler token")
+wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
 
 print("Reset database")
 wdb.collaborations.delete({})
@@ -55,13 +46,8 @@ executable_id = wdb.executables.commit(executable)[0]
 print("Query executable")
 assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
-print("Query for some results")
-print(wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10))
-
-sys.exit(0)
-
 print("Submit properties")
-N0 = 1000; t0 = 1.2
+N0 = 2; t0 = 1.2
 N1 = 3; t1 = 2.0; w1 = 1.0
 
 props = []
@@ -80,6 +66,9 @@ for k in range(N0,N0+N1):
 
     props.append({"params":{"sleep_time":1.0, "seed":k}, "input_model_id":model_id, "output_model_id":model_id, "executable_id":executable_id, "timeout":t1, "status":"resolved", "walltime":w1, "log":"some kind of output"})
 wdb.properties.commit(props)
+
+print("Query for some results")
+print(wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10)['stats']['unresolved'])
 
 print("Check property stats")
 assert wdb.properties.get_unresolved_time() == N0*t0
