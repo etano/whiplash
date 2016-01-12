@@ -6,7 +6,6 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var models_routes = require(libs + 'routes/models');
-//var collection = db.get().collection('properties');
 var property = require(libs + 'schemas/property');
 var GridStore = require('mongodb').GridStore;
 var executables = db.get().collection('executables');
@@ -17,64 +16,84 @@ var properties = db.get().collection('properties');
 // Helper functions
 //
 
-function get_ids(filters, user_id, res, cb) {
+function get_ids(models_filter, executables_filter, user_id, res, cb) {
     // Find models
-    common.query_fields_only(models, filters['model'], ['_id'], user_id, res, function(res, err, result) {
+    common.query_fields_only(models, models_filter, ['_id'], user_id, res, function(res, err, result) {
         if (!err) {
             var model_ids = [];
             for (var i=0; i<result.length; i++) {
                 model_ids.push(String(result[i]['_id']));
             }
             // Find executable
-            common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, result) {
+            common.query_fields_only(executables, executables_filter, ['_id'], user_id, res, function(res, err, result) {
                 if (!err) {
-                    var executable_id = -1;
+                    var executable_id = "";
                     if (result.length > 0) {
                         executable_id = String(result[0]['_id']);
                     }
-                    cb(model_ids, executable_id, user_id, res);
+                    cb(model_ids, executable_id, res);
                 } else {
-                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
+                    common.return(res, err, 0);
                 }
             });
         } else {
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
+            common.return(res, err, 0);
         }
     });
 }
 
-function form_property_filter(filters, user_id, res, cb) {
-    get_ids(filters, user_id, res, function(model_ids, executable_id, user_id, res) {
-        // Form property filter
-        var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
-        for (var key in filters['params']) {
-            property_filter['params.'+key] = filters['params'][key];
-        }
-        cb(property_filter, user_id, res);
-    });
+function form_property_filter(model_ids, executable_id, params, user_id, res, cb) {
+    var property_filter = {'executable_id':executable_id,'input_model_id':{'$in':model_ids}};
+    for (var key in params) {
+        property_filter['params.'+key] = params[key];
+    }
+    cb(property_filter, res);
 }
 
-function form_results_filter(filters, user_id, res, cb) {
-    form_property_filter(filters, user_id, res, function(property_filter, user_id, res) {
-        property_filter["status"] = "resolved";
-        // Get output model ids
-        common.query_fields_only(properties, property_filter, ['output_model_id'], user_id, res, function(res, err, result) {
-            if(!err) {
-                var model_ids = [];
-                for (var i=0; i<result.length; i++) {
-                    model_ids.push(result[i]['output_model_id']);
-                }
-                var results_filter = filters['results'];
-                results_filter['_id'] = {"$in":model_ids};
-                var results_fields = [];
-                if(filters['fields']) {
-                    results_fields = filters['fields'];
-                }
-                cb(results_filter, results_fields, user_id, res);
-            } else {
-                return res.json({status: res.statusCode, error: JSON.stringify(err)});
+function form_results_filter(property_filter, user_id, res, cb) {
+    property_filter["status"] = "resolved";
+    common.query_fields_only(properties, property_filter, ['output_model_id'], user_id, res, function(res, err, result) {
+        if(!err) {
+            var model_ids = [];
+            for (var i=0; i<result.length; i++) {
+                model_ids.push(result[i]['output_model_id']);
             }
-        });
+            var results_filter = {'_id':{"$in":model_ids}};
+            cb(results_filter, res);
+        } else {
+            common.return(res, err, 0);
+        }
+    });
+}
+
+function get_property_stats(property_filter, user_id, res, cb) {
+    common.query_fields_only(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
+        if (!err) {
+            var ids = [];
+            for (var i=0; i<result.length; i++) {
+                ids.push(result[i]['_id']);
+            }
+            var stats = {'resolved':0, 'running':0, 'errored':0, 'timedout':0, 'unresolved':0, 'total': 0};
+            properties.group(['status'],{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
+                for (var i=0; i<counts.length; i++) {
+                    if (counts[i].status === "resolved") {
+                        stats.resolved += counts[i].count;
+                    } else if (counts[i].status === "running") {
+                        stats.running += counts[i].count;
+                    } else if (counts[i].status === "errored") {
+                        stats.errored += counts[i].count;
+                    } else if (counts[i].status === "timedout") {
+                        stats.timedout += counts[i].count;
+                    } else {
+                        stats.unresolved += counts[i].count;
+                    }
+                    stats.total += counts[i].count;
+                }
+                cb(stats, res);
+            });
+        } else {
+            common.return(res, err, 0);
+        }
     });
 }
 
@@ -84,7 +103,8 @@ function form_results_filter(filters, user_id, res, cb) {
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filters = common.get_payload(req,'filters');
-    get_ids(filters, String(req.user._id), res, function(model_ids, executable_id, user_id, res) {
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
         var props = [];
         // Form properties
         for (var i=0; i<model_ids.length; i++) {
@@ -98,7 +118,39 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             }
         }
         // Commit properties
-        common.commit(property, properties, props, user_id, res, common.return);
+        common.commit(property, properties, props, user_id, res, function(res, err, result) {
+            // Get property statistics
+            var property_filter = {'_id':{'$in':result}};
+            console.log(property_filter);
+            get_property_stats(property_filter, user_id, res, function(stats, res) {
+                // Get results
+                property_filter['status'] = "resolved";
+                form_results_filter(property_filter, user_id, res, function(results_filter, res) {
+                    console.log(results_filter);
+                    if (filters['fields']) {
+                        common.query_fields_only(models, results_filter, filters['fields'], user_id, res, function(res, err, objs) {
+                            if (!err) {
+                                common.get_gridfs_field_objs(objs, filters['fields'], res, function(res, err, objs) {
+                                    common.return(res, err, {'stats': stats, 'results': objs});
+                                });
+                            } else {
+                                common.return(res, err, 0);
+                            }
+                        });
+                    } else {
+                        common.query(models, results_filter, user_id, res, function(res, err, objs) {
+                            if (!err) {
+                                common.get_gridfs_objs(objs, res, function(res, err, objs) {
+                                    common.return(res, err, {'stats': stats, 'results': objs});
+                                });
+                            } else {
+                                common.return(res, err, 0);
+                            }
+                        });
+                    }
+                });
+            });
+        });
     });
 });
 
@@ -107,75 +159,72 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
-        common.query(properties, property_filter, user_id, res, common.return);
+    var filters = common.get_payload(req,'filters');
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
+        form_property_filter(model_ids, executable_id, filters['params'], user_id, res, function(property_filter, res) {
+            common.query(properties, property_filter, user_id, res, common.return);
+        });
     });
 });
 
 router.get('/count', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
-        common.query_count(properties, property_filter, user_id, res, common.return);
+    var filters = common.get_payload(req,'filters');
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
+        form_property_filter(model_ids, executable_id, filters['params'], user_id, res, function(property_filter, res) {
+            common.query_count(properties, property_filter, user_id, res, common.return);
+        });
     });
 });
 
 router.get('/stats', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_property_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(property_filter, user_id, res) {
-        common.query_fields_only(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
-            if (!err) {
-                var ids = [];
-                for (var i=0; i<result.length; i++) {
-                    ids.push(result[i]['_id']);
-                }
-                var stats = {'resolved':0, 'running':0, 'errored':0, 'timedout':0, 'unresolved':0, 'total': 0};
-                properties.group(['status'],{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
-                    for (var i=0; i<counts.length; i++) {
-                        if (counts[i].status === "resolved") {
-                            stats.resolved += counts[i].count;
-                        } else if (counts[i].status === "running") {
-                            stats.running += counts[i].count;
-                        } else if (counts[i].status === "errored") {
-                            stats.errored += counts[i].count;
-                        } else if (counts[i].status === "timedout") {
-                            stats.timedout += counts[i].count;
-                        } else {
-                            stats.unresolved += counts[i].count;
-                        }
-                        stats.total += counts[i].count;
-                    }
-                    return res.json({status: 'OK', result: stats});
-                });
-            } else {
-                return res.json({status: res.statusCode, error: JSON.stringify(err)});
-            }
+    var filters = common.get_payload(req,'filters');
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
+        form_property_filter(model_ids, executable_id, filters['params'], user_id, res, function(property_filter, res) {
+
         });
     });
 });
 
 router.get('/results', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
-        if (results_fields.length > 0) {
-            common.query_fields_only(models, results_filter, results_fields, user_id, res, function(res, err, objs) {
-                if (!err) {
-                    common.get_gridfs_field_objs(objs, results_fields, res, common.return);
+    var filters = common.get_payload(req,'filters');
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
+        form_property_filter(model_ids, executable_id, filters['params'], user_id, res, function(property_filter, res) {
+            form_results_filter(property_filter, user_id, res, function(results_filter, res) {
+                if (filters['fields']) {
+                    common.query_fields_only(models, results_filter, filters['fields'], user_id, res, function(res, err, objs) {
+                        if (!err) {
+                            common.get_gridfs_field_objs(objs, filters['fields'], res, common.return);
+                        } else {
+                            common.return(res, err, 0);
+                        }
+                    });
                 } else {
-                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
+                    common.query(models, results_filter, user_id, res, function(res, err, objs) {
+                        if (!err) {
+                            common.get_gridfs_objs(objs, res, common.return);
+                        } else {
+                            common.return(res, err, 0);
+                        }
+                    });
                 }
             });
-        } else {
-            common.query(models, results_filter, user_id, res, function(res, err, objs) {
-                if (!err) {
-                    common.get_gridfs_objs(objs, res, common.return);
-                } else {
-                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
-                }
-            });
-        }
+        });
     });
 });
 
 router.get('/results/count', passport.authenticate('bearer', { session: false }), function(req, res) {
-    form_results_filter(common.get_payload(req,'filters'), String(req.user._id), res, function(results_filter, results_fields, user_id, res) {
-        common.query_count(models, results_filter, user_id, res, common.return);
+    var filters = common.get_payload(req,'filters');
+    var user_id = String(req.user._id);
+    get_ids(filters['model'], filters['executable'], user_id, res, function(model_ids, executable_id, res) {
+        form_property_filter(model_ids, executable_id, filters['params'], user_id, res, function(property_filter, res) {
+            form_results_filter(property_filter, user_id, res, function(results_filter, res) {
+                common.query_count(models, results_filter, user_id, res, common.return);
+            });
+        });
     });
 });
 

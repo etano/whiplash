@@ -47,7 +47,7 @@ print("Query executable")
 assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
 
 print("Query for some results")
-wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10)
+print(wdb.query({"name":"test"}, {"name":"test"}, {"sleep_time":1.0}, 10))
 
 sys.exit(0)
 
