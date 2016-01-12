@@ -112,7 +112,6 @@ router.get('/one/', passport.authenticate('bearer', { session: false }), functio
     });
 });
 
-
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });

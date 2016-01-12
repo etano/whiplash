@@ -191,8 +191,7 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        all_ids = self.properties.query_fields_only(filter,["input_model_id","output_model_id","_id"])
-        in_model_ids = all_ids["input_model_id"]
+        all_ids = self.properties.query_fields_only(filter,["output_model_id","_id"])
         out_model_ids = all_ids["output_model_id"]
         prop_ids = all_ids["_id"]
 
@@ -209,6 +208,19 @@ class wdb:
                     results[i] = out_model['content']
                     break
         return results
+
+    def get_results_fields(self,tags,params,fields):
+        '''
+        fetches output models corresponding to the models and properties found by their respective filters
+        '''
+        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
+        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
+        for key in params:
+            filter["params."+key] = params[key]
+
+        out_model_ids = self.properties.query_fields_only(filter,["output_model_id"])["output_model_id"]
+
+        return self.models.query_fields_only({'_id': {'$in': out_model_ids}},fields)
 
     #
     # Submit query
@@ -295,14 +307,7 @@ class wdb:
             for field in fields:
                 res[field] = []
                 for o in tmp:
-                    tmp0 = o
-                    if 'metadata' in tmp0:
-                        tmp00 = tmp0['metadata']
-                        tmp0.pop('metadata',None)
-                        tmp0.update(tmp00)
-                    for f in field.split('.'):
-                        tmp0 = tmp0[f]
-                    res[field].append(tmp0)
+                    res[field].append(o[field])
             return res
 
         def query_id(self,ID):
