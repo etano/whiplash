@@ -46,30 +46,30 @@ QTable.prototype.showFilters = function(){
         for(var i = 0; i < params.length; i++){
             param_json[params[i]] = "";
         }
-        this.widget.find("textarea#parameters_filter").val(JSON.stringify(param_json));
+        this.widget.find("textarea#params_filter").val(JSON.stringify(param_json));
     }
     this.updateCounts();
 };
 
 QTable.prototype.updateCounts = function(){
-    this.updateQueryCount();
     this.updateModelCount();
-    this.updateResultCount();
 };
 
 QTable.prototype.updateQueryCount = function(){
     var widget = this.widget;
-    this.getFilters(function(filters,err){
+    this.getFilters(function(filters,fields,err){
         if(!err){
             $.ajax({
                 type: 'GET',
                 url: api_addr+"/api/queries/stats",
                 data: { "access_token"  : session_token,
-                        "filters" : JSON.stringify(filters)
+                        "filters" : JSON.stringify(filters),
+                        "fields" : JSON.stringify(fields)
                 },
                 success: function(data){
                     var stats = data.result;
                     widget.find("span#n_queries").text(stats.total);
+                    widget.find("span#n_results").text(n_results);
                 },
                 error: function(request, status, err){
                     alert(err);
@@ -77,19 +77,20 @@ QTable.prototype.updateQueryCount = function(){
             });
         }else{
             widget.find("span#n_queries").text(0);
+            widget.find("span#n_results").text(0);
         }
     });
 };
 
 QTable.prototype.updateModelCount = function(){
     var widget = this.widget;
-    this.getFilters(function(filters,err) {
+    this.getFilters(function(filters,fields,err) {
         if(!err){
             $.ajax({
                 type: 'GET',
                 url: api_addr+"/api/models/count",
-                data: { "access_token"  : session_token,
-                        "filter" : JSON.stringify(filters['model'])
+                data: { "access_token": session_token,
+                        "filter": JSON.stringify(filters['input_model'])
                 },
                 success: function(data){
                     var n_models = data.result;
@@ -105,73 +106,55 @@ QTable.prototype.updateModelCount = function(){
     });
 };
 
-QTable.prototype.updateResultCount = function(){
-    var widget = this.widget;
-    this.getFilters(function(filters,err) {
-        if (!err) {
-            // Count matching properties
-            $.ajax({
-                type: 'GET',
-                url: api_addr+"/api/queries/results/count",
-                data: { "access_token"  : session_token,
-                        "filters" : JSON.stringify(filters)
-                },
-                success: function(data){
-                    var n_results = data.result;
-                    widget.find("span#n_results").text(n_results);
-                },
-                error: function(request, status, err){
-                    alert(err);
-                }
-            });
-        } else {
-            widget.find("span#n_results").text(0);
-        }
-    });
-};
-
 QTable.prototype.getFilters = function(callback){
     var widget = this.widget;
-    var inputs = {'executable': widget.find("select#executable_name"),
-                  'model': widget.find("textarea#models_filter"),
-                  'params': widget.find("textarea#parameters_filter"),
-                  'fields': widget.find("textarea#results_fields")};
-    var fields = inputs['fields'].val().replace(/\s/g,'');
-    if (fields !== '') {
-        fields = fields.split(',');
+    var filter_inputs = {'executable': widget.find("select#executable_name"),
+                         'input_model': widget.find("textarea#input_model_filter"),
+                         'params': widget.find("textarea#params_filter"),
+                         'output_model': widget.find("textarea#output_model_filter")};
+    var field_inputs = {'executable': widget.find("textarea#executable_fields"),
+                        'input_model': widget.find("textarea#input_model_fields"),
+                        'params': widget.find("textarea#params_fields"),
+                        'output_model': widget.find("textarea#output_model_fields")};
+    var key;
+    var fields = {};
+    for (key in field_inputs) {
+        fields[key] = field_inputs[key].val().replace(/\s/g,'');
+        if (fields[key] !== '') {
+            fields[key] = fields[key].split(',');
+        }
     }
-    var filters = {'executable': JSON.stringify({"name": inputs['executable'].val()}),
-                   'model': inputs['model'].val(),
-                   'params': inputs['params'].val(),
-                   'fields': fields};
+    var filters = {};
+    for (key in filter_inputs) {
+        filters[key] = filter_inputs[key].val();
+        if (filters[key] === '') {
+            filters[key] = '{}';
+        }
+    }
+    filters['executable'] = JSON.stringify({"name": filters['executable']});
 
     // Check filters are proper JSON
     var bad_filters = false;
-    for (var key in filters) {
-        if (key !== 'fields') {
-            try {
-                filters[key] = JSON.parse(filters[key]);
-                inputs[key].css('color','black');
-            } catch(e) {
-                inputs[key].css('color','red');
-                bad_filters = true;
-            }
+    for (key in filters) {
+        try {
+            filters[key] = JSON.parse(filters[key]);
+            filter_inputs[key].css('color','black');
+        } catch(e) {
+            filter_inputs[key].css('color','red');
+            bad_filters = true;
         }
     }
 
-    // Fix results filters for now
-    filters['results'] = {};
-
     if (bad_filters) {
-        callback(0,bad_filters);
+        callback(0,0,bad_filters);
     } else {
-        callback(filters,0);
+        callback(filters,fields,0);
     }
 
 };
 
 function viewModels(){
-    QTable.instance.getFilters(function(filters,err) {
+    QTable.instance.getFilters(function(filters,fields,err) {
         if(!err){
             var data = { "access_token": session_token, "filters": JSON.stringify(filters['model']) };
             window.location = api_addr+"/api/models?"+$.param(data);
@@ -179,35 +162,31 @@ function viewModels(){
     });
 }
 
-function viewQ(){
-    QTable.instance.getFilters(function(filters,err) {
+function submitQuery(){
+    QTable.instance.getFilters(function(filters,fields,err) {
         if(!err){
-            var data = { "access_token": session_token, "filters": JSON.stringify(filters) };
-            window.location = api_addr+"/api/queries?"+$.param(data);
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/queries/submit",
+                data: { "access_token"  : session_token,
+                        "filters" : JSON.stringify(filters),
+                        "fields" : JSON.stringify(fields),
+                        "n_rep" : 1 // FIXME: number of repetitions
+                },
+                success: function(data){
+                    viewQueries();
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
+            alert(err);
         }
     });
-}
-
-function downloadQResults(){
-    QTable.instance.getFilters(function(filters,err) {
-        if(!err){
-            var data = { "access_token": session_token, "filters": JSON.stringify(filters) };
-            window.location = api_addr+"/api/queries/results?"+$.param(data);
-        }
-    });
-}
-
-function composeQuery(){
-    transition($("section#compose-query"));
-    indicateMenu("compose-query");
 }
 
 $(document).ready(function(){
-    //$(document).on("change", "section#compose-query select#executable_name", loadQParams);
-    //$(document).on("change", "section#compose-query select#executable_name", updateCounts);
-    //$(document).on("change", "section#compose-query textarea", updateCounts);
-
     $(document).on("click", "section#compose-query div.button_row div#models", viewModels);
-    $(document).on("click", "section#compose-query div.button_row div#queries", viewQ);
-    $(document).on("click", "section#compose-query div.button_row div#results", downloadQResults);
+    $(document).on("click", "section#compose-query div.button_row div#submit", submitQuery);
 });

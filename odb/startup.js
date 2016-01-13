@@ -6,7 +6,7 @@ try{ db.fs.files.createIndex({md5 : 1, "metadata.property_id" : 1, "metadata.own
 try{ db.executables.createIndex({name : 1, algorithm : 1, version : 1, build : 1, owner : 1},{unique : true}); } catch(err) {}
 try{ db.properties.createIndex({input_model_id : 1, executable_id : 1, md5 : 1, owner : 1},{unique : true}); } catch(err) {}
 try{ db.properties.createIndex({status : 1},{unique : false}); } catch(err) {}
-try{ db.jobs.createIndex({name : 1, owner : 1, md5 : 1},{unique : true}); } catch(err) {}
+try{ db.queries.createIndex({owner : 1, "filters.input_model": 1, "filters.executable": 1, "filters.params": 1, "filters.output_model": 1, "fields.input_model": 1, "fields.executable": 1, "fields.params": 1, "fields.output_model": 1},{unique : true}); } catch(err) {}
 try{ db.collaborations.createIndex({name : 1},{unique : true}); } catch(err) {}
 try{ db.users.createIndex({username : 1},{unique : true}); } catch(err) {}
 try{ db.clients.createIndex({name : 1},{unique : true}); } catch(err) {}

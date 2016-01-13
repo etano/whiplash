@@ -284,9 +284,6 @@ module.exports = {
                         if (collection.collectionName === "properties") {
                             objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
                         }
-                        else if (collection.collectionName === "jobs") {
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].ids));
-                        }
                     }
                     var batch = [];
                     for(var i=0; i<objs.length; i++) {
@@ -310,10 +307,10 @@ module.exports = {
                             filter['md5'] = objs[i]['md5'];
                             filter['owner'] = objs[i]['owner'];
                         }
-                        else if (collection.collectionName === "jobs") {
-                            filter['name'] = objs[i]['name'];
+                        else if (collection.collectionName === "queries") {
                             filter['owner'] = objs[i]['owner'];
-                            filter['md5'] = objs[i]['md5'];
+                            filter['filters'] = objs[i]['filters'];
+                            filter['fields'] = objs[i]['fields'];
                         }
                         else if (collection.collectionName === "collaborations") {
                             filter['name'] = objs[i]['name'];

@@ -81,6 +81,11 @@ function viewQueries(){
     loadQueries();
 }
 
+function composeQuery(){
+    transition($("section#compose-query"));
+    indicateMenu("compose-query");
+}
+
 function viewMain(){
     $("section#menu > div.hidden").removeClass("hidden");
     $("section#menu > div#login").addClass("hidden");

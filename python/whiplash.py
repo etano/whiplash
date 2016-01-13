@@ -30,7 +30,7 @@ class wdb:
         self.executables = self.collection(self,"executables")
         self.properties = self.properties_collection(self,"properties")
         self.work_batches = self.collection(self,"work_batches")
-        self.jobs = self.collection(self,"jobs")
+        self.queries = self.collection(self,"queries")
         self.collaborations = self.collection(self,"collaborations")
         self.users = self.collection(self,"users")
         self.accesstokens = self.collection(self,"accesstokens")
@@ -209,7 +209,7 @@ class wdb:
                     break
         return results
 
-    def get_results_fields(self,tags,params,fields):
+    def get_results_fields(self,tags,params,model_fields,property_fields):
         '''
         fetches output models corresponding to the models and properties found by their respective filters
         '''
@@ -218,19 +218,42 @@ class wdb:
         for key in params:
             filter["params."+key] = params[key]
 
-        out_model_ids = self.properties.query_fields_only(filter,["output_model_id"])["output_model_id"]
+        if not isinstance(property_fields, list):
+            property_fields = [property_fields]
 
-        return self.models.query_fields_only({'_id': {'$in': out_model_ids}},fields)
+        props = self.properties.query_fields_only(filter,property_fields + ['output_model_id'])
+
+        if not isinstance(model_fields, list):
+            model_fields = [model_fields]
+
+        models = self.models.query_fields_only({'_id': {'$in': props['output_model_id']}},model_fields + ['_id'])
+
+        results = {}
+        for field in property_fields:
+            results['property.' + field] = props[field]
+
+        for field in model_fields:
+            results['model.' + field] = []
+
+        index = {}
+        for i in range(len(models['_id'])):
+            index[models['_id'][i]] = i
+
+        for i in range(len(props['output_model_id'])):
+            for field in model_fields:
+                results['model.' + field].append(models[field][index[props['output_model_id'][i]]])
+
+        return results
 
     #
     # Submit query
     #
 
-    def query(self,model_filter,executable_filter,params,n_rep=1):
+    def query(self,filters,fields,n_rep=1):
         '''
         submits a query to the database
         '''
-        status, reason, res = self.request("POST","/api/queries",json.dumps({"model":model_filter,"executable":executable_filter,"params":params,"n_rep":n_rep}))
+        status, reason, res = self.request("GET","/api/queries",json.dumps({"filters":filters,"fields":fields,"n_rep":n_rep}))
         if status == 200 or status == 'OK':
             return json.loads(res.decode('utf-8'))["result"]
         else:
@@ -272,8 +295,6 @@ class wdb:
             if not isinstance(objs, list):
                 objs = [objs]
             ids = self.request("POST","/api/"+self.name+"/",objs)
-            if self.name == "properties" and len(ids) > 0:
-                self.db.jobs.commit({"ids":ids,"submitted":1,"name":"default"})
             return ids
 
         #
