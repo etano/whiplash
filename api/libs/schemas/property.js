@@ -9,7 +9,7 @@ var Property = new Schema({
     log: { type: String, default: "" },
     executable_id: { type: String, required: true},
     status: { type: String, default: "unresolved", required: true},
-    timeout: { type: Number, min: 1, required: true },
+    timeout: { type: Number, required: true },
     params: { type: Schema.Types.Mixed, default: "", required: true},
     timestamp: { type: Date, default: Date.now, required : true},
     walltime: { type: Number, default: -1, required : true},
