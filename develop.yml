@@ -30,4 +30,4 @@ scheduler:
         service: scheduler
     links:
         - api_dev
-    command: sh -c "python3 python/scheduler_users.py --local --host 127.0.0.1 --port 1337"
+    command: sh -c "python3 scheduler/scheduler_users.py --local --host 127.0.0.1 --port 1337"

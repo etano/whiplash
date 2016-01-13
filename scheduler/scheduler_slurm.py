@@ -34,9 +34,9 @@ def submit_job(args,time_limit,time_window):
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "source " + args.whiplash_work_dir + "/rte/user_init.sh && sbatch ~/" + user_job_file + "\'\"",shell=True)
     else:
-        sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+        sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
 
-def get_times(wdb):
+def get_times(args,wdb):
     print('getting times')
     th = int(11.8*3600)
     timeouts = wdb.properties.stats("timeout",{"status":{"$in":["unresolved","pulled"]}})
@@ -44,7 +44,11 @@ def get_times(wdb):
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
     else:
-        time_window = min(th,max(1.2*timeouts['max'],601))
+        if args.local:
+            th_min = 1
+        else:
+            th_min = 601
+        time_window = min(th,max(1.2*timeouts['max'],th_min))
         time_limit = 24*3600
         return [time_limit,time_window]
 
@@ -90,20 +94,19 @@ def scheduler(args):
 
     if args.local:
         while True:
-            [time_limit,time_window] = get_times(wdb)
-            time_window = 1
+            [time_limit,time_window] = get_times(args,wdb)
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
                 make_batches(wdb,time_window)
                 print('starting local scheduler')
-                sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+                sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
             time.sleep(10)
     else:
         count = 0
         while True:
             if args.test and count > 1:
                break
-            [time_limit,time_window] = get_times(wdb)
+            [time_limit,time_window] = get_times(args,wdb)
             if (time_limit > 0 and time_window > 0):
                 make_batches(wdb,time_window)
             if not args.test:
@@ -133,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='/mnt/lnec/whiplash/logs/scheduler')
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
-    parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')    
+    parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     assert args.num_cpus <= 20
