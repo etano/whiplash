@@ -25,10 +25,10 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
         if (!err) {
             // Get input model info
-            common.query_fields_only(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
+            common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
                 if (!err) {
                     // Get executable info
-                    common.query_fields_only(executables, filters['executable'], ['_id'].concat(fields['executable']), user_id, res, function(res, err, executable_objs) {
+                    common.query(executables, filters['executable'], ['_id'].concat(fields['executable']), user_id, res, function(res, err, executable_objs) {
                         if (!err) {
                             // Form properties
                             var props = [];
@@ -53,7 +53,7 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
                                     for (var i=0; i<fields['params'].length; i++) {
                                         property_fields.push('params.'+fields['params'][i]);
                                     }
-                                    common.query_fields_only(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
+                                    common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
                                         if (!err) {
                                             cb(query_ids, input_model_objs, executable_objs, property_objs, res);
                                         } else {
@@ -82,7 +82,6 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
 // Submit/Retrieve
 //
 
-// TODO: Should be POST, but couldn't get it to parse inputs correctly :/
 router.get('/submit', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get filters, fields, n_reps, and user id
     var filters = common.get_payload(req,'filters');
@@ -113,9 +112,9 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             }
         }
         filters['output_model']['_id'] = {'$in':output_model_ids};
-        common.query_fields_only(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
+        common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
             if (!err) {
-                common.get_gridfs_field_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
+                common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
                     if (!err) {
                         // Sort everything
                         var i;
@@ -156,6 +155,18 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     });
 });
 
+router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+});
+
+//
+// Delete
+//
+
+router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+});
+
 //
 // Stats
 //
@@ -163,7 +174,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 router.get('/stats', passport.authenticate('bearer', { session: false }), function(req, res) {
     var user_id = String(req.user._id);
     // Get all queries
-    common.query(collection, {}, user_id, res, function(res, err, queries) {
+    common.query(collection, {}, [], user_id, res, function(res, err, queries) {
         if (!err) {
             var stats_objs = [];
             var append_stats = function(count) {
@@ -172,12 +183,12 @@ router.get('/stats', passport.authenticate('bearer', { session: false }), functi
                     var fields = queries[count]['fields'];
                     log.debug(JSON.stringify(filters));
                     log.debug(JSON.stringify(fields));
-                    stats_objs.push({'timestamp':queries[count]['timestamp'], '_id':queries[count]['_id'], 'resolved':0, 'pulled':0, 'running':0, 'errored':0, 'timedout':0, 'unresolved':0, 'total': 0});
+                    stats_objs.push({'timestamp':queries[count]['timestamp'], '_id':queries[count]['_id'], 'resolved':0, 'pulled':0, 'running':0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0});
                     // Get input model info
-                    common.query_fields_only(models, filters['input_model'], ['_id'], user_id, res, function(res, err, input_model_objs) {
+                    common.query(models, filters['input_model'], ['_id'], user_id, res, function(res, err, input_model_objs) {
                         if (!err) {
                             // Get executable info
-                            common.query_fields_only(executables, filters['executable'], ['_id'], user_id, res, function(res, err, executable_objs) {
+                            common.query(executables, filters['executable'], ['_id'], user_id, res, function(res, err, executable_objs) {
                                 if (!err) {
                                     // Form property filter
                                     var i;
@@ -191,7 +202,7 @@ router.get('/stats', passport.authenticate('bearer', { session: false }), functi
                                     }
                                     var property_filter = {"input_model_id":{"$in":input_model_ids},"executable_id":{"$in":executable_ids}};
                                     // Get stats
-                                    common.query_fields_only(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
+                                    common.query(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
                                         if (!err) {
                                             var ids = [];
                                             for (var i=0; i<result.length; i++) {
@@ -225,24 +236,6 @@ router.get('/stats', passport.authenticate('bearer', { session: false }), functi
             common.return(res, err, 0);
         }
     });
-});
-
-//
-// Delete
-//
-
-router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    console.log(req.params.id);
-    common.delete(collection, {"_id": new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
-});
-
-router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    console.log(req.params.id);
-    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
-});
-
-router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 module.exports = router;

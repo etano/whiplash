@@ -5,12 +5,12 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def get_unresolved(wdb,pid,unresolved,is_work):
+def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
 
     t0 = time.time()
 
     # TODO: should not be "query" but something like "pull"
-    property_ids = wdb.work_batches.query({})
+    property_ids = work_batches.query({})
     properties = wdb.properties.query({'_id': {'$in': property_ids}})
 
     if len(properties) == 0:
@@ -112,7 +112,7 @@ def resolve_object(pid,obj,models,executables,work_dir):
 
     return {'property':prop,'model':result}
 
-def worker(pid,wdb,args,end_time):
+def worker(pid,wdb,work_batches,args,end_time):
     print('worker',str(pid),'active')
 
     start_time = time.time()
@@ -121,7 +121,7 @@ def worker(pid,wdb,args,end_time):
     unresolved1 = []
     fetch_thread = th.Thread()
 
-    is_work = [wdb.work_batches.count({}) > 0]
+    is_work = [work_batches.count({}) > 0]
 
     threads = []
     while True:
@@ -132,7 +132,7 @@ def worker(pid,wdb,args,end_time):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
                 if (time_left() > 2*args.time_window):
-                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,pid,unresolved0,is_work,))
+                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,work_batches,pid,unresolved0,is_work,))
                     fetch_thread.start()
             if len(unresolved1) > 0:
                 objs = unresolved1[0]
@@ -179,6 +179,8 @@ def scheduler(args):
     wdb = whiplash.wdb(args.host,args.port,token=args.token)
     print('local scheduler connected to wdb')
 
+    work_batches = wdb.collection(wdb,'work_batches')
+
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
         num_cpus = min(args.num_cpus,num_cpus)
@@ -188,12 +190,12 @@ def scheduler(args):
     context = mp.get_context('fork')
     procs = []
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
+        p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
         p.start()
         procs.append([pid,p])
 
     while True:
-        is_work = (wdb.work_batches.count({}) > 0)
+        is_work = (work_batches.count({}) > 0)
 
         n_alive = 0
         for [pid,p] in procs:

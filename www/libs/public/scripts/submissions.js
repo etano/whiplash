@@ -17,7 +17,7 @@ function loadQueries(){
                     var total = parseInt(stats[i].total);
                     var pulled = parseInt(stats[i].pulled);
                     var errored = parseInt(stats[i].errored);
-                    var timedout = parseInt(stats[i].timedout);
+                    var timedout = parseInt(stats[i]['timed out']);
 
                     var stat = "OK";
                     var progress = 100;

@@ -11,8 +11,6 @@ print("Create scheduler token")
 wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
 
 print("Reset database")
-wdb.collaborations.delete({})
-assert wdb.collaborations.count({}) == 0
 wdb.queries.delete({})
 assert wdb.queries.count({}) == 0
 wdb.models.delete({})
@@ -21,8 +19,6 @@ wdb.executables.delete({})
 assert wdb.executables.count({}) == 0
 wdb.properties.delete({})
 assert wdb.properties.count({}) == 0
-wdb.work_batches.delete({})
-assert wdb.work_batches.count({}) == 0
 
 print("Commit model")
 N = 4
@@ -37,14 +33,14 @@ model.update(tags)
 model_id = wdb.models.commit(model)[0]
 
 print("Query model")
-assert model_id == wdb.models.query_fields_only(tags,'_id')['_id'][0]
+assert model_id == wdb.models.query(tags,'_id')[0]['_id']
 
 print("Commit executable")
 executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test", "params":{"required":["sleep_time"],"optional":[]}}
 executable_id = wdb.executables.commit(executable)[0]
 
 print("Query executable")
-assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id'][0]
+assert executable_id == wdb.executables.query(executable,'_id')[0]['_id']
 
 print("Query for some results")
 filters = {'input_model': {"name":"test"}, 'executable': {"name":"test"}, 'params': {"sleep_time":1.0}, 'output_model': {}}

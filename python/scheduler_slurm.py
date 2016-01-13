@@ -48,11 +48,11 @@ def get_times(wdb):
         time_limit = 24*3600
         return [time_limit,time_window]
 
-def make_batches(wdb,time_window):
+def make_batches(wdb,work_batches,time_window):
     print('querying properties')
-    properties = wdb.properties.query_fields_only({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
-    ids = properties['_id']
-    timeouts = properties['timeout']
+    properties = wdb.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
+    ids = [x['_id'] for x in properties]
+    timeouts = [x['timeout'] for x in properties]
 
     print('building batches')
     batches = []
@@ -77,7 +77,7 @@ def make_batches(wdb,time_window):
     if len(batches) > 0:
         print('committing batches')
         wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
-        wdb.work_batches.commit(batches)
+        work_batches.commit(batches)
         print('done')
     else:
         print('no suitable work')
@@ -88,13 +88,15 @@ def scheduler(args):
 
     print('slurm scheduler connected to wdb')
 
+    work_batches = wdb.collection(wdb,'work_batches')
+
     if args.local:
         while True:
             [time_limit,time_window] = get_times(wdb)
             time_window = 8
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
-                make_batches(wdb,time_window)
+                make_batches(wdb,work_batches,time_window)
                 print('starting local scheduler')
                 sp.call("./python/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
             time.sleep(10)
@@ -105,12 +107,12 @@ def scheduler(args):
                break
             [time_limit,time_window] = get_times(wdb)
             if (time_limit > 0 and time_window > 0):
-                make_batches(wdb,time_window)
+                make_batches(wdb,work_batches,time_window)
             if not args.test:
                 num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
             else:
                 num_pending = 0
-            if (wdb.work_batches.count({}) > 0) and (num_pending == 0):
+            if (work_batches.count({}) > 0) and (num_pending == 0):
                 if (time_limit > 0 and time_window > 0):
                     submit_job(args,time_limit,time_window)
                 else:

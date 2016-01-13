@@ -33,7 +33,7 @@ router.post('/', webAuth, function(req, res){
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 module.exports = router;
