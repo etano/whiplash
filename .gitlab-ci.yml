@@ -18,6 +18,7 @@ build:
 test:
   stage: test
   script:
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./scheduler/create_token.py 192.168.99.100 1337 test test
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/tests.py ${DOCKERHOST:-localhost} 1337
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./scheduler/scheduler_users.py --test --host ${DOCKERHOST:-localhost} --port 1337
   tags:

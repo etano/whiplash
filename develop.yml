@@ -28,6 +28,7 @@ scheduler_dev:
     extends:
         file: scheduler/docker-compose.yml
         service: scheduler
-    links:
-        - api_dev
-    command: sh -c "python3 create_token.py 127.0.0.1 1337; python3 scheduler_users.py --local --host 127.0.0.1 --port 1337"
+    volumes:
+        - $PWD/scheduler:/scheduler
+        - $PWD/python:/python
+    command: sh -c "sleep 30; PYTHONPATH=/python:$PYTHONPATH ./scheduler/create_token.py 192.168.99.100 1337 test test; PYTHONPATH=/python:$PYTHONPATH ./scheduler/scheduler_users.py --local --host 192.168.99.100 --port 1337"

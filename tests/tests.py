@@ -7,9 +7,6 @@ host = sys.argv[1]
 port = int(sys.argv[2])
 wdb = whiplash.wdb(host,port,username="test",password="test")
 
-print("Create scheduler token")
-wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
-
 print("Reset database")
 wdb.queries.delete({})
 assert wdb.queries.count({}) == 0
