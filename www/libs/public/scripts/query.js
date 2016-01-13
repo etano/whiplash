@@ -156,7 +156,7 @@ QTable.prototype.getFilters = function(callback){
 function viewModels(){
     QTable.instance.getFilters(function(filters,fields,err) {
         if(!err){
-            var data = { "access_token": session_token, "filters": JSON.stringify(filters['model']) };
+            var data = { "access_token": session_token, "filters": JSON.stringify(filters['model']), "fields": JSON.stringify([]) };
             window.location = api_addr+"/api/models?"+$.param(data);
         }
     });

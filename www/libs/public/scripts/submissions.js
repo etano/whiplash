@@ -46,8 +46,9 @@ function deleteQuery(){
 
     $.ajax({
         type: 'DELETE',
-        url: api_addr+"/api/queries/"+id,
-        data: { "access_token"  : session_token },
+        url: api_addr+"/api/queries/",
+        data: {"access_token": session_token,
+               "_id": id},
         success: function(data){
             query.remove();
         },

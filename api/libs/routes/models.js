@@ -87,6 +87,10 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = common.get_payload(req,'filter');
     var fields = common.get_payload(req,'fields');
+    if (fields.length === 0) {
+        fields.push('metadata');
+        fields.push('content');
+    }
     common.query(collection, filter, fields, String(req.user._id), res, function(res, err, objs) {
         if (!err) {
             common.get_gridfs_objs(objs, fields, res, common.return);
