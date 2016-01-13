@@ -42,7 +42,7 @@ def scheduler(args):
         for wdb_user in get_users(wdb):
             user = wdb_user['username']
             if user not in running_users:
-                if sp.call("ssh -o BatchMode=yes " + user + "@" + wdb_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255:
+                if (not args.test) and (sp.call("ssh -o BatchMode=yes " + user + "@" + wdb_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255):
                     print('access denied for user',user)
                 else:
                     print('starting slurm scheduler for user',user)
