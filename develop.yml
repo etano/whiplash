@@ -24,3 +24,10 @@ www_dev:
     volumes:
         - $PWD/www/libs:/src/libs
     command: sh -c "cp config.dev.json config.json; node bin/www"
+scheduler_dev:
+    extends:
+        file: scheduler/docker-compose.yml
+        service: scheduler
+    links:
+        - api_dev
+    command: sh -c "python3 create_token.py 127.0.0.1 1337; python3 scheduler_users.py --local --host 127.0.0.1 --port 1337"
