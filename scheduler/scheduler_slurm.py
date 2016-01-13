@@ -91,7 +91,7 @@ def scheduler(args):
     if args.local:
         while True:
             [time_limit,time_window] = get_times(wdb)
-            time_window = 8
+            time_window = 1
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
                 make_batches(wdb,time_window)
