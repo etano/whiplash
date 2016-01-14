@@ -1,10 +1,14 @@
 odb:
     image: whiplash/odb
+    command: --auth
     restart: always
     ports:
         - "27017:27017"
 api:
     image: whiplash/api
+    environment:
+        MONGO_API_USERNAME: api
+        MONGO_API_PASSWORD: haYrv{Ak9UJiaDsqVTe7rLJTc
     ports:
         - "1337:1337"
     links:
