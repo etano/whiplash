@@ -6,3 +6,4 @@ RUN pip3 install python-daemon
 RUN mkdir -p /scheduler
 WORKDIR /
 COPY *.py /scheduler/
+#TODO: copy whiplash.py into the scheduler directory or find another way

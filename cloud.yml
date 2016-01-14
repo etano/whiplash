@@ -1,27 +1,19 @@
 odb:
-    extends:
-        file: odb/docker-compose.yml
-        service: odb
+    image: whiplash/odb
     restart: always
-    volumes:
-        - /data/db:/data/db
     ports:
         - "27017:27017"
 api:
-    extends:
-        file: api/docker-compose.yml
-        service: api
+    image: whiplash/api
     ports:
         - "1337:1337"
     links:
         - odb:mongo
     restart: always
     command: sh -c "node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/api"
-www:
-    extends:
-        file: www/docker-compose.yml
-        service: www
-    ports:
-        - "80:80"
+scheduler:
+    image: whiplash/scheduler
+    links:
+        - api:api
     restart: always
-    command: sh -c "node bin/www"
+    command: sh -c "python3 scheduler/scheduler_users.py --local --host api --port 1337"

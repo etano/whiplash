@@ -7,8 +7,8 @@ host = sys.argv[1]
 port = int(sys.argv[2])
 wdb = whiplash.wdb(host,port,username="test",password="test")
 
-print("Create scheduler token")
-wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
+#print("Create scheduler token")
+#wdb.create_token(username="test",password="test",client_id='test-scheduler',client_secret='test',save_token=False)
 
 print("Reset database")
 wdb.collaborations.delete({})
@@ -49,4 +49,11 @@ assert executable_id == wdb.executables.query_fields_only(executable,'_id')['_id
 print("Query for some results")
 filters = {'input_model': {"name":"test"}, 'executable': {"name":"test"}, 'params': {"sleep_time":1.0}, 'output_model': {}}
 fields = {'input_model': ["name"], 'executable': ["name"], 'params': ["sleep_time"], 'output_model': ["content.edges"]}
-assert len(wdb.query(filters, fields, 10)) == 10
+assert len(wdb.query(filters, fields, 1000)) == 1000
+
+import time
+while True:
+    for status in ['unresolved','resolved','errored','timed out','running','pulled','not found']:
+        print(status + ':',wdb.properties.count({"status":status}))
+    print('***********')
+    time.sleep(1)
