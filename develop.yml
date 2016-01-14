@@ -3,13 +3,13 @@ odb_dev:
         file: odb/docker-compose.yml
         service: odb
     ports:
-        - 27017:27017
+        - "27017:27017"
 api_dev:
     extends:
         file: api/docker-compose.yml
         service: api
     ports:
-        - 1337:1337
+        - "1337:1337"
     volumes:
         - $PWD/api/libs:/src/libs
     links:
@@ -20,7 +20,7 @@ www_dev:
         file: www/docker-compose.yml
         service: www
     ports:
-        - 80:80
+        - "80:80"
     volumes:
         - $PWD/www/libs:/src/libs
     command: sh -c "cp config.dev.json config.json; node bin/www"
