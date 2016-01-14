@@ -131,20 +131,9 @@ class wdb:
         filter = {"input_model_id":{"$in":in_model_ids}}
         for key in params:
             filter["params."+key] = params[key]
-        filter["status"] = "unresolved"
-        print('unresolved: %d'%(self.properties.count(filter)))
-        filter["status"] = "pulled"
-        print('pulled: %d'%(self.properties.count(filter)))
-        filter["status"] = "running"
-        print('running: %d'%(self.properties.count(filter)))
-        filter["status"] = "timed out"
-        print('timed out: %d'%(self.properties.count(filter)))
-        filter["status"] = "resolved"
-        print('resolved: %d'%(self.properties.count(filter)))
-        filter["status"] = "errored"
-        print('errored: %d'%(self.properties.count(filter)))
-        filter["status"] = "not found"
-        print('not found: %d'%(self.properties.count(filter)))
+        for status in ['unresolved','resolved','errored','timed out','running','pulled','not found']:
+            filter["status"] = "unresolved"
+            print(status + ': %d'%(self.properties.count(filter)))
 
     #
     # Get results
