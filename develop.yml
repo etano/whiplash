@@ -29,5 +29,5 @@ scheduler_dev:
         file: scheduler/docker-compose.yml
         service: scheduler
     links:
-        - api_dev
-    command: sh -c "python3 create_token.py 127.0.0.1 1337; python3 scheduler_users.py --local --host 127.0.0.1 --port 1337"
+        - api_dev:api
+    command: sh -c "python3 scheduler/create_token.py api 1337; python3 scheduler/scheduler_users.py --local --host api --port 1337"
