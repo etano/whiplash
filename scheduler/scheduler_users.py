@@ -12,14 +12,14 @@ def start_scheduler_slurm(args,wdb_user):
     else:
         sp.call("./scheduler/scheduler_slurm.py --daemonise " + "--user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
 
-def get_users(wdb):
-    users = wdb.users.query({})
-    tokens = wdb.accesstokens.query({})
+def get_users(users,accesstokens):
+    all_users = users.query({})
+    all_tokens = accesstokens.query({})
     tokens_arr = []
-    for token in tokens:
+    for token in all_tokens:
         tokens_arr.append(token)
     wdb_users = []
-    for user in users:
+    for user in all_users:
         if user['username'] != "scheduler":
             for token in tokens_arr:
                 if (str(user['_id']) == token['userId']) and (token['clientId'] == user['username']+'-scheduler'):
@@ -32,11 +32,15 @@ def scheduler(args):
     wdb = whiplash.wdb(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca")
     print('user scheduler connected to wdb')
     context = mp.get_context('fork')
+
+    users = wdb.collection(wdb,'users')
+    accesstokens = wdb.collection(wdb,'accesstokens')
+
     running_users = []
     schedulers = []
     count = 0
     while True:
-        for wdb_user in get_users(wdb):
+        for wdb_user in get_users(users,accesstokens):
             user = wdb_user['username']
             if user not in running_users:
                 if (not args.test) and (not args.local) and (sp.call("ssh -o BatchMode=yes " + user + "@" + wdb_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255):

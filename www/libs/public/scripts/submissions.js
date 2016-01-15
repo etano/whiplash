@@ -1,23 +1,25 @@
 function loadQueries(){
     $.ajax({
         type: 'GET',
-        url: api_addr+"/api/queries/stats/",
+        url: api_addr+"/api/queries/status/all",
         data: {"access_token": session_token},
         success: function(data){
-            var stats = data.result;
-            if(stats.length === 0) {
+            var status = data.result;
+            if(status.length === 0) {
                 $("section#view-queries div#info").html("No queries to display at the moment.");
             } else {
                 $("section#view-queries div#info").empty();
-                for (var i=0; i<stats.length; i++) {
-                    var id = stats[i]._id;
-                    var timestamp = stats[i].timestamp;
-                    var resolved = parseInt(stats[i].resolved);
-                    var unresolved = parseInt(stats[i].unresolved);
-                    var total = parseInt(stats[i].total);
-                    var pulled = parseInt(stats[i].pulled);
-                    var errored = parseInt(stats[i].errored);
-                    var timedout = parseInt(stats[i].timedout);
+                for (var i=0; i<status.length; i++) {
+                    var id = status[i]._id;
+                    var timestamp = status[i].timestamp;
+                    var resolved = parseInt(status[i]['resolved']);
+                    var unresolved = parseInt(status[i]['unresolved']);
+                    var total = parseInt(status[i]['total']);
+                    var pulled = parseInt(status[i]['pulled']);
+                    var errored = parseInt(status[i]['errored']);
+                    var running = parseInt(status[i]['running']);
+                    var notfound = parseInt(status[i]['not found']);
+                    var timedout = parseInt(status[i]['timed out']);
 
                     var stat = "OK";
                     var progress = 100;
@@ -46,8 +48,9 @@ function deleteQuery(){
 
     $.ajax({
         type: 'DELETE',
-        url: api_addr+"/api/queries/"+id,
-        data: { "access_token"  : session_token },
+        url: api_addr+"/api/queries/",
+        data: {"access_token": session_token,
+               "_id": id},
         success: function(data){
             query.remove();
         },

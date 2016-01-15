@@ -7,3 +7,4 @@ RUN mkdir -p /scheduler
 WORKDIR /
 COPY *.py /scheduler/
 #TODO: copy whiplash.py into the scheduler directory or find another way
+RUN chmod 755 /scheduler/*.py

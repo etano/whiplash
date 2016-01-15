@@ -5,48 +5,28 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def get_unresolved(wdb,pid,unresolved,is_work):
-
+def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
     t0 = time.time()
 
-    # TODO: should not be "query" but something like "pull"
-    property_ids = wdb.work_batches.query({})
-    properties = wdb.properties.query({'_id': {'$in': property_ids}})
-
-    if len(properties) == 0:
+    work_batch = work_batches.query({})
+    if len(work_batch['properties']) == 0:
         is_work[0] = False
         unresolved = []
     else:
         is_work[0] = True
-        model_ids = set()
-        executable_ids = set()
-        for prop in properties:
-            model_ids.add(prop['input_model_id'])
-            executable_ids.add(prop['executable_id'])
-        models = wdb.models.query({'_id': { '$in': list(model_ids) }})
-        executables = wdb.executables.query({'_id': { '$in': list(executable_ids) }})
-
-        objs = []
-        for prop in properties:
-            obj = {'property':prop,'model_index':-1,'executable_index':-1}
-            for i in range(len(models)):
-                if prop['input_model_id'] == models[i]['_id']:
-                    obj['model_index'] = i
-                    break
-            for i in range(len(executables)):
-                if prop['executable_id'] == executables[i]['_id']:
-                    obj['executable_index'] = i
-                    break
-            objs.append(obj)
-
-        assert len(objs) > 0
-
-        unresolved.append(objs)
-        unresolved.append(models)
-        unresolved.append(executables)
+        model_indices = {}
+        for i in range(len(work_batch['models'])):
+            model_indices[work_batch['models'][i]['_id']] = i
+        executable_indices = {}
+        for i in range(len(work_batch['executables'])):
+            executable_indices[work_batch['executables'][i]['_id']] = i
+        for prop in work_batch['properties']:
+            prop['model_index'] = model_indices[prop['input_model_id']]
+            prop['executable_index'] = executable_indices[prop['executable_id']]
+        unresolved.append(work_batch)
 
     t1 = time.time()
-    print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)
+    print('worker',str(pid),'fetched',len(work_batch['properties']),'properties in time',t1-t0)
 
 def commit_resolved(wdb,good_results,bad_results,pid):
     t0 = time.time()
@@ -63,56 +43,42 @@ def commit_resolved(wdb,good_results,bad_results,pid):
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
-def resolve_object(pid,obj,models,executables,work_dir):
-    prop = obj['property']
-    ID = prop['_id']
-
-    package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
-
-    file_name = work_dir + '/object_' + str(pid) + '_' + str(ID) + '.json'
-
-    with open(file_name, 'w') as propfile:
-        propfile.write(package)
-
-    path = executables[obj['executable_index']]['path']
-    timeout = prop['timeout']
-
+def resolve_object(pid,property,models,executables,work_dir):
     t0 = time.time()
 
-    try:
-        prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
-        prop['status'] = "resolved"
+    file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
+    with open(file_name, 'w') as io_file:
+        io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
 
-        with open(file_name, 'r') as propfile:
-            result = json.load(propfile)
+    result = {}
+    try:
+        path = executables[property['executable_index']]['path']
+        property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        property['status'] = "resolved"
+        with open(file_name, 'r') as io_file:
+            result = json.load(io_file)
     except sp.TimeoutExpired as e:
-        prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
-        prop['status'] = "timed out"
-        result = {}
+        property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
+        property['status'] = "timed out"
     except sp.CalledProcessError as e:
-        prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
-        prop['status'] = "errored"
-        result = {}
+        property['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
+        property['status'] = "errored"
     except FileNotFoundError as e:
-        prop['log'] = str(e)
-        prop['status'] = "not found"
-        result = {}
+        property['log'] = str(e)
+        property['status'] = "not found"
 
     t1 = time.time()
-
     elapsed = t1-t0
-
-    prop['walltime'] = elapsed
+    property['walltime'] = elapsed
 
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
-    result['property_id'] = ID
 
-    return {'property':prop,'model':result}
+    return {'property':property,'model':result}
 
-def worker(pid,wdb,args,end_time):
+def worker(pid,wdb,work_batches,args,end_time):
     print('worker',str(pid),'active')
 
     start_time = time.time()
@@ -121,7 +87,7 @@ def worker(pid,wdb,args,end_time):
     unresolved1 = []
     fetch_thread = th.Thread()
 
-    is_work = [wdb.work_batches.count({}) > 0]
+    is_work = [work_batches.count({}) > 0]
 
     threads = []
     while True:
@@ -132,18 +98,15 @@ def worker(pid,wdb,args,end_time):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
                 if (time_left() > 2*args.time_window):
-                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,pid,unresolved0,is_work,))
+                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,work_batches,pid,unresolved0,is_work,))
                     fetch_thread.start()
             if len(unresolved1) > 0:
-                objs = unresolved1[0]
-                models = unresolved1[1]
-                executables = unresolved1[2]
                 good_results = {'properties':[],'models':[]}
                 bad_results = {'properties':[],'models':[]}
                 t0 = time.time()
-                for obj in objs:
-                    if time_left() > obj['property']['timeout']:
-                        resolved = resolve_object(pid,obj,models,executables,args.work_dir)
+                for property in unresolved1[0]['properties']:
+                    if time_left() > property['timeout']:
+                        resolved = resolve_object(pid,property,unresolved1[0]['models'],unresolved1[0]['executables'],args.work_dir)
                         if resolved['property']['status'] == "resolved":
                             good_results['properties'].append(resolved['property'])
                             good_results['models'].append(resolved['model'])
@@ -152,7 +115,7 @@ def worker(pid,wdb,args,end_time):
                             bad_results['models'].append(resolved['model'])
                     else: break
                 t1 = time.time()
-                unresolved1 = [[],[],[]]
+                unresolved1 = [{'properties':[],'models':[],'executables':[]}]
                 if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
                     print('worker',str(pid),'resolved',len(good_results['properties']),'and fumbled',len(bad_results['properties']),'properties in time',t1-t0)
                     thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
@@ -179,6 +142,8 @@ def scheduler(args):
     wdb = whiplash.wdb(args.host,args.port,token=args.token)
     print('local scheduler connected to wdb')
 
+    work_batches = wdb.collection(wdb,'work_batches')
+
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
         num_cpus = min(args.num_cpus,num_cpus)
@@ -188,12 +153,12 @@ def scheduler(args):
     context = mp.get_context('fork')
     procs = []
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
+        p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
         p.start()
         procs.append([pid,p])
 
     while True:
-        is_work = (wdb.work_batches.count({}) > 0)
+        is_work = (work_batches.count({}) > 0)
 
         n_alive = 0
         for [pid,p] in procs:
@@ -202,7 +167,7 @@ def scheduler(args):
             elif (is_work) and ((end_time-time.time())>args.time_window):
                 print('worker',str(pid),'restarting')
                 p.join()
-                p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
+                p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
                 p.start()
                 n_alive += 1
 

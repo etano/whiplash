@@ -27,25 +27,45 @@
 <body>
 
 <widget class="qtable prototype" constructor="new QTable">
-    <div class="label">Filter inputs models:</div>
-    <textarea id="input_model_filter">{}</textarea>
-    <div class="label">Desired input model fields:</div>
-    <textarea id="input_model_fields"></textarea>
+    <div class="input_row">
+        <div class="input_row_filter">
+            <div class="label">Filter inputs models:</div>
+            <textarea id="input_model_filter">{}</textarea>
+        </div>
+        <div class="input_row_fields">
+            <div class="label">Desired input model fields:</div>
+            <textarea id="input_model_fields"></textarea>
+        </div>
+    </div>
     <div class="button_row">
         <div id="models" class="button"><span id="n_models">0</span> models</div>
     </div>
-    <div class="label">Select executable:</div>
-    <select id="executable_name"></select>
-    <div class="label">Desired executable fields:</div>
-    <textarea id="executable_fields"></textarea>
-    <div class="label">Filter running parameters:</div>
-    <textarea id="params_filter">{}</textarea>
-    <div class="label">Desired parameter fields:</div>
-    <textarea id="params_fields"></textarea>
-    <div class="label">Filter output models:</div>
-    <textarea id="output_model_filter">{}</textarea>
-    <div class="label">Desired output model fields:</div>
-    <textarea id="output_model_fields"></textarea>
+    <div class="input_row">
+        <div class="input_row_filter">
+            <div class="label">Select executable:</div>
+            <select id="executable_name"></select>
+        </div>
+        <div class="input_row_fields">
+            <div class="label">Desired executable fields:</div>
+            <textarea id="executable_fields"></textarea>
+        </div>
+        <div class="input_row_filter">
+            <div class="label">Filter running parameters:</div>
+            <textarea id="params_filter">{}</textarea>
+        </div>
+        <div class="input_row_fields">
+            <div class="label">Desired parameter fields:</div>
+            <textarea id="params_fields"></textarea>
+        </div>
+        <div class="input_row_filter">
+            <div class="label">Filter output models:</div>
+            <textarea id="output_model_filter">{}</textarea>
+        </div>
+        <div class="input_row_fields">
+            <div class="label">Desired output model fields:</div>
+            <textarea id="output_model_fields"></textarea>
+        </div>
+    </div>
     <div class="button_row">
         <div id="submit" class="button">Submit query</div>
     </div>

@@ -12,8 +12,6 @@ var collection = db.get().collection('fs.files');
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
-var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
-
 //
 // Commit
 //
@@ -87,61 +85,19 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, common.get_payload(req,'filter'), String(req.user._id), res, function(res, err, objs) {
+    var filter = common.get_payload(req,'filter');
+    var fields = common.get_payload(req,'fields');
+    common.query(collection, filter, fields, String(req.user._id), res, function(res, err, objs) {
         if (!err) {
-            common.get_gridfs_objs(objs, res, common.return);
+            common.get_gridfs_objs(objs, fields, res, common.return);
         } else {
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
-        }
-    });
-});
-
-router.get('/one/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(collection, common.get_payload(req,'filter'), String(req.user._id), res, function(res, err, obj) {
-        if (!err) {
-            common.get_gridfs_objs([obj], res, function(res, err, objs) {
-                if (!err) {
-                    return res.json({status: 'OK', result: objs[0]});
-                } else {
-                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
-                }
-            });
-        } else {
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
+            common.return(res, err, 0);
         }
     });
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
-});
-
-router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filter = common.get_payload(req,'filter');
-    var fields = common.get_payload(req,'fields');
-    common.query_fields_only(collection, filter, fields, String(req.user._id), res, function(res, err, objs) {
-        if (!err) {
-            common.get_gridfs_field_objs(objs, fields, res, common.return);
-        } else {
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
-        }
-    });
-});
-
-router.get('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_one(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, function(res, err, obj) {
-        if (!err) {
-            common.get_gridfs_objs([obj], res, function(res, err, objs) {
-                if (!err) {
-                    return res.json({status: 'OK', result: objs[0]});
-                } else {
-                    return res.json({status: res.statusCode, error: JSON.stringify(err)});
-                }
-            });
-        } else {
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
-        }
-    });
+    common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 //
@@ -209,12 +165,6 @@ var delete_by_filter = function(filter,res) {
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.form_filter(collection, common.get_payload(req,'filter'), String(req.user._id), function(filter) {
-        delete_by_filter(filter,res);
-    });
-});
-
-router.delete('/id/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.form_filter(collection,{_id: new ObjectID(req.params.id)},String(req.user._id), function(filter) {
         delete_by_filter(filter,res);
     });
 });

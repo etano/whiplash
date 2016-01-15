@@ -10,6 +10,7 @@ class wdb:
     '''
     interface to the whiplash database
     '''
+
     def __init__(self,server,port,token="",username="",password=""):
         '''
         initialises the whiplash class. server and port required
@@ -29,15 +30,7 @@ class wdb:
         self.models = self.collection(self,"models")
         self.executables = self.collection(self,"executables")
         self.properties = self.properties_collection(self,"properties")
-        self.work_batches = self.collection(self,"work_batches")
         self.queries = self.collection(self,"queries")
-        self.collaborations = self.collection(self,"collaborations")
-        self.users = self.collection(self,"users")
-        self.accesstokens = self.collection(self,"accesstokens")
-
-    #
-    # Request
-    #
 
     def request(self,protocol,uri,payload,zip=False):
         '''
@@ -58,10 +51,6 @@ class wdb:
             print(res.status_code, res.reason, res.content)
 
         return res.status_code, res.reason, res.content
-
-    #
-    # Tokens
-    #
 
     def set_token(self,access_token):
         '''
@@ -119,125 +108,6 @@ class wdb:
                 f.close()
                 self.set_token(res["access_token"])
 
-    #
-    # Check status
-    #
-
-    def check_status(self,tags={},params={}):
-        '''
-        checks how many properties are {unresolved, pulled, timed out, resolved, errored}
-        '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
-        filter = {"input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
-        for status in ['unresolved','resolved','errored','timed out','running','pulled','not found']:
-            filter["status"] = "unresolved"
-            print(status + ': %d'%(self.properties.count(filter)))
-
-    #
-    # Get results
-    #
-
-    def get_inputs_outputs(self,tags,params):
-        '''
-        fetches input and output models corresponding to the models and properties found by their respective filters
-        '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
-        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
-
-        all_ids = self.properties.query_fields_only(filter,["input_model_id","output_model_id","_id"])
-        in_model_ids = all_ids["input_model_id"]
-        out_model_ids = all_ids["output_model_id"]
-
-        in_models = self.models.query({'_id': {'$in': in_model_ids}})
-        out_models = self.models.query({'_id': {'$in': out_model_ids}})
-        inputs = []
-        outputs = []
-        for j in range(len(in_model_ids)):
-            in_model = {}
-            for i in range(len(in_models)):
-                if in_models[i]['_id'] == in_model_ids[j]:
-                    in_model = in_models[i]
-                    break
-            inputs.append(in_model)
-            out_model = {}
-            for i in range(len(out_models)):
-                if out_models[i]['_id'] == out_model_ids[j]:
-                    out_model = out_models[i]
-                    break
-            outputs.append(out_model)
-        return inputs,outputs
-
-    def get_results(self,tags,params):
-        '''
-        fetches output models corresponding to the models and properties found by their respective filters
-        '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
-        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
-
-        all_ids = self.properties.query_fields_only(filter,["output_model_id","_id"])
-        out_model_ids = all_ids["output_model_id"]
-        prop_ids = all_ids["_id"]
-
-        out_models = self.models.query({'_id': {'$in': out_model_ids}})
-        results = [{} for i in range(len(out_model_ids))]
-        for out_model_id in out_model_ids:
-            out_model = {}
-            for i in range(len(out_models)):
-                if out_models[i]['_id'] == out_model_id:
-                    out_model = out_models[i]
-                    break
-            for i in range(len(prop_ids)):
-                if out_model["property_id"] == prop_ids[i]:
-                    results[i] = out_model['content']
-                    break
-        return results
-
-    def get_results_fields(self,tags,params,model_fields,property_fields):
-        '''
-        fetches output models corresponding to the models and properties found by their respective filters
-        '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
-        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
-
-        if not isinstance(property_fields, list):
-            property_fields = [property_fields]
-
-        props = self.properties.query_fields_only(filter,property_fields + ['output_model_id'])
-
-        if not isinstance(model_fields, list):
-            model_fields = [model_fields]
-
-        models = self.models.query_fields_only({'_id': {'$in': props['output_model_id']}},model_fields + ['_id'])
-
-        results = {}
-        for field in property_fields:
-            results['property.' + field] = props[field]
-
-        for field in model_fields:
-            results['model.' + field] = []
-
-        index = {}
-        for i in range(len(models['_id'])):
-            index[models['_id'][i]] = i
-
-        for i in range(len(props['output_model_id'])):
-            for field in model_fields:
-                results['model.' + field].append(models[field][index[props['output_model_id'][i]]])
-
-        return results
-
-    #
-    # Submit query
-    #
-
     def query(self,filters,fields,n_rep=1):
         '''
         submits a query to the database
@@ -249,9 +119,17 @@ class wdb:
             print(status,reason,res)
             sys.exit(1)
 
-    #
-    # Collections
-    #
+    def status(self,filters,fields):
+        '''
+        Checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
+        '''
+        status, reason, res = self.request("GET","/api/queries/status",json.dumps({"filters":filters,"fields":fields}))
+        if status == 200 or status == 'OK':
+            return json.loads(res.decode('utf-8'))["result"]
+        else:
+            print(status,reason,res)
+            sys.exit(1)
+
     class collection:
         '''
         base class for models, executables and properties collections
@@ -273,9 +151,6 @@ class wdb:
             else:
                 print(status,reason,res)
                 sys.exit(1)
-        #
-        # Commit
-        #
 
         def commit(self,objs):
             '''
@@ -283,106 +158,53 @@ class wdb:
             '''
             if not isinstance(objs, list):
                 objs = [objs]
-            ids = self.request("POST","/api/"+self.name+"/",objs)
-            return ids
+            return self.request("POST","/api/"+self.name+"/",objs)
 
-        #
-        # Query
-        #
-
-        def count(self,fltr):
+        def count(self,filter):
             '''
             counts the number of objects in the colleciton which satisfy the filter
             '''
-            return self.request("GET","/api/"+self.name+"/count/",fltr)
+            return self.request("GET","/api/"+self.name+"/count/",filter)
 
-        def query(self,fltr):
+        def query(self,filter,fields=[]):
             '''
-            fetches objects in the collection which satisfy the filter
-            '''
-            return self.request("GET","/api/"+self.name+"/",fltr)
-
-        def query_one(self,fltr):
-            '''
-            fetches a single object in the collection which satisfies the filter
-            '''
-            return self.request("GET","/api/"+self.name+"/one/",fltr)
-
-        def query_fields_only(self,fltr,fields):
-            '''
-            fetches only specified fields of objects which satisfy the filter
+            Fetches specified fields of objects in the collection which satisfy the filter.
+            If no fields are specified, then returns the whole objects.
             '''
             if not isinstance(fields, list):
                 fields = [fields]
-            tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
-            res = {}
-            for field in fields:
-                res[field] = []
-                for o in tmp:
-                    res[field].append(o[field])
-            return res
+            return self.request("GET","/api/"+self.name+"/",filter)
 
-        def query_id(self,ID):
-            '''
-            fetches the object in the collection which has the id
-            '''
-            return self.request("GET","/api/"+self.name+"/id/"+str(ID),{})
-
-        #
-        # Find and update
-        #
-
-        def update(self,fltr,update):
+        def update(self,filter,update):
             '''
             updates the objects in the collection which satisfy the filter as specified in the update
             '''
-            return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
+            return self.request("PUT","/api/"+self.name+"/",{'filter':filter,'update':update})
 
-
-        def find_one_and_update(self,fltr,update):
+        def replace(self,replacements):
             '''
-            fetches a single object in the collection which satisfies the filter and updates it as specified in the update
+            replaces objects in the collection with the replacements
             '''
-            return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
+            return self.request("PUT","/api/"+self.name+"/replace/",replacements)
 
-        def find_id_and_update(self,ID,update):
-            '''
-            fetches the object in the collection which has the id and updates it as specified in the update
-            '''
-            return self.request("PUT","/api/"+self.name+"/id/"+str(ID),update)
-
-        #
-        # Delete
-        #
-
-        def delete(self,fltr):
+        def delete(self,filter):
             '''
             deletes the objects in the collection which satisfy the filter
             '''
-            return self.request("DELETE","/api/"+self.name+"/",fltr)
+            return self.request("DELETE","/api/"+self.name+"/",filter)
 
-        def delete_id(self,ID):
-            '''
-            deletes the object in the collection which has the id 
-            '''
-            return self.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-
-        #
-        # Map-reduce
-        #
-
-        def stats(self,field,fltr):
+        def stats(self,field,filter):
             '''
             computes the {sum, max, min, count, mean, standard deviation, variance} of the 
             specified fields of objects in the collection which satisfy the filter 
             '''
-            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
+            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":filter})
 
-        def mapreduce(self,fltr,mapper,reducer,finalizer):
+        def mapreduce(self,filter,mapper,reducer,finalizer):
             '''
             Performs a custom computation on the data, by performing a mapreduce operation.
             Custom map(), reduce(key,value) and finalize(key,value) functions have to be a string of a JS function.
-            
+
             For usage of MongoDB mapreduce see mongoDB Documentation: https://docs.mongodb.org/manual/reference/command/mapReduce/#dbcmd.mapReduce
 
             Sample mapper:
@@ -417,31 +239,9 @@ class wdb:
                 return value;
             };
             '''
-            return self.request("GET","/api/"+self.name+"/mapreduce/",{"filter":fltr,"map":mapper,"reduce":reducer,"finalize":finalizer})
+            return self.request("GET","/api/"+self.name+"/mapreduce/",{"filter":filter,"map":mapper,"reduce":reducer,"finalize":finalizer})
 
-
-    #
-    # Special helper functions, only for properties
-    #
     class properties_collection(collection):
-
-        def get_unresolved_time(self):
-            '''
-            computes the sum of timeouts of all unresolved properties
-            '''
-            return self.stats("timeout",{"status":"unresolved"})['sum']
-
-        def get_resolved_time(self):
-            '''
-            computes the sum of timeouts of all resolved properties
-            '''
-            return self.stats("walltime",{"status":"resolved"})['sum']
-
-        def replace(self,replacements):
-            '''
-            replaces objects in the collection with the replacements
-            '''
-            return self.request("PUT","/api/properties/replace/",replacements)
 
         def refresh(self):
             '''
