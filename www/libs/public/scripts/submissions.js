@@ -12,11 +12,13 @@ function loadQueries(){
                 for (var i=0; i<status.length; i++) {
                     var id = status[i]._id;
                     var timestamp = status[i].timestamp;
-                    var resolved = parseInt(status[i].resolved);
-                    var unresolved = parseInt(status[i].unresolved);
-                    var total = parseInt(status[i].total);
-                    var pulled = parseInt(status[i].pulled);
-                    var errored = parseInt(status[i].errored);
+                    var resolved = parseInt(status[i]['resolved']);
+                    var unresolved = parseInt(status[i]['unresolved']);
+                    var total = parseInt(status[i]['total']);
+                    var pulled = parseInt(status[i]['pulled']);
+                    var errored = parseInt(status[i]['errored']);
+                    var running = parseInt(status[i]['running']);
+                    var notfound = parseInt(status[i]['not found']);
                     var timedout = parseInt(status[i]['timed out']);
 
                     var stat = "OK";

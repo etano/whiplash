@@ -126,7 +126,7 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
 }
 
 function get_status(filters, fields, user_id, res, cb) {
-    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
+    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
     // Get input model info
     common.query(models, filters['input_model'], ['_id'], user_id, res, function(res, err, input_model_objs) {
         if (!err) {
