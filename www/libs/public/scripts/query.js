@@ -61,15 +61,15 @@ QTable.prototype.updateQueryCount = function(){
         if(!err){
             $.ajax({
                 type: 'GET',
-                url: api_addr+"/api/queries/stats",
+                url: api_addr+"/api/queries/status",
                 data: { "access_token"  : session_token,
                         "filters" : JSON.stringify(filters),
                         "fields" : JSON.stringify(fields)
                 },
                 success: function(data){
-                    var stats = data.result;
-                    widget.find("span#n_queries").text(stats.total);
-                    widget.find("span#n_results").text(n_results);
+                    var status = data.result;
+                    widget.find("span#n_queries").text(status.total);
+                    widget.find("span#n_results").text(status.resolved);
                 },
                 error: function(request, status, err){
                     alert(err);

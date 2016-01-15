@@ -171,6 +171,7 @@ module.exports = {
         if (!err) {
             return res.json({status: 'OK', result: obj});
         } else {
+            log.error(JSON.stringify(err));
             return res.json({status: res.statusCode, error: JSON.stringify(err)});
         }
     },

@@ -119,28 +119,16 @@ class wdb:
             print(status,reason,res)
             sys.exit(1)
 
-    def check_status(self,tags={},params={}):
+    def status(self,filters,fields):
         '''
-        checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
+        Checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
         '''
-        in_model_ids = [x["_id"] for x in self.models.query(tags,"_id")]
-        filter = {"input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
-        filter["status"] = "unresolved"
-        print('unresolved: %d'%(self.properties.count(filter)))
-        filter["status"] = "pulled"
-        print('pulled: %d'%(self.properties.count(filter)))
-        filter["status"] = "running"
-        print('running: %d'%(self.properties.count(filter)))
-        filter["status"] = "timed out"
-        print('timed out: %d'%(self.properties.count(filter)))
-        filter["status"] = "resolved"
-        print('resolved: %d'%(self.properties.count(filter)))
-        filter["status"] = "errored"
-        print('errored: %d'%(self.properties.count(filter)))
-        filter["status"] = "not found"
-        print('not found: %d'%(self.properties.count(filter)))
+        status, reason, res = self.request("GET","/api/queries/status",json.dumps({"filters":filters,"fields":fields}))
+        if status == 200 or status == 'OK':
+            return json.loads(res.decode('utf-8'))["result"]
+        else:
+            print(status,reason,res)
+            sys.exit(1)
 
     class collection:
         '''

@@ -19,9 +19,56 @@ var properties = db.get().collection('properties');
 // Helper functions
 //
 
+var createNestedObject = function(obj, keys, value) {
+    var lastName = arguments.length === 3 ? keys[keys.length-1] : false;
+    for(var i=0; i<keys.length-1; i++) {
+        obj = obj[keys[i]] = obj[keys[i]] || {};
+    }
+    if(lastName) {
+        obj = obj[lastName] = value;
+    }
+    return obj;
+};
+
+function find_in_operators(ins, obj, keys) {
+    for (var key in obj) {
+        if (key === '$in') {
+            ins.push({'keys':keys, 'values':obj[key]});
+        } else {
+            if (typeof obj[key] === 'object') {
+                find_in_operators(ins, obj[key], keys.concat(key));
+            }
+        }
+    }
+}
+
+function expand_props(props) {
+    var new_props = [];
+    for (var i=0; i<props.length; i++) {
+        var prop = props[i];
+        var ins = [];
+        find_in_operators(ins, props[i], []);
+        var branch_ins = function(i, ins, keys_vals) {
+            if (i<ins.length) {
+                for (var j=0; j<ins[i].values.length; j++) {
+                    branch_ins(i+1, ins, keys_vals.concat({'keys':ins[i].keys, 'value':ins[i].values[j]}));
+                }
+            } else {
+                var new_prop = JSON.parse(JSON.stringify(prop));
+                for (var k=0; k<keys_vals.length; k++) {
+                    createNestedObject(new_prop, keys_vals[k]['keys'], keys_vals[k]['value']);
+                }
+                new_props.push(new_prop);
+            }
+        };
+        branch_ins(0, ins, []);
+    }
+    return new_props;
+}
+
 function setup_query(filters, fields, n_rep, user_id, res, cb) {
     // Commit query
-    var query = [{'filters':filters,'fields':fields}];
+    var query = [{'filters':JSON.stringify(filters),'fields':fields}];
     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
         if (!err) {
             // Get input model info
@@ -35,15 +82,15 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
                             for (var i=0; i<input_model_objs.length; i++) {
                                 for (var j=0; j<executable_objs.length; j++) {
                                     for (var k=0; k<n_rep; k++) {
-                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':3600,'params':{}}; // FIXME: Hard-coded timeout
+                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':3600,'params':{'seed':k}}; // FIXME: Hard-coded timeout
                                         for (var key in filters['params']) {
                                             prop['params'][key] = filters['params'][key];
                                         }
-                                        prop['params']['seed'] = k;
                                         props.push(prop);
                                     }
                                 }
                             }
+                            props = expand_props(props);
                             // Commit properties
                             common.commit(property, properties, props, user_id, res, function(res, err, property_ids) {
                                 if (!err) {
@@ -78,6 +125,56 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
     });
 }
 
+function get_status(filters, fields, user_id, res, cb) {
+    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
+    // Get input model info
+    common.query(models, filters['input_model'], ['_id'], user_id, res, function(res, err, input_model_objs) {
+        if (!err) {
+            // Get executable info
+            common.query(executables, filters['executable'], ['_id'], user_id, res, function(res, err, executable_objs) {
+                if (!err) {
+                    // Form property filter
+                    var i;
+                    var input_model_ids = [];
+                    for (i=0; i<input_model_objs.length; i++) {
+                        input_model_ids.push(String(input_model_objs[i]['_id']));
+                    }
+                    var executable_ids = [];
+                    for (i=0; i<executable_objs.length; i++) {
+                        executable_ids.push(String(executable_objs[i]['_id']));
+                    }
+                    var property_filter = {"input_model_id":{"$in":input_model_ids},"executable_id":{"$in":executable_ids}};
+                    for (var key in filters['params']) {
+                        property_filter['params.'+key] = filters['params'][key];
+                    }
+                    // Get stats
+                    common.query(properties, property_filter, ['_id'], user_id, res, function(res, err, property_objs) {
+                        if (!err) {
+                            var ids = [];
+                            for (var i=0; i<property_objs.length; i++) {
+                                ids.push(property_objs[i]['_id']);
+                            }
+                            properties.group(['status'],{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
+                                for (var i=0; i<counts.length; i++) {
+                                    stats_obj[counts[i].status] += counts[i].count;
+                                    stats_obj['total'] += counts[i].count;
+                                }
+                                cb(res, 0, stats_obj);
+                            });
+                        } else {
+                            cb(res, err, 0);
+                        }
+                    });
+                } else {
+                    cb(res, err, 0);
+                }
+            });
+        } else {
+            cb(res, err, 0);
+        }
+    });
+}
+
 //
 // Submit/Retrieve
 //
@@ -88,8 +185,6 @@ router.get('/submit', passport.authenticate('bearer', { session: false }), funct
     var fields = common.get_payload(req,'fields');
     var n_rep = common.get_payload(req,'n_rep');
     var user_id = String(req.user._id);
-    log.debug(JSON.stringify(filters));
-    log.debug(JSON.stringify(fields));
     // Commit query, get input model objects, executable objects, and property objects
     setup_query(filters, fields, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
         common.return(res, 0, property_objs);
@@ -108,7 +203,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         var output_model_ids = [];
         for (var i=0; i<property_objs.length; i++) {
             if (property_objs[i]['output_model_id'] !== '') {
-                output_model_ids.push(property_objs[i]['output_model_id']);
+                output_model_ids.push(new ObjectID(property_objs[i]['output_model_id']));
             }
         }
         filters['output_model']['_id'] = {'$in':output_model_ids};
@@ -134,7 +229,8 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                         for (i=0; i<property_objs.length; i++) {
                             var obj = {'input_model': input_model_objs[input_model_indexes[property_objs['input_model_id']]],
                                        'executable': executable_objs[executable_indexes[property_objs['executable_id']]],
-                                       'params': property_objs[i]['params']};
+                                       'params': property_objs[i]['params'],
+                                       'status': property_objs[i]['status']};
                             if (property_objs[i]['status'] === 'resolved') {
                                 obj['output_model'] = output_model_objs[output_model_indexes[property_objs['output_model']]];
                             } else {
@@ -171,61 +267,27 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 // Stats
 //
 
-router.get('/stats', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.get('/status', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var filters = common.get_payload(req,'filters');
+    var fields = common.get_payload(req,'fields');
     var user_id = String(req.user._id);
-    // Get all queries
+    get_status(filters, fields, user_id, res, common.return);
+});
+
+router.get('/status/all', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var user_id = String(req.user._id);
     common.query(collection, {}, [], user_id, res, function(res, err, queries) {
         if (!err) {
             var stats_objs = [];
             var append_stats = function(count) {
                 if (count<queries.length) {
-                    var filters = queries[count]['filters'];
+                    var filters = JSON.parse(queries[count]['filters']);
                     var fields = queries[count]['fields'];
-                    log.debug(JSON.stringify(filters));
-                    log.debug(JSON.stringify(fields));
-                    stats_objs.push({'timestamp':queries[count]['timestamp'], '_id':queries[count]['_id'], 'resolved':0, 'pulled':0, 'running':0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0});
-                    // Get input model info
-                    common.query(models, filters['input_model'], ['_id'], user_id, res, function(res, err, input_model_objs) {
-                        if (!err) {
-                            // Get executable info
-                            common.query(executables, filters['executable'], ['_id'], user_id, res, function(res, err, executable_objs) {
-                                if (!err) {
-                                    // Form property filter
-                                    var i;
-                                    var input_model_ids = [];
-                                    for (i=0; i<input_model_objs.length; i++) {
-                                        input_model_ids.push(input_model_objs[i]['_id']);
-                                    }
-                                    var executable_ids = [];
-                                    for (i=0; i<executable_objs.length; i++) {
-                                        executable_ids.push(executable_objs[i]['_id']);
-                                    }
-                                    var property_filter = {"input_model_id":{"$in":input_model_ids},"executable_id":{"$in":executable_ids}};
-                                    // Get stats
-                                    common.query(properties, property_filter, ['_id'], user_id, res, function(res, err, result) {
-                                        if (!err) {
-                                            var ids = [];
-                                            for (var i=0; i<result.length; i++) {
-                                                ids.push(result[i]['_id']);
-                                            }
-                                            properties.group(['status'],{'_id':{'$in':ids}},{'count':0},"function(obj,prev) { prev.count++; }", function (err, counts) {
-                                                for (var i=0; i<counts.length; i++) {
-                                                    stats_objs[count][counts[i].status] += counts[i].count;
-                                                    stats_objs[count]['total'] += counts[i].count;
-                                                }
-                                                append_stats(count+1);
-                                            });
-                                        } else {
-                                            common.return(res, err, 0);
-                                        }
-                                    });
-                                } else {
-                                    common.return(res, err, 0);
-                                }
-                            });
-                        } else {
-                            common.return(res, err, 0);
-                        }
+                    get_status(filters, fields, user_id, res, function(res, err, stats_obj) {
+                        stats_obj['timestamp'] = queries[count]['timestamp'];
+                        stats_obj['_id'] = queries[count]['_id'];
+                        stats_objs.push(stats_obj);
+                        append_stats(count+1);
                     });
                 } else {
                     common.return(res, 0, stats_objs);

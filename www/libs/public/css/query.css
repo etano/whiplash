@@ -20,3 +20,25 @@ div.button_row div.button {
     margin-left: 25px;
     background-color: white;
 }
+
+div.input_row {
+    display: table;
+    margin: 25px 0;
+    width: 100%;
+}
+
+div.input_row_filter {
+    display: inline-block;
+    float: left;
+    margin: 0 2% 0 0;
+    padding: 0;
+    width: 48%;
+}
+
+div.input_row_fields {
+    display: inline-block;
+    float: left;
+    margin: 0 0 0 2%;
+    padding: 0;
+    width: 48%;
+}
