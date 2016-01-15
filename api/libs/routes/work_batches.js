@@ -6,6 +6,7 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('work_batches');
+var properties = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/work_batch');
 var ObjectID = require('mongodb').ObjectID;
 
@@ -22,29 +23,32 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    collection.findOneAndDelete({owner:String(req.user._id)}, {sort: {timestamp: 1}, projection: {ids: 1}}, function (err, result) {
+    var user_id = String(req.user._id);
+    common.pop(collection, {}, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
         if (!err) {
-            if(result.value){
-                for(var i=0;i<result.value.ids.length;i++){
-                    result.value.ids[i] = new ObjectID(result.value.ids[i]);
+            if (work_batch) {
+                var property_ids = [];
+                for (var i=0; i<work_batch['ids'].length; i++) {
+                    property_ids.push(new ObjectID(work_batch['ids'][i]));
                 }
-                db.get().collection('properties').updateMany({'_id':{'$in':result.value.ids}}, {'$set':{"status":"running"}}, {w:1}, function (err, result2) {
+                common.update(properties, {'_id':{'$in':property_ids}}, {'status':'running'}, user_id, res, function(res, err, count) {
                     if (!err) {
-                        log.info("%d properties are running",result2.modifiedCount);
-                        return res.json({ status: 'OK', result: result.value.ids });
+                        common.query(properties, {'_id':{'$in':property_ids}}, [], user_id, res, function(res, err, property_objs) {
+                            if (!err) {
+                                common.return(res, 0, property_objs);
+                            } else {
+                                common.return(res, err, 0);
+                            }
+                        });
                     } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
+                        common.return(res, err, 0);
                     }
                 });
             } else {
-                return res.json({ status: 'OK', result: [] });
+                common.return(res, 0, []);
             }
         } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
+            common.return(res, err, 0);
         }
     });
 });

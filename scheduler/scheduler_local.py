@@ -10,8 +10,7 @@ def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
     t0 = time.time()
 
     # TODO: should not be "query" but something like "pull"
-    property_ids = work_batches.query({})
-    properties = wdb.properties.query({'_id': {'$in': property_ids}})
+    properties = work_batches.query({})
 
     if len(properties) == 0:
         is_work[0] = False
@@ -26,17 +25,18 @@ def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
         models = wdb.models.query({'_id': { '$in': list(model_ids) }})
         executables = wdb.executables.query({'_id': { '$in': list(executable_ids) }})
 
+        model_indices = {}
+        for i in range(len(models)):
+            model_indices[models[i]['_id']] = i
+        executable_indices = {}
+        for i in range(len(executables)):
+            executable_indices[executables[i]['_id']] = i
+
         objs = []
         for prop in properties:
-            obj = {'property':prop,'model_index':-1,'executable_index':-1}
-            for i in range(len(models)):
-                if prop['input_model_id'] == models[i]['_id']:
-                    obj['model_index'] = i
-                    break
-            for i in range(len(executables)):
-                if prop['executable_id'] == executables[i]['_id']:
-                    obj['executable_index'] = i
-                    break
+            obj = {'property':prop}
+            obj['model_index'] = model_indices[prop['input_model_id']]
+            obj['executable_index'] = executable_indices[prop['executable_id']]
             objs.append(obj)
 
         assert len(objs) > 0
@@ -204,7 +204,7 @@ def scheduler(args):
             elif (is_work) and ((end_time-time.time())>args.time_window):
                 print('worker',str(pid),'restarting')
                 p.join()
-                p = context.Process(target=worker, args=(pid,wdb,args,end_time,))
+                p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
                 p.start()
                 n_alive += 1
 

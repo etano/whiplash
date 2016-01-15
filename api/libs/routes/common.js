@@ -377,6 +377,10 @@ module.exports = {
         });
     },
 
+    //
+    // Replace
+    //
+
     replace: function(ObjType, collection, objs, user_id, res, cb) {
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
@@ -387,13 +391,37 @@ module.exports = {
         }
         collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
-                log.info("%s new objects replaced", String(result.modifiedCount));
+                log.info("%s objects replaced", String(result.modifiedCount));
                 cb(res,0,result.modifiedCount);
             } else {
                 res.statusCode = 500;
                 log.error('Write error: %s %s', err.message, result.getWriteErrors());
                 cb(res,err.message,0);
             }
+        });
+    },
+
+    //
+    // Pop
+    //
+
+    pop: function(collection, filter, sort, user_id, res, cb) {
+        this.form_filter(collection, filter, user_id, function(filter) {
+            collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
+                if (!err) {
+                    if (result.value) {
+                        log.info("Popping 1 object from %s",collection.collectionName);
+                        cb(res, 0, result.value);
+                    } else {
+                        log.info("Popping 0 objects from %s",collection.collectionName);
+                        cb(res, 0, 0);
+                    }
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    cb(res, err.message, 0);
+                }
+            });
         });
     },
 
