@@ -66,7 +66,7 @@ function expand_props(props) {
     return new_props;
 }
 
-function setup_query(filters, fields, n_rep, user_id, res, cb) {
+function setup_query(filters, fields, timeout, n_rep, user_id, res, cb) {
     // Commit query
     var query = [{'filters':JSON.stringify(filters),'fields':fields}];
     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
@@ -82,7 +82,7 @@ function setup_query(filters, fields, n_rep, user_id, res, cb) {
                             for (var i=0; i<input_model_objs.length; i++) {
                                 for (var j=0; j<executable_objs.length; j++) {
                                     for (var k=0; k<n_rep; k++) {
-                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':3600,'params':{'seed':k}}; // FIXME: Hard-coded timeout
+                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':timeout,'params':{'seed':k}};
                                         for (var key in filters['params']) {
                                             prop['params'][key] = filters['params'][key];
                                         }
@@ -183,10 +183,11 @@ router.get('/submit', passport.authenticate('bearer', { session: false }), funct
     // Get filters, fields, n_reps, and user id
     var filters = common.get_payload(req,'filters');
     var fields = common.get_payload(req,'fields');
+    var timeout = common.get_payload(req,'timeout');
     var n_rep = common.get_payload(req,'n_rep');
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and property objects
-    setup_query(filters, fields, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+    setup_query(filters, fields, timeout, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
         common.return(res, 0, property_objs);
     });
 });
@@ -195,10 +196,11 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     // Get filters, fields, n_reps, and user id
     var filters = common.get_payload(req,'filters');
     var fields = common.get_payload(req,'fields');
+    var timeout = common.get_payload(req,'timeout');
     var n_rep = common.get_payload(req,'n_rep');
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and commit properties
-    setup_query(filters, fields, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+    setup_query(filters, fields, timeout, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
         // Get output model info
         var output_model_ids = [];
         for (var i=0; i<property_objs.length; i++) {

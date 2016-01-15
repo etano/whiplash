@@ -108,11 +108,11 @@ class wdb:
                 f.close()
                 self.set_token(res["access_token"])
 
-    def query(self,filters,fields,n_rep=1):
+    def query(self,filters,fields,timeout=3600,n_rep=1):
         '''
         submits a query to the database
         '''
-        status, reason, res = self.request("GET","/api/queries",json.dumps({"filters":filters,"fields":fields,"n_rep":n_rep}))
+        status, reason, res = self.request("GET","/api/queries",json.dumps({"filters":filters,"fields":fields,"timeout":timeout,"n_rep":n_rep}))
         if status == 200 or status == 'OK':
             return json.loads(res.decode('utf-8'))["result"]
         else:

@@ -43,4 +43,4 @@ assert executable_id == wdb.executables.query(executable,'_id')[0]['_id']
 print("Query for some results")
 filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0}, 'output_model':{}}
 fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["content.edges"]}
-assert len(wdb.query(filters, fields, 10)) == 10
+assert len(wdb.query(filters, fields, timeout=3, n_rep=10)) == 10

@@ -171,7 +171,8 @@ function submitQuery(){
                 data: { "access_token"  : session_token,
                         "filters" : JSON.stringify(filters),
                         "fields" : JSON.stringify(fields),
-                        "n_rep" : 1 // FIXME: number of repetitions
+                        "timeout" : 3600, // FIXME: should be given as option
+                        "n_rep" : 1 // FIXME: should be given as option
                 },
                 success: function(data){
                     viewQueries();
