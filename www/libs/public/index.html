@@ -9,8 +9,6 @@
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="/css/common.css" type="text/css" />
     <link rel="stylesheet" href="/css/submissions.css" type="text/css" />
-    <link rel="stylesheet" href="/css/explore.css" type="text/css" />
-    <link rel="stylesheet" href="/css/api.css" type="text/css" />
     <link rel="stylesheet" href="/css/query.css" type="text/css" />
     <link rel="stylesheet" href="/css/widget.qtable.css" type="text/css" />
     <script src="/scripts/utils/jquery-2.1.1.min.js"></script>
@@ -21,7 +19,6 @@
     <script src="/scripts/login.js"></script>
     <script src="/scripts/submissions.js"></script>
     <script src="/scripts/query.js"></script>
-    <script src="/scripts/explore.js"></script>
     <script src="/scripts/api.js"></script>
 </head>
 <body>
@@ -71,11 +68,9 @@
     </div>
 </widget>
 
-<screen>
+<screen><div class="helper">
+
     <div id="title">Project Whiplash<img src="https://www.ethz.ch/img/header/eth_logo.png"></div>
-    <section id="tagline">
-        <div>A distributed cash</div>
-    </section>
     <section id="menu">
         <div id="logout" class="hidden">Sign out</div>
         <div id="login">Sign in</div>
@@ -84,34 +79,36 @@
         <div id="view-queries" class="hidden">Existing queries</div>
         <div id="compose-query" class="hidden">New query</div>
     </section>
-    <section id="register" class="content centered transit">
+    <section id="register" class="centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="CSCS Username">
         <input type="password" class="passwd" placeholder="Password">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Email">
         <input type="button" value="Sign up" class="submit">
     </section>
-    <section id="login" class="content centered transit">
+    <section id="login" class="centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="CSCS Username">
         <input type="password" name="user_password" class="passwd" placeholder="Password">
         <input type="submit" name="login" value="Sign in" class="submit">
         <div id="forgot">Forgot your password?</div>
     </section>
-    <section id="forgot" class="content centered transit">
+    <section id="forgot" class="centered transit">
         <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" class="login" placeholder="Email">
         <input type="password" class="passwd" placeholder="Create a new password">
         <input type="button" value="Request password change" class="submit">
     </section>
-    <section id="view-queries" class="content transit">
-        <div id="info"></div>
+    <section id="viewport">
+        <div class="limit"></div>
+        <div class="limit"></div>
     </section>
-    <section id="explore" class="content centered transit">
-        <div id="info"></div>
+    <section id="view-queries" class="meta">
+        <div id="info" class="queries"></div>
     </section>
-    <section id="compose-query" class="content centered transit">
+    <section id="compose-query" class="meta">
         <widget class="qtable"></widget>
     </section>
     <div id="confirm" class="transit">Ok, great. Check your email for further instructions.</div>
-</screen>
+
+</div></screen>
 
 </body>
 </html>

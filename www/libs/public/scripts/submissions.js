@@ -6,9 +6,9 @@ function loadQueries(){
         success: function(data){
             var status = data.result;
             if(status.length === 0) {
-                $("section#view-queries div#info").html("No queries to display at the moment.");
+                $("section#viewport div.queries#info").html("No queries to display at the moment.");
             } else {
-                $("section#view-queries div#info").empty();
+                $("section#viewport div.queries#info").empty();
                 for (var i=0; i<status.length; i++) {
                     var id = status[i]._id;
                     var timestamp = status[i].timestamp;
@@ -27,7 +27,7 @@ function loadQueries(){
                         stat = resolved + "/" + total;
                         progress = Math.floor(resolved * 100 / total);
                     }
-                    $("section#view-queries div#info").append("<div class='record' id='" + id + "'>" +
+                    $("section#viewport div.queries#info").append("<div class='record' id='" + id + "'>" +
                                                             "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
                                                             "<div class='date'>" + timestamp + "</div>" +
                                                             "<div class='progress'><progress max='100' value='" + progress + "'></progress></div>" +
@@ -61,5 +61,5 @@ function deleteQuery(){
 }
 
 $(document).ready(function(){
-    $(document).on("click", "section#view-queries div.delete", deleteQuery);
+    $(document).on("click", "section#viewport div.queries#info div.delete", deleteQuery);
 });

@@ -1,11 +1,3 @@
-section#compose-query, section#edit-query {
-    border: 0;
-    width: 90%;
-    max-width: 800px;
-    padding-top: 30px;
-    padding-bottom: 20px;
-}
-
 div.button_row {
     display: table;
     margin: 25px 0;
