@@ -75,6 +75,7 @@ def resolve_object(pid,property,models,executables,work_dir):
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
+    result['property_id'] = property['_id']
 
     return {'property':property,'model':result}
 

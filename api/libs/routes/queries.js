@@ -214,27 +214,26 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
                     if (!err) {
                         // Sort everything
-                        var i;
                         var input_model_indexes = {};
-                        for (i=0; i<input_model_objs.length; i++) {
-                            input_model_indexes[input_model_objs['_id']] = i;
+                        for (var i=0; i<input_model_objs.length; i++) {
+                            input_model_indexes[String(input_model_objs[i]['_id'])] = i;
                         }
                         var output_model_indexes = {};
-                        for (i=0; i<output_model_objs.length; i++) {
-                            output_model_indexes[output_model_objs['_id']] = i;
+                        for (var i=0; i<output_model_objs.length; i++) {
+                            output_model_indexes[String(output_model_objs[i]['_id'])] = i;
                         }
                         var executable_indexes = {};
-                        for (i=0; i<executable_objs.length; i++) {
-                            executable_indexes[executable_objs['_id']] = i;
+                        for (var i=0; i<executable_objs.length; i++) {
+                            executable_indexes[String(executable_objs[i]['_id'])] = i;
                         }
                         var objs = [];
-                        for (i=0; i<property_objs.length; i++) {
-                            var obj = {'input_model': input_model_objs[input_model_indexes[property_objs['input_model_id']]],
-                                       'executable': executable_objs[executable_indexes[property_objs['executable_id']]],
+                        for (var i=0; i<property_objs.length; i++) {
+                            var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
+                                       'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
                                        'params': property_objs[i]['params'],
                                        'status': property_objs[i]['status']};
                             if (property_objs[i]['status'] === 'resolved') {
-                                obj['output_model'] = output_model_objs[output_model_indexes[property_objs['output_model']]];
+                                obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
                             } else {
                                 obj['output_model'] = '';
                             }
