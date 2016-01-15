@@ -1,0 +1,9 @@
+www:
+    extends:
+        file: www/docker-compose.yml
+        service: www
+    ports:
+        - "80:80"
+    volumes:
+        - $PWD/www/libs:/src/libs
+    command: sh -c "cp config.cloud.json config.json; node bin/www"
