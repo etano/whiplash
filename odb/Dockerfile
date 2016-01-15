@@ -44,9 +44,9 @@ RUN mkdir -p /data/db && chown -R mongodb:mongodb /data/db
 COPY docker-entrypoint.sh /entrypoint.sh
 COPY startup.js /tmp/startup.js
 
-RUN (mongod --bind_ip=127.0.0.1 &) && (sleep 5) \
-    && (mongo 127.0.0.1:27017/wdb /tmp/startup.js) && (sleep 5) && (rm /tmp/startup.js) \
-    && (mongod --shutdown) && (sleep 5)
+RUN (mongod --bind_ip=127.0.0.1 &) && (sleep 10) \
+    && (mongo 127.0.0.1:27017/wdb /tmp/startup.js) && (sleep 10) && (rm /tmp/startup.js) \
+    && (mongod --shutdown) && (sleep 10)
 
 ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 27017
