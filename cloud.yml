@@ -1,11 +1,12 @@
 odb:
     image: whiplash/odb
-    command: --auth
     restart: always
     ports:
         - "27017:27017"
+    command: --auth        
 api:
     image: whiplash/api
+    restart: always
     environment:
         MONGO_API_USERNAME: api
         MONGO_API_PASSWORD: haYrv{Ak9UJiaDsqVTe7rLJTc
@@ -13,11 +14,10 @@ api:
         - "1337:1337"
     links:
         - odb:mongo
-    restart: always
     command: sh -c "node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/api"
 scheduler:
     image: whiplash/scheduler
+    restart: always
     links:
         - api:api
-    restart: always
     command: sh -c "sleep 30; python3 scheduler/scheduler_users.py --local --host api --port 1337"
