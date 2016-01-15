@@ -54,29 +54,33 @@ def get_times(args,wdb):
 
 def make_batches(wdb,work_batches,time_window):
     print('querying properties')
-    properties = wdb.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout'])
-    ids = [x['_id'] for x in properties]
-    timeouts = [x['timeout'] for x in properties]
+    properties = wdb.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
 
     print('building batches')
     batches = []
     times_left = []
     ids_in_batches = []
-    for i in range(len(ids)):
+    for i in range(len(properties)):
         if len(batches)==1000:
             break
         found = False
         for j in range(len(batches)):
-            if timeouts[i] < times_left[j]:
-                times_left[j] -= timeouts[i]
-                batches[j]['ids'].append(ids[i])
+            if properties[i]['timeout'] < times_left[j]:
+                times_left[j] -= properties[i]['timeout']
+                batches[j]['property_ids'].append(properties[i]['_id'])
+                batches[j]['model_ids'].append(properties[i]['input_model_id'])
+                batches[j]['executable_ids'].append(properties[i]['executable_id'])
                 found = True
-                ids_in_batches.append(ids[i])
+                ids_in_batches.append(properties[i]['_id'])
                 break
         if not found:
-            batches.append({'ids':[ids[i]]})
-            times_left.append(time_window-timeouts[i])
-            ids_in_batches.append(ids[i])
+            batches.append({'property_ids':[properties[i]['_id']], 'model_ids':[properties[i]['input_model_id']], 'executable_ids':[properties[i]['executable_id']]})
+            times_left.append(time_window - properties[i]['timeout'])
+            ids_in_batches.append(properties[i]['_id'])
+
+    for batch in batches:
+        batch['model_ids'] = list(set(batch['model_ids']))
+        batch['executable_ids'] = list(set(batch['executable_ids']))
 
     if len(batches) > 0:
         print('committing batches')

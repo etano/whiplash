@@ -6,40 +6,27 @@ import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
 def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
-
     t0 = time.time()
 
-    # TODO: should not be "query" but something like "pull"
-    properties = work_batches.query({})
-
-    if len(properties) == 0:
+    work_batch = work_batches.query({})
+    if len(work_batch['properties']) == 0:
         is_work[0] = False
         unresolved = []
     else:
         is_work[0] = True
-        model_ids = set()
-        executable_ids = set()
-        for prop in properties:
-            model_ids.add(prop['input_model_id'])
-            executable_ids.add(prop['executable_id'])
-        models = wdb.models.query({'_id': { '$in': list(model_ids) }})
-        executables = wdb.executables.query({'_id': { '$in': list(executable_ids) }})
-
         model_indices = {}
-        for i in range(len(models)):
-            model_indices[models[i]['_id']] = i
+        for i in range(len(work_batch['models'])):
+            model_indices[work_batch['models'][i]['_id']] = i
         executable_indices = {}
-        for i in range(len(executables)):
-            executable_indices[executables[i]['_id']] = i
-
-        for prop in properties:
+        for i in range(len(work_batch['executables'])):
+            executable_indices[work_batch['executables'][i]['_id']] = i
+        for prop in work_batch['properties']:
             prop['model_index'] = model_indices[prop['input_model_id']]
             prop['executable_index'] = executable_indices[prop['executable_id']]
-
-        unresolved.append({'properties':properties,'models':models,'executables':executables})
+        unresolved.append(work_batch)
 
     t1 = time.time()
-    print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)
+    print('worker',str(pid),'fetched',len(work_batch['properties']),'properties in time',t1-t0)
 
 def commit_resolved(wdb,good_results,bad_results,pid):
     t0 = time.time()
@@ -57,38 +44,31 @@ def commit_resolved(wdb,good_results,bad_results,pid):
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
 def resolve_object(pid,property,models,executables,work_dir):
+    t0 = time.time()
+
     file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
     with open(file_name, 'w') as io_file:
         io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
 
-    path = executables[property['executable_index']]['path']
-    timeout = property['timeout']
-
-    t0 = time.time()
-
+    result = {}
     try:
-        property['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
+        path = executables[property['executable_index']]['path']
+        property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
         property['status'] = "resolved"
-
         with open(file_name, 'r') as io_file:
             result = json.load(io_file)
     except sp.TimeoutExpired as e:
         property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         property['status'] = "timed out"
-        result = {}
     except sp.CalledProcessError as e:
         property['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         property['status'] = "errored"
-        result = {}
     except FileNotFoundError as e:
         property['log'] = str(e)
         property['status'] = "not found"
-        result = {}
 
     t1 = time.time()
-
     elapsed = t1-t0
-
     property['walltime'] = elapsed
 
     os.remove(file_name)
