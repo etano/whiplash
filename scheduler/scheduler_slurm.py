@@ -45,7 +45,7 @@ def get_times(args,wdb):
         return [0,0]
     else:
         if args.local:
-            th_min = 1
+            th_min = 60
         else:
             th_min = 601
         time_window = min(th,max(1.2*timeouts['max'],th_min))
