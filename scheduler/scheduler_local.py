@@ -32,18 +32,11 @@ def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
         for i in range(len(executables)):
             executable_indices[executables[i]['_id']] = i
 
-        objs = []
         for prop in properties:
-            obj = {'property':prop}
-            obj['model_index'] = model_indices[prop['input_model_id']]
-            obj['executable_index'] = executable_indices[prop['executable_id']]
-            objs.append(obj)
+            prop['model_index'] = model_indices[prop['input_model_id']]
+            prop['executable_index'] = executable_indices[prop['executable_id']]
 
-        assert len(objs) > 0
-
-        unresolved.append(objs)
-        unresolved.append(models)
-        unresolved.append(executables)
+        unresolved.append({'properties':properties,'models':models,'executables':executables})
 
     t1 = time.time()
     print('worker',str(pid),'fetched',len(properties),'properties in time',t1-t0)
@@ -63,54 +56,47 @@ def commit_resolved(wdb,good_results,bad_results,pid):
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
-def resolve_object(pid,obj,models,executables,work_dir):
-    prop = obj['property']
-    ID = prop['_id']
+def resolve_object(pid,property,models,executables,work_dir):
+    file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
+    with open(file_name, 'w') as io_file:
+        io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
 
-    package = json.dumps({'content':models[obj['model_index']]['content'],'params':prop['params']}).replace(" ","")
-
-    file_name = work_dir + '/object_' + str(pid) + '_' + str(ID) + '.json'
-
-    with open(file_name, 'w') as propfile:
-        propfile.write(package)
-
-    path = executables[obj['executable_index']]['path']
-    timeout = prop['timeout']
+    path = executables[property['executable_index']]['path']
+    timeout = property['timeout']
 
     t0 = time.time()
 
     try:
-        prop['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
-        prop['status'] = "resolved"
+        property['log'] = sp.check_output([path,file_name],timeout=timeout,universal_newlines=True,stderr=sp.STDOUT)
+        property['status'] = "resolved"
 
-        with open(file_name, 'r') as propfile:
-            result = json.load(propfile)
+        with open(file_name, 'r') as io_file:
+            result = json.load(io_file)
     except sp.TimeoutExpired as e:
-        prop['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
-        prop['status'] = "timed out"
+        property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
+        property['status'] = "timed out"
         result = {}
     except sp.CalledProcessError as e:
-        prop['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
-        prop['status'] = "errored"
+        property['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
+        property['status'] = "errored"
         result = {}
     except FileNotFoundError as e:
-        prop['log'] = str(e)
-        prop['status'] = "not found"
+        property['log'] = str(e)
+        property['status'] = "not found"
         result = {}
 
     t1 = time.time()
 
     elapsed = t1-t0
 
-    prop['walltime'] = elapsed
+    property['walltime'] = elapsed
 
     os.remove(file_name)
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
-    result['property_id'] = ID
 
-    return {'property':prop,'model':result}
+    return {'property':property,'model':result}
 
 def worker(pid,wdb,work_batches,args,end_time):
     print('worker',str(pid),'active')
@@ -135,15 +121,12 @@ def worker(pid,wdb,work_batches,args,end_time):
                     fetch_thread = th.Thread(target = get_unresolved, args = (wdb,work_batches,pid,unresolved0,is_work,))
                     fetch_thread.start()
             if len(unresolved1) > 0:
-                objs = unresolved1[0]
-                models = unresolved1[1]
-                executables = unresolved1[2]
                 good_results = {'properties':[],'models':[]}
                 bad_results = {'properties':[],'models':[]}
                 t0 = time.time()
-                for obj in objs:
-                    if time_left() > obj['property']['timeout']:
-                        resolved = resolve_object(pid,obj,models,executables,args.work_dir)
+                for property in unresolved1[0]['properties']:
+                    if time_left() > property['timeout']:
+                        resolved = resolve_object(pid,property,unresolved1[0]['models'],unresolved1[0]['executables'],args.work_dir)
                         if resolved['property']['status'] == "resolved":
                             good_results['properties'].append(resolved['property'])
                             good_results['models'].append(resolved['model'])
@@ -152,7 +135,7 @@ def worker(pid,wdb,work_batches,args,end_time):
                             bad_results['models'].append(resolved['model'])
                     else: break
                 t1 = time.time()
-                unresolved1 = [[],[],[]]
+                unresolved1 = [{'properties':[],'models':[],'executables':[]}]
                 if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
                     print('worker',str(pid),'resolved',len(good_results['properties']),'and fumbled',len(bad_results['properties']),'properties in time',t1-t0)
                     thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
