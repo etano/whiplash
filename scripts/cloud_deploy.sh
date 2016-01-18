@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ec2_host=$1n
+ec2_host=$1
 ssh -t ec2-user@${ec2_host} 'sudo yum update -y'
 ssh -t ec2-user@${ec2_host} 'sudo yum install -y automake autoconf libtool* gcc-gfortran docker gcc-c++ boost lapack-devel blas-devel'
 #ssh -t ec2-user@${ec2_host} 'cd /usr/lib64 && sudo ln -s liblapack.so.3 liblapack.so'
