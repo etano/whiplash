@@ -14,7 +14,7 @@ api:
         - "1337:1337"
     links:
         - odb:mongo
-    command: sh -c "node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/api"
+    command: sh -c "sleep 15; node bin/createUser.js test test; node bin/createClient.js test-python test-python test; node bin/createClient.js test-scheduler test-scheduler test; node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/api"
 scheduler:
     image: whiplash/scheduler
     restart: always
@@ -22,4 +22,4 @@ scheduler:
         - api:api
     volumes:
         - $PWD:/host
-    command: sh -c "sleep 30; python3 scheduler/scheduler_users.py --local --host api --port 1337"
+    command: sh -c "sleep 30; python3 scheduler/create_token.py api 1337 test test && python3 scheduler/scheduler_users.py --local --host api --port 1337"
