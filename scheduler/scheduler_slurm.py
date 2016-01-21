@@ -36,10 +36,10 @@ def submit_job(args,time_limit,time_window):
     else:
         sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
 
-def get_times(args,wdb):
+def get_times(args,db):
     print('getting times')
     th = int(11.8*3600)
-    timeouts = wdb.properties.stats("timeout",{"status":{"$in":["unresolved","pulled"]}})
+    timeouts = db.properties.stats("timeout",{"status":{"$in":["unresolved","pulled"]}})
     print(timeouts)
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return [0,0]
@@ -52,9 +52,9 @@ def get_times(args,wdb):
         time_limit = 24*3600
         return [time_limit,time_window]
 
-def make_batches(wdb,work_batches,time_window):
+def make_batches(db,time_window):
     print('querying properties')
-    properties = wdb.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
+    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id','owner'])
 
     print('building batches')
     batches = []
@@ -84,26 +84,23 @@ def make_batches(wdb,work_batches,time_window):
 
     if len(batches) > 0:
         print('committing batches')
-        wdb.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
-        work_batches.commit(batches)
+        db.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
+        db.collection('work_batches').commit(batches)
         print('done')
     else:
         print('no suitable work')
 
 def scheduler(args):
 
-    wdb = whiplash.wdb(args.host,args.port,token=args.token)
-
-    print('slurm scheduler connected to wdb')
-
-    work_batches = wdb.collection(wdb,'work_batches')
+    db = whiplash.db(args.host,args.port,token=args.token)
+    print('slurm scheduler connected to db')
 
     if args.local:
         while True:
-            [time_limit,time_window] = get_times(args,wdb)
+            [time_limit,time_window] = get_times(args,db)
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
-                make_batches(wdb,work_batches,time_window)
+                make_batches(db,time_window)
                 print('starting local scheduler')
                 sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
             time.sleep(10)
@@ -112,14 +109,14 @@ def scheduler(args):
         while True:
             if args.test and count > 1:
                break
-            [time_limit,time_window] = get_times(args,wdb)
+            [time_limit,time_window] = get_times(args,db)
             if (time_limit > 0 and time_window > 0):
-                make_batches(wdb,work_batches,time_window)
+                make_batches(db,time_window)
             if not args.test:
                 num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
             else:
                 num_pending = 0
-            if (work_batches.count({}) > 0) and (num_pending == 0):
+            if (db.collection('work_batches').count({}) > 0) and (num_pending == 0):
                 if (time_limit > 0 and time_window > 0):
                     submit_job(args,time_limit,time_window)
                 else:
