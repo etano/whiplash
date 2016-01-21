@@ -44,5 +44,4 @@ print("Query for some results")
 filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0}, 'output_model':{}}
 fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["content.edges"]}
 settings = {'timeout':3, 'n_rep':10}
-print(db.query(filters, fields, settings))
 assert len(db.query(filters, fields, settings)) == 10

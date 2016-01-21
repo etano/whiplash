@@ -54,7 +54,7 @@ def get_times(args,db):
 
 def make_batches(db,time_window):
     print('querying properties')
-    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
+    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id','owner'])
 
     print('building batches')
     batches = []

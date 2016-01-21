@@ -8,18 +8,19 @@ class connection:
     interface to the whiplash database
     '''
 
-    def __init__(self,server,port,token="",username="",password=""):
+    def __init__(self,server,port,token="",username="",password="",save_token=True):
         '''
         initialises the whiplash class. server and port required
         '''
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
+        self.save_token = save_token
         if token == "":
             if username == "":
                 self.read_config()
             else:
-                self.create_token(username,password,save_token=True)
+                self.create_token(username,password)
         else:
             self.set_token(token)
         self.check_token()
@@ -61,7 +62,7 @@ class connection:
             self.set_token(token)
         except:
             print('Whiplash config not found. Please enter your authorization details.')
-            self.create_token(save_token=True)
+            self.create_token()
 
     def check_token(self):
         '''
@@ -71,9 +72,9 @@ class connection:
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
-                self.create_token(save_token=True)
+                self.create_token()
 
-    def create_token(self,username="",password="",client_id="",client_secret="",save_token=False):
+    def create_token(self,username="",password="",client_id="",client_secret=""):
         '''
         creates an access token using the username and password
         '''
@@ -93,7 +94,7 @@ class connection:
             sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
-            if save_token:
+            if self.save_token:
                 print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
                 f = open(os.path.expanduser("~")+"/.whiplash_config","w")
                 f.write(res["access_token"])
@@ -138,7 +139,7 @@ class collection:
         '''
         if not isinstance(fields, list):
             fields = [fields]
-        return self.request("GET", "", filter)
+        return self.request("GET", "", {"fields":fields,"filter":filter})
 
     def update(self,filter,update):
         '''
@@ -219,8 +220,8 @@ class db:
     interface to the whiplash database
     '''
 
-    def __init__(self, server, port, token="", username="", password=""):
-        self.conn = connection(server,port,token=token,username=username,password=password)
+    def __init__(self, server, port, token="", username="", password="", save_token=True):
+        self.conn = connection(server,port,token=token,username=username,password=password,save_token=save_token)
         self.models = self.collection("models")
         self.executables = self.collection("executables")
         self.properties = properties_collection(self,"properties")

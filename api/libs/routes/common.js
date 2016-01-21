@@ -7,6 +7,17 @@ var db = require(libs + 'db/mongo');
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
 
+function get_sorted_keys(obj) {
+    var keys = [];
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            keys.push(key);
+        }
+    }
+    keys.sort();
+    return keys;
+}
+
 function get_gridfs_filter(filter)
 {
     var special = ['$or','$and','$not','$nor'];
@@ -266,8 +277,13 @@ module.exports = {
                     for(var i=0; i<objs.length; i++) {
                         objs[i]['commit_tag'] = commit_tag;
                         if (collection.collectionName === "properties") {
-                            // FIXME: Not unique if multiple params
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
+                            var keys = get_sorted_keys(objs[i].params);
+                            var param_str = '';
+                            for(var j=0; j<keys.length; j++) {
+                                param_str += JSON.stringify(objs[i].params[keys[j]]);
+                            }
+                            objs[i]['md5'] = checksum(param_str);
+                            console.log(checksum(param_str));
                         }
                     }
                     var batch = [];

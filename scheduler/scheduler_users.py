@@ -29,7 +29,7 @@ def get_users(db):
     return db_users
 
 def scheduler(args):
-    db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca")
+    db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca",save_token=True)
     print('user scheduler connected to db')
     context = mp.get_context('fork')
 
