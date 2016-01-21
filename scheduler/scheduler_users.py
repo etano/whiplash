@@ -4,50 +4,47 @@ import daemon,argparse,time,sys,os,whiplash
 import subprocess as sp
 import multiprocessing as mp
 
-def start_scheduler_slurm(args,wdb_user):
+def start_scheduler_slurm(args,db_user):
     if args.test:
-        sp.call("./scheduler/scheduler_slurm.py --test " + "--user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus 1",shell=True)
+        sp.call("./scheduler/scheduler_slurm.py --test " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus 1",shell=True)
     elif args.local:
-        sp.call("./scheduler/scheduler_slurm.py --local " + "--user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus " + str(args.num_cpus),shell=True)
+        sp.call("./scheduler/scheduler_slurm.py --local " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus " + str(args.num_cpus),shell=True)
     else:
-        sp.call("./scheduler/scheduler_slurm.py --daemonise " + "--user " + wdb_user['username'] + " --token " + wdb_user['token'] + " --cluster " + wdb_user['cluster'],shell=True)
+        sp.call("./scheduler/scheduler_slurm.py --daemonise " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --cluster " + db_user['cluster'],shell=True)
 
-def get_users(users,accesstokens):
-    all_users = users.query({})
-    all_tokens = accesstokens.query({})
+def get_users(db):
+    all_users = db.collection('users').query({})
+    all_tokens = db.collection('accesstokens').query({})
     tokens_arr = []
     for token in all_tokens:
         tokens_arr.append(token)
-    wdb_users = []
+    db_users = []
     for user in all_users:
         if user['username'] != "scheduler":
             for token in tokens_arr:
                 if (str(user['_id']) == token['userId']) and (token['clientId'] == user['username']+'-scheduler'):
                     cluster = "monch.cscs.ch" #TODO: dedicated collection of clusters
-                    wdb_users.append({'username':user['username'],'token':token['token'],'cluster':cluster})
+                    db_users.append({'username':user['username'],'token':token['token'],'cluster':cluster})
                     break
-    return wdb_users
+    return db_users
 
 def scheduler(args):
-    wdb = whiplash.wdb(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca")
-    print('user scheduler connected to wdb')
+    db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca")
+    print('user scheduler connected to db')
     context = mp.get_context('fork')
-
-    users = wdb.collection(wdb,'users')
-    accesstokens = wdb.collection(wdb,'accesstokens')
 
     running_users = []
     schedulers = []
     count = 0
     while True:
-        for wdb_user in get_users(users,accesstokens):
-            user = wdb_user['username']
+        for db_user in get_users(db):
+            user = db_user['username']
             if user not in running_users:
-                if (not args.test) and (not args.local) and (sp.call("ssh -o BatchMode=yes " + user + "@" + wdb_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255):
+                if (not args.test) and (not args.local) and (sp.call("ssh -o BatchMode=yes " + user + "@" + db_user['cluster'] + " \'ls\'",stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255):
                     print('access denied for user',user)
                 else:
                     print('starting slurm scheduler for user',user)
-                    p = context.Process(target=start_scheduler_slurm, args=(args,wdb_user,))
+                    p = context.Process(target=start_scheduler_slurm, args=(args,db_user,))
                     p.start()
                     schedulers.append(p)
                     running_users.append(user)

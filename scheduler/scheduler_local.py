@@ -5,10 +5,10 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
+def get_unresolved(db,pid,unresolved,is_work):
     t0 = time.time()
 
-    work_batch = work_batches.query({})
+    work_batch = db.collection('work_batches').query({})
     if len(work_batch['properties']) == 0:
         is_work[0] = False
         unresolved = []
@@ -28,9 +28,9 @@ def get_unresolved(wdb,work_batches,pid,unresolved,is_work):
     t1 = time.time()
     print('worker',str(pid),'fetched',len(work_batch['properties']),'properties in time',t1-t0)
 
-def commit_resolved(wdb,good_results,bad_results,pid):
+def commit_resolved(db,good_results,bad_results,pid):
     t0 = time.time()
-    ids = wdb.models.commit(good_results['models'])
+    ids = db.models.commit(good_results['models'])
     t1 = time.time()
     elapsed0 = t1-t0
     print('worker',str(pid),'commited',len(good_results['models']),'models in time',elapsed0)
@@ -38,7 +38,7 @@ def commit_resolved(wdb,good_results,bad_results,pid):
         good_results['properties'][i]['output_model_id'] = ids[i]
     t0 = time.time()
     all_properties = good_results['properties']+bad_results['properties']
-    wdb.properties.replace(all_properties)
+    db.properties.replace(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
@@ -79,7 +79,7 @@ def resolve_object(pid,property,models,executables,work_dir):
 
     return {'property':property,'model':result}
 
-def worker(pid,wdb,work_batches,args,end_time):
+def worker(pid,db,args,end_time):
     print('worker',str(pid),'active')
 
     start_time = time.time()
@@ -88,7 +88,7 @@ def worker(pid,wdb,work_batches,args,end_time):
     unresolved1 = []
     fetch_thread = th.Thread()
 
-    is_work = [work_batches.count({}) > 0]
+    is_work = [db.collection('work_batches').count({}) > 0]
 
     threads = []
     while True:
@@ -99,7 +99,7 @@ def worker(pid,wdb,work_batches,args,end_time):
                 unresolved1 = copy.deepcopy(unresolved0)
                 unresolved0 = []
                 if (time_left() > 2*args.time_window):
-                    fetch_thread = th.Thread(target = get_unresolved, args = (wdb,work_batches,pid,unresolved0,is_work,))
+                    fetch_thread = th.Thread(target = get_unresolved, args = (db,pid,unresolved0,is_work,))
                     fetch_thread.start()
             if len(unresolved1) > 0:
                 good_results = {'properties':[],'models':[]}
@@ -119,7 +119,7 @@ def worker(pid,wdb,work_batches,args,end_time):
                 unresolved1 = [{'properties':[],'models':[],'executables':[]}]
                 if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
                     print('worker',str(pid),'resolved',len(good_results['properties']),'and fumbled',len(bad_results['properties']),'properties in time',t1-t0)
-                    thread = th.Thread(target = commit_resolved, args = (wdb,good_results,bad_results,pid,))
+                    thread = th.Thread(target = commit_resolved, args = (db,good_results,bad_results,pid,))
                     thread.start()
                     threads.append(thread)
             elif not is_work[0]:
@@ -140,10 +140,8 @@ def scheduler(args):
     end_time = time.time() + args.time_limit
     print('local scheduler started at',str(int(start_time)))
 
-    wdb = whiplash.wdb(args.host,args.port,token=args.token)
-    print('local scheduler connected to wdb')
-
-    work_batches = wdb.collection(wdb,'work_batches')
+    db = whiplash.db(args.host,args.port,token=args.token)
+    print('local scheduler connected to db')
 
     num_cpus = mp.cpu_count()
     if args.num_cpus != None:
@@ -154,12 +152,12 @@ def scheduler(args):
     context = mp.get_context('fork')
     procs = []
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
+        p = context.Process(target=worker, args=(pid,db,args,end_time,))
         p.start()
         procs.append([pid,p])
 
     while True:
-        is_work = (work_batches.count({}) > 0)
+        is_work = (db.collection('work_batches').count({}) > 0)
 
         n_alive = 0
         for [pid,p] in procs:
@@ -168,7 +166,7 @@ def scheduler(args):
             elif (is_work) and ((end_time-time.time())>args.time_window):
                 print('worker',str(pid),'restarting')
                 p.join()
-                p = context.Process(target=worker, args=(pid,wdb,work_batches,args,end_time,))
+                p = context.Process(target=worker, args=(pid,db,args,end_time,))
                 p.start()
                 n_alive += 1
 

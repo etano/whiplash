@@ -57,7 +57,7 @@ QTable.prototype.updateCounts = function(){
 
 QTable.prototype.updateQueryCount = function(){
     var widget = this.widget;
-    this.getFilters(function(filters,fields,err){
+    this.getFilters(function(filters,fields,settings,err){
         if(!err){
             $.ajax({
                 type: 'GET',
@@ -84,7 +84,7 @@ QTable.prototype.updateQueryCount = function(){
 
 QTable.prototype.updateModelCount = function(){
     var widget = this.widget;
-    this.getFilters(function(filters,fields,err) {
+    this.getFilters(function(filters,fields,settings,err) {
         if(!err){
             $.ajax({
                 type: 'GET',
@@ -145,16 +145,19 @@ QTable.prototype.getFilters = function(callback){
         }
     }
 
+    // FIXME: Settings are fixed for now
+    var settings = {"timeout":3600, "n_rep":1};
+
     if (bad_filters) {
-        callback(0,0,bad_filters);
+        callback(0,0,0,bad_filters);
     } else {
-        callback(filters,fields,0);
+        callback(filters,fields,settings,0);
     }
 
 };
 
 function viewModels(){
-    QTable.instance.getFilters(function(filters,fields,err) {
+    QTable.instance.getFilters(function(filters,fields,settings,err) {
         if(!err){
             var data = { "access_token": session_token, "filters": JSON.stringify(filters['model']), "fields": JSON.stringify([]) };
             window.location = api_addr+"/api/models?"+$.param(data);
@@ -163,7 +166,7 @@ function viewModels(){
 }
 
 function submitQuery(){
-    QTable.instance.getFilters(function(filters,fields,err) {
+    QTable.instance.getFilters(function(filters,fields,settings,err) {
         if(!err){
             $.ajax({
                 type: 'GET',
@@ -171,8 +174,7 @@ function submitQuery(){
                 data: { "access_token"  : session_token,
                         "filters" : JSON.stringify(filters),
                         "fields" : JSON.stringify(fields),
-                        "timeout" : 3600, // FIXME: should be given as option
-                        "n_rep" : 1 // FIXME: should be given as option
+                        "settings" : JSON.stringify(settings)
                 },
                 success: function(data){
                     viewQueries();

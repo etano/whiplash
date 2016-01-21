@@ -266,6 +266,7 @@ module.exports = {
                     for(var i=0; i<objs.length; i++) {
                         objs[i]['commit_tag'] = commit_tag;
                         if (collection.collectionName === "properties") {
+                            // FIXME: Not unique if multiple params
                             objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
                         }
                     }
@@ -295,6 +296,7 @@ module.exports = {
                             filter['owner'] = objs[i]['owner'];
                             filter['filters'] = objs[i]['filters'];
                             filter['fields'] = objs[i]['fields'];
+                            filter['settings'] = objs[i]['settings'];
                         }
                         else if (collection.collectionName === "collaborations") {
                             filter['name'] = objs[i]['name'];

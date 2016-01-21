@@ -66,9 +66,16 @@ function expand_props(props) {
     return new_props;
 }
 
-function setup_query(filters, fields, timeout, n_rep, user_id, res, cb) {
+function setup_query(filters, fields, settings, user_id, res, cb) {
+    // Settings defaults
+    if (!settings['timeout']) {
+        settings['timeout'] = 3600;
+    }
+    if (!settings['n_rep']) {
+        settings['n_rep'] = 1;
+    }
     // Commit query
-    var query = [{'filters':JSON.stringify(filters),'fields':fields}];
+    var query = [{'filters':JSON.stringify(filters),'fields':fields,'settings':settings}];
     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
         if (!err) {
             // Get input model info
@@ -81,8 +88,8 @@ function setup_query(filters, fields, timeout, n_rep, user_id, res, cb) {
                             var props = [];
                             for (var i=0; i<input_model_objs.length; i++) {
                                 for (var j=0; j<executable_objs.length; j++) {
-                                    for (var k=0; k<n_rep; k++) {
-                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':timeout,'params':{'seed':k}};
+                                    for (var k=0; k<settings['n_rep']; k++) {
+                                        var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':settings['timeout'],'params':{'seed':k}};
                                         for (var key in filters['params']) {
                                             prop['params'][key] = filters['params'][key];
                                         }
@@ -95,7 +102,7 @@ function setup_query(filters, fields, timeout, n_rep, user_id, res, cb) {
                             common.commit(property, properties, props, user_id, res, function(res, err, property_ids) {
                                 if (!err) {
                                     // Get property info
-                                    var property_filter = {'_id':{'$in':property_ids}};
+                                    var property_filter = {'_id':{'$in':property_ids},'status':'resolved'};
                                     var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                     for (var i=0; i<fields['params'].length; i++) {
                                         property_fields.push('params.'+fields['params'][i]);
@@ -180,27 +187,26 @@ function get_status(filters, fields, user_id, res, cb) {
 //
 
 router.get('/submit', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // Get filters, fields, n_reps, and user id
+    // Get filters, fields, settings, and user id
     var filters = common.get_payload(req,'filters');
     var fields = common.get_payload(req,'fields');
-    var timeout = common.get_payload(req,'timeout');
-    var n_rep = common.get_payload(req,'n_rep');
+    var settings = common.get_payload(req,'settings');
+
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and property objects
-    setup_query(filters, fields, timeout, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+    setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
         common.return(res, 0, property_objs);
     });
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // Get filters, fields, n_reps, and user id
+    // Get filters, fields, settings, and user id
     var filters = common.get_payload(req,'filters');
     var fields = common.get_payload(req,'fields');
-    var timeout = common.get_payload(req,'timeout');
-    var n_rep = common.get_payload(req,'n_rep');
+    var settings = common.get_payload(req,'settings');
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and commit properties
-    setup_query(filters, fields, timeout, n_rep, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+    setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
         // Get output model info
         var output_model_ids = [];
         for (var i=0; i<property_objs.length; i++) {
