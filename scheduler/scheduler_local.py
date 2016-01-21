@@ -44,30 +44,33 @@ def commit_resolved(db,good_results,bad_results,pid):
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
 def resolve_object(pid,property,models,executables,work_dir):
-    t0 = time.time()
 
     file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
     with open(file_name, 'w') as io_file:
         io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
 
     result = {}
+    t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
         property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        t1 = time.time()
         property['status'] = "resolved"
         with open(file_name, 'r') as io_file:
             result = json.load(io_file)
     except sp.TimeoutExpired as e:
+        t1 = time.time()
         property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
         property['status'] = "timed out"
     except sp.CalledProcessError as e:
+        t1 = time.time()
         property['log'] = e.output + '\n' + 'Exit with code: ' + str(e.returncode)
         property['status'] = "errored"
     except FileNotFoundError as e:
+        t1 = time.time()
         property['log'] = str(e)
         property['status'] = "not found"
 
-    t1 = time.time()
     elapsed = t1-t0
     property['walltime'] = elapsed
 
