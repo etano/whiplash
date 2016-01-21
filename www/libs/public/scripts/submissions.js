@@ -60,6 +60,12 @@ function deleteQuery(){
     });
 }
 
+function downloadQuery(){
+    var batch_id = $(this).parent().attr("id");
+    window.location = api_addr+"/api/queries/"+batch_id+"/download?access_token="+session_token;
+}
+
 $(document).ready(function(){
-    $(document).on("click", "section#viewport div.queries#info div.delete", deleteQuery);
+    $(document).on("click", "section#viewport > div.queries#info div.delete", deleteQuery);
+    $(document).on("click", "section#viewport > div.queries#info div.date", downloadQuery);
 });
