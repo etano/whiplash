@@ -8,4 +8,4 @@ username = sys.argv[3]
 password = sys.argv[4]
 
 conn = whiplash.connection(host,port,username=username,password=password)
-conn.create_token(username=username,password=password,client_id=username+'-scheduler',client_secret=password,save_token=False)
+conn.create_token(username=username,password=password,client_id=username+'-scheduler',client_secret=password)
