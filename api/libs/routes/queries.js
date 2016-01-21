@@ -102,7 +102,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                             common.commit(property, properties, props, user_id, res, function(res, err, property_ids) {
                                 if (!err) {
                                     // Get property info
-                                    var property_filter = {'_id':{'$in':property_ids},'status':'resolved'};
+                                    var property_filter = {'_id':{'$in':property_ids}};
                                     var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                     for (var i=0; i<fields['params'].length; i++) {
                                         property_fields.push('params.'+fields['params'][i]);
