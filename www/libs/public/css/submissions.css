@@ -1,9 +1,8 @@
-section#viewport div.queries#info {
-    text-align: center;
-}
 section#viewport > div.queries#info {
     display: table;
-    width: 100%;
+    width: 600px;
+    text-align: center;
+    padding-top: 50px;
 }
 section#viewport > div.queries#info > div.record {
     display: table-row;
@@ -29,8 +28,14 @@ section#viewport > div.queries#info div.delete {
     border: 0;
 }
 section#viewport > div.queries#info div.date {
-    width: 150px;
+    width: 175px;
+    min-width: 175px;
+    max-width: 175px;
     padding-left: 15px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    cursor: pointer;
 }
 
 section#viewport > div.queries#info div.name {
@@ -54,12 +59,12 @@ section#viewport > div.queries#info progress {
     width: 100%;
 }
 section#viewport > div.queries#info div.progress {
-    width: 30%;
+    width: auto;
     padding-left: 15px;
-    padding-right: 15px;
+    padding-right: 25px;
 }
 section#viewport > div.queries#info div.shortcuts {
-    width: 1%;
+    width: 34px;
 }
 section#viewport > div.queries#info div.shortcuts div {
     margin-left: 0 !important;

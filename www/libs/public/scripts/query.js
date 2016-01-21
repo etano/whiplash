@@ -187,13 +187,7 @@ function submitQuery(){
     });
 }
 
-function downloadBatch(){
-    var batch_id = $(this).parent().attr("batch");
-    window.location = api_addr+"/api/jobs/"+batch_id+"/download?access_token="+session_token;
-}
-
 $(document).ready(function(){
     $(document).on("click", "widget.qtable div.button_row div#models", viewModels);
     $(document).on("click", "widget.qtable div.button_row div#submit", submitQuery);
-    $(document).on("click", "info.queries div.name", downloadBatch);
 });

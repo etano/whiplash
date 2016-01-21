@@ -6,10 +6,6 @@ api:
     extends:
         file: api/docker-compose.yml
         service: api
-www:
-    extends:
-        file: www/docker-compose.yml
-        service: www
 scheduler:
     extends:
         file: scheduler/docker-compose.yml
