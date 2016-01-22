@@ -146,7 +146,7 @@ QTable.prototype.getFilters = function(callback){
     }
 
     // FIXME: Settings are fixed for now
-    var settings = {"timeout":3600, "n_rep":1};
+    var settings = {"timeout":3600};
 
     if (bad_filters) {
         callback(0,0,0,bad_filters);
