@@ -35,6 +35,7 @@ section#viewport > div.queries#info div.date {
     white-space: nowrap;
     overflow: hidden !important;
     text-overflow: ellipsis;
+    color: rgb(50,210,210);
     cursor: pointer;
 }
 
