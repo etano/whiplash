@@ -283,7 +283,8 @@ module.exports = {
                                 param_str += JSON.stringify(objs[i].params[keys[j]]);
                             }
                             objs[i]['md5'] = checksum(param_str);
-                            console.log(checksum(param_str));
+                        } else if (collection.collectionName === "queries") {
+                            objs[i]['md5'] = checksum(objs[i]['filters']);
                         }
                     }
                     var batch = [];
@@ -311,6 +312,7 @@ module.exports = {
                         else if (collection.collectionName === "queries") {
                             filter['owner'] = objs[i]['owner'];
                             filter['filters'] = objs[i]['filters'];
+                            filter['md5'] = objs[i]['md5'];
                             filter['fields'] = objs[i]['fields'];
                             filter['settings'] = objs[i]['settings'];
                         }
@@ -342,6 +344,7 @@ module.exports = {
                                     log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
                                     log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
                                     log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
+                                    res.nInserted = result.nInserted;
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
