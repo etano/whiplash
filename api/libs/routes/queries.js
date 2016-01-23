@@ -81,9 +81,6 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
     if (!settings['timeout']) {
         settings['timeout'] = 3600;
     }
-    if (!settings['n_rep']) {
-        settings['n_rep'] = 1;
-    }
     // Get input model info
     common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
         if (!err) {
@@ -133,13 +130,11 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                 var props = [];
                                 for (var i=0; i<input_model_ids.length; i++) {
                                     for (var j=0; j<executable_ids.length; j++) {
-                                        for (var k=0; k<settings['n_rep']; k++) {
-                                            var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{'seed':k}};
-                                            for (var key in filters['params']) {
-                                                prop['params'][key] = filters['params'][key];
-                                            }
-                                            props.push(prop);
+                                        var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{}};
+                                        for (var key in filters['params']) {
+                                            prop['params'][key] = filters['params'][key];
                                         }
+                                        props.push(prop);
                                     }
                                 }
                                 props = expand_props(props);
