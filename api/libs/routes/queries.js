@@ -85,36 +85,29 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
         settings['n_rep'] = 1;
     }
     // Get input model info
-    log.debug('query models');
     common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
-        var d = new Date();
-        var n = d.getTime();
-        log.debug(JSON.stringify(n));
         if (!err) {
+            var input_model_ids = [];
+            for (var i=0; i<input_model_objs.length; i++) {
+                input_model_ids.push(input_model_objs[i]['_id']);
+            }
             // Get executable info
-            log.debug('query executables');
             common.query(executables, filters['executable'], ['_id'].concat(fields['executable']), user_id, res, function(res, err, executable_objs) {
-                var d = new Date();
-                var n = d.getTime();
-                log.debug(JSON.stringify(n));
                 if (!err) {
+                    var executable_ids = [];
+                    for (var i=0; i<executable_objs.length; i++) {
+                        executable_ids.push(executable_objs[i]['_id']);
+                    }
                     // Commit query
-                    log.debug('commit query');
-                    var query = [{'filters':JSON.stringify(filters),'fields':fields,'settings':settings}];
+                    var query = [{'filters':JSON.stringify(filters),'fields':fields,'settings':settings,'input_model_ids':JSON.stringify(input_model_ids),'executable_ids':JSON.stringify(executable_ids)}];
                     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
+                        console.log(JSON.stringify(query_ids));
                         var query_id = new ObjectID(query_ids[0]);
-                        var d = new Date();
-                        var n = d.getTime();
-                        log.debug(JSON.stringify(n));
                         if (!err) {
                             if (res.nInserted === 0) {
                                 // Get query info
-                                log.debug('get query');
                                 common.query(collection, {'_id': query_id}, ['property_ids'], user_id, res, function(res, err, query_objs) {
                                     var property_ids = query_objs[0]['property_ids'];
-                                    var d = new Date();
-                                    var n = d.getTime();
-                                    log.debug(JSON.stringify(n));
                                     if (!err) {
                                         // Get property info
                                         var property_filter = {'_id':{'$in':property_ids}};
@@ -122,11 +115,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                         for (var i=0; i<fields['params'].length; i++) {
                                             property_fields.push('params.'+fields['params'][i]);
                                         }
-                                        log.debug('query properties');
                                         common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
-                                            var d = new Date();
-                                            var n = d.getTime();
-                                            log.debug(JSON.stringify(n));
                                             if (!err) {
                                                 cb(query_ids, input_model_objs, executable_objs, property_objs, res);
                                             } else {
@@ -139,12 +128,13 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                 });
                             } else {
                                 // Form properties
-                                log.debug('form properties');
+                                var d = new Date();
+                                log.debug('form properties '+JSON.stringify(d.getTime()));
                                 var props = [];
-                                for (var i=0; i<input_model_objs.length; i++) {
-                                    for (var j=0; j<executable_objs.length; j++) {
+                                for (var i=0; i<input_model_ids.length; i++) {
+                                    for (var j=0; j<executable_ids.length; j++) {
                                         for (var k=0; k<settings['n_rep']; k++) {
-                                            var prop = {'executable_id':executable_objs[j]['_id'],'input_model_id':input_model_objs[i]['_id'],'timeout':settings['timeout'],'params':{'seed':k}};
+                                            var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{'seed':k}};
                                             for (var key in filters['params']) {
                                                 prop['params'][key] = filters['params'][key];
                                             }
@@ -155,15 +145,8 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                 props = expand_props(props);
                                 // FIXME: No need to randomize
                                 props = shuffle_array(props);
-                                d = new Date();
-                                n = d.getTime();
-                                log.debug(JSON.stringify(n));
                                 // Commit properties
-                                log.debug('commit properties');
                                 common.commit(property, properties, props, user_id, res, function(res, err, property_ids) {
-                                    var d = new Date();
-                                    var n = d.getTime();
-                                    log.debug(JSON.stringify(n));
                                     if (!err) {
                                         // Get property info
                                         var prop_ids = [];
@@ -175,14 +158,10 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                         for (var i=0; i<fields['params'].length; i++) {
                                             property_fields.push('params.'+fields['params'][i]);
                                         }
-                                        log.debug('query properties');
                                         common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
-                                            var d = new Date();
-                                            var n = d.getTime();
-                                            log.debug(JSON.stringify(n));
                                             if (!err) {
                                                 // Update query
-                                                var update = {'property_ids': prop_ids};
+                                                var update = {'input_model_ids':JSON.stringify(input_model_ids), 'executable_ids':JSON.stringify(executable_ids), 'property_ids':property_ids};
                                                 common.update(collection, {'_id':query_id}, update, user_id, res, function(res, err, n_modified) {
                                                     if (!err) {
                                                         cb(query_ids, input_model_objs, executable_objs, property_objs, res);
@@ -255,10 +234,6 @@ router.get('/submit', passport.authenticate('bearer', { session: false }), funct
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    log.debug('starting');
-    var d = new Date();
-    var n = d.getTime();
-    log.debug(JSON.stringify(n));
     // Get filters, fields, settings, and user id
     var filters = common.get_payload(req,'filters');
     var fields = common.get_payload(req,'fields');
@@ -274,18 +249,11 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             }
         }
         filters['output_model']['_id'] = {'$in':output_model_ids};
-        log.debug('query output models');
-        var d = new Date();
-        var n = d.getTime();
-        log.debug(JSON.stringify(n));
         common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
             if (!err) {
-                log.debug('query output models gridfs');
                 common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
                     var d = new Date();
-                    var n = d.getTime();
-                    log.debug(JSON.stringify(n));
-                    log.debug('sorting');
+                    log.debug('sorting '+JSON.stringify(d.getTime()));
                     if (!err) {
                         // Sort everything
                         var input_model_indexes = {};
@@ -315,8 +283,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                         }
                         // Return
                         var d = new Date();
-                        var n = d.getTime();
-                        log.debug(JSON.stringify(n));
+                        log.debug('returning '+JSON.stringify(d.getTime()));
                         common.return(res, err, objs);
                     } else {
                         common.return(res, err, 0);

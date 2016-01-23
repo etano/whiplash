@@ -53,13 +53,17 @@ function get_gridfs_metadata_fields(fields) {
 }
 
 function get_gridfs_content_fields(fields) {
-    var content_fields = [];
-    for(var i=0; i<fields.length; i++) {
-        if((fields[i] === 'content') || (~fields[i].indexOf('content.'))) {
-            content_fields.push(fields[i]);
+    if (fields.length === 0) {
+        return ['content'];
+    } else {
+        var content_fields = [];
+        for(var i=0; i<fields.length; i++) {
+            if((fields[i] === 'content') || (~fields[i].indexOf('content.'))) {
+                content_fields.push(fields[i]);
+            }
         }
+        return content_fields;
     }
-    return content_fields;
 }
 
 function concaternate(o1, o2) {
@@ -192,6 +196,8 @@ module.exports = {
     //
 
     query: function(collection, filter, fields, user_id, res, cb) {
+        var d = new Date();
+        log.debug('query '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         this.form_filter(collection, filter, user_id, function(filter) {
             if (fields.length > 0) {
                 var new_fields = fields;
@@ -239,6 +245,8 @@ module.exports = {
     },
 
     count: function(collection, filter, user_id, res, cb) {
+        var d = new Date();
+        log.debug('count '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
@@ -258,6 +266,8 @@ module.exports = {
     //
 
     commit: function(ObjType, collection, objs, user_id, res, cb) {
+        var d = new Date();
+        log.debug('commit '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         this.validate(ObjType, objs, user_id, function(err) {
             if(err) {
                 if(err.name === 'ValidationError') {
@@ -345,6 +355,7 @@ module.exports = {
                                     log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
                                     log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
                                     res.nInserted = result.nInserted;
+                                    //console.log(JSON.stringify(result.getRawResponse()));
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
@@ -383,6 +394,8 @@ module.exports = {
     //
 
     update: function(collection, filter, update, user_id, res, cb) {
+        var d = new Date();
+        log.debug('update '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         // FIXME: user can inadvertantly give access to someone else
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
@@ -403,6 +416,8 @@ module.exports = {
     //
 
     replace: function(ObjType, collection, objs, user_id, res, cb) {
+        var d = new Date();
+        log.debug('replace '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
         for(var i=0; i<objs.length; i++) {
@@ -427,6 +442,8 @@ module.exports = {
     //
 
     pop: function(collection, filter, sort, user_id, res, cb) {
+        var d = new Date();
+        log.debug('pop '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
@@ -451,6 +468,8 @@ module.exports = {
     //
 
     delete: function(collection, filter, user_id, res, cb) {
+        var d = new Date();
+        log.debug('delete '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
@@ -470,6 +489,8 @@ module.exports = {
     //
 
     stats: function(collection,req,res,map) {
+        var d = new Date();
+        log.debug('stats '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
@@ -535,6 +556,8 @@ module.exports = {
 
 
     mapreduce: function(collection,req,res) {
+        var d = new Date();
+        log.debug('mapreduce '+collection.collectionName+' '+JSON.stringify(d.getTime()));
         if (!req.query.field) {
             req.query.filter = req.body.filter;
             req.query.map = req.body.map;
@@ -584,14 +607,16 @@ module.exports = {
     //
 
     get_gridfs_objs: function(objs, fields, res, cb) {
+        var d = new Date();
+        log.debug('get_gridfs_objs '+JSON.stringify(d.getTime()));
         var content_fields = get_gridfs_content_fields(fields);
-        var apply_content = function(i){
-            if (i<objs.length) {
-                var name = String(objs[i]._id);
-                GridStore.read(db.get(), name, function(err, fileData) {
-                    if(!err) {
-                        var data = JSON.parse(fileData.toString());
-                        if (content_fields.length > 0) {
+        if (content_fields.length > 0) {
+            var apply_content = function(i){
+                if (i<objs.length) {
+                    var name = String(objs[i]._id);
+                    GridStore.read(db.get(), name, function(err, fileData) {
+                        if(!err) {
+                            var data = JSON.parse(fileData.toString());
                             for(var j=0; j<content_fields.length; j++) {
                                 var subfields = content_fields[j].split('.');
                                 var obj = data;
@@ -607,23 +632,27 @@ module.exports = {
                                 }
                                 objs[i][content_fields[j]] = obj;
                             }
+                            apply_content(i+1);
                         } else {
-                            objs[i]['content'] = data;
+                            res.statusCode = 500;
+                            err = {"message":"Error reading file " + name};
+                            log.error("Read error: %s",err.message);
+                            cb(res,err.message,0);
                         }
-                        apply_content(i+1);
-                    } else {
-                        res.statusCode = 500;
-                        err = {"message":"Error reading file " + name};
-                        log.error("Read error: %s",err.message);
-                        cb(res,err.message,0);
-                    }
-                });
-            } else {
-                log.info("Returning %d objects",objs.length);
-                cb(res,0,objs);
+                    });
+                } else {
+                    log.info("Returning %d objects",objs.length);
+                    cb(res,0,objs);
+                }
+            };
+            apply_content(0);
+        } else {
+            for(var i=0; i<objs.length; i++) {
+                objs[i]['content'] = {};
             }
-        };
-        apply_content(0);
+            log.info("Returning %d objects",objs.length);
+            cb(res,0,objs);
+        }
     },
 
 };
