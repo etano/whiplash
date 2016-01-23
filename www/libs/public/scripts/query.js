@@ -146,7 +146,7 @@ QTable.prototype.getFilters = function(callback){
     }
 
     // FIXME: Settings are fixed for now
-    var settings = {"timeout":3600, "n_rep":1};
+    var settings = {"timeout":3600};
 
     if (bad_filters) {
         callback(0,0,0,bad_filters);
@@ -189,7 +189,24 @@ function submitQuery(){
     });
 }
 
+function toggleChooseFields(){
+    if($(this).attr("state") == "on"){
+        $(this).attr("state", "off");
+        $("widget.qtable div#choose_fields").text("+ Choose output fields");
+
+        $("div.input_row_filter").css({ display: "block", width: "auto", float: "none" });
+        $("div.input_row_fields").css({ display: "none" });
+    }else{
+        $(this).attr("state", "on");
+        $("widget.qtable div#choose_fields").text("– Choose output fields");
+
+        $("div.input_row_filter").css({ display: "inline-block", width: "48%", float: "left" });
+        $("div.input_row_fields").css({ display: "inline-block" });
+    }
+}
+
 $(document).ready(function(){
     $(document).on("click", "widget.qtable div.button_row div#models", viewModels);
     $(document).on("click", "widget.qtable div.button_row div#submit", submitQuery);
+    $(document).on("click", "widget.qtable div#choose_fields", toggleChooseFields);
 });

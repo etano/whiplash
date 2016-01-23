@@ -1,36 +1,44 @@
 div.button_row {
     display: table;
-    margin: 25px 0;
+    margin-bottom: 25px;
     width: 100%;
 }
 
 div.button_row div.button {
     display: inline-block;
-    float: right;
     color: rgb(50,210,210);
     cursor: pointer;
-    margin-left: 25px;
+    margin-left: 0px;
     background-color: white;
 }
 
 div.input_row {
     display: table;
-    margin: 25px 0;
+    margin-top: 25px;
     width: 100%;
 }
 
 div.input_row_filter {
-    display: inline-block;
-    float: left;
-    margin: 0 2% 0 0;
-    padding: 0;
-    width: 48%;
+    display: block;
+    margin: 0 auto;
 }
 
 div.input_row_fields {
-    display: inline-block;
+    display: none;
     float: left;
     margin: 0 0 0 2%;
     padding: 0;
-    width: 48%;
+    width: 50%;
+}
+
+div.input_row_fields div.label {
+    opacity: 0;
+}
+
+div#choose_fields {
+    position: absolute;
+    right: 0px;
+    color: rgb(50,210,210);
+    cursor: pointer;
+    z-index: 1;
 }
