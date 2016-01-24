@@ -244,6 +244,18 @@ class db:
         '''
         return self.request("GET", "queries", {"filters":filters,"fields":fields,"settings":settings})
 
+    def poll(self, filters, fields, settings={}, freq=1):
+        '''
+        Blocks until query is satisfied
+        '''
+        self.query(filters, fields, settings)
+        while True:
+            status = self.status(filters,fields)
+            if status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
+                break
+            time.sleep(freq)
+        return self.query(filters, fields, settings)
+
     def status(self, filters, fields):
         '''
         Checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
