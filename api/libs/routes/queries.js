@@ -98,7 +98,6 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                     // Commit query
                     var query = [{'filters':JSON.stringify(filters),'fields':fields,'settings':settings,'input_model_ids':JSON.stringify(input_model_ids),'executable_ids':JSON.stringify(executable_ids)}];
                     common.commit(ObjType, collection, query, user_id, res, function(res, err, query_ids) {
-                        console.log(JSON.stringify(query_ids));
                         var query_id = new ObjectID(query_ids[0]);
                         if (!err) {
                             if (res.nInserted === 0) {
@@ -125,8 +124,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                 });
                             } else {
                                 // Form properties
-                                var d = new Date();
-                                log.debug('form properties '+JSON.stringify(d.getTime()));
+                                log.debug('form properties');
                                 var props = [];
                                 for (var i=0; i<input_model_ids.length; i++) {
                                     for (var j=0; j<executable_ids.length; j++) {
@@ -247,8 +245,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
             if (!err) {
                 common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
-                    var d = new Date();
-                    log.debug('sorting '+JSON.stringify(d.getTime()));
+                    log.debug('sorting');
                     if (!err) {
                         // Sort everything
                         var input_model_indexes = {};
@@ -277,8 +274,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                             objs.push(obj);
                         }
                         // Return
-                        var d = new Date();
-                        log.debug('returning '+JSON.stringify(d.getTime()));
+                        log.debug('returning');
                         common.return(res, err, objs);
                     } else {
                         common.return(res, err, 0);

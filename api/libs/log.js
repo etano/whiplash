@@ -15,14 +15,16 @@ function logger(module) {
                 json: true,
                 maxSize: 5242880, //5mb
                 maxFiles: 2,
-                colorize: false
+                colorize: false,
+                timestamp: true
             }),
             new winston.transports.Console({
                 level: 'debug',
                 label: getFilePath(module),
                 handleException: true,
                 json: false,
-                colorize: true
+                colorize: true,
+                timestamp: true
             })
         ],
         exitOnError: false
