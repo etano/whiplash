@@ -34,7 +34,13 @@ def submit_job(args,time_limit,time_window):
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "source " + args.whiplash_work_dir + "/rte/user_init.sh && sbatch ~/" + user_job_file + "\'\"",shell=True)
     else:
-        sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+        if args.docker:
+            command = "./scheduler/scheduler_local_docker.py"
+            work_dir =  os.environ['HOST_PATH']
+        else:
+            command = "./scheduler/scheduler_local.py"
+            work_dir = os.getcwd()
+        sp.call(command + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit " + str(time_limit) + " --time_window " + str(time_window) + " --work_dir " + work_dir + " --num_cpus " + str(args.num_cpus),shell=True)
 
 def get_times(args,db):
     print('getting times')
@@ -102,7 +108,13 @@ def scheduler(args):
             if (time_limit > 0 and time_window > 0):
                 make_batches(db,time_window)
                 print('starting local scheduler')
-                sp.call("./scheduler/scheduler_local.py" + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + "./" + " --num_cpus " + str(args.num_cpus),shell=True)
+                if args.docker:
+                    command = "./scheduler/scheduler_local_docker.py"
+                    work_dir =  os.environ['HOST_PATH']
+                else:
+                    command = "./scheduler/scheduler_local.py"
+                    work_dir = os.getcwd()
+                sp.call(command + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + work_dir + " --num_cpus " + str(args.num_cpus),shell=True)
             time.sleep(10)
     else:
         count = 0
@@ -140,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
+    parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')    
     args = parser.parse_args()
 
     assert args.num_cpus <= 20

@@ -5,12 +5,16 @@ import subprocess as sp
 import multiprocessing as mp
 
 def start_scheduler_slurm(args,db_user):
-    if args.test:
-        sp.call("./scheduler/scheduler_slurm.py --test " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus 1",shell=True)
-    elif args.local:
-        sp.call("./scheduler/scheduler_slurm.py --local " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus " + str(args.num_cpus),shell=True)
+    if args.docker:
+        docker_flag = " --docker"
     else:
-        sp.call("./scheduler/scheduler_slurm.py --daemonise " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --cluster " + db_user['cluster'],shell=True)
+        docker_flag = ""
+    if args.test:
+        sp.call("./scheduler/scheduler_slurm.py --test " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus 1" + docker_flag,shell=True)
+    elif args.local:
+        sp.call("./scheduler/scheduler_slurm.py --local " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --host " + args.host + " --port " + str(args.port) + " --num_cpus " + str(args.num_cpus) + docker_flag,shell=True)
+    else:
+        sp.call("./scheduler/scheduler_slurm.py --daemonise " + "--user " + db_user['username'] + " --token " + db_user['token'] + " --cluster " + db_user['cluster'] + docker_flag,shell=True)
 
 def get_users(db):
     all_users = db.collection('users').query({})
@@ -67,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--daemonise',dest='daemonise',required=False,default=False,action='store_true')
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
+    parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
     args = parser.parse_args()
     if args.daemonise:
         with daemon.DaemonContext(working_directory=os.getcwd(),stdout=open(args.log_dir + '/users/' + str(int(time.time())) + '.log', 'w+')):

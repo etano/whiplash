@@ -5,6 +5,8 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
+pulled_containers = set([])
+
 def get_unresolved(db,pid,unresolved,is_work):
     t0 = time.time()
 
@@ -19,6 +21,10 @@ def get_unresolved(db,pid,unresolved,is_work):
             model_indices[work_batch['models'][i]['_id']] = i
         executable_indices = {}
         for i in range(len(work_batch['executables'])):
+            container = work_batch['executables'][i]['path']
+            if container not in pulled_containers:
+                sp.call("docker pull " + container,shell=True)
+                pulled_containers.add(container)
             executable_indices[work_batch['executables'][i]['_id']] = i
         for prop in work_batch['properties']:
             prop['model_index'] = model_indices[prop['input_model_id']]
@@ -44,17 +50,20 @@ def commit_resolved(db,good_results,bad_results,pid):
     print('worker',str(pid),'commited',len(all_properties),'properties in time',elapsed1)
 
 def resolve_object(pid,property,models,executables,work_dir):
-    file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
-    with open(file_name, 'w') as io_file:
+    file_name = 'object_' + str(pid) + '_' + str(property['_id']) + '.json'
+    host_file_name = work_dir + '/' + file_name
+    with open(host_file_name, 'w') as io_file:
         io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
     result = {}
     t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
-        property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        #TODO: replace 'path' with 'container'
+        command = 'docker run --rm=true -it -v ' + work_dir + ':/input ' + path + ' /input/' + file_name
+        property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
-        with open(file_name, 'r') as io_file:
+        with open(host_file_name, 'r') as io_file:
             result = json.load(io_file)
     except sp.TimeoutExpired as e:
         t1 = time.time()
