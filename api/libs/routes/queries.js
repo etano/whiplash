@@ -241,6 +241,8 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 output_model_ids.push(new ObjectID(property_objs[i]['output_model_id']));
             }
         }
+        if(!filters.hasOwnProperty('output_model'))
+            filters['output_model'] = {}
         filters['output_model']['_id'] = {'$in':output_model_ids};
         common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
             if (!err) {
