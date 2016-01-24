@@ -36,9 +36,15 @@ class connection:
             self.headers["Content-type"] = "application/json"
         uri = self.server + ':' + str(self.port) + '/api/' + uri
         try:
+            t0 = time.time()
             res = requests.request(protocol, 'https://'+uri, data=payload, headers=self.headers)
+            t1 = time.time()
+            #print('request time',t1-t0)
         except:
+            t0 = time.time()
             res = requests.request(protocol, 'http://'+uri, data=payload, headers=self.headers)
+            t1 = time.time()
+            #print('request time',t1-t0)
 
         if res.status_code != 200:
             print(res.status_code, res.reason, res.content)
@@ -116,7 +122,11 @@ class collection:
         '''
         wrappers http request to the API server with some convenience
         '''
-        return self.db.request(protocol, self.name+"/"+uri, payload)
+        t0 = time.time()
+        response = self.db.request(protocol, self.name+"/"+uri, payload)
+        t1 = time.time()
+        #print('collection request time',t1-t0)
+        return response
 
     def commit(self,objs):
         '''
@@ -231,9 +241,17 @@ class db:
         '''
         Wraps http request to the API server with some convenience
         '''
-        status, reason, res = self.conn.request(protocol, uri, json.dumps(payload))
+        t0 = time.time()
+        req = json.dumps(payload)
+        t1 = time.time()
+        #print('serialization time',t1-t0)
+        status, reason, res = self.conn.request(protocol, uri, req)
         if status == 200 or status == 'OK':
-            return json.loads(res.decode('utf-8'))["result"]
+            t0 = time.time()
+            res = json.loads(res.decode('utf-8'))["result"]
+            t1 = time.time()
+            #print('deserialization time',t1-t0)
+            return res
         else:
             print(status,reason,res)
             sys.exit(1)
@@ -242,7 +260,11 @@ class db:
         '''
         Submits a query to the database
         '''
-        return self.request("GET", "queries", {"filters":filters,"fields":fields,"settings":settings})
+        t0 = time.time()
+        res = self.request("GET", "queries", {"filters":filters,"fields":fields,"settings":settings})
+        t1 = time.time()
+        #print('query time',t1-t0)
+        return res
 
     def status(self, filters, fields):
         '''
