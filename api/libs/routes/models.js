@@ -70,11 +70,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 }
             });
         } else {
-            log.info("Commited %d objects",ids.length);
-            return res.json({
-                status: 'OK',
-                result: ids
-            });
+            common.return(res, 0, ids);
         }
     };
     write_file(0);
@@ -134,31 +130,20 @@ var delete_by_filter = function(filter,res) {
                             if(!err) {
                                 delete_objs(i+1);
                             } else {
-                                res.statusCode = 500;
-                                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                return res.json({ error: 'Server error' });
+                                common.return(res, err, 0);
                             }
                         });
                     } else {
-                        log.info("Deleting %d objects",objs.length);
-                        return res.json({
-                            status: 'OK',
-                            result: objs.length
-                        });
+                        log.debug('deleted %d objects', objs.length);
+                        common.return(res, 0, objs.length);
                     }
                 };
                 delete_objs(0);
             } else {
-                log.info("Objects with filter %s not found",JSON.stringify(filter));
-                return res.json({
-                    status: 'OK',
-                    result: 0
-                });
+                common.return(res, 0, 0);
             }
         } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
+            common.return(res, err, 0);
         }
     });
 };

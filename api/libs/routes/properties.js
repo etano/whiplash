@@ -61,12 +61,9 @@ router.put('/refresh/', passport.authenticate('bearer', { session: false }), fun
             collection.updateOne({"_id":new ObjectID(doc._id)},{"$set":{"timeout":2*doc.timeout,"status":"unresolved"}});
         }, function(err) {
             if(!err) {
-                log.info("Refreshed properties");
-                return res.json({ status: 'OK', result: 'done' });
+                common.return(res, 0, 'done');
             } else {
-                res.statusCode = 500;
-                log.error('Internal error(%d): %s',res.statusCode,err.message);
-                return res.json({ error: 'Server error' });
+                common.return(res, err, 0);
             }
         });
     });

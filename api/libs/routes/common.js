@@ -184,9 +184,22 @@ module.exports = {
 
     return: function(res,err,obj) {
         if (!err) {
+            if (isNaN(obj)) {
+                var x = obj.length;
+                if (isNaN(x)) {
+                    log.debug('returning object');
+                } else {
+                    log.debug('returning %d objects',obj.length);
+                }
+            } else {
+                log.debug('returning '+JSON.stringify(obj));
+            }
             return res.json({status: 'OK', result: obj});
         } else {
             log.error(JSON.stringify(err));
+            if (!res.hasOwnProperty('statusCode')) {
+                res.statusCode = 500;
+            }
             return res.json({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
@@ -196,8 +209,7 @@ module.exports = {
     //
 
     query: function(collection, filter, fields, user_id, res, cb) {
-        var d = new Date();
-        log.debug('query '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('query '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             if (fields.length > 0) {
                 var new_fields = fields;
@@ -210,7 +222,6 @@ module.exports = {
                 }
                 collection.find(filter).project(proj).toArray(function (err, objs) {
                     if (!err) {
-                        log.info("Querying fields in %s",collection.collectionName);
                         if (collection.collectionName === "fs.files") {
                             for(var i=0; i<objs.length; i++){
                                 if(objs[i].hasOwnProperty('metadata')) {
@@ -222,22 +233,19 @@ module.exports = {
                                 }
                             }
                         }
+                        log.debug('found %d objects',objs.length);
                         cb(res,0,objs);
                     } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        cb(res,err.message,0);
+                        cb(res,err,0);
                     }
                 });
             } else {
                 collection.find(filter).toArray(function (err, objs) {
                     if (!err) {
-                        log.info("Found %d objects in %s",objs.length,collection.collectionName);
+                        log.debug('found %d objects',objs.length);
                         cb(res,0,objs);
                     } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        cb(res,err.message,0);
+                        cb(res,err,0);
                     }
                 });
             }
@@ -245,17 +253,14 @@ module.exports = {
     },
 
     count: function(collection, filter, user_id, res, cb) {
-        var d = new Date();
-        log.debug('count '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('count '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
-                    log.info("Counting %d objects in %s",count,collection.collectionName);
+                    log.debug('found %d objects', count);
                     cb(res,0,count);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res,err,0);
                 }
             });
         });
@@ -266,19 +271,10 @@ module.exports = {
     //
 
     commit: function(ObjType, collection, objs, user_id, res, cb) {
-        var d = new Date();
-        log.debug('commit '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('commit '+collection.collectionName);
         this.validate(ObjType, objs, user_id, function(err) {
             if(err) {
-                if(err.name === 'ValidationError') {
-                    res.statusCode = 400;
-                    log.error('Validation error(%d): %s', res.statusCode, err.message);
-                    cb(res,err.message,0);
-                } else {
-                    res.statusCode = 500;
-                    log.error('Server error(%d): %s', res.statusCode, err.message);
-                    cb(res,err.message,0);
-                }
+                cb(res,err,0);
             } else {
                 if(objs.length === 0) {
                     cb(res,0,[]);
@@ -355,7 +351,6 @@ module.exports = {
                                     log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
                                     log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
                                     res.nInserted = result.nInserted;
-                                    //console.log(JSON.stringify(result.getRawResponse()));
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
@@ -364,24 +359,18 @@ module.exports = {
                                             for(var j=0; j<objs.length; j++) {
                                                 ids.push(objs[j]['_id']);
                                             }
-                                            log.info("Querying fields in %s",collection.collectionName);
+                                            log.debug('found %d objects',objs.length);
                                             cb(res,0,ids);
                                         } else {
-                                            res.statusCode = 500;
-                                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                            cb(res,err.message,0);
+                                            cb(res,err,0);
                                         }
                                     });
                                 } else {
-                                    res.statusCode = 500;
-                                    log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                                    cb(res,err.message,0);
+                                    cb(res,err,0);
                                 }
                             });
                         } else {
-                            res.statusCode = 500;
-                            log.error('Error updating commit tags: %s %s', err.message, result.getWriteErrors());
-                            cb(res,err.message,0);
+                            cb(res,err,0);
                         }
                     });
                 }
@@ -394,18 +383,15 @@ module.exports = {
     //
 
     update: function(collection, filter, update, user_id, res, cb) {
-        var d = new Date();
-        log.debug('update '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('update '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
-                    log.info("%d objects updated",result.modifiedCount);
+                    log.debug('updated %d objects',result.modifiedCount);
                     cb(res,0,result.modifiedCount);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res,err,0);
                 }
             });
         });
@@ -416,8 +402,7 @@ module.exports = {
     //
 
     replace: function(ObjType, collection, objs, user_id, res, cb) {
-        var d = new Date();
-        log.debug('replace '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('replace '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
         for(var i=0; i<objs.length; i++) {
@@ -427,12 +412,10 @@ module.exports = {
         }
         collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
-                log.info("%s objects replaced", String(result.modifiedCount));
-                cb(res,0,result.modifiedCount);
+                log.debug('replaced %d objects', result.modifiedCount);
+                cb(res, 0, result.modifiedCount);
             } else {
-                res.statusCode = 500;
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                cb(res,err.message,0);
+                cb(res, err, 0);
             }
         });
     },
@@ -442,22 +425,18 @@ module.exports = {
     //
 
     pop: function(collection, filter, sort, user_id, res, cb) {
-        var d = new Date();
-        log.debug('pop '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('pop '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
-                        log.info("Popping 1 object from %s",collection.collectionName);
+                        log.debug('popped %d objects', result.modifiedCount);
                         cb(res, 0, result.value);
                     } else {
-                        log.info("Popping 0 objects from %s",collection.collectionName);
                         cb(res, 0, 0);
                     }
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res, err.message, 0);
+                    cb(res, err, 0);
                 }
             });
         });
@@ -468,17 +447,14 @@ module.exports = {
     //
 
     delete: function(collection, filter, user_id, res, cb) {
-        var d = new Date();
-        log.debug('delete '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('delete '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
-                    log.info("Deleting %d objects from %s",result.deletedCount,collection.collectionName);
-                    cb(res,0,result.deletedCount);
+                    log.debug('deleted %d objects', result.deletedCount);
+                    cb(res, 0, result.deletedCount);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res, err, 0);
                 }
             });
         });
@@ -489,8 +465,7 @@ module.exports = {
     //
 
     stats: function(collection,req,res,map) {
-        var d = new Date();
-        log.debug('stats '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('stats '+collection.collectionName);
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
@@ -556,8 +531,7 @@ module.exports = {
 
 
     mapreduce: function(collection,req,res) {
-        var d = new Date();
-        log.debug('mapreduce '+collection.collectionName+' '+JSON.stringify(d.getTime()));
+        log.debug('mapreduce '+collection.collectionName);
         if (!req.query.field) {
             req.query.filter = req.body.filter;
             req.query.map = req.body.map;
@@ -607,8 +581,7 @@ module.exports = {
     //
 
     get_gridfs_objs: function(objs, fields, res, cb) {
-        var d = new Date();
-        log.debug('get_gridfs_objs '+JSON.stringify(d.getTime()));
+        log.debug('get_gridfs_objs');
         var content_fields = get_gridfs_content_fields(fields);
         if (content_fields.length > 0) {
             var apply_content = function(i){
@@ -624,24 +597,19 @@ module.exports = {
                                     if (obj[subfields[k]]) {
                                         obj = obj[subfields[k]];
                                     } else {
-                                        res.statusCode = 404;
                                         err = {"message":"Field " + content_fields[j] + " not found in " + name};
-                                        log.error("Read error: %s",err.message);
-                                        cb(res,err.message,0);
+                                        cb(res,err,0);
                                     }
                                 }
                                 objs[i][content_fields[j]] = obj;
                             }
                             apply_content(i+1);
                         } else {
-                            res.statusCode = 500;
-                            err = {"message":"Error reading file " + name};
-                            log.error("Read error: %s",err.message);
-                            cb(res,err.message,0);
+                            cb(res,err,0);
                         }
                     });
                 } else {
-                    log.info("Returning %d objects",objs.length);
+                    log.debug('added content to %d objects',objs.length);
                     cb(res,0,objs);
                 }
             };
@@ -650,7 +618,7 @@ module.exports = {
             for(var i=0; i<objs.length; i++) {
                 objs[i]['content'] = {};
             }
-            log.info("Returning %d objects",objs.length);
+            log.debug('no added content');
             cb(res,0,objs);
         }
     },
