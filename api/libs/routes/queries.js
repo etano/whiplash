@@ -106,7 +106,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     var property_ids = query_objs[0]['property_ids'];
                                     if (!err) {
                                         // Get property info
-                                        var property_filter = {'_id':{'$in':property_ids}};
+                                        var property_filter = {'_id':{'$in':property_ids}, 'status':'resolved'};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                         for (var i=0; i<fields['params'].length; i++) {
                                             property_fields.push('params.'+fields['params'][i]);
@@ -146,7 +146,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                         for (var i=0; i<property_ids.length; i++) {
                                             prop_ids.push(new ObjectID(property_ids[i]));
                                         }
-                                        var property_filter = {'_id':{'$in':prop_ids}};
+                                        var property_filter = {'_id':{'$in':prop_ids},'status':'resolved'};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                         for (var i=0; i<fields['params'].length; i++) {
                                             property_fields.push('params.'+fields['params'][i]);

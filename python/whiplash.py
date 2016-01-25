@@ -256,7 +256,7 @@ class db:
             print(status,reason,res)
             sys.exit(1)
 
-    def query(self, filters, fields, settings={}):
+    def query(self, filters, fields={"input_model":[],"executable":[],"params":[],"output_model":[]}, settings={}):
         '''
         Submits a query to the database
         '''
@@ -266,7 +266,7 @@ class db:
         #print('query time',t1-t0)
         return res
 
-    def poll(self, filters, fields, settings={}, freq=1):
+    def poll(self, filters, fields={"input_model":[],"executable":[],"params":[],"output_model":[]}, settings={}, freq=1):
         '''
         Blocks until query is satisfied
         '''
