@@ -51,7 +51,7 @@ def commit_resolved(db,good_results,bad_results,pid):
 
 def resolve_object(pid,property,models,executables,work_dir):
     file_name = 'object_' + str(pid) + '_' + str(property['_id']) + '.json'
-    host_file_name = work_dir + '/' + file_name
+    host_file_name = '/host/' + file_name
     with open(host_file_name, 'w') as io_file:
         io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
     result = {}
@@ -59,7 +59,7 @@ def resolve_object(pid,property,models,executables,work_dir):
     try:
         path = executables[property['executable_index']]['path']
         #TODO: replace 'path' with 'container'
-        command = 'docker run --rm=true -it -v ' + work_dir + ':/input ' + path + ' /input/' + file_name
+        command = 'docker run --rm=true -i -v ' + work_dir + ':/input ' + path + ' /input/' + file_name
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
@@ -81,7 +81,7 @@ def resolve_object(pid,property,models,executables,work_dir):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    os.remove(file_name)
+    os.remove(host_file_name)
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
