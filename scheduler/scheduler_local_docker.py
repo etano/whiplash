@@ -53,7 +53,9 @@ def resolve_object(pid,property,models,executables,work_dir):
     file_name = 'object_' + str(pid) + '_' + str(property['_id']) + '.json'
     host_file_name = '/host/' + file_name
     with open(host_file_name, 'w') as io_file:
-        io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
+        obj = models[property['model_index']]
+        obj['params'] = property['params']
+        io_file.write(json.dumps(obj).replace(" ",""))
     result = {}
     t0 = time.time()
     try:
