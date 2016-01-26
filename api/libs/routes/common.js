@@ -18,8 +18,16 @@ function get_sorted_keys(obj) {
     return keys;
 }
 
-function get_gridfs_filter(filter)
-{
+function smart_stringify(obj) {
+    var keys = get_sorted_keys(obj);
+    var str = '';
+    for(var i=0; i<keys.length; i++) {
+        str += JSON.stringify(obj[keys[i]]);
+    }
+    return str;
+}
+
+function get_gridfs_filter(filter) {
     var special = ['$or','$and','$not','$nor'];
     var new_filter = {};
     for(var key in filter) {
@@ -283,13 +291,9 @@ module.exports = {
                     for(var i=0; i<objs.length; i++) {
                         objs[i]['commit_tag'] = commit_tag;
                         if (collection.collectionName === "properties") {
-                            var keys = get_sorted_keys(objs[i].params);
-                            var param_str = '';
-                            for(var j=0; j<keys.length; j++) {
-                                param_str += JSON.stringify(objs[i].params[keys[j]]);
-                            }
-                            objs[i]['md5'] = checksum(param_str);
+                            objs[i]['md5'] = checksum(smart_stringify(objs[i].params));
                         } else if (collection.collectionName === "queries") {
+                            objs[i]['filters'] = smart_stringify(objs[i].filters);
                             objs[i]['md5'] = checksum(objs[i]['filters']);
                         }
                     }
@@ -430,7 +434,7 @@ module.exports = {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
-                        log.debug('popped %d objects', result.modifiedCount);
+                        log.debug('popped %d objects', result.deletedCount);
                         cb(res, 0, result.value);
                     } else {
                         cb(res, 0, 0);

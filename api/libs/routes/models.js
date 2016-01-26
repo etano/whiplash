@@ -17,6 +17,7 @@ function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').dig
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    log.debug('commit models');
     var objs = common.get_payload(req,'objs');
     var ids = [];
     var write_file = function(i) {
