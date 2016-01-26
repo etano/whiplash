@@ -61,7 +61,7 @@ def resolve_object(pid,property,models,executables,work_dir):
     try:
         path = executables[property['executable_index']]['path']
         #TODO: replace 'path' with 'container'
-        command = 'docker run --rm=true -i -v ' + work_dir + ':/input ' + path + ' /input/' + file_name
+        command = 'docker run -i --rm=true -v ' + work_dir + ':/input ' + path + ' /input/' + file_name
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
