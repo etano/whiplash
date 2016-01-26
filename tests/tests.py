@@ -44,4 +44,6 @@ print("Query for some results")
 filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0, "seed":{"$in":list(range(10))}}, 'output_model':{}}
 fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["content.edges"]}
 settings = {'timeout':3}
-assert len(db.query(filters, fields, settings)) == 10
+print(db.query(filters, fields, settings))
+print(db.status(filters, fields))
+assert db.status(filters, fields)['unresolved'] == 10
