@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import whiplash,daemon,argparse,time,json,sys,os,random
+import threading as th
 import subprocess as sp
 
 def seconds2time(time_limit):
@@ -96,17 +97,26 @@ def make_batches(db,time_window):
     else:
         print('no suitable work')
 
+def make_batches_local(args,db):
+    while True:
+        [time_limit,time_window] = get_times(args,db)
+        if (time_limit > 0 and time_window > 0):
+            make_batches(db,time_window)
+        time.sleep(2)
+
 def scheduler(args):
 
     db = whiplash.db(args.host,args.port,token=args.token)
     print('slurm scheduler connected to db')
 
     if args.local:
+        batcher = th.Thread(target = make_batches_local, args = (args,db,))
+        batcher.start()
         while True:
             [time_limit,time_window] = get_times(args,db)
             print('time_limit:',time_limit,'time_window:',time_window)
             if (time_limit > 0 and time_window > 0):
-                make_batches(db,time_window)
+                #make_batches(db,time_window)
                 print('starting local scheduler')
                 if args.docker:
                     command = "./scheduler/scheduler_local_docker.py"

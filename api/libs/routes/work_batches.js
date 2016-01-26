@@ -26,7 +26,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var user_id = String(req.user._id);
-    common.pop(collection, {}, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
+    common.pop(collection, {}, {timestamp: -1}, user_id, res, function (res, err, work_batch) {
         if (!err) {
             if (work_batch) {
                 var property_ids = [];
