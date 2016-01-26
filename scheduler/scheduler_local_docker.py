@@ -51,7 +51,7 @@ def commit_resolved(db,good_results,bad_results,pid):
 
 def resolve_object(pid,property,models,executables,work_dir):
     file_name = 'object_' + str(pid) + '_' + str(property['_id']) + '.json'
-    host_file_name = work_dir + '/' + file_name
+    host_file_name = '/host/' + file_name
     with open(host_file_name, 'w') as io_file:
         obj = models[property['model_index']]
         obj['params'] = property['params']
