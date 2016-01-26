@@ -307,7 +307,7 @@ module.exports = {
                         if (collection.collectionName === "properties") {
                             objs[i]['md5'] = hash(objs[i].params);
                         } else if (collection.collectionName === "queries") {
-                            objs[i]['md5'] = hash(objs[i]['filters'])+hash(objs[i]['fields'])+hash(objs[i]['settings']);
+                            objs[i]['md5'] = hash(objs[i]['filters'])+hash(objs[i]['fields']);
                             objs[i]['filters'] = smart_stringify(objs[i].filters);
                         }
                     }

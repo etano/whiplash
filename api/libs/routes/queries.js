@@ -14,6 +14,7 @@ var ObjectID = require('mongodb').ObjectID;
 var executables = db.get().collection('executables');
 var models = db.get().collection('fs.files');
 var properties = db.get().collection('properties');
+var hash = require('object-hash');
 
 //
 // Helper functions
@@ -216,7 +217,8 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
 
 function get_status(filters, fields, user_id, res, cb) {
     var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
-    var query = {};
+    var md5 = hash(filters)+hash(fields);
+    var query = {'md5': md5};
     common.query(collection, query, ['property_ids'], user_id, res, function(res, err, query_objs) {
         if (!err) {
             if (query_objs.length > 0) {
