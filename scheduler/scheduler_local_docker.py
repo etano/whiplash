@@ -5,7 +5,7 @@ import subprocess as sp
 import threading as th
 import whiplash,time,json,os,argparse,daemon,sys,copy
 
-pulled_containers = set([])
+#pulled_containers = set([])
 
 def get_unresolved(db,pid,unresolved,is_work):
     t0 = time.time()
@@ -21,10 +21,10 @@ def get_unresolved(db,pid,unresolved,is_work):
             model_indices[work_batch['models'][i]['_id']] = i
         executable_indices = {}
         for i in range(len(work_batch['executables'])):
-            container = work_batch['executables'][i]['path']
-            if container not in pulled_containers:
-                sp.call("docker pull " + container,shell=True)
-                pulled_containers.add(container)
+            # container = work_batch['executables'][i]['path']
+            # if container not in pulled_containers:
+            #     sp.call("docker pull " + container,shell=True)
+            #     pulled_containers.add(container)
             executable_indices[work_batch['executables'][i]['_id']] = i
         for prop in work_batch['properties']:
             prop['model_index'] = model_indices[prop['input_model_id']]
