@@ -115,7 +115,7 @@ def scheduler(args):
                     command = "./scheduler/scheduler_local.py"
                     work_dir = os.getcwd()
                 sp.call(command + " --host " + args.host + " --port " + str(args.port) + " --token " + args.token + " --time_limit 86400 --time_window " + str(time_window) + " --work_dir " + work_dir + " --num_cpus " + str(args.num_cpus),shell=True)
-            time.sleep(10)
+            time.sleep(1)
     else:
         count = 0
         while True:
@@ -133,7 +133,7 @@ def scheduler(args):
                     submit_job(args,time_limit,time_window)
                 else:
                     print('time_limit:',time_limit,'time_window:',time_window)
-            time.sleep(6)
+            time.sleep(1)
             count += 1
 
     print('slurm scheduler shutting down')

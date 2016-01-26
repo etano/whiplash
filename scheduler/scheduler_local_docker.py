@@ -51,7 +51,7 @@ def commit_resolved(db,good_results,bad_results,pid):
 
 def resolve_object(pid,property,models,executables,work_dir):
     file_name = 'object_' + str(pid) + '_' + str(property['_id']) + '.json'
-    host_file_name = '/host/' + file_name
+    host_file_name = work_dir + '/' + file_name
     with open(host_file_name, 'w') as io_file:
         obj = models[property['model_index']]
         obj['params'] = property['params']
@@ -140,10 +140,10 @@ def worker(pid,db,args,end_time):
                     sys.exit(0)
                 else:
                     print('worker',str(pid),'no unresolved properties.',str(num_alive()),'threads alive.')
-                time.sleep(2)
+                time.sleep(1)
             elif time_left() < args.time_window:
                 print('worker',str(pid),'is running out of time with',num_alive(),'threads still alive')
-                time.sleep(2)
+                time.sleep(1)
         else:
             break
 
@@ -188,7 +188,7 @@ def scheduler(args):
                 p.join()
             sys.exit(0)
 
-        time.sleep(2)
+        time.sleep(1)
 
     print('local scheduler shutting down')
 

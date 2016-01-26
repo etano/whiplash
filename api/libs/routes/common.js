@@ -3,6 +3,7 @@ var log = require(libs + 'log')(module);
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
+var hash = require('object-hash');
 
 var crypto = require('crypto');
 function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
@@ -20,10 +21,12 @@ function get_sorted_keys(obj) {
 
 function smart_stringify(obj) {
     var keys = get_sorted_keys(obj);
-    var str = '';
+    console.log(JSON.stringify(keys));
+    var str = "{";
     for(var i=0; i<keys.length; i++) {
-        str += JSON.stringify(obj[keys[i]]);
+        str += "\""+keys[i]+"\":"+JSON.stringify(obj[keys[i]])+",";
     }
+    str += "}";
     return str;
 }
 
@@ -225,7 +228,7 @@ module.exports = {
                     new_fields = get_gridfs_metadata_fields(fields);
                 }
                 var proj = {};
-                for(var i=0; i<new_fields.length; i++){
+                for(var i=0; i<new_fields.length; i++) {
                     proj[new_fields[i]] = 1;
                 }
                 collection.find(filter).project(proj).toArray(function (err, objs) {
@@ -250,6 +253,17 @@ module.exports = {
             } else {
                 collection.find(filter).toArray(function (err, objs) {
                     if (!err) {
+                        if (collection.collectionName === "fs.files") {
+                            for(var i=0; i<objs.length; i++){
+                                if(objs[i].hasOwnProperty('metadata')) {
+                                    var metadata = objs[i].metadata;
+                                    delete objs[i].metadata;
+                                    for(var key in metadata){
+                                        objs[i][key] = metadata[key];
+                                    }
+                                }
+                            }
+                        }
                         log.debug('found %d objects',objs.length);
                         cb(res,0,objs);
                     } else {
@@ -291,10 +305,10 @@ module.exports = {
                     for(var i=0; i<objs.length; i++) {
                         objs[i]['commit_tag'] = commit_tag;
                         if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = checksum(smart_stringify(objs[i].params));
+                            objs[i]['md5'] = hash(objs[i].params);
                         } else if (collection.collectionName === "queries") {
+                            objs[i]['md5'] = hash(objs[i]['filters'])+hash(objs[i]['fields'])+hash(objs[i]['settings']);
                             objs[i]['filters'] = smart_stringify(objs[i].filters);
-                            objs[i]['md5'] = checksum(objs[i]['filters']);
                         }
                     }
                     var batch = [];
@@ -321,10 +335,7 @@ module.exports = {
                         }
                         else if (collection.collectionName === "queries") {
                             filter['owner'] = objs[i]['owner'];
-                            filter['filters'] = objs[i]['filters'];
                             filter['md5'] = objs[i]['md5'];
-                            filter['fields'] = objs[i]['fields'];
-                            filter['settings'] = objs[i]['settings'];
                         }
                         else if (collection.collectionName === "collaborations") {
                             filter['name'] = objs[i]['name'];

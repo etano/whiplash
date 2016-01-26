@@ -55,7 +55,7 @@ def scheduler(args):
         if args.test:
             break
         else:
-            time.sleep(10)
+            time.sleep(1)
             count += 1
     print('user scheduler shutting down')
     for p in schedulers:

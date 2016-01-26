@@ -22,7 +22,8 @@
         "passport-oauth2-client-password": "^0.1.x",
         "winston": "^0.8.x",
         "mongodb": "^2.0.x",
-        "throng": "^1.0.1"
+        "throng": "^1.0.1",
+        "object-hash": "1.1.0"
     },
     "jshintConfig":{
         "curly": true,
