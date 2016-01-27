@@ -53,7 +53,8 @@ def resolve_object(pid,property,models,executables,work_dir):
     t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
-        property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        #property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        property['log'] = sp.check_output(path + ' ' + file_name,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
         with open(file_name, 'r') as io_file:
