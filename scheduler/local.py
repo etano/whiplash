@@ -12,7 +12,7 @@ def time_left(end_time):
 def is_work(db, end_time):
     return db.collection('work_batches').count({'total_time':{"$lt": time_left(end_time)}}) > 0
 
-def get_unresolved(db, pid, unresolved, end_time):
+def get_unresolved(args, db, pid, unresolved, end_time, pulled_containers=[]):
     if is_work(db, end_time):
         t0 = time.time()
         work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
@@ -21,7 +21,13 @@ def get_unresolved(db, pid, unresolved, end_time):
             model_indices[work_batch['models'][i]['_id']] = i
         executable_indices = {}
         for i in range(len(work_batch['executables'])):
-            executable_indices[work_batch['executables'][i]['_id']] = i
+            if args.docker:
+                container = work_batch['executables'][i]['path']
+                if container not in pulled_containers:
+                    pulled_containers.append(container)
+                    sp.call("docker pull "+container, shell=True)
+            else:
+                executable_indices[work_batch['executables'][i]['_id']] = i
         for prop in work_batch['properties']:
             prop['model_index'] = model_indices[prop['input_model_id']]
             prop['executable_index'] = executable_indices[prop['executable_id']]
@@ -45,15 +51,22 @@ def commit_resolved(db, good_results, bad_results, pid):
     elapsed1 = t1-t0
     logging.info('worker %i commited %i properties in %f seconds', pid, len(all_properties), t1-t0)
 
-def resolve_object(pid,property,models,executables,work_dir):
-    file_name = work_dir + '/object_' + str(pid) + '_' + str(property['_id']) + '.json'
-    with open(file_name, 'w') as io_file:
-        io_file.write(json.dumps({'content':models[property['model_index']]['content'],'params':property['params']}).replace(" ",""))
+def resolve_object(args, pid, property, models, executables):
+    file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'
+    host_file_name = args.work_dir+'/'+file_name
+    with open(host_file_name, 'w') as io_file:
+        obj = models[property['model_index']]
+        obj['params'] = property['params']
+        io_file.write(json.dumps(obj).replace(" ",""))
     result = {}
     t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
-        property['log'] = sp.check_output([path,file_name],timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT)
+        if args.docker:
+            command = 'docker run --rm=true -i -v ' + args.work_dir + ':/input ' + path + ' /input/' + file_name
+        else:
+            command = path+' '+host_file_name
+        property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
         with open(file_name, 'r') as io_file:
@@ -74,7 +87,7 @@ def resolve_object(pid,property,models,executables,work_dir):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    os.remove(file_name)
+    os.remove(host_file_name)
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
@@ -87,7 +100,8 @@ def worker(pid, db, args, end_time):
     logging.info('worker %i active', pid)
 
     unresolved0, unresolved1 = [], []
-    fetch_thread = th.Thread(target = get_unresolved, args = (db,pid,unresolved0,end_time))
+    pull_containers = []
+    fetch_thread = th.Thread(target = get_unresolved, args = (args,db,pid,unresolved0,end_time,pulled_containers,))
     fetch_thread.start()
 
     threads = [fetch_thread]
@@ -96,7 +110,7 @@ def worker(pid, db, args, end_time):
         if (not fetch_thread.is_alive()):
             unresolved1 = copy.deepcopy(unresolved0)
             unresolved0 = []
-            fetch_thread = th.Thread(target = get_unresolved, args = (db,pid,unresolved0,end_time))
+            fetch_thread = th.Thread(target = get_unresolved, args = (args,db,pid,unresolved0,end_time,pulled_containers,))
             fetch_thread.start()
         if len(unresolved1) > 0:
             good_results = {'properties':[],'models':[]}
@@ -104,7 +118,7 @@ def worker(pid, db, args, end_time):
             t0 = time.time()
             for property in unresolved1[0]['properties']:
                 if time_left(end_time) > property['timeout']:
-                    resolved = resolve_object(pid,property,unresolved1[0]['models'],unresolved1[0]['executables'],args.work_dir)
+                    resolved = resolve_object(args, pid, property, unresolved1[0]['models'], unresolved1[0]['executables'])
                     if resolved['property']['status'] == "resolved":
                         good_results['properties'].append(resolved['property'])
                         good_results['models'].append(resolved['model'])
@@ -119,13 +133,13 @@ def worker(pid, db, args, end_time):
                 commit_thread = th.Thread(target = commit_resolved, args = (db,good_results,bad_results,pid,))
                 commit_thread.start()
                 threads.append(commit_thread)
-        elif len(unresolved0) == 0:
-            if num_alive() == 0:
+        elif num_alive() == 0:
+            if len(unresolved0) == 0:
                 logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
                 sys.exit(0)
-            else:
-                logging.info('worker %i has no suitable, but %i threads alive', pid, num_alive())
-                time.sleep(2)
+        elif len(unresolved0) == 0:
+            logging.info('worker %i has no suitable work, but %i threads alive', pid, num_alive())
+            time.sleep(2)
 
 def scheduler(args):
     start_time = time.time()
