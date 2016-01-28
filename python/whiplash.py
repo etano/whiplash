@@ -1,4 +1,7 @@
-import sys,json,time,zlib,math,os,getpass,requests
+import sys,json,time,zlib,math,os,getpass
+
+if sys.version_info[0] < 3: import httplib
+else: import http.client as httplib
 
 try: input = raw_input
 except NameError: pass
@@ -36,20 +39,15 @@ class connection:
             self.headers["Content-type"] = "application/json"
         uri = self.server + ':' + str(self.port) + '/api/' + uri
         try:
-            t0 = time.time()
-            res = requests.request(protocol, 'https://'+uri, data=payload, headers=self.headers)
-            t1 = time.time()
-            #print('request time',t1-t0)
+            conn = httplib.HTTPSConnection(self.server, self.port)
+            conn.request(protocol, 'https://'+uri, payload, self.headers)
         except:
-            t0 = time.time()
-            res = requests.request(protocol, 'http://'+uri, data=payload, headers=self.headers)
-            t1 = time.time()
-            #print('request time',t1-t0)
-
-        if res.status_code != 200:
-            print(res.status_code, res.reason, res.content)
-
-        return res.status_code, res.reason, res.content
+            conn = httplib.HTTPConnection(self.server, self.port)
+            conn.request(protocol, 'http://'+uri, payload, self.headers)
+        res = conn.getresponse()
+        if res.status != 200:
+            print(res.status, res.reason, res.read())
+        return res.status, res.reason, res.read()
 
     def set_token(self,access_token):
         '''
