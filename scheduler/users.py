@@ -57,13 +57,13 @@ def scheduler(args):
             username = db_user['username']
             if username not in running_users:
                 flags = " --user "+db_user['username']+" --token "+db_user['token']+" --host "+args.host+" --port "+str(args.port)+" --log_dir "+args.log_dir
-                if args.docker:
-                    flags += " --docker"
                 logging.info('starting batcher for user %s', db_user['username'])
                 p = context.Process(target=start_batcher, args=(args,flags,))
                 p.start()
                 schedulers.append(p)
                 flags += " --num_cpus "+str(args.num_cpus)+" --work_dir "+db_user['work_dir']+" --time_limit "+str(time_limit)
+                if args.docker:
+                    flags += " --docker"
                 if args.cluster:
                     if check_access(db_user):
                         flags += " --cluster "+db_user['cluster']

@@ -19,6 +19,9 @@ def submit_job(args):
     job_file = "job_" + args.user + ".sbatch"
     user_job_file = ".whiplash_job.sbatch"
     logging.info('submitting job: %s | %i', args.user, args.time_limit)
+    flags = " --host "+args.host+" --port "+str(args.port)+" --token "+args.token+" --time_limit "+str(args.time_limit)+" --work_dir "+user_work_dir+" --num_cpus "+str(args.num_cpus)+" --log_dir "+args.log_dir
+    if args.docker:
+        flags += " --docker"
     with open(job_file,"w") as sbatch:
         sbatch.write("#!/bin/bash -l" + "\n")
         sbatch.write("#SBATCH --job-name=" + "whiplash_" + t + "\n")
@@ -31,7 +34,7 @@ def submit_job(args):
         sbatch.write("#SBATCH --ntasks=1\n")
         sbatch.write("module load python/3.4.1-gcc-4.8.1\n")
         sbatch.write("export PYTHONPATH=/mnt/lnec/whiplash/rte/python_packages:/mnt/lnec/whiplash/rte:$PYTHONPATH\n")
-        sbatch.write("srun python /mnt/lnec/whiplash/rte/scheduler/local.py"+" --host "+args.host+" --port "+str(args.port)+" --token "+args.token+" --time_limit "+str(args.time_limit)+" --work_dir "+user_work_dir+" --num_cpus "+str(args.num_cpus)+" --log_dir "+args.log_dir+"\n")
+        sbatch.write("srun python /mnt/lnec/whiplash/rte/scheduler/local.py"+flags+"\n")
     sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True)
 

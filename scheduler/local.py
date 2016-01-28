@@ -10,11 +10,17 @@ def time_left(end_time):
     return end_time - time.time()
 
 def is_work(db, end_time):
-    return db.collection('work_batches').count({'total_time':{"$lt": time_left(end_time)}}) > 0
+    t0 = time.time()
+    n_work_batches = db.collection('work_batches').count({'total_time':{"$lt": time_left(end_time)}})
+    t1 = time.time()
+    logging.info('counted %i work batches in %f seconds', n_work_batches, t1-t0)
+    return n_work_batches > 0
 
-def get_unresolved(args, db, pid, unresolved, end_time, pulled_containers=[]):
+def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
+    logging.info('worker %i is looking for a work batch', pid)
+
+    t0 = time.time()
     if is_work(db, end_time):
-        t0 = time.time()
         work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
         model_indices = {}
         for i in range(len(work_batch['models'])):
@@ -31,11 +37,13 @@ def get_unresolved(args, db, pid, unresolved, end_time, pulled_containers=[]):
         for prop in work_batch['properties']:
             prop['model_index'] = model_indices[prop['input_model_id']]
             prop['executable_index'] = executable_indices[prop['executable_id']]
-        unresolved.append(work_batch)
+        work_batches.append(work_batch)
         t1 = time.time()
-        logging.info('worker %i fetched %i properties in %f seconds', pid, len(work_batch['properties']), t1-t0)
+        logging.info('worker %i fetched a work batch with %i properties, %i models, and %i executables in %f seconds', pid, len(work_batch['properties']), len(work_batch['models']), len(work_batch['executables']), t1-t0)
     else:
-        unresolved = []
+        t1 = time.time()
+        logging.info('worker %i found no work batches in %f seconds', pid, t1-t0)
+
 
 def commit_resolved(db, good_results, bad_results, pid):
     t0 = time.time()
@@ -96,29 +104,26 @@ def resolve_object(args, pid, property, models, executables):
     return {'property':property,'model':result}
 
 def worker(pid, db, args, end_time):
-    start_time = time.time()
     logging.info('worker %i active', pid)
 
-    unresolved0, unresolved1 = [], []
-    pull_containers = []
-    fetch_thread = th.Thread(target = get_unresolved, args = (args,db,pid,unresolved0,end_time,pulled_containers,))
-    fetch_thread.start()
-
-    threads = [fetch_thread]
-    num_alive = lambda: sum(thread.is_alive() for thread in threads)
+    work_batches = []
+    pulled_containers = []
+    fetch_thread, commit_thread = th.Thread(), th.Thread()
+    threads = {}
+    num_alive = lambda: sum(threads[key].is_alive() for key in threads)
     while True:
-        if (not fetch_thread.is_alive()):
-            unresolved1 = copy.deepcopy(unresolved0)
-            unresolved0 = []
-            fetch_thread = th.Thread(target = get_unresolved, args = (args,db,pid,unresolved0,end_time,pulled_containers,))
+        if (is_work(db, end_time)) and (not fetch_thread.is_alive()) and (len(work_batches) <= 2):
+            fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,pulled_containers,))
             fetch_thread.start()
-        if len(unresolved1) > 0:
+            threads['fetch'] = fetch_thread
+        if len(work_batches) > 0:
             good_results = {'properties':[],'models':[]}
             bad_results = {'properties':[],'models':[]}
             t0 = time.time()
-            for property in unresolved1[0]['properties']:
+            work_batch = work_batches.pop(0)
+            for property in work_batch['properties']:
                 if time_left(end_time) > property['timeout']:
-                    resolved = resolve_object(args, pid, property, unresolved1[0]['models'], unresolved1[0]['executables'])
+                    resolved = resolve_object(args, pid, property, work_batch['models'], work_batch['executables'])
                     if resolved['property']['status'] == "resolved":
                         good_results['properties'].append(resolved['property'])
                         good_results['models'].append(resolved['model'])
@@ -127,24 +132,23 @@ def worker(pid, db, args, end_time):
                         bad_results['models'].append(resolved['model'])
                 else: break
             t1 = time.time()
-            unresolved1 = [{'properties':[],'models':[],'executables':[]}]
             if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
                 logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, len(good_results['properties']), len(bad_results['properties']), t1-t0)
                 commit_thread = th.Thread(target = commit_resolved, args = (db,good_results,bad_results,pid,))
                 commit_thread.start()
-                threads.append(commit_thread)
-        elif num_alive() == 0:
-            if len(unresolved0) == 0:
+                threads['commit'] = commit_thread
+        if len(work_batches) == 0:
+            n_alive = num_alive()
+            if n_alive == 0:
                 logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
                 sys.exit(0)
-        elif len(unresolved0) == 0:
-            logging.info('worker %i has no suitable work, but %i threads alive', pid, num_alive())
-            time.sleep(2)
+            else:
+                logging.info('worker %i has no suitable work, but %i threads alive', pid, n_alive)
+                time.sleep(2)
 
 def scheduler(args):
-    start_time = time.time()
     end_time = time.time() + args.time_limit
-    logging.info('local scheduler started at %f', start_time)
+    logging.info('local scheduler started')
 
     db = whiplash.db(args.host,args.port,token=args.token)
     logging.info('local scheduler connected to db')
@@ -156,29 +160,29 @@ def scheduler(args):
 
     logging.info('starting workers')
     context = mp.get_context('fork')
-    procs = []
+    procs = {}
     for pid in range(num_cpus):
-        p = context.Process(target=worker, args=(pid,db,args,end_time,))
-        p.start()
-        procs.append([pid,p])
+        procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,))
+        procs[pid].start()
 
     while True:
+        time.sleep(2)
         n_alive = 0
-        for [pid,p] in procs:
-            if p.is_alive():
-                n_alive += 1
-            elif is_work(db, end_time):
+        for pid in procs:
+            if is_work(db, end_time) and (not procs[pid].is_alive()):
                 logging.info('worker %i restarting', pid)
-                p.join()
-                p = context.Process(target=worker, args=(pid,db,args,end_time,))
-                p.start()
+                procs[pid].join()
+                procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,))
+                procs[pid].start()
                 n_alive += 1
+            elif procs[pid].is_alive():
+                n_alive += 1
+
         if n_alive == 0:
             logging.info('stopping workers')
-            for [pid,p] in procs:
-                p.join()
+            for pid in procs:
+                procs[pid].join()
             sys.exit(0)
-        time.sleep(2)
 
     logging.info('local scheduler shutting down')
 
@@ -193,6 +197,7 @@ if __name__ == '__main__':
     parser.add_argument('--work_dir',dest='work_dir',required=True,type=str)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
+    parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/'+args.user+'_local_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
