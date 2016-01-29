@@ -136,12 +136,12 @@ def worker(pid, db, args, end_time):
             commit_thread.start()
         if (len(work_batches) == 0):
             if (not is_work(db, end_time)):
+                time.sleep(5)
                 if num_alive() == 0:
                     logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
                     sys.exit(0)
                 else:
                     logging.info('worker %i has no suitable work, but %i threads alive', pid, num_alive())
-                time.sleep(5)
 
 def scheduler(args):
     end_time = time.time() + args.time_limit
