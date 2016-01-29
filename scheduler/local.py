@@ -17,43 +17,39 @@ def is_work(db, end_time):
     return n_work_batches > 0
 
 def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
-    logging.info('worker %i is looking for a work batch', pid)
-
     t0 = time.time()
-    if is_work(db, end_time):
-        work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
-        model_indices = {}
-        for i in range(len(work_batch['models'])):
-            model_indices[work_batch['models'][i]['_id']] = i
-        executable_indices = {}
-        for i in range(len(work_batch['executables'])):
-            if args.docker:
-                container = work_batch['executables'][i]['path']
-                if container not in pulled_containers:
-                    pulled_containers.append(container)
-                    sp.call("docker pull "+container, shell=True)
-            else:
-                executable_indices[work_batch['executables'][i]['_id']] = i
-        for prop in work_batch['properties']:
-            prop['model_index'] = model_indices[prop['input_model_id']]
-            prop['executable_index'] = executable_indices[prop['executable_id']]
+    work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
+    model_indices = {}
+    for i in range(len(work_batch['models'])):
+        model_indices[work_batch['models'][i]['_id']] = i
+    executable_indices = {}
+    for i in range(len(work_batch['executables'])):
+        if args.docker:
+            container = work_batch['executables'][i]['path']
+            if container not in pulled_containers:
+                pulled_containers.append(container)
+                sp.call("docker pull "+container, shell=True)
+        else:
+            executable_indices[work_batch['executables'][i]['_id']] = i
+    for prop in work_batch['properties']:
+        prop['model_index'] = model_indices[prop['input_model_id']]
+        prop['executable_index'] = executable_indices[prop['executable_id']]
+    t1 = time.time()
+    if len(work_batch['properties']) > 0:
         work_batches.append(work_batch)
-        t1 = time.time()
         logging.info('worker %i fetched a work batch with %i properties, %i models, and %i executables in %f seconds', pid, len(work_batch['properties']), len(work_batch['models']), len(work_batch['executables']), t1-t0)
     else:
-        t1 = time.time()
         logging.info('worker %i found no work batches in %f seconds', pid, t1-t0)
 
-
-def commit_resolved(db, good_results, bad_results, pid):
+def commit_resolved(db, pid, result):
     t0 = time.time()
-    ids = db.models.commit(good_results['models'])
+    ids = db.models.commit(result['good']['models'])
     t1 = time.time()
-    logging.info('worker %i commited %i models in %f seconds', pid, len(good_results['models']), t1-t0)
+    logging.info('worker %i commited %i models in %f seconds', pid, len(result['good']['models']), t1-t0)
     for i in range(len(ids)):
-        good_results['properties'][i]['output_model_id'] = ids[i]
+        result['good']['properties'][i]['output_model_id'] = ids[i]
     t0 = time.time()
-    all_properties = good_results['properties']+bad_results['properties']
+    all_properties = result['good']['properties']+result['bad']['properties']
     db.properties.replace(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
@@ -103,48 +99,49 @@ def resolve_object(args, pid, property, models, executables):
 
     return {'property':property,'model':result}
 
+def resolve_work_batch(args, pid, work_batch, end_time):
+    good_results = {'properties':[],'models':[]}
+    bad_results = {'properties':[],'models':[]}
+    t0 = time.time()
+    for property in work_batch['properties']:
+        if time_left(end_time) > property['timeout']:
+            resolved = resolve_object(args, pid, property, work_batch['models'], work_batch['executables'])
+            if resolved['property']['status'] == "resolved":
+                good_results['properties'].append(resolved['property'])
+                good_results['models'].append(resolved['model'])
+            else:
+                bad_results['properties'].append(resolved['property'])
+                bad_results['models'].append(resolved['model'])
+        else:
+            break
+    t1 = time.time()
+    logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, len(good_results['properties']), len(bad_results['properties']), t1-t0)
+    return {'good':good_results, 'bad':bad_results}
+
 def worker(pid, db, args, end_time):
     logging.info('worker %i active', pid)
 
     work_batches = []
     pulled_containers = []
     fetch_thread, commit_thread = th.Thread(), th.Thread()
-    threads = {}
-    num_alive = lambda: sum(threads[key].is_alive() for key in threads)
+    num_alive = lambda: fetch_thread.is_alive() + commit_thread.is_alive()
     while True:
-        if (is_work(db, end_time)) and (not fetch_thread.is_alive()) and (len(work_batches) <= 2):
+        if (not fetch_thread.is_alive()) and (len(work_batches) < 2):
             fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,pulled_containers,))
             fetch_thread.start()
-            threads['fetch'] = fetch_thread
-        if len(work_batches) > 0:
-            good_results = {'properties':[],'models':[]}
-            bad_results = {'properties':[],'models':[]}
-            t0 = time.time()
-            work_batch = work_batches.pop(0)
-            for property in work_batch['properties']:
-                if time_left(end_time) > property['timeout']:
-                    resolved = resolve_object(args, pid, property, work_batch['models'], work_batch['executables'])
-                    if resolved['property']['status'] == "resolved":
-                        good_results['properties'].append(resolved['property'])
-                        good_results['models'].append(resolved['model'])
-                    else:
-                        bad_results['properties'].append(resolved['property'])
-                        bad_results['models'].append(resolved['model'])
-                else: break
-            t1 = time.time()
-            if (len(bad_results['properties']) + len(good_results['properties'])) > 0:
-                logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, len(good_results['properties']), len(bad_results['properties']), t1-t0)
-                commit_thread = th.Thread(target = commit_resolved, args = (db,good_results,bad_results,pid,))
-                commit_thread.start()
-                threads['commit'] = commit_thread
-        if len(work_batches) == 0:
-            n_alive = num_alive()
-            if n_alive == 0:
-                logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
-                sys.exit(0)
-            else:
-                logging.info('worker %i has no suitable work, but %i threads alive', pid, n_alive)
-                time.sleep(2)
+        if (len(work_batches) > 0):
+            logging.info('worker %i has started resolving a work batch', pid)
+            result = resolve_work_batch(args, pid, work_batches.pop(0), end_time)
+            commit_thread = th.Thread(target = commit_resolved, args = (db,pid,result,))
+            commit_thread.start()
+        if (len(work_batches) == 0):
+            if (not is_work(db, end_time)):
+                if num_alive() == 0:
+                    logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
+                    sys.exit(0)
+                else:
+                    logging.info('worker %i has no suitable work, but %i threads alive', pid, num_alive())
+                time.sleep(5)
 
 def scheduler(args):
     end_time = time.time() + args.time_limit
@@ -166,7 +163,7 @@ def scheduler(args):
         procs[pid].start()
 
     while True:
-        time.sleep(2)
+        time.sleep(5)
         n_alive = 0
         for pid in procs:
             if is_work(db, end_time) and (not procs[pid].is_alive()):
