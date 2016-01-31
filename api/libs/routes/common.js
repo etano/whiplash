@@ -21,7 +21,6 @@ function get_sorted_keys(obj) {
 
 function smart_stringify(obj) {
     var keys = get_sorted_keys(obj);
-    console.log(JSON.stringify(keys));
     var str = "{";
     for(var i=0; i<keys.length; i++) {
         str += "\""+keys[i]+"\":"+JSON.stringify(obj[keys[i]])+",";
@@ -170,6 +169,7 @@ module.exports = {
     //
 
     validate: function(ObjType, objs, user_id, cb) {
+        log.debug('valdate');
         for(var i=0; i<objs.length; i++) {
             objs[i].owner = user_id;
             var obj = new ObjType(objs[i]);
@@ -186,6 +186,7 @@ module.exports = {
                 cb(err);
             }
         }
+        log.debug('valdated %d objects', objs.length);
         cb(null);
     },
 
@@ -193,14 +194,14 @@ module.exports = {
     // Return
     //
 
-    return: function(res,err,obj) {
+    return: function(res, err, obj) {
         if (!err) {
             if (isNaN(obj)) {
                 var x = obj.length;
                 if (isNaN(x)) {
                     log.debug('returning object');
                 } else {
-                    log.debug('returning %d objects',obj.length);
+                    log.debug('returning %d objects', obj.length);
                 }
             } else {
                 log.debug('returning '+JSON.stringify(obj));
@@ -301,6 +302,7 @@ module.exports = {
                 if(objs.length === 0) {
                     cb(res,0,[]);
                 } else {
+                    log.debug('hash objects');
                     var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
                     for(var i=0; i<objs.length; i++) {
                         objs[i]['commit_tag'] = commit_tag;
@@ -311,14 +313,15 @@ module.exports = {
                             objs[i]['filters'] = smart_stringify(objs[i].filters);
                         }
                     }
+                    log.debug('form commit filter');
                     var batch = [];
                     for(var i=0; i<objs.length; i++) {
                         var filter = {};
                         if (collection.collectionName === "fs.files") {
-                            filter['md5'] = objs[i]['md5'];
                             filter['metadata'] = {};
                             filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
                             filter['metadata']['owner'] = objs[i]['metadata']['owner'];
+                            filter['metadata']['md5'] = objs[i]['metadata']['md5'];
                         }
                         else if(collection.collectionName === "executables") {
                             filter['name'] = objs[i]['name'];
@@ -351,6 +354,7 @@ module.exports = {
                         }
                         batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                     }
+                    log.debug('apply commit tag');
                     collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
                         if (result.ok) {
                             log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
@@ -360,6 +364,7 @@ module.exports = {
                             for(var i=0; i<objs.length; i++) {
                                 batch.push({ insertOne: { document : objs[i] } });
                             }
+                            log.debug('attempt insertion');
                             collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
                                 if (result.ok) {
                                     log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
@@ -368,6 +373,7 @@ module.exports = {
                                     res.nInserted = result.nInserted;
                                     var tag_filter = {'commit_tag':commit_tag};
                                     var proj = {'_id':1};
+                                    log.debug('get object ids');
                                     collection.find(tag_filter).project(proj).toArray(function (err, objs) {
                                         if (!err) {
                                             var ids = [];

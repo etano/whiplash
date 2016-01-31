@@ -155,13 +155,13 @@ class collection:
         '''
         return self.request("PUT", "", {'filter':filter,'update':update})
 
-    def replace(self,replacements):
+    def replace(self,replacements): # FIXME: Only for properties
         '''
         replaces objects in the collection with the replacements
         '''
         return self.request("PUT", "replace", replacements)
 
-    def delete(self,filter):
+    def delete(self,filter): # FIXME: No deleting ?
         '''
         deletes the objects in the collection which satisfy the filter
         '''
@@ -169,8 +169,8 @@ class collection:
 
     def stats(self,field,filter):
         '''
-        computes the {sum, max, min, count, mean, standard deviation, variance} of the 
-        specified fields of objects in the collection which satisfy the filter 
+        computes the {sum, max, min, count, mean, standard deviation, variance} of the
+        specified fields of objects in the collection which satisfy the filter
         '''
         return self.request("GET", "stats", {"field":field,"filter":filter})
 

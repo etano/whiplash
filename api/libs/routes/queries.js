@@ -54,26 +54,32 @@ function find_in_operators(ins, obj, keys) {
 }
 
 function expand_props(props) {
+    log.debug('expand props');
     var new_props = [];
     for (var i=0; i<props.length; i++) {
-        var prop = props[i];
         var ins = [];
         find_in_operators(ins, props[i], []);
-        var branch_ins = function(i, ins, keys_vals) {
-            if (i<ins.length) {
-                for (var j=0; j<ins[i].values.length; j++) {
-                    branch_ins(i+1, ins, keys_vals.concat({'keys':ins[i].keys, 'value':ins[i].values[j]}));
+        if (ins.length>0) {
+            var prop = props[i];
+            var branch_ins = function(i, ins, keys_vals) {
+                if (i<ins.length) {
+                    for (var j=0; j<ins[i].values.length; j++) {
+                        branch_ins(i+1, ins, keys_vals.concat({'keys':ins[i].keys, 'value':ins[i].values[j]}));
+                    }
+                } else {
+                    var new_prop = JSON.parse(JSON.stringify(prop));
+                    for (var k=0; k<keys_vals.length; k++) {
+                        create_nested_object(new_prop, keys_vals[k]['keys'], keys_vals[k]['value']);
+                    }
+                    new_props.push(new_prop);
                 }
-            } else {
-                var new_prop = JSON.parse(JSON.stringify(prop));
-                for (var k=0; k<keys_vals.length; k++) {
-                    create_nested_object(new_prop, keys_vals[k]['keys'], keys_vals[k]['value']);
-                }
-                new_props.push(new_prop);
-            }
-        };
-        branch_ins(0, ins, []);
+            };
+            branch_ins(0, ins, []);
+        } else {
+            new_props.push(props[i]);
+        }
     }
+    log.debug('expanded from %d to %d properties', props.length, new_props.length);
     return new_props;
 }
 
@@ -155,8 +161,9 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                             }
                                         }
                                         props = expand_props(props);
-                                        // FIXME: No need to randomize
-                                        props = shuffle_array(props);
+                                        log.debug('formed %d properties', props.length);
+                                        // No need to randomize, but here it is
+                                        // props = shuffle_array(props);
                                         // Commit properties
                                         common.commit(property, properties, props, user_id, res, function(res, err, property_ids) {
                                             if (!err) {
