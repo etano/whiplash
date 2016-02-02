@@ -8,7 +8,6 @@ var db = require(libs + 'db/mongo');
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var collection = db.get().collection('fs.files');
-var hash = require('object-hash');
 
 //
 // Commit
@@ -37,7 +36,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             if (objs[i].hasOwnProperty('_id')) {
                 delete objs[i]._id;
             }
-            metadata.md5 = hash(objs[i]);
+            metadata.md5 = common.hash(objs[i]);
             common.query(collection, {"md5":metadata.md5, "property_id":metadata.property_id}, ['_id'], user_id, res, function(res, err, prev_objs) {
                 if(err) {
                     log.error("Error in count: %s",err.message);
