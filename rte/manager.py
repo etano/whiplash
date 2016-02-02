@@ -8,17 +8,17 @@ import whiplash
 def start_batcher(args, flags):
     if args.test:
         flags += " --test"
-    command = args.scheduler_dir+"/batch.py"+flags
+    command = args.scheduler_dir+"/batcher.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
 def start_slurm_scheduler(args, flags):
-    command = args.scheduler_dir+"/slurm.py"+flags
+    command = args.scheduler_dir+"/scheduler_slurm.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
 def start_local_scheduler(args, flags):
-    command = args.scheduler_dir+"/local.py"+flags
+    command = args.scheduler_dir+"/scheduler_local.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
@@ -102,5 +102,5 @@ if __name__ == '__main__':
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/users_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(filename=args.log_dir+'/manager_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)
