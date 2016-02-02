@@ -41,9 +41,10 @@ print("Query executable")
 assert executable_id == db.executables.query(executable,'_id')[0]['_id']
 
 print("Query for some results")
-filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0, "seed":{"$in":list(range(10))}}, 'output_model':{}}
+n_seeds = 10
+filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0, "seed":{"$in":list(range(n_seeds))}}, 'output_model':{}}
 fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["content.edges"]}
 settings = {'timeout':300}
 print(db.query(filters, fields, settings))
 print(db.status(filters, fields))
-assert db.status(filters, fields)['unresolved'] == 10
+assert db.status(filters, fields)['unresolved'] == n_seeds

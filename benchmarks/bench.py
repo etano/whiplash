@@ -11,7 +11,7 @@ bench.reset_db(db)
 
 print("Benchmarking collections")
 sizes = [2]
-numbers = [10, 100, 1000]
+numbers = [10, 100, 1000, 10000]
 print("sizes:", sizes)
 print("numbers:", numbers)
 collections = [

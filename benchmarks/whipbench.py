@@ -2,7 +2,7 @@ import random, time, logging
 from string import ascii_uppercase
 random.seed(0)
 
-logging.basicConfig(filename='./commit.log', level=logging.INFO)
+logging.basicConfig(filename='./stats.log', level=logging.INFO)
 
 def reset_db(db):
     db.collection("work_batches").delete({})
@@ -118,7 +118,5 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={}):
             new_filters['params']['run_time'] = 1.0
             t, res = timer(db.query, new_filters, fields, settings)
             logging.info('root query %i %i %f', number, size, t)
-            t, res = timer(db.status, new_filters, fields)
-            logging.info('root status %i %i %f', number, size, t)
-            assert res['total'] == number*number
+            assert len(res) == number*number
             print('Finished in %f seconds'%(t))
