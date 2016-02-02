@@ -12,3 +12,6 @@ todo: descriptions, homepage, online demo, crunchbase url, company office and in
 site: https://www.ethz.ch/en/research/research-promotion/eth-internal-programmes/pioneer-fellowships.html
 deadline: 1 March
 todo: project summary
+
+-- Wayra
+site: https://calls.openfuture.org/wayra
