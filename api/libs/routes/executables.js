@@ -6,14 +6,13 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('executables');
-var ObjType = require(libs + 'schemas/executable');
 
 //
 // Commit
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
+    common.commit(collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 //
@@ -37,7 +36,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.put('/replace/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.replace(ObjType, collection, common.get_payload(req,'objs'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    common.replace(collection, common.get_payload(req,'objs'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 //

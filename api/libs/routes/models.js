@@ -9,49 +9,52 @@ var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var collection = db.get().collection('fs.files');
 
-var crypto = require('crypto');
-function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
-
 //
 // Commit
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     log.debug('commit models');
+    var user_id = String(req.user._id);
     var objs = common.get_payload(req,'objs');
     var ids = [];
     var write_file = function(i) {
         if(i < objs.length) {
             var metadata = {};
             for(var key in objs[i]) {
-                if(key != 'content')
+                if(key !== 'content') {
                     metadata[key] = objs[i][key];
+                }
             }
-            metadata.owner = String(req.user._id);
-            if (!('property_id' in objs[i]))
+            metadata.owner = user_id;
+            if (!('property_id' in objs[i])) {
                 metadata.property_id = "";
-            if (!('content' in objs[i]))
+            }
+            if (!('content' in objs[i])) {
                 objs[i].content = {};
-            var content = JSON.stringify(objs[i].content);
-            var md5 = checksum(content);
-            collection.find({md5 : md5, "metadata.property_id" : metadata.property_id}).limit(1).toArray(function (err, objs) {
+            }
+            if (objs[i].hasOwnProperty('_id')) {
+                delete objs[i]._id;
+            }
+            metadata.md5 = common.hash(objs[i]);
+            common.query(collection, {"md5":metadata.md5, "property_id":metadata.property_id}, ['_id'], user_id, res, function(res, err, prev_objs) {
                 if(err) {
                     log.error("Error in count: %s",err.message);
                     write_file(i+1);
-                } else if(objs.length > 0) {
-                    log.error("Duplicate file with md5: %s",md5);
-                    ids.push(objs[0]._id);
+                } else if(prev_objs.length > 0) {
+                    log.error("Duplicate file with md5: %s",metadata.md5);
+                    ids.push(prev_objs[0]._id);
                     write_file(i+1);
                 } else {
                     var fileId = new ObjectID();
                     var options = { metadata: metadata };
-                    var gridStore = new GridStore(db.get(),fileId,String(fileId),'w',options);
+                    var gridStore = new GridStore(db.get(),fileId, String(fileId), 'w', options);
                     gridStore.open(function(err, gridStore) {
                         if(err) {
                             log.error("Error opening file: %s",err.message);
                             write_file(i+1);
                         } else {
-                            gridStore.write(content, function(err, gridStore) {
+                            gridStore.write(JSON.stringify(objs[i].content), function(err, gridStore) {
                                 if(err) {
                                     log.error("Error writing file: %s",err.message);
                                     write_file(i+1);
@@ -95,6 +98,14 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+});
+
+//
+// Update
+//
+
+router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.update(collection, common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
 });
 
 //

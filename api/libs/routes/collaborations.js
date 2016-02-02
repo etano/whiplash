@@ -13,7 +13,7 @@ var ObjType = require(libs + 'schemas/collaboration');
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
+    common.commit(collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 //

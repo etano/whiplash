@@ -5,7 +5,7 @@ ssh -t ${ec2_host} 'sudo apt-get update -y'
 ssh -t ${ec2_host} 'sudo apt-get install -y build-essential make g++ python3-pip'
 ssh -t ${ec2_host} 'sudo apt-get install -y python-numpy'
 ssh -t ${ec2_host} 'pip3 install requests python-daemon==2.0.6'
-scp -r scheduler ${ec2_host}:
+scp -r rte ${ec2_host}:
 ssh -t ${ec2_host} 'mkdir -p python'
 scp python/whiplash.py ${ec2_host}:python/
 scp -r tsp_ising_mapper ${ec2_host}:
@@ -25,5 +25,5 @@ scp cloud.yml ${ec2_host}:
 ssh -t ${ec2_host} 'docker login -u iliazin -p whipass -e iliazin@gmail.com'
 ssh -t ${ec2_host} 'docker-compose -f cloud.yml up -d'
 ssh -t ${ec2_host} 'mkdir -p logs && mkdir -p logs/users'
-ssh -t ${ec2_host} 'python3 scheduler/create_token.py localhost 1337 test test'
-ssh -t ${ec2_host} 'python3 scheduler/scheduler_users.py --local --host localhost --port 1337 --num_cpus 8'
+ssh -t ${ec2_host} 'python3 rte/create_token.py localhost 1337 test test'
+ssh -t ${ec2_host} 'python3 rte/manager.py --local --host localhost --port 1337 --num_cpus 8'

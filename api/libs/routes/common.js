@@ -3,10 +3,45 @@ var log = require(libs + 'log')(module);
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-var hash = require('object-hash');
-
+//var hash = require('object-hash');
 var crypto = require('crypto');
-function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
+var Property = require(libs + 'schemas/property');
+var Executable = require(libs + 'schemas/executable');
+
+var collections = {'executables': Executable, 'properties': Property};
+
+function validate(collection, objs, user_id, cb) {
+    log.debug('validate '+collection.collectionName);
+    for (var i=0; i<objs.length; i++) {
+        objs[i]['owner'] = user_id;
+    }
+    var bad_objs = [];
+    if (collections.hasOwnProperty(collection.collectionName)) {
+        var schema = collections[collection.collectionName];
+        for (var i=0; i<objs.length; i++) {
+            for (var key in schema) {
+                if (!objs[i].hasOwnProperty(key)) {
+                    if (schema[key].required) {
+                        if (!schema[key].hasOwnProperty('default')) {
+                            bad_objs.push({'index': i, 'key': key});
+                            continue;
+                        }
+                        objs[i][key] = schema[key].default;
+                    }
+                }
+            }
+        }
+    }
+    if (bad_objs.length === 0) {
+        cb(0, objs);
+    } else {
+        cb(bad_objs, 0);
+    }
+}
+
+function checksum(str) {
+    return crypto.createHash('md5').update(str, 'utf8').digest('hex');
+}
 
 function get_sorted_keys(obj) {
     var keys = [];
@@ -21,13 +56,21 @@ function get_sorted_keys(obj) {
 
 function smart_stringify(obj) {
     var keys = get_sorted_keys(obj);
-    console.log(JSON.stringify(keys));
     var str = "{";
     for(var i=0; i<keys.length; i++) {
-        str += "\""+keys[i]+"\":"+JSON.stringify(obj[keys[i]])+",";
+        str += "\""+keys[i]+"\":";
+        if (typeof(obj[keys[i]]) === 'object') {
+            str += smart_stringify(obj[keys[i]]);
+        } else {
+            str += JSON.stringify(obj[keys[i]])+",";
+        }
     }
     str += "}";
     return str;
+}
+
+function hash(obj) {
+    return checksum(smart_stringify(obj));
 }
 
 function get_gridfs_filter(filter) {
@@ -85,6 +128,13 @@ function concaternate(o1, o2) {
 }
 
 module.exports = {
+    //
+    // Hash
+    //
+
+    hash: function(obj) {
+        return checksum(smart_stringify(obj));
+    },
 
     //
     // Get payload
@@ -166,41 +216,17 @@ module.exports = {
     },
 
     //
-    // Validate
-    //
-
-    validate: function(ObjType, objs, user_id, cb) {
-        for(var i=0; i<objs.length; i++) {
-            objs[i].owner = user_id;
-            var obj = new ObjType(objs[i]);
-            var err = obj.validateSync();
-            if (!err) {
-                obj = obj.toObject();
-                delete objs[i]['_id'];
-                for(var field in obj) {
-                    if (!objs[i].hasOwnProperty(field) && field !== '_id'){
-                        objs[i][field] = obj[field];
-                    }
-                }
-            } else {
-                cb(err);
-            }
-        }
-        cb(null);
-    },
-
-    //
     // Return
     //
 
-    return: function(res,err,obj) {
+    return: function(res, err, obj) {
         if (!err) {
             if (isNaN(obj)) {
                 var x = obj.length;
                 if (isNaN(x)) {
                     log.debug('returning object');
                 } else {
-                    log.debug('returning %d objects',obj.length);
+                    log.debug('returning %d objects', obj.length);
                 }
             } else {
                 log.debug('returning '+JSON.stringify(obj));
@@ -292,90 +318,104 @@ module.exports = {
     // Commit
     //
 
-    commit: function(ObjType, collection, objs, user_id, res, cb) {
+    commit: function(collection, orig_objs, user_id, res, cb) {
         log.debug('commit '+collection.collectionName);
-        this.validate(ObjType, objs, user_id, function(err) {
-            if(err) {
-                cb(res,err,0);
+        var ids = [];
+        var max_chunk_size = 10000;
+        var commit_next_chunk = function(chunk_i, chunk_j) {
+            if (chunk_i === orig_objs.length) {
+                cb(res,0,ids);
             } else {
-                if(objs.length === 0) {
-                    cb(res,0,[]);
-                } else {
-                    var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
-                    for(var i=0; i<objs.length; i++) {
-                        objs[i]['commit_tag'] = commit_tag;
-                        if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = hash(objs[i].params);
-                        } else if (collection.collectionName === "queries") {
-                            objs[i]['md5'] = hash(objs[i]['filters'])+hash(objs[i]['fields']);
-                            objs[i]['filters'] = smart_stringify(objs[i].filters);
-                        }
-                    }
-                    var batch = [];
-                    for(var i=0; i<objs.length; i++) {
-                        var filter = {};
-                        if (collection.collectionName === "fs.files") {
-                            filter['md5'] = objs[i]['md5'];
-                            filter['metadata'] = {};
-                            filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
-                            filter['metadata']['owner'] = objs[i]['metadata']['owner'];
-                        }
-                        else if(collection.collectionName === "executables") {
-                            filter['name'] = objs[i]['name'];
-                            filter['algorithm'] = objs[i]['algorithm'];
-                            filter['version'] = objs[i]['version'];
-                            filter['build'] = objs[i]['build'];
-                            filter['owner'] = objs[i]['owner'];
-                        }
-                        else if (collection.collectionName === "properties") {
-                            filter['input_model_id'] = objs[i]['input_model_id'];
-                            filter['executable_id'] = objs[i]['executable_id'];
-                            filter['md5'] = objs[i]['md5'];
-                            filter['owner'] = objs[i]['owner'];
-                        }
-                        else if (collection.collectionName === "queries") {
-                            filter['owner'] = objs[i]['owner'];
-                            filter['md5'] = objs[i]['md5'];
-                        }
-                        else if (collection.collectionName === "collaborations") {
-                            filter['name'] = objs[i]['name'];
-                        }
-                        else if (collection.collectionName === "users") {
-                            filter['username'] = objs[i]['username'];
-                        }
-                        else if (collection.collectionName === "clients") {
-                            filter['name'] = objs[i]['name'];
-                        }
-                        else if (collection.collectionName === "work_batches") {
-                            filter['timestamp'] = objs[i]['timestamp'];
-                        }
-                        batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                    }
-                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
-                        if (result.ok) {
-                            log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
-                            log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
-                            log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
+                validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
+                    if(err) {
+                        cb(res,err,0);
+                    } else {
+                        if(objs.length === 0) {
+                            cb(res,0,[]);
+                        } else {
+                            log.debug('hash objects');
+                            var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
+                            for(var i=0; i<objs.length; i++) {
+                                objs[i]['commit_tag'] = commit_tag;
+                                if (collection.collectionName === "properties") {
+                                    objs[i]['md5'] = hash(objs[i].params);
+                                } else if (collection.collectionName === "queries") {
+                                    objs[i]['md5'] = hash(objs[i]['filters']) + hash(objs[i]['fields']);
+                                    objs[i]['filters'] = smart_stringify(objs[i].filters);
+                                }
+                            }
+                            log.debug('form commit filter');
                             var batch = [];
                             for(var i=0; i<objs.length; i++) {
-                                batch.push({ insertOne: { document : objs[i] } });
+                                var filter = {};
+                                if (collection.collectionName === "fs.files") {
+                                    filter['metadata'] = {};
+                                    filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
+                                    filter['metadata']['owner'] = objs[i]['metadata']['owner'];
+                                    filter['metadata']['md5'] = objs[i]['metadata']['md5'];
+                                }
+                                else if(collection.collectionName === "executables") {
+                                    filter['name'] = objs[i]['name'];
+                                    filter['algorithm'] = objs[i]['algorithm'];
+                                    filter['version'] = objs[i]['version'];
+                                    filter['build'] = objs[i]['build'];
+                                    filter['owner'] = objs[i]['owner'];
+                                }
+                                else if (collection.collectionName === "properties") {
+                                    filter['input_model_id'] = objs[i]['input_model_id'];
+                                    filter['executable_id'] = objs[i]['executable_id'];
+                                    filter['md5'] = objs[i]['md5'];
+                                    filter['owner'] = objs[i]['owner'];
+                                }
+                                else if (collection.collectionName === "queries") {
+                                    filter['owner'] = objs[i]['owner'];
+                                    filter['md5'] = objs[i]['md5'];
+                                }
+                                else if (collection.collectionName === "collaborations") {
+                                    filter['name'] = objs[i]['name'];
+                                }
+                                else if (collection.collectionName === "users") {
+                                    filter['username'] = objs[i]['username'];
+                                }
+                                else if (collection.collectionName === "clients") {
+                                    filter['name'] = objs[i]['name'];
+                                }
+                                else if (collection.collectionName === "work_batches") {
+                                    filter['timestamp'] = objs[i]['timestamp'];
+                                }
+                                batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
                             }
-                            collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
+                            log.debug('apply commit tag');
+                            collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
                                 if (result.ok) {
-                                    log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
-                                    log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
-                                    log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
-                                    res.nInserted = result.nInserted;
-                                    var tag_filter = {'commit_tag':commit_tag};
-                                    var proj = {'_id':1};
-                                    collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                                        if (!err) {
-                                            var ids = [];
-                                            for(var j=0; j<objs.length; j++) {
-                                                ids.push(objs[j]['_id']);
-                                            }
-                                            log.debug('found %d objects',objs.length);
-                                            cb(res,0,ids);
+                                    log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
+                                    log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
+                                    log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
+                                    var batch = [];
+                                    for(var i=0; i<objs.length; i++) {
+                                        batch.push({ insertOne: { document : objs[i] } });
+                                    }
+                                    log.debug('attempt insertion');
+                                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
+                                        if (result.ok) {
+                                            log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
+                                            log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
+                                            log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
+                                            res.nInserted = result.nInserted;
+                                            var tag_filter = {'commit_tag': commit_tag};
+                                            var proj = {'_id':1};
+                                            log.debug('get object ids');
+                                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                                if (!err) {
+                                                    for(var j=0; j<objs.length; j++) {
+                                                        ids.push(objs[j]['_id']);
+                                                    }
+                                                    log.debug('found %d objects',objs.length);
+                                                    commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
+                                                } else {
+                                                    cb(res,err,0);
+                                                }
+                                            });
                                         } else {
                                             cb(res,err,0);
                                         }
@@ -384,13 +424,12 @@ module.exports = {
                                     cb(res,err,0);
                                 }
                             });
-                        } else {
-                            cb(res,err,0);
                         }
-                    });
-                }
+                    }
+                });
             }
-        });
+        };
+        commit_next_chunk(0, Math.min(orig_objs.length, max_chunk_size));
     },
 
     //
@@ -416,7 +455,7 @@ module.exports = {
     // Replace
     //
 
-    replace: function(ObjType, collection, objs, user_id, res, cb) {
+    replace: function(collection, objs, user_id, res, cb) {
         log.debug('replace '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
