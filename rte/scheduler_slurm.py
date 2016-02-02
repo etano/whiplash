@@ -45,10 +45,7 @@ def scheduler(args):
     while True:
         num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
         if (db.collection('work_batches').count({}) > 0) and (num_pending == 0):
-            if (args.time_limit > 0):
-                submit_job(args)
-            else:
-                logging.info('time_limit: %i', args.time_limit)
+            submit_job(args)
         time.sleep(1)
 
     logging.info('slurm scheduler shutting down')
