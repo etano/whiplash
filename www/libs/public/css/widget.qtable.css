@@ -1,3 +1,8 @@
+widget.qtable {
+    display: block;
+    position: relative;
+    width: auto;
+}
 widget.qtable div.row {
     display: table-row;
     height: 40px;
@@ -109,4 +114,8 @@ widget.qtable div.duplicate {
     position: absolute;
     right: 10px;
     top: 10px;
+}
+
+widget.qtable textarea {
+    resize: none;
 }

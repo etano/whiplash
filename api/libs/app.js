@@ -20,8 +20,8 @@ var models = require('./routes/models');
 var executables = require('./routes/executables');
 var collaborations = require('./routes/collaborations');
 var properties = require('./routes/properties');
+var queries = require('./routes/queries');
 var work_batches = require('./routes/work_batches');
-var jobs = require('./routes/jobs');
 var oauth2 = require('./auth/oauth2');
 
 var allowCrossDomain = function(req, res, next) {
@@ -49,8 +49,8 @@ app.use('/api/models', models);
 app.use('/api/executables', executables);
 app.use('/api/collaborations', collaborations);
 app.use('/api/properties', properties);
+app.use('/api/queries', queries);
 app.use('/api/work_batches', work_batches);
-app.use('/api/jobs', jobs);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next){

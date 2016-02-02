@@ -2,6 +2,7 @@ var api_addr;
 var server_token;
 var session_token;
 var refresh_token;
+var viewport_origin;
 
 function redirect(path){
     var www_server = window.location.host;
@@ -40,8 +41,8 @@ function indicateMenu(id){
 
     if( $(window).scrollTop() > 92 ){
         $(window).scrollTop(0);
-        $("section#menu, section#tagline, div#title").css({top: "-=100px"});
-        $("section#menu, section#tagline, div#title").animate({top: "+=100px"}, "fast");
+        $("section#menu, div#title").css({top: "-=100px"});
+        $("section#menu, div#title").animate({top: "+=100px"}, "fast");
     }
 }
 
@@ -58,8 +59,27 @@ function makeWidgets(view){
 }
 
 function transition(target){
+
     if(target.position().left > 0) return;
     indicateMenu(target.attr("id"));
+
+    if(target.hasClass("meta")){
+        var view = $("section#viewport");
+        view.delay(300).animate({opacity: 1}, 300);
+        if(viewport_origin) viewport_origin.append(view.children(":not(div.limit)"));
+        viewport_origin = target;
+
+        view.empty();
+        view.append("<div class='limit'></div>");
+        view.append(target.children());
+        view.append("<div class='limit'></div>");
+        target = view;
+    }else if(viewport_origin){
+        viewport_origin.append($("section#viewport").children(":not(div.limit)"));
+        $("section#viewport").css({opacity: 0});
+        viewport_origin = false;
+    }
+
     makeWidgets(target);
     $(".transit").css("left", "-50%");
 
@@ -81,11 +101,24 @@ function viewQueries(){
     loadQueries();
 }
 
+function composeQuery(){
+    transition($("section#compose-query"));
+    indicateMenu("compose-query");
+}
+
 function viewMain(){
     $("section#menu > div.hidden").removeClass("hidden");
     $("section#menu > div#login").addClass("hidden");
     $("section#menu > div#register").addClass("hidden");
     composeQuery();
+}
+
+function viewLogin(){
+    $("section#menu > div.hidden").removeClass("hidden");
+    $("section#menu > div#logout").addClass("hidden");
+    $("section#menu > div#view-queries").addClass("hidden");
+    $("section#menu > div#compose-query").addClass("hidden");
+    transition($("section#login"));
 }
 
 function roundCentering(){
@@ -101,7 +134,7 @@ function roundCentering(){
 $(document).ready(function(){
     roundCentering();
 
-    $(document).on("click", "div#title, section#tagline",     function(){ transition($("section#quickstart"));   });
+    $(document).on("click", "div#title",                      function(){ redirect("/"); });
     $(document).on("click", "section#login div#forgot",       function(){ transition($("section#forgot"));       });
     $(document).on("click", "section#menu div#login",         function(){ transition($("section#login"));        });
     $(document).on("click", "section#menu div#register",      function(){ transition($("section#register"));     });
@@ -120,5 +153,6 @@ $(document).ready(function(){
     session_token = getCookie("session_token");
     refresh_token = getCookie("refresh_token");
     if(session_token) setTimeout(function(){ viewMain(); }, 1000);
+    else setTimeout(function(){ viewLogin(); }, 100);
     //viewMain();
 });

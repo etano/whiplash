@@ -1,0 +1,30 @@
+odb:
+    image: whiplash/odb
+    restart: always
+    ports:
+        - "27017:27017"
+    command: --auth
+api:
+    image: whiplash/api
+    restart: always
+    environment:
+        MONGO_API_USERNAME: api
+        MONGO_API_PASSWORD: haYrv{Ak9UJiaDsqVTe7rLJTc
+    ports:
+        - "1337:1337"
+    links:
+        - odb:mongo
+    command: sh -c "sleep 15; node bin/createUser.js test test; node bin/createClient.js test-python test-python test; node bin/createClient.js test-scheduler test-scheduler test; node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node bin/api"
+rte:
+    image: whiplash/rte
+    restart: always
+    links:
+        - api:api
+    environment:
+        HOST_PATH: $PWD
+    volumes:
+        - $PWD:/host
+        - /var/run/docker.sock:/run/docker.sock
+        - $DOCKER_PATH:/bin/docker
+        - /usr/lib/x86_64-linux-gnu/libapparmor.so.1.1.0:/usr/lib/x86_64-linux-gnu/libapparmor.so.1
+    command: sh -c "sleep 30; python3 rte/create_token.py api 1337 test test && python3 rte/manager.py --local --docker --host api --port 1337"

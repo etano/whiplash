@@ -1,45 +1,38 @@
 function loadQueries(){
     $.ajax({
         type: 'GET',
-        url: api_addr+"/api/jobs/stats/",
-        data: { "access_token"  : session_token },
+        url: api_addr+"/api/queries/status/all",
+        data: {"access_token": session_token},
         success: function(data){
-            if(data.result.count == 0) {
-                $("section#view-queries div#info").html("No queries to display at the moment.");
+            var status = data.result;
+            if(status.length === 0) {
+                $("section#viewport div.queries#info").html("No queries to display at the moment.");
             } else {
-                $("section#view-queries div#info").empty();
-                for(var i = 0; i < data.result.count; i++){
-                    var name = data.result.stats[i].name;
-                    var time = data.result.stats[i].time;
-                    var done = parseInt(data.result.stats[i].done);
-                    var togo = parseInt(data.result.stats[i].togo);
-                    var now  = parseInt(data.result.stats[i].now);
-                    var batch_id = data.result.stats[i].batch_id;
-                    var submitted = data.result.stats[i].submitted;
+                $("section#viewport div.queries#info").empty();
+                for (var i=0; i<status.length; i++) {
+                    var id = status[i]._id;
+                    var timestamp = status[i].timestamp;
+                    var resolved = parseInt(status[i]['resolved']);
+                    var unresolved = parseInt(status[i]['unresolved']);
+                    var total = parseInt(status[i]['total']);
+                    var pulled = parseInt(status[i]['pulled']);
+                    var errored = parseInt(status[i]['errored']);
+                    var running = parseInt(status[i]['running']);
+                    var notfound = parseInt(status[i]['not found']);
+                    var timedout = parseInt(status[i]['timed out']);
 
                     var stat = "OK";
                     var progress = 100;
-                    if(togo > 0 || now > 0){
-                        stat = done + "/" + (done + togo + now);
-                        progress = Math.floor(done * 100 / (done + togo + now));
+                    if (resolved < total){
+                        stat = resolved + "/" + total;
+                        progress = Math.floor(resolved * 100 / total);
                     }
-                    if(submitted){
-                        $("section#view-queries div#info").append("<div class='record' batch='" + batch_id + "'>" +
-                                                                "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
-                                                                "<div class='name'>" + name + "</div>" +
-                                                                "<div class='date'>" + time + "</div>" +
-                                                                "<div class='progress'><progress max='100' value='" + progress + "'></progress></div>" +
-                                                                "<div class='status'>" + stat + "</div>" +
-                                                             "</div>");
-                    }else{
-                        $("section#view-queries div#info").append("<div class='record mock' batch='" + batch_id + "'>" +
-                                                                "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
-                                                                "<div class='name'>" + name + "</div>" +
-                                                                "<div class='date'>" + time + "</div>" +
-                                                                "<div class='progress'>Not submitted</div>" +
-                                                                "<div class='status'></div>" +
-                                                             "</div>");
-                    }
+                    $("section#viewport div.queries#info").append("<div class='record' id='" + id + "'>" +
+                                                            "<div class='shortcuts'><div class='delete'>&#xd7;</div></div>" +
+                                                            "<div class='date'>" + timestamp + "</div>" +
+                                                            "<div class='progress'><progress max='100' value='" + progress + "'></progress></div>" +
+                                                            "<div class='status'>" + stat + "</div>" +
+                                                         "</div>");
                 }
             }
         },
@@ -51,12 +44,13 @@ function loadQueries(){
 
 function deleteQuery(){
     var query = $(this).parent().parent();
-    var batch_id = query.attr("batch");
+    var id = query.attr("id");
 
     $.ajax({
         type: 'DELETE',
-        url: api_addr+"/api/jobs/"+batch_id,
-        data: { "access_token"  : session_token },
+        url: api_addr+"/api/queries/",
+        data: {"access_token": session_token,
+               "_id": id},
         success: function(data){
             query.remove();
         },
@@ -66,6 +60,12 @@ function deleteQuery(){
     });
 }
 
+function downloadQuery(){
+    var batch_id = $(this).parent().attr("id");
+    window.location = api_addr+"/api/queries/"+batch_id+"/download?access_token="+session_token;
+}
+
 $(document).ready(function(){
-    $(document).on("click", "section#view-queries div.delete", deleteQuery);
+    $(document).on("click", "section#viewport > div.queries#info div.delete", deleteQuery);
+    $(document).on("click", "section#viewport > div.queries#info div.date", downloadQuery);
 });

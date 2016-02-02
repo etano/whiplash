@@ -8,6 +8,7 @@ var www = process.cwd() + '/libs/public/';
 var cached_index = fs.readFileSync( www + 'index.html' );
 
 var api_addr = config.get('api_address');
+console.log('api address:',api_addr);
 var server_token = config.get('WebAccessToken');
 
 router.use('/css', express.static( www + "/css" ));

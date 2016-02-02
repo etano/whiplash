@@ -18,7 +18,8 @@ COPY libs /src/libs
 
 # building docs
 COPY docs /src/docs
-RUN mv docs/mkdocs.yml . && mkdocs build
+RUN mv docs/mkdocs.yml .
+RUN mkdocs build
 
 # expose port
 EXPOSE 80

@@ -1,12 +1,156 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-
+//var hash = require('object-hash');
 var crypto = require('crypto');
-function checksum (str) {return crypto.createHash('md5').update(str, 'utf8').digest('hex');}
+var Property = require(libs + 'schemas/property');
+var Executable = require(libs + 'schemas/executable');
+
+var collections = {'executables': Executable, 'properties': Property};
+
+function validate(collection, objs, user_id, cb) {
+    log.debug('validate '+collection.collectionName);
+    for (var i=0; i<objs.length; i++) {
+        objs[i]['owner'] = user_id;
+    }
+    var bad_objs = [];
+    if (collections.hasOwnProperty(collection.collectionName)) {
+        var schema = collections[collection.collectionName];
+        for (var i=0; i<objs.length; i++) {
+            for (var key in schema) {
+                if (!objs[i].hasOwnProperty(key)) {
+                    if (schema[key].required) {
+                        if (!schema[key].hasOwnProperty('default')) {
+                            bad_objs.push({'index': i, 'key': key});
+                            continue;
+                        }
+                        objs[i][key] = schema[key].default;
+                    }
+                }
+            }
+        }
+    }
+    if (bad_objs.length === 0) {
+        cb(0, objs);
+    } else {
+        cb(bad_objs, 0);
+    }
+}
+
+function checksum(str) {
+    return crypto.createHash('md5').update(str, 'utf8').digest('hex');
+}
+
+function get_sorted_keys(obj) {
+    var keys = [];
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            keys.push(key);
+        }
+    }
+    keys.sort();
+    return keys;
+}
+
+function smart_stringify(obj) {
+    var keys = get_sorted_keys(obj);
+    var str = "{";
+    for(var i=0; i<keys.length; i++) {
+        str += "\""+keys[i]+"\":";
+        if (typeof(obj[keys[i]]) === 'object') {
+            str += smart_stringify(obj[keys[i]]);
+        } else {
+            str += JSON.stringify(obj[keys[i]])+",";
+        }
+    }
+    str += "}";
+    return str;
+}
+
+function hash(obj) {
+    return checksum(smart_stringify(obj));
+}
+
+function get_gridfs_filter(filter) {
+    var special = ['$or','$and','$not','$nor'];
+    var new_filter = {};
+    for(var key in filter) {
+        if(key === '_id') {
+            new_filter['_id'] = filter[key];
+        } else if(~special.indexOf(key)) {
+            new_filter[key] = [];
+            for (var i = 0; i < filter[key].length; i++) {
+                new_filter[key].push(get_gridfs_filter(filter[key][i]));
+            }
+        } else {
+            if(filter.hasOwnProperty(key)) {
+                new_filter["metadata."+key] = filter[key];
+            }
+        }
+    }
+    return new_filter;
+}
+
+function get_gridfs_metadata_fields(fields) {
+    var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
+    var metadata_fields = [];
+    for(var i=0; i<fields.length; i++) {
+        if((!~special.indexOf(fields[i])) && (!~fields[i].indexOf('content.'))) {
+            metadata_fields.push('metadata.' + fields[i]);
+        } else {
+            metadata_fields.push(fields[i]);
+        }
+    }
+    return metadata_fields;
+}
+
+function get_gridfs_content_fields(fields) {
+    if (fields.length === 0) {
+        return ['content'];
+    } else {
+        var content_fields = [];
+        for(var i=0; i<fields.length; i++) {
+            if((fields[i] === 'content') || (~fields[i].indexOf('content.'))) {
+                content_fields.push(fields[i]);
+            }
+        }
+        return content_fields;
+    }
+}
+
+function concaternate(o1, o2) {
+    for (var key in o2) {
+        o1[key] = o2[key];
+    }
+    return o1;
+}
 
 module.exports = {
+    //
+    // Hash
+    //
+
+    hash: function(obj) {
+        return checksum(smart_stringify(obj));
+    },
+
+    //
+    // Get payload
+    //
+
+    get_payload: function(req, key) {
+        if (!req.query[key]) {
+            if (!req.body[key]) {
+                return req.body;
+            } else {
+                return req.body[key];
+            }
+        } else {
+            return JSON.parse(req.query[key]);
+        }
+    },
 
     //
     // Permissions
@@ -53,58 +197,46 @@ module.exports = {
 
                     // Prepend metadata for models
                     if (collection.collectionName === "fs.files") {
-                        var new_filter = {};
-                        for(var key in filter) {
-                            if(key !== '_id') {
-                                if(filter.hasOwnProperty(key)) {
-                                    new_filter["metadata."+key] = filter[key];
-                                }
-                            } else {
-                                new_filter['_id'] = filter[key];
-                            }
-                        }
-                        filter = new_filter;
+                        filter = get_gridfs_filter(filter);
                     }
 
                     // Callback with filter
                     cb(filter);
                 });
             });
-        }
-    },
-
-    //
-    // Validate
-    //
-
-    validate: function(ObjType, objs, user_id, cb) {
-        for(var i=0; i<objs.length; i++) {
-            objs[i].owner = user_id;
-            var obj = new ObjType(objs[i]);
-            var err = obj.validateSync();
-            if (!err) {
-                obj = obj.toObject();
-                delete objs[i]['_id'];
-                for(var field in obj) {
-                    if (!objs[i].hasOwnProperty(field) && field !== '_id'){
-                        objs[i][field] = obj[field];
-                    }
-                }
-            } else {
-                cb(err);
+        } else {
+            // Prepend metadata for models
+            if (collection.collectionName === "fs.files") {
+                filter = get_gridfs_filter(filter);
             }
+
+            // Callback with filter
+            cb(filter);
         }
-        cb(null);
     },
 
     //
     // Return
     //
 
-    return: function(res,err,obj) {
+    return: function(res, err, obj) {
         if (!err) {
+            if (isNaN(obj)) {
+                var x = obj.length;
+                if (isNaN(x)) {
+                    log.debug('returning object');
+                } else {
+                    log.debug('returning %d objects', obj.length);
+                }
+            } else {
+                log.debug('returning '+JSON.stringify(obj));
+            }
             return res.json({status: 'OK', result: obj});
         } else {
+            log.error(JSON.stringify(err));
+            if (!res.hasOwnProperty('statusCode')) {
+                res.statusCode = 500;
+            }
             return res.json({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
@@ -113,74 +245,70 @@ module.exports = {
     // Query
     //
 
-    query: function(collection, filter, user_id, res, cb) {
+    query: function(collection, filter, fields, user_id, res, cb) {
+        log.debug('query '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
-            collection.find(filter).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
-                    log.info("Found %d objects in %s",objs.length,collection.collectionName);
-                    cb(res,0,objs);
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+            if (fields.length > 0) {
+                var new_fields = fields;
+                if (collection.collectionName === "fs.files") {
+                    new_fields = get_gridfs_metadata_fields(fields);
                 }
-            });
+                var proj = {};
+                for(var i=0; i<new_fields.length; i++) {
+                    proj[new_fields[i]] = 1;
+                }
+                collection.find(filter).project(proj).toArray(function (err, objs) {
+                    if (!err) {
+                        if (collection.collectionName === "fs.files") {
+                            for(var i=0; i<objs.length; i++){
+                                if(objs[i].hasOwnProperty('metadata')) {
+                                    var metadata = objs[i].metadata;
+                                    delete objs[i].metadata;
+                                    for(var key in metadata){
+                                        objs[i][key] = metadata[key];
+                                    }
+                                }
+                            }
+                        }
+                        log.debug('found %d objects',objs.length);
+                        cb(res,0,objs);
+                    } else {
+                        cb(res,err,0);
+                    }
+                });
+            } else {
+                collection.find(filter).toArray(function (err, objs) {
+                    if (!err) {
+                        if (collection.collectionName === "fs.files") {
+                            for(var i=0; i<objs.length; i++){
+                                if(objs[i].hasOwnProperty('metadata')) {
+                                    var metadata = objs[i].metadata;
+                                    delete objs[i].metadata;
+                                    for(var key in metadata){
+                                        objs[i][key] = metadata[key];
+                                    }
+                                }
+                            }
+                        }
+                        log.debug('found %d objects',objs.length);
+                        cb(res,0,objs);
+                    } else {
+                        cb(res,err,0);
+                    }
+                });
+            }
         });
     },
 
-    query_one: function(collection, filter, user_id, res, cb) {
-        this.form_filter(collection, filter, user_id, function(filter) {
-            collection.find(filter).limit(1).toArray(function (err, obj) {
-                if(!obj) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
-                    log.info("Query single object in %s",collection.collectionName);
-                    cb(res,0,obj[0]);
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
-                }
-            });
-        });
-    },
-
-    query_count: function(collection, filter, user_id, res, cb) {
+    count: function(collection, filter, user_id, res, cb) {
+        log.debug('count '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
-                    log.info("Counting %d objects in %s",count,collection.collectionName);
+                    log.debug('found %d objects', count);
                     cb(res,0,count);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
-                }
-            });
-        });
-    },
-
-    query_fields_only: function(collection, filter, fields, user_id, res, cb) {
-        this.form_filter(collection, filter, user_id, function(filter) {
-            var proj = {};
-            for(var i=0; i<fields.length; i++){
-                proj[fields[i]] = 1;
-            }
-            collection.find(filter).project(proj).toArray(function (err, objs) {
-                if(!objs) {
-                    res.statusCode = 404;
-                    cb(res,"Not found",0);
-                } else if (!err) {
-                    log.info("Querying fields in %s",collection.collectionName);
-                    cb(res,0,objs);
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res,err,0);
                 }
             });
         });
@@ -190,65 +318,118 @@ module.exports = {
     // Commit
     //
 
-    commit: function(ObjType, collection, objs, user_id, res, cb) {
-        this.validate(ObjType, objs, user_id, function(err) {
-            if(err) {
-                if(err.name === 'ValidationError') {
-                    res.statusCode = 400;
-                    log.error('Validation error(%d): %s', res.statusCode, err.message);
-                    cb(res,err.message,0);
-                } else {
-                    res.statusCode = 500;
-                    log.error('Server error(%d): %s', res.statusCode, err.message);
-                    cb(res,err.message,0);
-                }
+    commit: function(collection, orig_objs, user_id, res, cb) {
+        log.debug('commit '+collection.collectionName);
+        var ids = [];
+        var max_chunk_size = 10000;
+        var commit_next_chunk = function(chunk_i, chunk_j) {
+            if (chunk_i === orig_objs.length) {
+                cb(res,0,ids);
             } else {
-                if(objs.length === 0) {
-                    cb(res,0,[]);
-                } else {
-                    var batch = [];
-                    var unix_time = String(Math.round(new Date().getTime() / 1000));
-                    var commit_tag = user_id + unix_time;
-                    for(var i=0; i<objs.length; i++) {
-                        if (collection.collectionName === "properties") {
-                            objs[i]['md5'] = checksum(JSON.stringify(objs[i].params));
-                        }
-                        objs[i]['commit_tag'] = commit_tag;
-                        batch.push({ updateOne: { filter: objs[i], update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                        batch.push({ insertOne: { document : objs[i] } });
-                    }
-                    collection.bulkWrite(batch,{w:1},function(err,result) {
-                        if (result.ok) {
-                            log.info("%s objects modified", String(result.modifiedCount));
-                            log.info("%s objects inserted", String(result.insertedCount));
-                            var tag_filter = {'commit_tag':commit_tag};
-                            var proj = {'_id':1};
-                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
-                                if(!objs) {
-                                    res.statusCode = 404;
-                                    cb(res,"Not found",0);
-                                } else if (!err) {
-                                    var ids = [];
-                                    for(var j=0; j<objs.length; j++) {
-                                        ids.push(objs[j]['_id']);
+                validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
+                    if(err) {
+                        cb(res,err,0);
+                    } else {
+                        if(objs.length === 0) {
+                            cb(res,0,[]);
+                        } else {
+                            log.debug('hash objects');
+                            var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
+                            for(var i=0; i<objs.length; i++) {
+                                objs[i]['commit_tag'] = commit_tag;
+                                if (collection.collectionName === "properties") {
+                                    objs[i]['md5'] = hash(objs[i].params);
+                                } else if (collection.collectionName === "queries") {
+                                    objs[i]['md5'] = hash(objs[i]['filters']) + hash(objs[i]['fields']);
+                                    objs[i]['filters'] = smart_stringify(objs[i].filters);
+                                }
+                            }
+                            log.debug('form commit filter');
+                            var batch = [];
+                            for(var i=0; i<objs.length; i++) {
+                                var filter = {};
+                                if (collection.collectionName === "fs.files") {
+                                    filter['metadata'] = {};
+                                    filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
+                                    filter['metadata']['owner'] = objs[i]['metadata']['owner'];
+                                    filter['metadata']['md5'] = objs[i]['metadata']['md5'];
+                                }
+                                else if(collection.collectionName === "executables") {
+                                    filter['name'] = objs[i]['name'];
+                                    filter['algorithm'] = objs[i]['algorithm'];
+                                    filter['version'] = objs[i]['version'];
+                                    filter['build'] = objs[i]['build'];
+                                    filter['owner'] = objs[i]['owner'];
+                                }
+                                else if (collection.collectionName === "properties") {
+                                    filter['input_model_id'] = objs[i]['input_model_id'];
+                                    filter['executable_id'] = objs[i]['executable_id'];
+                                    filter['md5'] = objs[i]['md5'];
+                                    filter['owner'] = objs[i]['owner'];
+                                }
+                                else if (collection.collectionName === "queries") {
+                                    filter['owner'] = objs[i]['owner'];
+                                    filter['md5'] = objs[i]['md5'];
+                                }
+                                else if (collection.collectionName === "collaborations") {
+                                    filter['name'] = objs[i]['name'];
+                                }
+                                else if (collection.collectionName === "users") {
+                                    filter['username'] = objs[i]['username'];
+                                }
+                                else if (collection.collectionName === "clients") {
+                                    filter['name'] = objs[i]['name'];
+                                }
+                                else if (collection.collectionName === "work_batches") {
+                                    filter['timestamp'] = objs[i]['timestamp'];
+                                }
+                                batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                            }
+                            log.debug('apply commit tag');
+                            collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
+                                if (result.ok) {
+                                    log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
+                                    log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
+                                    log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
+                                    var batch = [];
+                                    for(var i=0; i<objs.length; i++) {
+                                        batch.push({ insertOne: { document : objs[i] } });
                                     }
-                                    log.info("Querying fields in %s",collection.collectionName);
-                                    cb(res,0,ids);
+                                    log.debug('attempt insertion');
+                                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
+                                        if (result.ok) {
+                                            log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
+                                            log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
+                                            log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
+                                            res.nInserted = result.nInserted;
+                                            var tag_filter = {'commit_tag': commit_tag};
+                                            var proj = {'_id':1};
+                                            log.debug('get object ids');
+                                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                                if (!err) {
+                                                    for(var j=0; j<objs.length; j++) {
+                                                        ids.push(objs[j]['_id']);
+                                                    }
+                                                    log.debug('found %d objects',objs.length);
+                                                    commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
+                                                } else {
+                                                    cb(res,err,0);
+                                                }
+                                            });
+                                        } else {
+                                            cb(res,err,0);
+                                        }
+                                    });
                                 } else {
-                                    res.statusCode = 500;
-                                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                                    cb(res,err.message,0);
+                                    cb(res,err,0);
                                 }
                             });
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                            cb(res,err.message,0);
                         }
-                    });
-                }
+                    }
+                });
             }
-        });
+        };
+        commit_next_chunk(0, Math.min(orig_objs.length, max_chunk_size));
     },
 
     //
@@ -256,22 +437,26 @@ module.exports = {
     //
 
     update: function(collection, filter, update, user_id, res, cb) {
+        log.debug('update '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
-                    log.info("%d objects updated",result.modifiedCount);
+                    log.debug('updated %d objects',result.modifiedCount);
                     cb(res,0,result.modifiedCount);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res,err,0);
                 }
             });
         });
     },
 
-    replace: function(ObjType, collection, objs, user_id, res, cb) {
+    //
+    // Replace
+    //
+
+    replace: function(collection, objs, user_id, res, cb) {
+        log.debug('replace '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
         for(var i=0; i<objs.length; i++) {
@@ -281,27 +466,31 @@ module.exports = {
         }
         collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
-                log.info("%s new objects replaced", String(result.modifiedCount));
-                cb(res,0,result.modifiedCount);
+                log.debug('replaced %d objects', result.modifiedCount);
+                cb(res, 0, result.modifiedCount);
             } else {
-                res.statusCode = 500;
-                log.error('Write error: %s %s', err.message, result.getWriteErrors());
-                cb(res,err.message,0);
+                cb(res, err, 0);
             }
         });
     },
 
-    find_one_and_update: function(collection, filter, update, user_id, res, cb) {
-        // FIXME: user can inadvertantly give access to someone else
+    //
+    // Pop
+    //
+
+    pop: function(collection, filter, sort, user_id, res, cb) {
+        log.debug('pop '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
-            collection.findOneAndUpdate(filter, update, {w:1}, function (err, result) {
+            collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
-                    log.info("Found and updated object in %s",collection.collectionName);
-                    cb(res,0,result.value);
+                    if (result.value) {
+                        log.debug('popped %d objects', result.deletedCount);
+                        cb(res, 0, result.value);
+                    } else {
+                        cb(res, 0, 0);
+                    }
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res, err, 0);
                 }
             });
         });
@@ -312,15 +501,14 @@ module.exports = {
     //
 
     delete: function(collection, filter, user_id, res, cb) {
+        log.debug('delete '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
-                    log.info("Deleting %d objects from %s",result.deletedCount,collection.collectionName);
-                    cb(res,0,result.deletedCount);
+                    log.debug('deleted %d objects', result.deletedCount);
+                    cb(res, 0, result.deletedCount);
                 } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    cb(res,err.message,0);
+                    cb(res, err, 0);
                 }
             });
         });
@@ -330,22 +518,14 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res) {
+    stats: function(collection,req,res,map) {
+        log.debug('stats '+collection.collectionName);
         if (!req.query.field) {
             req.query.field = req.body.field;
             req.query.filter = req.body.filter;
         }
         var field = req.query.field;
         this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            var map = function () {
-                emit(this.owner,
-                     {sum: this[field],
-                      max: this[field],
-                      min: this[field],
-                      count: 1,
-                      diff: 0
-                     });
-            };
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -385,7 +565,7 @@ module.exports = {
                             } else {
                                 return res.json({
                                     status: 'OK',
-                                    result: {'count':0}
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
                                 });
                             }
                         } else {
@@ -401,5 +581,100 @@ module.exports = {
                 }
             });
         });
-    }
+    },
+
+
+    mapreduce: function(collection,req,res) {
+        log.debug('mapreduce '+collection.collectionName);
+        if (!req.query.field) {
+            req.query.filter = req.body.filter;
+            req.query.map = req.body.map;
+            req.query.reduce=req.body.reduce;
+            req.query.finalize=req.body.finalize;
+        }
+        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+            eval(String(req.query.map));
+            eval(String(req.query.reduce));
+            eval(String(req.query.finalize));
+            var o = {};
+            o.finalize = finalize;
+            o.query = filter;
+            o.out = {replace: 'mapreduce' + '_' + collection.collectionName};
+            collection.mapReduce(map, reduce, o, function (err, out_collection) {
+                if(!err){
+                    out_collection.find().toArray(function (err, result) {
+                        if(!err) {
+                            if(result.length>0) {
+                                return res.json({
+                                    status: 'OK',
+                                    result: result[0].value
+                                });
+                            } else {
+                                return res.json({
+                                    status: 'OK',
+                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
+                                });
+                            }
+                        } else {
+                            res.statusCode = 500;
+                            log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            return res.json({ error: 'Server error' });
+                        }
+                    });
+                } else {
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.json({ error: 'Server error' });
+                }
+            });
+        });
+    },
+
+    //
+    // GridFS helpers
+    //
+
+    get_gridfs_objs: function(objs, fields, res, cb) {
+        log.debug('get_gridfs_objs');
+        var content_fields = get_gridfs_content_fields(fields);
+        if (content_fields.length > 0) {
+            var apply_content = function(i){
+                if (i<objs.length) {
+                    var name = String(objs[i]._id);
+                    GridStore.read(db.get(), name, function(err, fileData) {
+                        if(!err) {
+                            var data = JSON.parse(fileData.toString());
+                            for(var j=0; j<content_fields.length; j++) {
+                                var subfields = content_fields[j].split('.');
+                                var obj = data;
+                                for(var k=1; k<subfields.length; k++) {
+                                    if (obj[subfields[k]]) {
+                                        obj = obj[subfields[k]];
+                                    } else {
+                                        err = {"message":"Field " + content_fields[j] + " not found in " + name};
+                                        cb(res,err,0);
+                                    }
+                                }
+                                objs[i][content_fields[j]] = obj;
+                            }
+                            apply_content(i+1);
+                        } else {
+                            cb(res,err,0);
+                        }
+                    });
+                } else {
+                    log.debug('added content to %d objects',objs.length);
+                    cb(res,0,objs);
+                }
+            };
+            apply_content(0);
+        } else {
+            for(var i=0; i<objs.length; i++) {
+                objs[i]['content'] = {};
+            }
+            log.debug('no added content');
+            cb(res,0,objs);
+        }
+    },
+
 };

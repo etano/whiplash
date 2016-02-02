@@ -6,6 +6,9 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('work_batches');
+var models = db.get().collection('fs.files');
+var executables = db.get().collection('executables');
+var properties = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/work_batch');
 var ObjectID = require('mongodb').ObjectID;
 
@@ -14,7 +17,7 @@ var ObjectID = require('mongodb').ObjectID;
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.commit(ObjType, collection, req.body, String(req.user._id), res, common.return);
+    common.commit(collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
 //
@@ -22,53 +25,73 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 //
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    collection.findOneAndDelete({owner:String(req.user._id)}, {sort: {timestamp: 1}, projection: {ids: 1}}, function (err, result) {
+    var user_id = String(req.user._id);
+    var filter = common.get_payload(req, 'filter');
+    common.pop(collection, filter, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
         if (!err) {
-            if(result.value){
-                for(var i=0;i<result.value.ids.length;i++){
-                    result.value.ids[i] = new ObjectID(result.value.ids[i]);
+            if (work_batch) {
+                var property_ids = [];
+                for (var i=0; i<work_batch['property_ids'].length; i++) {
+                    property_ids.push(new ObjectID(work_batch['property_ids'][i]));
                 }
-                db.get().collection('properties').updateMany({'_id':{'$in':result.value.ids}}, {'$set':{"status":"running"}}, {w:1}, function (err, result2) {
+                common.update(properties, {'_id':{'$in':property_ids}}, {'status':'running'}, user_id, res, function(res, err, count) {
                     if (!err) {
-                        log.info("%d properties are running",result2.modifiedCount);
-                        return res.json({ status: 'OK', result: result.value.ids });
+                        common.query(properties, {'_id':{'$in':property_ids}}, [], user_id, res, function(res, err, property_objs) {
+                            if (!err) {
+                                var model_ids = [];
+                                for (var i=0; i<work_batch['model_ids'].length; i++) {
+                                    model_ids.push(new ObjectID(work_batch['model_ids'][i]));
+                                }
+                                common.query(models, {'_id':{'$in':model_ids}}, [], user_id, res, function(res, err, model_objs) {
+                                    if (!err) {
+                                        common.get_gridfs_objs(model_objs, [], res, function(res, err, model_objs) {
+                                            if (!err) {
+                                                var executable_ids = [];
+                                                for (var i=0; i<work_batch['executable_ids'].length; i++) {
+                                                    executable_ids.push(new ObjectID(work_batch['executable_ids'][i]));
+                                                }
+                                                common.query(executables, {'_id':{'$in':executable_ids}}, [], user_id, res, function(res, err, executable_objs) {
+                                                    if (!err) {
+                                                        common.return(res, 0, {'properties':property_objs, 'models':model_objs, 'executables':executable_objs});
+                                                    } else {
+                                                        common.return(res, err, 0);
+                                                    }
+                                                });
+                                            } else {
+                                                common.return(res, err, 0);
+                                            }
+                                        });
+                                    } else {
+                                        common.return(res, err, 0);
+                                    }
+                                });
+                            } else {
+                                common.return(res, err, 0);
+                            }
+                        });
                     } else {
-                        res.statusCode = 500;
-                        log.error('Internal error(%d): %s',res.statusCode,err.message);
-                        return res.json({ error: 'Server error' });
+                        common.return(res, err, 0);
                     }
                 });
             } else {
-                return res.json({ status: 'OK', result: [] });
+                common.return(res, 0, {'properties':[], 'models':[], 'executables':[]});
             }
         } else {
-            res.statusCode = 500;
-            log.error('Internal error(%d): %s',res.statusCode,err.message);
-            return res.json({ error: 'Server error' });
+            common.return(res, err, 0);
         }
     });
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_count(collection, req.body, String(req.user._id), res, common.return);
+    common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
-
-router.get('/fields/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query_fields_only(collection, req.body.filter, req.body.fields, String(req.user._id), res, common.return);
-});
-
 
 //
 // Delete
 //
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, req.body, String(req.user._id), res, common.return);
+    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
-
-router.delete('/:id', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, {"_id": new ObjectID(req.params.id)}, String(req.user._id), res, common.return);
-});
-
 
 module.exports = router;

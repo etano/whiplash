@@ -6,41 +6,27 @@ else: import http.client as httplib
 try: input = raw_input
 except NameError: pass
 
-#
-# Whiplash class
-#
-class wdb:
+class connection:
     '''
     interface to the whiplash database
     '''
-    def __init__(self,server,port,token="",username="",password=""):
+
+    def __init__(self,server,port,token="",username="",password="",save_token=True):
         '''
         initialises the whiplash class. server and port required
         '''
         self.server = server
         self.port = port
         self.headers = {"Accept": "*/*"}
+        self.save_token = save_token
         if token == "":
             if username == "":
                 self.read_config()
             else:
-                self.create_token(username,password,save_token=True)
+                self.create_token(username,password)
         else:
             self.set_token(token)
         self.check_token()
-
-        self.models = self.collection(self,"models")
-        self.executables = self.collection(self,"executables")
-        self.properties = self.properties_collection(self,"properties")
-        self.work_batches = self.collection(self,"work_batches")
-        self.jobs = self.collection(self,"jobs")
-        self.collaborations = self.collection(self,"collaborations")
-        self.users = self.collection(self,"users")
-        self.accesstokens = self.collection(self,"accesstokens")
-
-    #
-    # Request
-    #
 
     def request(self,protocol,uri,payload,zip=False):
         '''
@@ -51,20 +37,17 @@ class wdb:
             self.headers["Content-type"] = "gzip"
         else:
             self.headers["Content-type"] = "application/json"
-        conn = httplib.HTTPSConnection(self.server,self.port)
+        uri = self.server + ':' + str(self.port) + '/api/' + uri
         try:
-            conn.request(protocol,uri,payload,self.headers)
+            conn = httplib.HTTPSConnection(self.server, self.port)
+            conn.request(protocol, 'https://'+uri, payload, self.headers)
         except:
-            conn = httplib.HTTPConnection(self.server,self.port)
-            conn.request(protocol,uri,str(payload),self.headers)
+            conn = httplib.HTTPConnection(self.server, self.port)
+            conn.request(protocol, 'http://'+uri, payload, self.headers)
         res = conn.getresponse()
         if res.status != 200:
             print(res.status, res.reason, res.read())
         return res.status, res.reason, res.read()
-
-    #
-    # Tokens
-    #
 
     def set_token(self,access_token):
         '''
@@ -83,19 +66,19 @@ class wdb:
             self.set_token(token)
         except:
             print('Whiplash config not found. Please enter your authorization details.')
-            self.create_token(save_token=True)
+            self.create_token()
 
     def check_token(self):
         '''
         checks if token in valid 
         '''
-        status, reason, res = self.request("GET","/api",json.dumps({"foo":"bar"}))
+        status, reason, res = self.request("GET", "", json.dumps({}))
         if status != 200:
             if 'Unauthorized' in reason:
                 print('Token not valid. Please create one.')
-                self.create_token(save_token=True)
+                self.create_token()
 
-    def create_token(self,username="",password="",client_id="",client_secret="",save_token=False):
+    def create_token(self,username="",password="",client_id="",client_secret=""):
         '''
         creates an access token using the username and password
         '''
@@ -108,220 +91,196 @@ class wdb:
         if client_secret == "":
             client_secret = password
 
-        status, reason, res = self.request("POST","/api/users/token",json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
+        status, reason, res = self.request("POST", "users/token", json.dumps({"grant_type":"password","client_id":client_id,"client_secret":client_secret,"username":username,"password":password}))
         if status != 200:
             if ('Unauthorized' in reason) or ('Forbidden' in reason):
                 print('Invalid login credentials. Please verify your account.')
             sys.exit(1)
         else:
             res = json.loads(res.decode('utf-8'))
-            if save_token:
+            if self.save_token:
                 print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
                 f = open(os.path.expanduser("~")+"/.whiplash_config","w")
                 f.write(res["access_token"])
                 f.close()
                 self.set_token(res["access_token"])
 
-    #
-    # Get results
-    #
-
-    def get_results(self,tags,params):
+class collection:
+    '''
+    base class for models, executables and properties collections
+    '''
+    def __init__(self,db,name):
         '''
-        fetches output models corresponding to the models and properties found by their respective filters
+        initialises a collection with the database and collection name
         '''
-        in_model_ids = self.models.query_fields_only(tags,"_id")["_id"]
-        filter = {"status":"resolved","input_model_id":{"$in":in_model_ids}}
-        for key in params:
-            filter["params."+key] = params[key]
+        self.db = db
+        self.name = name
 
-        out_model_ids = self.properties.query_fields_only(filter,"output_model_id")["output_model_id"]
-
-        tmp = self.models.query({'_id': {'$in': out_model_ids}})
-        results = []
-        for result in tmp:
-            results.append(result['content'])
-        return results
-
-    #
-    # Submit query
-    #
-
-    def submit_query(self,model_filter,executable_filter,params):
+    def request(self,protocol,uri,payload):
         '''
-        submits a query to the database
+        wrappers http request to the API server with some convenience
         '''
-        status, reason, res = self.request("POST","/api/query",json.dumps({"model_filter":model_filter,"executable_filter":executable_filter,"params":params}))
-        print(status)
-        print(reason)
-        print(res)
+        t0 = time.time()
+        response = self.db.request(protocol, self.name+"/"+uri, payload)
+        t1 = time.time()
+        #print('collection request time',t1-t0)
+        return response
 
-    #
-    # Collections
-    #
-    class collection:
+    def commit(self,objs):
         '''
-        base class for models, executables and properties collections
+        commits a single or multiple objects to collection
         '''
-        def __init__(self,db,name):
-            '''
-            initialises a collection with the database and collection name
-            '''
-            self.name = name
-            self.db = db
+        if not isinstance(objs, list):
+            objs = [objs]
+        return self.request("POST", "", objs)
 
-        def request(self,protocol,uri,payload):
-            '''
-            wrappers http request to the API server with some convenience
-            '''
-            status, reason, res = self.db.request(protocol,uri,json.dumps(payload))
-            if status == 200:
-                return json.loads(res.decode('utf-8'))["result"]
-            else:
-                print(status,reason,res)
-                sys.exit(1)
-        #
-        # Commit
-        #
+    def count(self,filter):
+        '''
+        counts the number of objects in the colleciton which satisfy the filter
+        '''
+        return self.request("GET", "count", filter)
 
-        def commit(self,objs):
-            '''
-            commits a single or multiple objects to collection
-            '''
-            if not isinstance(objs, list):
-                objs = [objs]
-            ids = self.request("POST","/api/"+self.name+"/",objs)
-            if self.name == "properties" and len(ids) > 0:
-                self.db.jobs.commit({"ids":ids,"submitted":1,"name":"default"})
-            return ids
+    def query(self,filter,fields=[]):
+        '''
+        Fetches specified fields of objects in the collection which satisfy the filter.
+        If no fields are specified, then returns the whole objects.
+        '''
+        if not isinstance(fields, list):
+            fields = [fields]
+        return self.request("GET", "", {"fields":fields,"filter":filter})
 
-        #
-        # Query
-        #
+    def update(self,filter,update):
+        '''
+        updates the objects in the collection which satisfy the filter as specified in the update
+        '''
+        return self.request("PUT", "", {'filter':filter,'update':update})
 
-        def count(self,fltr):
-            '''
-            counts the number of objects in the colleciton which satisfy the filter
-            '''
-            return self.request("GET","/api/"+self.name+"/count/",fltr)
+    def replace(self,replacements): # FIXME: Only for properties
+        '''
+        replaces objects in the collection with the replacements
+        '''
+        return self.request("PUT", "replace", replacements)
 
-        def query(self,fltr):
-            '''
-            fetches objects in the collection which satisfy the filter
-            '''
-            return self.request("GET","/api/"+self.name+"/",fltr)
+    def delete(self,filter): # FIXME: No deleting ?
+        '''
+        deletes the objects in the collection which satisfy the filter
+        '''
+        return self.request("DELETE", "", filter)
 
-        def query_one(self,fltr):
-            '''
-            fetches a single object in the collection which satisfies the filter
-            '''
-            return self.request("GET","/api/"+self.name+"/one/",fltr)
+    def stats(self,field,filter):
+        '''
+        computes the {sum, max, min, count, mean, standard deviation, variance} of the
+        specified fields of objects in the collection which satisfy the filter
+        '''
+        return self.request("GET", "stats", {"field":field,"filter":filter})
 
-        def query_fields_only(self,fltr,fields):
-            '''
-            fetches only specified fields of objects which satisfy the filter
-            '''
-            if not isinstance(fields, list):
-                fields = [fields]
-            tmp = self.request("GET","/api/"+self.name+"/fields/",{'filter':fltr,'fields':fields})
-            res = {}
-            for field in fields:
-                res[field] = []
-                for o in tmp:
-                    tmp0 = o
-                    for f in field.split('.'):
-                        tmp0 = tmp0[f]
-                    res[field].append(tmp0)
+    def mapreduce(self,filter,mapper,reducer,finalizer):
+        '''
+        Performs a custom computation on the data, by performing a mapreduce operation.
+        Custom map(), reduce(key,value) and finalize(key,value) functions have to be a string of a JS function.
+
+        For usage of MongoDB mapreduce see mongoDB Documentation: https://docs.mongodb.org/manual/reference/command/mapReduce/#dbcmd.mapReduce
+
+        Sample mapper:
+        var map = function () {
+            emit(this.owner,
+                 {sum: this["walltime"],
+                  max: this["walltime"],
+                  min: this["walltime"],
+                  count: 1,
+                  diff: 0
+                 });
+        };
+        Sample reducer:
+        var reduce = function (key, values) {
+            var a = values[0];
+            for (var i=1; i < values.length; i++){
+                var b = values[i];
+                var delta = a.sum/a.count - b.sum/b.count;
+                var weight = (a.count * b.count)/(a.count + b.count);
+                a.diff += b.diff + delta*delta*weight;
+                a.sum += b.sum;
+                a.count += b.count;
+                a.min = Math.min(a.min, b.min);
+                a.max = Math.max(a.max, b.max);
+            }
+            return a;
+        };
+        var finalize = function (key, value){
+            value.mean = value.sum / value.count;
+            value.variance = value.diff / value.count;
+            value.stddev = Math.sqrt(value.variance);
+            return value;
+        };
+        '''
+        return self.request("GET", "mapreduce", {"filter":filter, "map":mapper, "reduce":reducer, "finalize":finalizer})
+
+class properties_collection(collection):
+
+    def refresh(self):
+        '''
+        relaunches the properties which are timed out with double the timeout
+        '''
+        print(self.request("PUT", "refresh", {}))
+
+class db:
+    '''
+    interface to the whiplash database
+    '''
+
+    def __init__(self, server, port, token="", username="", password="", save_token=True):
+        self.conn = connection(server,port,token=token,username=username,password=password,save_token=save_token)
+        self.models = self.collection("models")
+        self.executables = self.collection("executables")
+        self.properties = properties_collection(self,"properties")
+        self.queries = self.collection("queries")
+
+    def request(self, protocol, uri, payload):
+        '''
+        Wraps http request to the API server with some convenience
+        '''
+        t0 = time.time()
+        req = json.dumps(payload)
+        t1 = time.time()
+        #print('serialization time',t1-t0)
+        status, reason, res = self.conn.request(protocol, uri, req)
+        if status == 200 or status == 'OK':
+            t0 = time.time()
+            res = json.loads(res.decode('utf-8'))["result"]
+            t1 = time.time()
+            #print('deserialization time',t1-t0)
             return res
+        else:
+            print(status,reason,res)
+            sys.exit(1)
 
-        def query_id(self,ID):
-            '''
-            fetches the object in the collection which has the id
-            '''
-            return self.request("GET","/api/"+self.name+"/id/"+str(ID),{})
+    def query(self, filters, fields={}, settings={}):
+        '''
+        Submits a query to the database
+        '''
+        t0 = time.time()
+        res = self.request("GET", "queries", {"filters":filters,"fields":fields,"settings":settings})
+        t1 = time.time()
+        #print('query time',t1-t0)
+        return res
 
-        #
-        # Find and update
-        #
+    def poll(self, filters, fields={}, settings={}, freq=1):
+        '''
+        Blocks until query is satisfied
+        '''
+        self.query(filters, fields, settings)
+        while True:
+            status = self.status(filters,fields)
+            if status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
+                break
+            time.sleep(freq)
+        return self.query(filters, fields, settings)
 
-        def update(self,fltr,update):
-            '''
-            updates the objects in the collection which satisfy the filter as specified in the update
-            '''
-            return self.request("PUT","/api/"+self.name+"/",{'filter':fltr,'update':update})
+    def status(self, filters, fields):
+        '''
+        Checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
+        '''
+        return self.request("GET", "queries/status", {"filters":filters,"fields":fields})
 
-
-        def find_one_and_update(self,fltr,update):
-            '''
-            fetches a single object in the collection which satisfies the filter and updates it as specified in the update
-            '''
-            return self.request("PUT","/api/"+self.name+"/one/",{'filter':fltr,'update':update})
-
-        def find_id_and_update(self,ID,update):
-            '''
-            fetches the object in the collection which has the id and updates it as specified in the update
-            '''
-            return self.request("PUT","/api/"+self.name+"/id/"+str(ID),update)
-
-        #
-        # Delete
-        #
-
-        def delete(self,fltr):
-            '''
-            deletes the objects in the collection which satisfy the filter
-            '''
-            return self.request("DELETE","/api/"+self.name+"/",fltr)
-
-        def delete_id(self,ID):
-            '''
-            deletes the object in the collection which has the id 
-            '''
-            return self.request("DELETE","/api/"+self.name+"/id/"+str(ID),{})
-
-        #
-        # Map-reduce
-        #
-
-        def stats(self,field,fltr):
-            '''
-            computes the {sum, max, min, count, mean, standard deviation, variance} of the 
-            specified fields of objects in the collection which satisfy the filter 
-            '''
-            return self.request("GET","/api/"+self.name+"/stats/",{"field":field,"filter":fltr})
-
-
-    #
-    # Special helper functions, only for properties
-    #
-    class properties_collection(collection):
-
-        def get_unresolved_time(self):
-            '''
-            computes the sum of timeouts of all unresolved properties
-            '''
-            return self.stats("timeout",{"status":"unresolved"})['sum']
-
-        def get_resolved_time(self):
-            '''
-            computes the sum of timeouts of all resolved properties
-            '''
-            return self.stats("walltime",{"status":"resolved"})['sum']
-
-        def check_status(self):
-            '''
-            checks how many properties are {unresolved, pulled, timed out, resolved, errored}
-            '''
-            print('unresolved: %d'%(self.count({"status":"unresolved"})))
-            print('pulled: %d'%(self.count({"status":"pulled"})))
-            print('running: %d'%(self.count({"status":"running"})))
-            print('timed out: %d'%(self.count({"status":"timed out"})))
-            print('resolved: %d'%(self.count({"status":"resolved"})))
-            print('errored: %d'%(self.count({"status":"errored"})))
-            print('not found: %d'%(self.count({"status":"not found"})))
-
-        def replace(self,replacements):
-            '''
-            replaces objects in the collection with the replacements
-            '''
-            return self.request("PUT","/api/"+self.name+"/replace",replacements)
+    def collection(self, name):
+        return collection(self, name)

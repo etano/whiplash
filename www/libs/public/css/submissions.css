@@ -1,52 +1,45 @@
-section#view-queries {
-    border: 0;
-    width: 50%;
-    max-width: 800px;
-    text-align: center;
-    max-height: 56%;
-}
-section#view-queries div.record:last-child {
-    height: 150px !important; /* bottom spacer */
-}
-
-section#view-queries > div#info {
+section#viewport > div.queries#info {
     display: table;
-    width: 100%;
+    width: 600px;
+    text-align: center;
+    padding-top: 50px;
 }
-section#view-queries > div#info > div.record {
+section#viewport > div.queries#info > div.record {
     display: table-row;
     height: 50px;
 }
 
-section#view-queries > div#info > div.record > div {
+section#viewport > div.queries#info > div.record > div {
     display: table-cell;
     text-align: left;
 }
 
-section#view-queries div.delete {
+section#viewport > div.queries#info div.delete {
     display: inline-block;
-    color: rgb(50,210,210);
+    color: black;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 16px;
     padding: 5px;
     padding-left: 12px;
     padding-right: 12px;
+    padding-top: 0px !important;
     border-radius: 3px;
     margin-left: 5px;
-    border: 1px solid #AAA;
-}
-section#view-queries div.delete {
     border: 0;
-    padding-top: 0px !important;
-    color: black;
-    font-size: 16px;
 }
-section#view-queries div.date {
-    width: 150px;
+section#viewport > div.queries#info div.date {
+    width: 175px;
+    min-width: 175px;
+    max-width: 175px;
     padding-left: 15px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    color: rgb(50,210,210);
+    cursor: pointer;
 }
 
-section#view-queries div.name {
+section#viewport > div.queries#info div.name {
     min-width: 150px;
     max-width: 150px;
     white-space: nowrap;
@@ -56,24 +49,24 @@ section#view-queries div.name {
     cursor: pointer;
 }
 
-section#view-queries div.status {
+section#viewport > div.queries#info div.status {
     width: 30px;
     text-align: left;
 }
 
-section#view-queries progress {
+section#viewport > div.queries#info progress {
     display: block;
     min-width: 150px;
     width: 100%;
 }
-section#view-queries div.progress {
-    width: 30%;
+section#viewport > div.queries#info div.progress {
+    width: auto;
     padding-left: 15px;
-    padding-right: 15px;
+    padding-right: 25px;
 }
-section#view-queries div.shortcuts {
-    width: 1%;
+section#viewport > div.queries#info div.shortcuts {
+    width: 34px;
 }
-section#view-queries div.shortcuts div {
+section#viewport > div.queries#info div.shortcuts div {
     margin-left: 0 !important;
 }

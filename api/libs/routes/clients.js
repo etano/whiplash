@@ -4,13 +4,14 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
+var common = require(libs + 'routes/common');
 var Client = require(libs + 'schemas/client');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('clients');
 var crypto = require('crypto');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var client = new Client({ name: req.body.client_name, clientId: req.body.client_id, clientSecret: req.body.client_secret, userId: String(req.user._id) });
+    var client = new Client({ name: common.get_payload(req,'client_name'), clientId: common.get_payload(req,'client_id'), clientSecret: common.get_payload(req,'client_secret'), userId: String(req.user._id) });
     client.save(function(err, client){
         if(!err){
             log.info("New user client %s", client.clientId);
@@ -50,13 +51,14 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var filter = { userId : String(req.user._id) , clientId : req.body.client_id };
+    var client_id = common.get_payload(req,'client_id');
+    var filter = { userId : String(req.user._id) , clientId : client_id };
     collection.deleteOne(filter, {}, function (err, result) {
         if(err) {
-            log.error('Error removing client',req.body.client_id,'for user',String(req.user._id));
+            log.error('Error removing client',client_id,'for user',String(req.user._id));
             return res.send(err);
         } else {
-            log.info('Removing client',req.body.client_id,'for user',String(req.user._id));
+            log.info('Removing client',client_id,'for user',String(req.user._id));
             db.get().collection('refreshtokens').deleteOne(filter, {}, function (err, result2) {});
             db.get().collection('accesstokens').deleteOne(filter, {}, function (err, result2) {});
             return res.json({ status: 'OK' });

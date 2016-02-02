@@ -1,10 +1,44 @@
-section#compose-query, section#edit-query {
-    border: 0;
+div.button_row {
+    display: table;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+div.button_row div.button {
+    display: inline-block;
+    color: rgb(50,210,210);
+    cursor: pointer;
+    margin-left: 0px;
+    background-color: white;
+}
+
+div.input_row {
+    display: table;
+    margin-top: 25px;
+    width: 100%;
+}
+
+div.input_row_filter {
+    display: block;
+    margin: 0 auto;
+}
+
+div.input_row_fields {
+    display: none;
+    float: left;
+    margin: 0 0 0 2%;
+    padding: 0;
     width: 50%;
-    max-width: 800px;
-    border: 1px solid #CCC;
-    border-radius: 4px;
-    padding-left: 10px;
-    padding-top: 30px;
-    padding-bottom: 20px;
+}
+
+div.input_row_fields div.label {
+    opacity: 0;
+}
+
+div#choose_fields {
+    position: absolute;
+    right: 0px;
+    color: rgb(50,210,210);
+    cursor: pointer;
+    z-index: 1;
 }

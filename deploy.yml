@@ -6,13 +6,13 @@ odb:
     volumes:
         - /data/db:/data/db
     ports:
-        - 27017:27017
+        - "27017:27017"
 api:
     extends:
         file: api/docker-compose.yml
         service: api
     ports:
-        - 1337:1337
+        - "1337:1337"
     links:
         - odb:mongo
     restart: always
@@ -22,6 +22,6 @@ www:
         file: www/docker-compose.yml
         service: www
     ports:
-        - 80:80
+        - "80:80"
     restart: always
     command: sh -c "node bin/www"

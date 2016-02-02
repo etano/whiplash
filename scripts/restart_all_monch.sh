@@ -6,15 +6,18 @@ echo 'Killing node'
 killall node
 echo 'Killing mongo'
 killall mongod
+
+HOME="/users/whiplash/whiplash"
+
 echo 'Setup mongo'
-bash scripts/mongo_setup.sh
+bash ${HOME}/scripts/mongo_setup.sh
 echo 'Starting mongo'
-bash scripts/mongo_startup.sh
+bash ${HOME}/scripts/mongo_startup.sh
 echo 'Preparing RTE'
-bash ~/whiplash/scripts/prepare_rte.sh
+bash ${HOME}/scripts/prepare_rte.sh
 echo 'Starting node'
-bash ~/whiplash/scripts/node_startup.sh
-echo 'Sleeping 20'
-sleep 20
-echo 'Starting python'
-bash ~/whiplash/scripts/scheduler_startup.sh
+bash ${HOME}/scripts/node_startup.sh
+echo 'Sleeping 30'
+sleep 30
+echo 'Starting RTE'
+bash ${HOME}/scripts/rte_startup.sh

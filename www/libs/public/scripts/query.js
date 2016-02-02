@@ -1,86 +1,212 @@
-var executables;
+var QTableFixture = fixture(function(){
+    //$(document).on("change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
+    //$(document).on("click",  $("widget.qtable select#executable_name"), attach_context(QTable.prototype.showFilters, function(){ return QTable.instance; }));
+    $(document).on("change", $("widget.qtable select#executable_name"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+    $(document).on("change", $("widget.qtable textarea"), attach_context(QTable.prototype.updateCounts, function(){ return QTable.instance; }));
+});
 
-function fetchQParams(){
-    if(executables) return;
-    $("widget.qtable select").attr("disabled", "true");
-    $.ajax({
-        type: 'GET',
-        url: api_addr+"/api/executables/info",
-        data: { "access_token"  : session_token },
-        success: function(data){
-            executables = data.result;
-            for(var i = 0; i < executables.length; i++)
-                $("widget.qtable select").append("<option value='"+executables[i].name+"'>"+executables[i].name+"</option>");
-            $("widget.qtable select").removeAttr("disabled");
-        },
-        error: function(request, status, err){
+var QTable = function(widget){
+    var instance = QTable.instance = this;
+    this.widget = widget;
+
+    if(QTable.executables){
+        instance.showFilters();
+    }else{
+        instance.widget.find("select#executable_name").attr("disabled", "true");
+        $.ajax({
+            type: 'GET',
+            url: api_addr+"/api/executables/",
+            data: { "access_token"  : session_token },
+            success: function(data){
+                QTable.executables = data.result;
+                instance.showFilters();
+            },
+            error: function(request, status, err){
+                alert(err);
+            }
+        });
+    }
+    roundCentering();
+    QTableFixture();
+};
+
+QTable.prototype.showFilters = function(){
+    var select = this.widget.find("select#executable_name");
+    select.empty();
+    for(var i = 0; i < QTable.executables.length; i++)
+        select.append("<option value='"+QTable.executables[i].name+"'>"+QTable.executables[i].name+"</option>");
+    select.removeAttr("disabled");
+
+    if (QTable.executables.length > 0) {
+        var executable_name = select.val();
+        var executable_json = $.grep(QTable.executables, function(e){ return e.name == executable_name; })[0];
+        var params = executable_json.params.optional.concat(executable_json.params.required);
+
+        var param_json = {};
+        for(var i = 0; i < params.length; i++){
+            param_json[params[i]] = "";
+        }
+        this.widget.find("textarea#params_filter").val(JSON.stringify(param_json));
+    }
+    this.updateCounts();
+};
+
+QTable.prototype.updateCounts = function(){
+    this.updateModelCount();
+};
+
+QTable.prototype.updateQueryCount = function(){
+    var widget = this.widget;
+    this.getFilters(function(filters,fields,settings,err){
+        if(!err){
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/queries/status",
+                data: { "access_token"  : session_token,
+                        "filters" : JSON.stringify(filters),
+                        "fields" : JSON.stringify(fields)
+                },
+                success: function(data){
+                    var status = data.result;
+                    widget.find("span#n_queries").text(status.total);
+                    widget.find("span#n_results").text(status.resolved);
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        }else{
+            widget.find("span#n_queries").text(0);
+            widget.find("span#n_results").text(0);
+        }
+    });
+};
+
+QTable.prototype.updateModelCount = function(){
+    var widget = this.widget;
+    this.getFilters(function(filters,fields,settings,err) {
+        if(!err){
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/models/count",
+                data: { "access_token": session_token,
+                        "filter": JSON.stringify(filters['input_model'])
+                },
+                success: function(data){
+                    var n_models = data.result;
+                    widget.find("span#n_models").text(n_models);
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
+            widget.find("span#n_models").text(0);
+        }
+    });
+};
+
+QTable.prototype.getFilters = function(callback){
+    var widget = this.widget;
+    var filter_inputs = {'executable': widget.find("select#executable_name"),
+                         'input_model': widget.find("textarea#input_model_filter"),
+                         'params': widget.find("textarea#params_filter"),
+                         'output_model': widget.find("textarea#output_model_filter")};
+    var field_inputs = {'executable': widget.find("textarea#executable_fields"),
+                        'input_model': widget.find("textarea#input_model_fields"),
+                        'params': widget.find("textarea#params_fields"),
+                        'output_model': widget.find("textarea#output_model_fields")};
+    var key;
+    var fields = {};
+    for (key in field_inputs) {
+        fields[key] = field_inputs[key].val().replace(/\s/g,'');
+        if (fields[key] !== '') {
+            fields[key] = fields[key].split(',');
+        }
+    }
+    var filters = {};
+    for (key in filter_inputs) {
+        filters[key] = filter_inputs[key].val();
+        if (filters[key] === '') {
+            filters[key] = '{}';
+        }
+    }
+    filters['executable'] = JSON.stringify({"name": filters['executable']});
+
+    // Check filters are proper JSON
+    var bad_filters = false;
+    for (key in filters) {
+        try {
+            filters[key] = JSON.parse(filters[key]);
+            filter_inputs[key].css('color','black');
+        } catch(e) {
+            filter_inputs[key].css('color','red');
+            bad_filters = true;
+        }
+    }
+
+    // FIXME: Settings are fixed for now
+    var settings = {"timeout":3600};
+
+    if (bad_filters) {
+        callback(0,0,0,bad_filters);
+    } else {
+        callback(filters,fields,settings,0);
+    }
+
+};
+
+function viewModels(){
+    QTable.instance.getFilters(function(filters,fields,settings,err) {
+        if(!err){
+            var data = { "access_token": session_token, "filters": JSON.stringify(filters['model']), "fields": JSON.stringify([]) };
+            window.location = api_addr+"/api/models?"+$.param(data);
+        }
+    });
+}
+
+function submitQuery(){
+    QTable.instance.getFilters(function(filters,fields,settings,err) {
+        if(!err){
+            $.ajax({
+                type: 'GET',
+                url: api_addr+"/api/queries/submit",
+                data: { "access_token"  : session_token,
+                        "filters" : JSON.stringify(filters),
+                        "fields" : JSON.stringify(fields),
+                        "settings" : JSON.stringify(settings)
+                },
+                success: function(data){
+                    viewQueries();
+                },
+                error: function(request, status, err){
+                    alert(err);
+                }
+            });
+        } else {
             alert(err);
         }
     });
 }
 
-function loadQParams(){
-    var widget = $(this).closest("widget.qtable");
-    var executable = $(this).val();
-    var parameters = $.grep(executables, function(e){ return e.name == executable; })[0].params;
+function toggleChooseFields(){
+    if($(this).attr("state") == "on"){
+        $(this).attr("state", "off");
+        $("widget.qtable div#choose_fields").text("+ Choose output fields");
 
-    widget.find("div.parameter").remove();
-    for(var i = 0; i < parameters.length; i++){
-        var param = $("<div class='row parameter'></div>");
-        param.append("<div class='label'><input type='text' value='' placeholder='filter (empty)'>"+ parameters[i] +":</div>");
-        param.insertBefore(widget.find("div.table div.submit").parent());
+        $("div.input_row_filter").css({ display: "block", width: "auto", float: "none" });
+        $("div.input_row_fields").css({ display: "none" });
+    }else{
+        $(this).attr("state", "on");
+        $("widget.qtable div#choose_fields").text("– Choose output fields");
+
+        $("div.input_row_filter").css({ display: "inline-block", width: "48%", float: "left" });
+        $("div.input_row_fields").css({ display: "inline-block" });
     }
 }
 
-function submitQTable(){
-    var widget = $(this).closest("widget.qtable");
-    var query = { model : widget.find("input.model").val(), container : widget.find("select.container").val(), parameters : [ ] };
-    widget.find("div.table div.parameter").each(function(i){
-        query.parameters.push({ name  : $(this).find("div.label").text(), value : $(this).find("div.label > input").val() });
-    });
-
-    //alert(JSON.stringify(query));
-    transition($("section#explore"));
-
-    $.ajax({
-        type: 'GET',
-        url: api_addr+"/api/properties/search",
-        data: { "access_token"  : session_token, "query" : query },
-        success: function(data){
-            if(data.result.count == 0) {
-                $("section#explore div#info").html("No details to explore at the moment.");
-            } else {
-                $("section#explore div#info").empty();
-                for(var i = 0; i < data.result.count; i++){
-                    var record = "<div class='record' pid='" + data.result.runs[i].id + "'>" +
-                                 "<div class='shortcuts'><div class='button log'>Log</div></div>" +
-                                 "<div class='app'>App: "     + data.result.runs[i].app   + "</div>" +
-                                 "<div class='model'>Model: " + data.result.runs[i].model + "</div>";
-    
-                    for(var p = 0; p < data.result.runs[i].params.length; p++) record += "<div class='param'>" + data.result.runs[i].params[p].name + ": " +
-                                                                                                                 data.result.runs[i].params[p].value + "</div>";
-                    record += "</div>";
-                    $("section#explore div#info").append(record);
-                }
-            }
-        },
-        error: function(request, status, err){
-            alert(err);
-        }
-    });
-}
-
-function initQTable(widget){
-    fetchQParams();
-    roundCentering();
-}
-
-function composeQuery(){
-    transition($("section#compose-query"));
-    indicateMenu("compose-query");
-}
-
 $(document).ready(function(){
-    $(document).on("change", "widget.qtable select.container", loadQParams);
-    $(document).on("click", "widget.qtable div.submit", submitQTable);
+    $(document).on("click", "widget.qtable div.button_row div#models", viewModels);
+    $(document).on("click", "widget.qtable div.button_row div#submit", submitQuery);
+    $(document).on("click", "widget.qtable div#choose_fields", toggleChooseFields);
 });
