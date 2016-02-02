@@ -34,7 +34,7 @@ def submit_job(args):
         sbatch.write("#SBATCH --ntasks=1\n")
         sbatch.write("module load python/3.4.1-gcc-4.8.1\n")
         sbatch.write("export PYTHONPATH=/mnt/lnec/whiplash/rte/python_packages:/mnt/lnec/whiplash/rte:$PYTHONPATH\n")
-        sbatch.write("srun python /mnt/lnec/whiplash/rte/scheduler/local.py"+flags+"\n")
+        sbatch.write("srun python /mnt/lnec/whiplash/rte/scheduler_local.py"+flags+"\n")
     sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True)
     sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True)
 

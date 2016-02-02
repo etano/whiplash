@@ -6,7 +6,7 @@ api:
     extends:
         file: api/docker-compose.yml
         service: api
-scheduler:
+rte:
     extends:
-        file: scheduler/docker-compose.yml
-        service: scheduler
+        file: rte/docker-compose.yml
+        service: rte

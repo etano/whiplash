@@ -19,5 +19,5 @@ echo 'Starting node'
 bash ${HOME}/scripts/node_startup.sh
 echo 'Sleeping 30'
 sleep 30
-echo 'Starting python'
-bash ${HOME}/scripts/scheduler_startup.sh
+echo 'Starting RTE'
+bash ${HOME}/scripts/rte_startup.sh
