@@ -2,7 +2,7 @@
 
 import sys, os, logging, argparse, time
 import subprocess as sp
-import multiprocessing as mp
+import threading as th
 import whiplash
 
 def start_batcher(args, flags):
@@ -50,7 +50,6 @@ def check_access(db_user):
 def scheduler(args):
     db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca",save_token=True)
     logging.info('user scheduler connected to db')
-    context = mp.get_context('fork')
 
     time_limit = 24*3600
     running_users = []
@@ -63,7 +62,7 @@ def scheduler(args):
                 if username not in running_users:
                     flags = " --user "+db_user['username']+" --token "+db_user['token']+" --host "+args.host+" --port "+str(args.port)+" --log_dir "+args.log_dir
                     logging.info('starting batcher for user %s', db_user['username'])
-                    p = context.Process(target=start_batcher, args=(args,flags,))
+                    p = th.Thread(target=start_batcher, args=(args,flags,))
                     p.start()
                     schedulers.append(p)
                     flags += " --num_cpus "+str(args.num_cpus)+" --work_dir "+db_user['work_dir']+" --time_limit "+str(time_limit)
@@ -73,14 +72,14 @@ def scheduler(args):
                         if check_access(db_user):
                             flags += " --cluster "+db_user['cluster']
                             logging.info('starting slurm scheduler for user %s', db_user['username'])
-                            p = context.Process(target=start_slurm_scheduler, args=(args,flags,))
+                            p = th.Thread(target=start_slurm_scheduler, args=(args,flags,))
                             p.start()
                             schedulers.append(p)
                         else:
                             logging.info('access denied for user %s', username)
                     else:
                         logging.info('starting local scheduler for user %s', db_user['username'])
-                        p = context.Process(target=start_local_scheduler, args=(args,flags,))
+                        p = th.Thread(target=start_local_scheduler, args=(args,flags,))
                         p.start()
                         schedulers.append(p)
                     running_users.append(username)
