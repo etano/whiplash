@@ -27,4 +27,5 @@ for collection, required_fields in collections:
     bench.stats(db, collection, sizes, numbers)
 
 print("Benchmarking query")
+numbers = [10, 100, 1000]
 bench.query(db, sizes, numbers)
