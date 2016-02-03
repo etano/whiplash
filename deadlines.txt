@@ -5,7 +5,7 @@ todo: descriptions, homepage, online demo
 
 -- techcrunch disrupt
 site: http://apply.techcrunch.com/start
-deadline: february 19th
+deadline: February 19th
 todo: descriptions, homepage, online demo, crunchbase url, company office and incorporation location
 
 -- ETH pioneer grant
@@ -20,4 +20,8 @@ site: https://calls.openfuture.org/wayra
 site: http://isc-hpc.com/registration.html
 deadline: opens 1 March
 todo: registration money
+
+-- MongoDB world
+site: https://www.mongodb.com/world16?jmp=dotorg-form&_ga=1.258469833.254460872.1444125261
+deadline: February 13th
 

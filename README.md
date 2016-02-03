@@ -32,4 +32,3 @@ db.setProfilingLevel(2)
 
 3) list the longest operations
 db.system.profile.find({},{millis : 1}).sort({millis : -1}).limit(1).pretty()
-
