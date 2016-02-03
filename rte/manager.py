@@ -24,9 +24,8 @@ def start_local_scheduler(args, flags):
 
 def get_users(args, db):
     all_users = db.collection('users').query({})
-    print(all_users)
+    logging.info(all_users)
     all_tokens = db.collection('accesstokens').query({})
-    print(all_tokens)
     db_users = []
     for user in all_users:
         if user['username'] != "scheduler":
