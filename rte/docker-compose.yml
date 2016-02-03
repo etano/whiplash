@@ -1,2 +1,3 @@
-scheduler:
-    build: .
+rte:
+    build: ../
+    dockerfile: rte/Dockerfile
