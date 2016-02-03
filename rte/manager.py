@@ -24,7 +24,9 @@ def start_local_scheduler(args, flags):
 
 def get_users(args, db):
     all_users = db.collection('users').query({})
+    print(all_users)
     all_tokens = db.collection('accesstokens').query({})
+    print(all_tokens)
     db_users = []
     for user in all_users:
         if user['username'] != "scheduler":
@@ -42,7 +44,9 @@ def get_users(args, db):
 
 def check_access(db_user):
     command = "ssh -o BatchMode=yes "+db_user['username']+"@"+db_user['cluster']+" \'ls\'"
-    return sp.call(command,stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255
+    logging.info(command)
+    logging.info(sp.call(command,stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True))
+    return (not (sp.call(command,stdout=sp.DEVNULL,stderr=sp.STDOUT,shell=True) == 255))
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca",save_token=True)
@@ -53,36 +57,41 @@ def scheduler(args):
     running_users = []
     schedulers = []
     while True:
-        for db_user in get_users(args, db):
-            username = db_user['username']
-            if username not in running_users:
-                flags = " --user "+db_user['username']+" --token "+db_user['token']+" --host "+args.host+" --port "+str(args.port)+" --log_dir "+args.log_dir
-                logging.info('starting batcher for user %s', db_user['username'])
-                p = context.Process(target=start_batcher, args=(args,flags,))
-                p.start()
-                schedulers.append(p)
-                flags += " --num_cpus "+str(args.num_cpus)+" --work_dir "+db_user['work_dir']+" --time_limit "+str(time_limit)
-                if args.docker:
-                    flags += " --docker"
-                if args.cluster:
-                    if check_access(db_user):
-                        flags += " --cluster "+db_user['cluster']
-                        logging.info('starting slurm scheduler for user %s', db_user['username'])
-                        p = context.Process(target=start_slurm_scheduler, args=(args,flags,))
-                        p.start()
-                        schedulers.append(p)
-                    else:
-                        logging.info('access denied for user %s', username)
-                else:
-                    logging.info('starting local scheduler for user %s', db_user['username'])
-                    p = context.Process(target=start_local_scheduler, args=(args,flags,))
+        all_users = get_users(args, db)
+        if len(all_users) > 0:
+            for db_user in get_users(args, db):
+                username = db_user['username']
+                if username not in running_users:
+                    flags = " --user "+db_user['username']+" --token "+db_user['token']+" --host "+args.host+" --port "+str(args.port)+" --log_dir "+args.log_dir
+                    logging.info('starting batcher for user %s', db_user['username'])
+                    p = context.Process(target=start_batcher, args=(args,flags,))
                     p.start()
                     schedulers.append(p)
-                running_users.append(username)
-        if args.test:
-            break
+                    flags += " --num_cpus "+str(args.num_cpus)+" --work_dir "+db_user['work_dir']+" --time_limit "+str(time_limit)
+                    if args.docker:
+                        flags += " --docker"
+                    if args.cluster:
+                        if check_access(db_user):
+                            flags += " --cluster "+db_user['cluster']
+                            logging.info('starting slurm scheduler for user %s', db_user['username'])
+                            p = context.Process(target=start_slurm_scheduler, args=(args,flags,))
+                            p.start()
+                            schedulers.append(p)
+                        else:
+                            logging.info('access denied for user %s', username)
+                    else:
+                        logging.info('starting local scheduler for user %s', db_user['username'])
+                        p = context.Process(target=start_local_scheduler, args=(args,flags,))
+                        p.start()
+                        schedulers.append(p)
+                    running_users.append(username)
+            if args.test:
+                break
+            else:
+                time.sleep(1)
         else:
-            time.sleep(1)
+            logging.info('no users found')
+        time.sleep(5)
     logging.info('terminating user schedulers')
     for p in schedulers:
         p.join()

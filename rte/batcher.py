@@ -67,7 +67,7 @@ def scheduler(args):
         time_window = get_times(args,db)
         if time_window > 0:
             make_batches(db,time_window)
-        time.sleep(1)
+        time.sleep(2)
         if args.test:
             break
 
