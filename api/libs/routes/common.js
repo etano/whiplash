@@ -7,11 +7,12 @@ var db = require(libs + 'db/mongo');
 var crypto = require('crypto');
 var Property = require(libs + 'schemas/property');
 var Executable = require(libs + 'schemas/executable');
-
 var collections = {'executables': Executable, 'properties': Property};
 
 function validate(collection, objs, user_id, cb) {
+    global.timer.get_timer('validate').start();
     log.debug('validate '+collection.collectionName);
+    var t0 = i
     for (var i=0; i<objs.length; i++) {
         objs[i]['owner'] = user_id;
     }
@@ -33,17 +34,23 @@ function validate(collection, objs, user_id, cb) {
         }
     }
     if (bad_objs.length === 0) {
+        global.timer.get_timer('validate').stop();
         cb(0, objs);
     } else {
+        global.timer.get_timer('validate').stop();
         cb(bad_objs, 0);
     }
 }
 
 function checksum(str) {
-    return crypto.createHash('md5').update(str, 'utf8').digest('hex');
+    global.timer.get_timer('checksum').start();
+    var res = crypto.createHash('md5').update(str, 'utf8').digest('hex');
+    global.timer.get_timer('checksum').stop();
+    return res;
 }
 
 function get_sorted_keys(obj) {
+    global.timer.get_timer('get_sorted_keys').start();
     var keys = [];
     for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
@@ -51,10 +58,12 @@ function get_sorted_keys(obj) {
         }
     }
     keys.sort();
+    global.timer.get_timer('get_sorted_keys').stop();
     return keys;
 }
 
 function smart_stringify(obj) {
+    global.timer.get_timer('smart_stringify').start();
     var keys = get_sorted_keys(obj);
     var str = "{";
     for(var i=0; i<keys.length; i++) {
@@ -66,14 +75,19 @@ function smart_stringify(obj) {
         }
     }
     str += "}";
+    global.timer.get_timer('smart_stringify').stop();
     return str;
 }
 
 function hash(obj) {
-    return checksum(smart_stringify(obj));
+    global.timer.get_timer('hash').start();
+    var res = checksum(smart_stringify(obj));
+    global.timer.get_timer('hash').stop();
+    return res;
 }
 
 function get_gridfs_filter(filter) {
+    global.timer.get_timer('get_gridfs_filter').start();
     var special = ['$or','$and','$not','$nor'];
     var new_filter = {};
     for(var key in filter) {
@@ -90,10 +104,12 @@ function get_gridfs_filter(filter) {
             }
         }
     }
+    global.timer.get_timer('get_gridfs_filter').stop();
     return new_filter;
 }
 
 function get_gridfs_metadata_fields(fields) {
+    global.timer.get_timer('get_gridfs_metadata_fields').start();
     var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
     var metadata_fields = [];
     for(var i=0; i<fields.length; i++) {
@@ -103,11 +119,14 @@ function get_gridfs_metadata_fields(fields) {
             metadata_fields.push(fields[i]);
         }
     }
+    global.timer.get_timer('get_gridfs_metadata_fields').stop();
     return metadata_fields;
 }
 
 function get_gridfs_content_fields(fields) {
+    global.timer.get_timer('get_gridfs_content_fields').start();
     if (fields.length === 0) {
+        global.timer.get_timer('get_gridfs_content_fields').stop();
         return ['content'];
     } else {
         var content_fields = [];
@@ -116,14 +135,17 @@ function get_gridfs_content_fields(fields) {
                 content_fields.push(fields[i]);
             }
         }
+        global.timer.get_timer('get_gridfs_content_fields').stop();
         return content_fields;
     }
 }
 
 function concaternate(o1, o2) {
+    global.timer.get_timer('concaternate').start();
     for (var key in o2) {
         o1[key] = o2[key];
     }
+    global.timer.get_timer('concaternate').stop();
     return o1;
 }
 
@@ -133,7 +155,10 @@ module.exports = {
     //
 
     hash: function(obj) {
-        return checksum(smart_stringify(obj));
+        global.timer.get_timer('hash').start();
+        var res = checksum(smart_stringify(obj));
+        global.timer.get_timer('hash').stop();
+        return res;
     },
 
     //
@@ -141,13 +166,17 @@ module.exports = {
     //
 
     get_payload: function(req, key) {
+        global.timer.get_timer('get_payload').start();
         if (!req.query[key]) {
             if (!req.body[key]) {
+                global.timer.get_timer('get_payload').stop();
                 return req.body;
             } else {
+                global.timer.get_timer('get_payload').stop();
                 return req.body[key];
             }
         } else {
+            global.timer.get_timer('get_payload').stop();
             return JSON.parse(req.query[key]);
         }
     },
@@ -156,7 +185,8 @@ module.exports = {
     // Permissions
     //
 
-    form_filter: function(collection,filter,user_id,cb) {
+    form_filter: function(collection, filter, user_id, cb) {
+        global.timer.get_timer('form_filter').start();
         // Regularize ids
         if ('_id' in filter) {
             if (typeof(filter['_id']) === 'object') {
@@ -201,6 +231,7 @@ module.exports = {
                     }
 
                     // Callback with filter
+                    global.timer.get_timer('form_filter').stop();
                     cb(filter);
                 });
             });
@@ -211,6 +242,7 @@ module.exports = {
             }
 
             // Callback with filter
+            global.timer.get_timer('form_filter').stop();
             cb(filter);
         }
     },
@@ -220,6 +252,7 @@ module.exports = {
     //
 
     return: function(res, err, obj) {
+        global.timer.get_timer('return').start();
         if (!err) {
             if (isNaN(obj)) {
                 var x = obj.length;
@@ -231,12 +264,14 @@ module.exports = {
             } else {
                 log.debug('returning '+JSON.stringify(obj));
             }
+            global.timer.get_timer('return').stop();
             return res.json({status: 'OK', result: obj});
         } else {
             log.error(JSON.stringify(err));
             if (!res.hasOwnProperty('statusCode')) {
                 res.statusCode = 500;
             }
+            global.timer.get_timer('return').stop();
             return res.json({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
@@ -246,6 +281,7 @@ module.exports = {
     //
 
     query: function(collection, filter, fields, user_id, res, cb) {
+        global.timer.get_timer('query').start();
         log.debug('query '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             if (fields.length > 0) {
@@ -271,8 +307,10 @@ module.exports = {
                             }
                         }
                         log.debug('found %d objects',objs.length);
+                        global.timer.get_timer('query').stop();
                         cb(res,0,objs);
                     } else {
+                        global.timer.get_timer('query').stop();
                         cb(res,err,0);
                     }
                 });
@@ -291,8 +329,10 @@ module.exports = {
                             }
                         }
                         log.debug('found %d objects',objs.length);
+                        global.timer.get_timer('query').stop();
                         cb(res,0,objs);
                     } else {
+                        global.timer.get_timer('query').stop();
                         cb(res,err,0);
                     }
                 });
@@ -301,13 +341,16 @@ module.exports = {
     },
 
     count: function(collection, filter, user_id, res, cb) {
+        global.timer.get_timer('query').start();
         log.debug('count '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
+                    global.timer.get_timer('count').stop();
                     cb(res,0,count);
                 } else {
+                    global.timer.get_timer('count').stop();
                     cb(res,err,0);
                 }
             });
@@ -319,18 +362,22 @@ module.exports = {
     //
 
     commit: function(collection, orig_objs, user_id, res, cb) {
+        global.timer.get_timer('commit').start();
         log.debug('commit '+collection.collectionName);
         var ids = [];
         var max_chunk_size = 10000;
         var commit_next_chunk = function(chunk_i, chunk_j) {
             if (chunk_i === orig_objs.length) {
+                global.timer.get_timer('commit').stop();
                 cb(res,0,ids);
             } else {
                 validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
                     if(err) {
+                        global.timer.get_timer('commit').stop();
                         cb(res,err,0);
                     } else {
                         if(objs.length === 0) {
+                            global.timer.get_timer('commit').stop();
                             cb(res,0,[]);
                         } else {
                             log.debug('hash objects');
@@ -413,14 +460,17 @@ module.exports = {
                                                     log.debug('found %d objects',objs.length);
                                                     commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
                                                 } else {
+                                                    global.timer.get_timer('commit').stop();
                                                     cb(res,err,0);
                                                 }
                                             });
                                         } else {
+                                            global.timer.get_timer('commit').stop();
                                             cb(res,err,0);
                                         }
                                     });
                                 } else {
+                                    global.timer.get_timer('commit').stop();
                                     cb(res,err,0);
                                 }
                             });
@@ -437,14 +487,17 @@ module.exports = {
     //
 
     update: function(collection, filter, update, user_id, res, cb) {
+        global.timer.get_timer('update').start();
         log.debug('update '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.debug('updated %d objects',result.modifiedCount);
+                    global.timer.get_timer('update').stop();
                     cb(res,0,result.modifiedCount);
                 } else {
+                    global.timer.get_timer('update').stop();
                     cb(res,err,0);
                 }
             });
@@ -456,6 +509,7 @@ module.exports = {
     //
 
     replace: function(collection, objs, user_id, res, cb) {
+        global.timer.get_timer('replace').start();
         log.debug('replace '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
@@ -467,8 +521,10 @@ module.exports = {
         collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
                 log.debug('replaced %d objects', result.modifiedCount);
+                global.timer.get_timer('replace').stop();
                 cb(res, 0, result.modifiedCount);
             } else {
+                global.timer.get_timer('replace').stop();
                 cb(res, err, 0);
             }
         });
@@ -479,17 +535,21 @@ module.exports = {
     //
 
     pop: function(collection, filter, sort, user_id, res, cb) {
+        global.timer.get_timer('pop').start();
         log.debug('pop '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
                         log.debug('popped %d objects', result.deletedCount);
+                        global.timer.get_timer('pop').stop();
                         cb(res, 0, result.value);
                     } else {
+                        global.timer.get_timer('pop').stop();
                         cb(res, 0, 0);
                     }
                 } else {
+                    global.timer.get_timer('pop').stop();
                     cb(res, err, 0);
                 }
             });
@@ -501,13 +561,16 @@ module.exports = {
     //
 
     delete: function(collection, filter, user_id, res, cb) {
+        global.timer.get_timer('delete').start();
         log.debug('delete '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
                     log.debug('deleted %d objects', result.deletedCount);
+                    global.timer.get_timer('delete').stop();
                     cb(res, 0, result.deletedCount);
                 } else {
+                    global.timer.get_timer('delete').stop();
                     cb(res, err, 0);
                 }
             });
@@ -519,6 +582,7 @@ module.exports = {
     //
 
     stats: function(collection,req,res,map) {
+        global.timer.get_timer('stats').start();
         log.debug('stats '+collection.collectionName);
         if (!req.query.field) {
             req.query.field = req.body.field;
@@ -558,11 +622,13 @@ module.exports = {
                         if(!err) {
                             log.info("Computing statistics for %s",field);
                             if(result.length>0) {
+                                global.timer.get_timer('stats').stop();
                                 return res.json({
                                     status: 'OK',
                                     result: result[0].value
                                 });
                             } else {
+                                global.timer.get_timer('stats').stop();
                                 return res.json({
                                     status: 'OK',
                                     result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
@@ -571,12 +637,14 @@ module.exports = {
                         } else {
                             res.statusCode = 500;
                             log.error('Internal error(%d): %s',res.statusCode,err.message);
+                            global.timer.get_timer('stats').stop();
                             return res.json({ error: 'Server error' });
                         }
                     });
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    global.timer.get_timer('stats').stop();
                     return res.json({ error: 'Server error' });
                 }
             });

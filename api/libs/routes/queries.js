@@ -19,16 +19,19 @@ var properties = db.get().collection('properties');
 //
 
 function shuffle_array(array) {
+    global.timer.get_timer('shuffle_array').start();
     for (var i=array.length-1; i>0; i--) {
         var j = Math.floor(Math.random() * (i+1));
         var tmp = array[i];
         array[i] = array[j];
         array[j] = tmp;
     }
+    global.timer.get_timer('shuffle_array').stop();
     return array;
 }
 
 var create_nested_object = function(obj, keys, value) {
+    global.timer.get_timer('create_nested_object').start();
     var lastName = arguments.length === 3 ? keys[keys.length-1] : false;
     for (var i=0; i<keys.length-1; i++) {
         obj = obj[keys[i]] = obj[keys[i]] || {};
@@ -36,22 +39,30 @@ var create_nested_object = function(obj, keys, value) {
     if(lastName) {
         obj = obj[lastName] = value;
     }
+    global.timer.get_timer('create_nested_object').stop();
     return obj;
 };
 
-function find_in_operators(ins, obj, keys) {
+function find_in_operators(ins, obj, keys, rec) {
+    if (!rec) {
+        global.timer.get_timer('find_in_operators').start();
+    }
     for (var key in obj) {
         if (key === '$in') {
             ins.push({'keys':keys, 'values':obj[key]});
         } else {
             if (typeof obj[key] === 'object') {
-                find_in_operators(ins, obj[key], keys.concat(key));
+                find_in_operators(ins, obj[key], keys.concat(key), true);
             }
         }
+    }
+    if (!rec) {
+        global.timer.get_timer('find_in_operators').stop();
     }
 }
 
 function expand_props(props) {
+    global.timer.get_timer('expand_props').start();
     log.debug('expand props');
     var new_props = [];
     for (var i=0; i<props.length; i++) {
@@ -78,10 +89,12 @@ function expand_props(props) {
         }
     }
     log.debug('expanded from %d to %d properties', props.length, new_props.length);
+    global.timer.get_timer('expand_props').stop();
     return new_props;
 }
 
 function set_defaults(filters, fields, settings, cb) {
+    global.timer.get_timer('set_defaults').start();
     // Handle default
     var default_filter_keys = ['input_model','executable','params','output_model'];
     var i;
@@ -99,10 +112,12 @@ function set_defaults(filters, fields, settings, cb) {
     if (!settings['timeout']) {
         settings['timeout'] = 3600;
     }
+    global.timer.get_timer('set_defaults').stop();
     cb(filters, fields, settings);
 }
 
 function setup_query(filters, fields, settings, user_id, res, cb) {
+    global.timer.get_timer('setup_query').start();
     // Commit query
     var max_chunk_size = 10000;
     var query = [{'filters': filters, 'fields': fields, 'settings':settings}];
@@ -168,6 +183,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                                                 property_objs.push.apply(property_objs, chunk_property_objs);
                                                                 query_next_chunk(chunk_j, Math.min(prop_ids.length, chunk_j+max_chunk_size));
                                                             } else {
+                                                                global.timer.get_timer('setup_query').stop();
                                                                 common.return(res, err, 0);
                                                             }
                                                         });
@@ -178,28 +194,34 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                                 cb(query_ids, input_model_objs, executable_objs, [], res);
                                             }
                                         } else {
+                                            global.timer.get_timer('setup_query').stop();
                                             common.return(res, err, 0);
                                         }
                                     });
                                 } else {
+                                    global.timer.get_timer('setup_query').stop();
                                     common.return(res, err, 0);
                                 }
                             });
                         } else {
+                            global.timer.get_timer('setup_query').stop();
                             common.return(res, err, 0);
                         }
                     });
                 } else {
+                    global.timer.get_timer('setup_query').stop();
                     common.return(res, err, 0);
                 }
             });
         } else {
+            global.timer.get_timer('setup_query').stop();
             common.return(res, err, 0);
         }
     });
 }
 
 function get_status(filters, fields, user_id, res, cb) {
+    global.timer.get_timer('get_status').start();
     var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
     var md5 = common.hash(filters) + common.hash(fields);
     var query = {'md5': md5};
@@ -211,6 +233,7 @@ function get_status(filters, fields, user_id, res, cb) {
             stats_obj[property_objs[i]['status']]++;
         }
         stats_obj['total'] = property_objs.length;
+        global.timer.get_timer('get_status').stop();
         cb(res, 0, stats_obj);
     });
 }

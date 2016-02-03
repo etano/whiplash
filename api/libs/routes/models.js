@@ -14,6 +14,7 @@ var collection = db.get().collection('fs.files');
 //
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    global.timer.get_timer('models/').start();
     log.debug('commit models');
     var user_id = String(req.user._id);
     var objs = common.get_payload(req,'objs');
@@ -74,6 +75,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 }
             });
         } else {
+            global.timer.get_timer('models/').stop();
             common.return(res, 0, ids);
         }
     };

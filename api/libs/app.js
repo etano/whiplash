@@ -14,6 +14,7 @@ var log = require('./log')(module);
 var api = require('./routes/api');
 var www = require('./routes/www');
 var users = require('./routes/users');
+var timer = require('./routes/timer');
 var accesstokens = require('./routes/accesstokens');
 var clients = require('./routes/clients');
 var models = require('./routes/models');
@@ -23,6 +24,7 @@ var properties = require('./routes/properties');
 var queries = require('./routes/queries');
 var work_batches = require('./routes/work_batches');
 var oauth2 = require('./auth/oauth2');
+require('./timer');
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -46,6 +48,7 @@ app.use('/api/accesstokens', accesstokens);
 app.use('/api/users/token', oauth2.token);
 app.use('/api/clients', clients);
 app.use('/api/models', models);
+app.use('/api/timer', timer);
 app.use('/api/executables', executables);
 app.use('/api/collaborations', collaborations);
 app.use('/api/properties', properties);
