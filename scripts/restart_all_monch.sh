@@ -6,6 +6,8 @@ echo 'Killing node'
 killall node
 echo 'Killing mongo'
 killall mongod
+echo 'Sleeping 5'
+sleep 5
 
 HOME="/users/whiplash/whiplash"
 

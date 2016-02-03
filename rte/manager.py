@@ -8,17 +8,17 @@ import whiplash
 def start_batcher(args, flags):
     if args.test:
         flags += " --test"
-    command = args.scheduler_dir+"/batcher.py"+flags
+    command = args.rte_dir+"/batcher.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
 def start_slurm_scheduler(args, flags):
-    command = args.scheduler_dir+"/scheduler_slurm.py"+flags
+    command = args.rte_dir+"/scheduler_slurm.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
 def start_local_scheduler(args, flags):
-    command = args.scheduler_dir+"/scheduler_local.py"+flags
+    command = args.rte_dir+"/scheduler_local.py"+flags
     logging.info(command)
     sp.call(command, shell=True)
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     parser.add_argument('--port',dest='port',required=True,type=int)
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
-    parser.add_argument('--scheduler_dir',dest='scheduler_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))
+    parser.add_argument('--rte_dir',dest='rte_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
