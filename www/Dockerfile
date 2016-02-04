@@ -1,4 +1,4 @@
-FROM node
+FROM node:latest
 RUN apt-get update
 RUN apt-get install -y libkrb5-dev
 RUN apt-get install -y python-dev libyaml-dev python-pip
