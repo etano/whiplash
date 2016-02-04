@@ -12,9 +12,9 @@ api_test:
         - 1337:1337
     links:
         - odb_test:mongo
-    command: sh -c "node bin/createUser.js test test; node bin/createClient.js test-python test-python test; node bin/createClient.js test-scheduler test-scheduler test; node bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; NODE_ENV=production node --prof --use_strict bin/api"
+    command: sh -c "node --use_strict bin/createUser.js test test; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"
 www_test:
     extends:
         file: www/docker-compose.yml
         service: www
-    command: sh -c "cp config.dev.json config.json; node bin/www"
+    command: sh -c "cp config.dev.json config.json; node --use_strict bin/www"
