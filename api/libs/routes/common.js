@@ -347,10 +347,10 @@ module.exports = {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
-                    global.timer.get_timer('count').stop();
+                    global.timer.get_timer('query').stop();
                     cb(res,0,count);
                 } else {
-                    global.timer.get_timer('count').stop();
+                    global.timer.get_timer('query').stop();
                     cb(res,err,0);
                 }
             });
