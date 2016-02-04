@@ -10,7 +10,7 @@ var Executable = require(libs + 'schemas/executable');
 var collections = {'executables': Executable, 'properties': Property};
 
 function validate(collection, objs, user_id, cb) {
-    global.timer.get_timer('validate').start();
+    global.timer.get_timer('validate_'+collection.collectionName).start();
     log.debug('validate '+collection.collectionName);
     var t0 = i
     for (var i=0; i<objs.length; i++) {
@@ -34,10 +34,10 @@ function validate(collection, objs, user_id, cb) {
         }
     }
     if (bad_objs.length === 0) {
-        global.timer.get_timer('validate').stop();
+        global.timer.get_timer('validate_'+collection.collectionName).stop();
         cb(0, objs);
     } else {
-        global.timer.get_timer('validate').stop();
+        global.timer.get_timer('validate_'+collection.collectionName).stop();
         cb(bad_objs, 0);
     }
 }
@@ -186,7 +186,7 @@ module.exports = {
     //
 
     form_filter: function(collection, filter, user_id, cb) {
-        global.timer.get_timer('form_filter').start();
+        global.timer.get_timer('form_filter_'+collection.collectionName).start();
         // Regularize ids
         if ('_id' in filter) {
             if (typeof(filter['_id']) === 'object') {
@@ -231,7 +231,7 @@ module.exports = {
                     }
 
                     // Callback with filter
-                    global.timer.get_timer('form_filter').stop();
+                    global.timer.get_timer('form_filter_'+collection.collectionName).stop();
                     cb(filter);
                 });
             });
@@ -242,7 +242,7 @@ module.exports = {
             }
 
             // Callback with filter
-            global.timer.get_timer('form_filter').stop();
+            global.timer.get_timer('form_filter_'+collection.collectionName).stop();
             cb(filter);
         }
     },
@@ -265,14 +265,14 @@ module.exports = {
                 log.debug('returning '+JSON.stringify(obj));
             }
             global.timer.get_timer('return').stop();
-            return res.json({status: 'OK', result: obj});
+            return res.send({status: 'OK', result: obj});
         } else {
             log.error(JSON.stringify(err));
             if (!res.hasOwnProperty('statusCode')) {
                 res.statusCode = 500;
             }
             global.timer.get_timer('return').stop();
-            return res.json({status: res.statusCode, error: JSON.stringify(err)});
+            return res.send({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
 
@@ -281,7 +281,7 @@ module.exports = {
     //
 
     query: function(collection, filter, fields, user_id, res, cb) {
-        global.timer.get_timer('query').start();
+        global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('query '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             if (fields.length > 0) {
@@ -307,10 +307,10 @@ module.exports = {
                             }
                         }
                         log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query').stop();
+                        global.timer.get_timer('query_'+collection.collectionName).stop();
                         cb(res,0,objs);
                     } else {
-                        global.timer.get_timer('query').stop();
+                        global.timer.get_timer('query_'+collection.collectionName).stop();
                         cb(res,err,0);
                     }
                 });
@@ -329,10 +329,10 @@ module.exports = {
                             }
                         }
                         log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query').stop();
+                        global.timer.get_timer('query_'+collection.collectionName).stop();
                         cb(res,0,objs);
                     } else {
-                        global.timer.get_timer('query').stop();
+                        global.timer.get_timer('query_'+collection.collectionName).stop();
                         cb(res,err,0);
                     }
                 });
@@ -341,16 +341,16 @@ module.exports = {
     },
 
     count: function(collection, filter, user_id, res, cb) {
-        global.timer.get_timer('query').start();
+        global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('count '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
-                    global.timer.get_timer('count').stop();
+                    global.timer.get_timer('count_'+collection.collectionName).stop();
                     cb(res,0,count);
                 } else {
-                    global.timer.get_timer('count').stop();
+                    global.timer.get_timer('count_'+collection.collectionName).stop();
                     cb(res,err,0);
                 }
             });
@@ -362,22 +362,22 @@ module.exports = {
     //
 
     commit: function(collection, orig_objs, user_id, res, cb) {
-        global.timer.get_timer('commit').start();
+        global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
         var ids = [];
         var max_chunk_size = 10000;
         var commit_next_chunk = function(chunk_i, chunk_j) {
             if (chunk_i === orig_objs.length) {
-                global.timer.get_timer('commit').stop();
+                global.timer.get_timer('commit_'+collection.collectionName).stop();
                 cb(res,0,ids);
             } else {
                 validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
                     if(err) {
-                        global.timer.get_timer('commit').stop();
+                        global.timer.get_timer('commit_'+collection.collectionName).stop();
                         cb(res,err,0);
                     } else {
                         if(objs.length === 0) {
-                            global.timer.get_timer('commit').stop();
+                            global.timer.get_timer('commit_'+collection.collectionName).stop();
                             cb(res,0,[]);
                         } else {
                             log.debug('hash objects');
@@ -460,17 +460,17 @@ module.exports = {
                                                     log.debug('found %d objects',objs.length);
                                                     commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
                                                 } else {
-                                                    global.timer.get_timer('commit').stop();
+                                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
                                                     cb(res,err,0);
                                                 }
                                             });
                                         } else {
-                                            global.timer.get_timer('commit').stop();
+                                            global.timer.get_timer('commit_'+collection.collectionName).stop();
                                             cb(res,err,0);
                                         }
                                     });
                                 } else {
-                                    global.timer.get_timer('commit').stop();
+                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
                                     cb(res,err,0);
                                 }
                             });
@@ -487,17 +487,17 @@ module.exports = {
     //
 
     update: function(collection, filter, update, user_id, res, cb) {
-        global.timer.get_timer('update').start();
+        global.timer.get_timer('update_'+collection.collectionName).start();
         log.debug('update '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.debug('updated %d objects',result.modifiedCount);
-                    global.timer.get_timer('update').stop();
+                    global.timer.get_timer('update_'+collection.collectionName).stop();
                     cb(res,0,result.modifiedCount);
                 } else {
-                    global.timer.get_timer('update').stop();
+                    global.timer.get_timer('update_'+collection.collectionName).stop();
                     cb(res,err,0);
                 }
             });
@@ -509,7 +509,7 @@ module.exports = {
     //
 
     replace: function(collection, objs, user_id, res, cb) {
-        global.timer.get_timer('replace').start();
+        global.timer.get_timer('replace_'+collection.collectionName).start();
         log.debug('replace '+collection.collectionName);
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
@@ -521,10 +521,10 @@ module.exports = {
         collection.bulkWrite(batch, {w:1}, function(err,result) {
             if (result.ok) {
                 log.debug('replaced %d objects', result.modifiedCount);
-                global.timer.get_timer('replace').stop();
+                global.timer.get_timer('replace_'+collection.collectionName).stop();
                 cb(res, 0, result.modifiedCount);
             } else {
-                global.timer.get_timer('replace').stop();
+                global.timer.get_timer('replace_'+collection.collectionName).stop();
                 cb(res, err, 0);
             }
         });
@@ -535,21 +535,21 @@ module.exports = {
     //
 
     pop: function(collection, filter, sort, user_id, res, cb) {
-        global.timer.get_timer('pop').start();
+        global.timer.get_timer('pop_'+collection.collectionName).start();
         log.debug('pop '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
                         log.debug('popped %d objects', result.deletedCount);
-                        global.timer.get_timer('pop').stop();
+                        global.timer.get_timer('pop_'+collection.collectionName).stop();
                         cb(res, 0, result.value);
                     } else {
-                        global.timer.get_timer('pop').stop();
+                        global.timer.get_timer('pop_'+collection.collectionName).stop();
                         cb(res, 0, 0);
                     }
                 } else {
-                    global.timer.get_timer('pop').stop();
+                    global.timer.get_timer('pop_'+collection.collectionName).stop();
                     cb(res, err, 0);
                 }
             });
@@ -561,16 +561,16 @@ module.exports = {
     //
 
     delete: function(collection, filter, user_id, res, cb) {
-        global.timer.get_timer('delete').start();
+        global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
                     log.debug('deleted %d objects', result.deletedCount);
-                    global.timer.get_timer('delete').stop();
+                    global.timer.get_timer('delete_'+collection.collectionName).stop();
                     cb(res, 0, result.deletedCount);
                 } else {
-                    global.timer.get_timer('delete').stop();
+                    global.timer.get_timer('delete_'+collection.collectionName).stop();
                     cb(res, err, 0);
                 }
             });
@@ -582,7 +582,7 @@ module.exports = {
     //
 
     stats: function(collection,req,res,map) {
-        global.timer.get_timer('stats').start();
+        global.timer.get_timer('stats_'+collection.collectionName).start();
         log.debug('stats '+collection.collectionName);
         if (!req.query.field) {
             req.query.field = req.body.field;
@@ -622,14 +622,14 @@ module.exports = {
                         if(!err) {
                             log.info("Computing statistics for %s",field);
                             if(result.length>0) {
-                                global.timer.get_timer('stats').stop();
-                                return res.json({
+                                global.timer.get_timer('stats_'+collection.collectionName).stop();
+                                return res.send({
                                     status: 'OK',
                                     result: result[0].value
                                 });
                             } else {
-                                global.timer.get_timer('stats').stop();
-                                return res.json({
+                                global.timer.get_timer('stats_'+collection.collectionName).stop();
+                                return res.send({
                                     status: 'OK',
                                     result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
                                 });
@@ -637,15 +637,15 @@ module.exports = {
                         } else {
                             res.statusCode = 500;
                             log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            global.timer.get_timer('stats').stop();
-                            return res.json({ error: 'Server error' });
+                            global.timer.get_timer('stats_'+collection.collectionName).stop();
+                            return res.send({ error: 'Server error' });
                         }
                     });
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    global.timer.get_timer('stats').stop();
-                    return res.json({ error: 'Server error' });
+                    global.timer.get_timer('stats_'+collection.collectionName).stop();
+                    return res.send({ error: 'Server error' });
                 }
             });
         });
@@ -673,12 +673,12 @@ module.exports = {
                     out_collection.find().toArray(function (err, result) {
                         if(!err) {
                             if(result.length>0) {
-                                return res.json({
+                                return res.send({
                                     status: 'OK',
                                     result: result[0].value
                                 });
                             } else {
-                                return res.json({
+                                return res.send({
                                     status: 'OK',
                                     result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
                                 });
@@ -686,13 +686,13 @@ module.exports = {
                         } else {
                             res.statusCode = 500;
                             log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.json({ error: 'Server error' });
+                            return res.send({ error: 'Server error' });
                         }
                     });
                 } else {
                     res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.json({ error: 'Server error' });
+                    return res.send({ error: 'Server error' });
                 }
             });
         });

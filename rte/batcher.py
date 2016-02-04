@@ -5,7 +5,7 @@ import whiplash
 
 def make_batches(db,time_window):
     logging.info('querying properties')
-    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id','owner'])
+    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
 
     logging.info('building batches')
     batches = []

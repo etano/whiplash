@@ -1,6 +1,5 @@
 var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
+var compression = require('compression');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var methodOverride = require('method-override');
@@ -34,9 +33,9 @@ var allowCrossDomain = function(req, res, next) {
 };
 
 var app = express();
+app.use(compression());
 app.use(bodyParser.json({limit: '1024mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(methodOverride());
 app.use(allowCrossDomain);
 app.use(passport.initialize());
@@ -49,6 +48,7 @@ app.use('/api/users/token', oauth2.token);
 app.use('/api/clients', clients);
 app.use('/api/models', models);
 app.use('/api/timer', timer);
+
 app.use('/api/executables', executables);
 app.use('/api/collaborations', collaborations);
 app.use('/api/properties', properties);
