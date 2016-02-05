@@ -174,15 +174,15 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var map = function () {
-                emit(this.owner,
-                     {sum: this.metadata[field],
+                  emit(this.owner, {
+                      sum: this.metadata[field],
                       max: this.metadata[field],
                       min: this.metadata[field],
                       count: 1,
                       diff: 0
-                     });
+                  });
               };
-    common.stats(collection,req,res,map);
+    common.stats(collection, common.get_payload(req,'filter'), common.get_payload(req,'field'), map, String(req.user._id), res, common.return);
 });
 
 

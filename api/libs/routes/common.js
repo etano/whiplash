@@ -581,15 +581,10 @@ module.exports = {
     // Map-reduce
     //
 
-    stats: function(collection,req,res,map) {
+    stats: function(collection, filter, field, map, user_id, res, cb) {
         global.timer.get_timer('stats_'+collection.collectionName).start();
         log.debug('stats '+collection.collectionName);
-        if (!req.query.field) {
-            req.query.field = req.body.field;
-            req.query.filter = req.body.filter;
-        }
-        var field = req.query.field;
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+        this.form_filter(collection, filter, user_id, function(filter) {
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -623,29 +618,21 @@ module.exports = {
                             log.info("Computing statistics for %s",field);
                             if(result.length>0) {
                                 global.timer.get_timer('stats_'+collection.collectionName).stop();
-                                return res.send({
-                                    status: 'OK',
-                                    result: result[0].value
-                                });
+                                cb(res, 0, result[0].value);
                             } else {
                                 global.timer.get_timer('stats_'+collection.collectionName).stop();
-                                return res.send({
-                                    status: 'OK',
-                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
-                                });
+                                cb(res, 0, {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0});
                             }
                         } else {
-                            res.statusCode = 500;
                             log.error('Internal error(%d): %s',res.statusCode,err.message);
                             global.timer.get_timer('stats_'+collection.collectionName).stop();
-                            return res.send({ error: 'Server error' });
+                            cb(res, err, 0);
                         }
                     });
                 } else {
-                    res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
                     global.timer.get_timer('stats_'+collection.collectionName).stop();
-                    return res.send({ error: 'Server error' });
+                    cb(res, err, 0);
                 }
             });
         });

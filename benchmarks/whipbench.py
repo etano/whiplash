@@ -12,11 +12,24 @@ def reset_db(db):
     db.properties.delete({})
 
 def timer(*args):
-    function = args[0]
-    args = args[1:]
+    db = args[0]
+    function = args[1]
+    args = args[2:]
+    db.request("GET", "timer/on", {})
     t0 = time.time()
     res = function(*args)
     t1 = time.time()
+    reports = db.request("GET", "timer", {})['reports']
+    reports = sorted(reports, key=lambda r: r['total_time'], reverse=True)
+    print('')
+    for r in reports:
+        try:
+            if (r['total_time'] > 0):
+                print('%s %f %i %f %f'%(r['name'], r['total_time'], r['count'], r['percent_time'], r['average_time']))
+        except:
+            continue
+    print('')
+    db.request("GET", "timer/off", {})
     return t1 - t0, res
 
 def commit(db, collection, sizes, numbers, obj={}, required_fields=[]):
@@ -33,7 +46,7 @@ def commit(db, collection, sizes, numbers, obj={}, required_fields=[]):
                 for field in required_fields:
                     new_obj[field] = str(size)+"_"+str(number)+"_"+str(i)
                 objs.append(new_obj)
-            t, res = timer(db.collection(collection).commit, objs)
+            t, res = timer(db, db.collection(collection).commit, objs)
             logging.info('%s commit %i %i %f', collection, number, size, t)
             assert len(res) == number
             print('Finished in %f seconds'%(t))
@@ -52,7 +65,7 @@ def count(db, collection, sizes, numbers, filter={}):
                     "size": size,
                     "number": number
                 }
-            t, res = timer(db.collection(collection).count, new_filter)
+            t, res = timer(db, db.collection(collection).count, new_filter)
             logging.info('%s count %i %i %f', collection, number, size, t)
             assert res == number
             print('Finished in %f seconds'%(t))
@@ -71,7 +84,7 @@ def query_collection(db, collection, sizes, numbers, filter={}):
                     "size": size,
                     "number": number
                 }
-            t, res = timer(db.collection(collection).query, new_filter)
+            t, res = timer(db, db.collection(collection).query, new_filter)
             logging.info('%s query %i %i %f', collection, number, size, t)
             if collection == 'properties':
                 assert len(res) == number*number
@@ -92,8 +105,8 @@ def update(db, collection, sizes, numbers, filter={}, update={}):
             new_update = {
                 "new_field": str(size)+"_"+str(number)
             }
-            t, res = timer(db.collection(collection).update, new_filter, new_update)
-            logging.info('%s query %i %i %f', collection, number, size, t)
+            t, res = timer(db, db.collection(collection).update, new_filter, new_update)
+            logging.info('%s update %i %i %f', collection, number, size, t)
             assert res == number
             print('Finished in %f seconds'%(t))
 
@@ -105,7 +118,7 @@ def stats(db, collection, sizes, numbers, filter={}):
             new_filter["size"] = size
             new_filter["number"] = number
             field = "size"
-            t, res = timer(db.collection(collection).stats, field, new_filter)
+            t, res = timer(db, db.collection(collection).stats, field, new_filter)
             logging.info('%s stats %i %i %f', collection, number, size, t)
             assert res["count"] == number
             print('Finished in %f seconds'%(t))
@@ -116,7 +129,7 @@ def mapreduce(db, collection, sizes, numbers, filter, mapper, reducer, finalizer
 def query(db, sizes, numbers, filters={}, fields=[], settings={}):
     for size in sizes:
         for number in numbers:
-            print('Querying for %i properties with size %i'%(number*number, size))
+            print('Querying for %i results with size %i'%(number*number, size))
             new_filters = filters.copy()
             if not 'input_model' in new_filters:
                 new_filters['input_model'] = {}
@@ -131,7 +144,7 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={}):
             new_filters['params']['size'] = size
             new_filters['params']['number'] = number
             new_filters['params']['run_time'] = 1.0
-            t, res = timer(db.query, new_filters, fields, settings)
+            t, res = timer(db, db.query, new_filters, fields, settings)
             logging.info('root query %i %i %f', number, size, t)
             assert len(res) == number*number
             print('Finished in %f seconds'%(t))

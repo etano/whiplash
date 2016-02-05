@@ -81,16 +81,16 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-   var map = function () {
-                 emit(this.owner,
-                     {sum: this[field],
+    var map = function () {
+                  emit(this.owner, {
+                      sum: this[field],
                       max: this[field],
                       min: this[field],
                       count: 1,
                       diff: 0
-                     });
-             };
-   common.stats(collection,req,res,map);
+                  });
+              };
+    common.stats(collection, common.get_payload(req,'filter'), common.get_payload(req,'field'), map, String(req.user._id), res, common.return);
 });
 
 router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
