@@ -82,8 +82,5 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/batcher/'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    stderrLogger = logging.StreamHandler()
-    stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
-    logging.getLogger().addHandler(stderrLogger)
+    logging.basicConfig(filename=args.log_dir+'/batcher_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)

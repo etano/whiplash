@@ -109,5 +109,5 @@ if __name__ == '__main__':
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/manager/'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(filename=args.log_dir+'/manager_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)
