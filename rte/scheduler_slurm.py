@@ -20,7 +20,7 @@ def submit_job(args):
         job_file = "job_" + args.user + ".sbatch"
         user_job_file = ".whiplash_job.sbatch"
         logging.info('submitting job: %s | %i', args.user, args.time_limit)
-        flags = " --host "+args.host+" --port "+str(args.port)+" --token "+args.token+" --time_limit "+str(args.time_limit)+" --work_dir "+user_work_dir+" --num_cpus "+str(args.num_cpus)+" --log_dir "+args.log_dir
+        flags = " --host "+args.host+" --port "+str(args.port)+" --token "+args.token+" --time_limit "+str(args.time_limit)+" --work_dir "+user_work_dir+" --num_cpus "+str(args.num_cpus)+" --log_dir "+args.log_dir+" --user "+args.user
         if args.docker:
             flags += " --docker"
         with open(job_file,"w") as sbatch:
