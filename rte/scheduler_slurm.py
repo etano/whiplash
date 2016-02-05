@@ -49,7 +49,7 @@ def scheduler(args):
         num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
         if (db.collection('work_batches').count({}) > 0) and (num_pending == 0):
             submit_job(args)
-        time.sleep(1)
+        time.sleep(5)
 
     logging.info('slurm scheduler shutting down')
 
@@ -68,5 +68,5 @@ if __name__ == '__main__':
     parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='.')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/'+args.user+'_slurm_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(filename=args.log_dir+'/slurm/'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)
