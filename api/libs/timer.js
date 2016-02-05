@@ -26,64 +26,61 @@ class GlobalTimer {
     }
 
     enable() {
-        this.enabled = true;
-        for (var key in this.timers) {
-            this.timers[key].enabled = true;
-            this.timers[key].reset();
+        if (!this.enabled) {
+            this.enabled = true;
+            for (var key in this.timers) {
+                this.timers[key].enabled = true;
+                this.timers[key].reset();
+            }
+            this.get_timer('global').start();
+            return 'global timer enabled';
+        } else {
+            return 'global timer already enabled';
         }
-        this.get_timer('global').start();
-        return 'global timer enabled';
     }
 
     disable() {
-        this.enabled = false;
-        for (var key in this.timers) {
-            this.timers[key].enabled = false;
-            this.timers[key].reset();
+        if (this.enabled) {
+            this.enabled = false;
+            for (var key in this.timers) {
+                this.timers[key].enabled = false;
+            }
+            this.get_timer('global').stop();
+            return 'global timer disabled';
+        } else {
+            return 'global timer already disabled';
         }
-        this.get_timer('global').stop();
-        return 'global timer disabled';
     }
 
     get_timer(function_name) {
         if (!this.timers.hasOwnProperty(function_name)) {
-            this.timers[function_name] = new Timer(function_name);
+            this.timers[function_name] = new Timer(function_name, this.enabled);
         }
         return this.timers[function_name];
     }
 
     report() {
-        if (this.enabled) {
-            this.get_timer('global').stop();
-            var total_time = this.get_timer('global').report()['total_time'];
-            var reports = [];
-            for (var key in this.timers) {
-                var report = this.timers[key].report();
-                report['percent_time'] = 100*(report['total_time']/total_time);
-                reports.push(report);
-            }
-            this.get_timer('global').start();
-            return {
-                'total_time': total_time,
-                'reports': reports
-            };
-        } else {
-            return {
-                'total_time': 0,
-                'reports': {}
-            };
+        this.get_timer('global').stop();
+        var total_time = this.get_timer('global').report()['total_time'];
+        var reports = [];
+        for (var key in this.timers) {
+            var report = this.timers[key].report();
+            report['percent_time'] = 100*(report['total_time']/total_time);
+            reports.push(report);
         }
+        this.get_timer('global').start();
+        return {
+            'total_time': total_time,
+            'reports': reports
+        };
     }
 }
 
 class Timer {
-    constructor(name) {
+    constructor(name, enabled) {
         this.name = name;
-        this.count = 0;
-        this.start_time = null;
-        this.stop_time = null;
-        this.average_time = 0;
-        this.enabled = false;
+        this.enabled = enabled;
+        this.reset();
     }
 
     get_time() {
@@ -93,12 +90,14 @@ class Timer {
     reset() {
         this.average_time = 0;
         this.count = 0;
+        this.start_time = null;
+        this.stop_time = null;
     }
 
     start() {
         if (this.enabled) {
-            this.count++;
             this.start_time = this.get_time();
+            this.count++;
         }
     }
 

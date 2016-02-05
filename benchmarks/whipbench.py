@@ -42,11 +42,16 @@ def count(db, collection, sizes, numbers, filter={}):
     for size in sizes:
         for number in numbers:
             print('Counting %i %s with size %i'%(number, collection, size))
-            new_filter = filter.copy()
-            new_filter = {
-                "size": size,
-                "number": number
-            }
+            if collection == 'properties':
+                new_filter = {
+                    "params.size": size,
+                    "params.number": number
+                }
+            else:
+                new_filter = {
+                    "size": size,
+                    "number": number
+                }
             t, res = timer(db.collection(collection).count, new_filter)
             logging.info('%s count %i %i %f', collection, number, size, t)
             assert res == number
@@ -56,14 +61,22 @@ def query_collection(db, collection, sizes, numbers, filter={}):
     for size in sizes:
         for number in numbers:
             print('Querying %i %s with size %i'%(number, collection, size))
-            new_filter = filter.copy()
-            new_filter = {
-                "size": size,
-                "number": number
-            }
+            if collection == 'properties':
+                new_filter = {
+                    "params.size": size,
+                    "params.number": number
+                }
+            else:
+                new_filter = {
+                    "size": size,
+                    "number": number
+                }
             t, res = timer(db.collection(collection).query, new_filter)
             logging.info('%s query %i %i %f', collection, number, size, t)
-            assert len(res) == number
+            if collection == 'properties':
+                assert len(res) == number*number
+            else:
+                assert len(res) == number
             print('Finished in %f seconds'%(t))
 
 def update(db, collection, sizes, numbers, filter={}, update={}):
@@ -115,6 +128,8 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={}):
             new_filters['executable']['number'] = number
             if not 'params' in new_filters:
                 new_filters['params'] = {}
+            new_filters['params']['size'] = size
+            new_filters['params']['number'] = number
             new_filters['params']['run_time'] = 1.0
             t, res = timer(db.query, new_filters, fields, settings)
             logging.info('root query %i %i %f', number, size, t)

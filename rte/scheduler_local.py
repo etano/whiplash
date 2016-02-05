@@ -17,6 +17,7 @@ def is_work(db, end_time):
     return n_work_batches > 0
 
 def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
+    logging.info('worker %i has begun trying to fetch a work batch', pid)
     t0 = time.time()
     work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
     model_indices = {}
@@ -42,6 +43,7 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
         logging.info('worker %i found no work batches in %f seconds', pid, t1-t0)
 
 def commit_resolved(db, pid, result):
+    logging.info('worker %i has began committing back models and properties', pid)
     t0 = time.time()
     ids = db.models.commit(result['good']['models'])
     t1 = time.time()
@@ -73,7 +75,7 @@ def resolve_object(args, pid, property, models, executables):
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
-        with open(file_name, 'r') as io_file:
+        with open(host_file_name, 'r') as io_file:
             result = json.load(io_file)
     except sp.TimeoutExpired as e:
         t1 = time.time()
@@ -91,7 +93,7 @@ def resolve_object(args, pid, property, models, executables):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    os.remove(host_file_name)
+    #os.remove(host_file_name)
 
     if 'content' not in result: result['content'] = {}
     if 'None' in result['content']: result['content'] = {}
@@ -138,8 +140,9 @@ def worker(pid, db, args, end_time):
             if (not is_work(db, end_time)):
                 time.sleep(5)
                 if num_alive() == 0:
-                    logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
-                    sys.exit(0)
+                    if (len(work_batches) == 0):
+                        logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
+                        sys.exit(0)
                 else:
                     logging.info('worker %i has no suitable work, but %i threads alive', pid, num_alive())
 
@@ -197,5 +200,5 @@ if __name__ == '__main__':
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/'+args.user+'_local_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(filename=args.log_dir+'/local_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)

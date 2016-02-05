@@ -5,7 +5,7 @@ import whiplash
 
 def make_batches(db,time_window):
     logging.info('querying properties')
-    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id','owner'])
+    properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
 
     logging.info('building batches')
     batches = []
@@ -67,7 +67,7 @@ def scheduler(args):
         time_window = get_times(args,db)
         if time_window > 0:
             make_batches(db,time_window)
-        time.sleep(2)
+        time.sleep(5)
         if args.test:
             break
 
@@ -82,5 +82,5 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=args.log_dir+'/'+args.user+'_batcher_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.basicConfig(filename=args.log_dir+'/batcher_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     scheduler(args)
