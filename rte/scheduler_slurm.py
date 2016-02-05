@@ -69,4 +69,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/slurm/'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    stderrLogger = logging.StreamHandler()
+    stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+    logging.getLogger().addHandler(stderrLogger)
     scheduler(args)
