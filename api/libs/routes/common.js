@@ -386,13 +386,16 @@ module.exports = {
                                 objs[i]['commit_tag'] = commit_tag;
                                 if (collection.collectionName === "properties") {
                                     objs[i]['md5'] = hash({
-                                                            input_model_id: objs[i]['input_model_id'],
-                                                            executable_id: objs[i]['executable_id'],
-                                                            owner: objs[i]['owner'],
-                                                            params: objs[i].params
-                                                          });
+                                                         input_model_id: objs[i]['input_model_id'],
+                                                         executable_id: objs[i]['executable_id'],
+                                                         owner: objs[i]['owner'],
+                                                         params: objs[i].params
+                                                     });
                                 } else if (collection.collectionName === "queries") {
-                                    objs[i]['md5'] = hash(objs[i]['filters']) + hash(objs[i]['fields']);
+                                    objs[i]['md5'] = hash({
+                                                        filters: objs[i]['filters'],
+                                                        fields: objs[i]['fields']
+                                                     });
                                     objs[i]['filters'] = smart_stringify(objs[i].filters);
                                 }
                             }
