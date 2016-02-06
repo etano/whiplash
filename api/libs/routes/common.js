@@ -385,13 +385,19 @@ module.exports = {
                             for(var i=0; i<objs.length; i++) {
                                 objs[i]['commit_tag'] = commit_tag;
                                 if (collection.collectionName === "properties") {
-                                    objs[i]['md5'] = hash(objs[i].params);
+                                    objs[i]['md5'] = hash({
+                                                            input_model_id: objs[i]['input_model_id'],
+                                                            executable_id: objs[i]['executable_id'],
+                                                            owner: objs[i]['owner'],
+                                                            params: objs[i].params
+                                                          });
                                 } else if (collection.collectionName === "queries") {
                                     objs[i]['md5'] = hash(objs[i]['filters']) + hash(objs[i]['fields']);
                                     objs[i]['filters'] = smart_stringify(objs[i].filters);
                                 }
                             }
                             log.debug('form commit filter');
+                            global.timer.get_timer('commit_place_tag_'+collection.collectionName).start();
                             var batch = [];
                             for(var i=0; i<objs.length; i++) {
                                 var filter = {};
@@ -409,10 +415,7 @@ module.exports = {
                                     filter['owner'] = objs[i]['owner'];
                                 }
                                 else if (collection.collectionName === "properties") {
-                                    filter['input_model_id'] = objs[i]['input_model_id'];
-                                    filter['executable_id'] = objs[i]['executable_id'];
                                     filter['md5'] = objs[i]['md5'];
-                                    filter['owner'] = objs[i]['owner'];
                                 }
                                 else if (collection.collectionName === "queries") {
                                     filter['owner'] = objs[i]['owner'];
@@ -434,6 +437,7 @@ module.exports = {
                             }
                             log.debug('apply commit tag');
                             collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
+                                global.timer.get_timer('commit_place_tag_'+collection.collectionName).stop();
                                 if (result.ok) {
                                     log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
                                     log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
@@ -449,10 +453,8 @@ module.exports = {
                                             log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
                                             log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
                                             res.nInserted = result.nInserted;
-                                            var tag_filter = {'commit_tag': commit_tag};
-                                            var proj = {'_id':1};
                                             log.debug('get object ids');
-                                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                            collection.find({'commit_tag': commit_tag}).project({'_id':1}).toArray(function (err, objs) {
                                                 if (!err) {
                                                     for(var j=0; j<objs.length; j++) {
                                                         ids.push(objs[j]['_id']);
