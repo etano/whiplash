@@ -25,3 +25,4 @@ try{ db.clients.createIndex({name: 1},{unique: true}); } catch(err) {}
 try{ db.work_batches.createIndex({timestamp : 1}); } catch(err) {}
 try{ db.properties.createIndex({owner: 1, status: 1},{unique: false}); } catch(err) {}
 try{ db.properties.createIndex({commit_tag: 1},{unique: false}); } catch(err) {}
+try{ db.properties.createIndex({status: 1, timeout: 1},{unique: false}); } catch(err) {}
