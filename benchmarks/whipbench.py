@@ -20,12 +20,11 @@ def timer(*args):
     res = function(*args)
     t1 = time.time()
     reports = db.request("GET", "timer", {})['reports']
-    reports = sorted(reports, key=lambda r: r['total_time'], reverse=True)
-    print('')
-    for r in reports:
+    for key in reports:
+        r = reports[key]
         try:
             if (r['total_time'] > 0):
-                print('%s %f %i %f %f'%(r['name'], r['total_time'], r['count'], r['percent_time'], r['average_time']))
+                print('%s %f %i %f %f'%(key, r['total_time'], r['count'], r['percent_time'], r['average_time']))
         except:
             continue
     print('')
@@ -126,7 +125,7 @@ def stats(db, collection, sizes, numbers, filter={}):
 def mapreduce(db, collection, sizes, numbers, filter, mapper, reducer, finalizer):
     print("NOT YET IMPLEMENTED")
 
-def query(db, sizes, numbers, filters={}, fields=[], settings={}):
+def query(db, sizes, numbers, filters={}, fields=[], settings={'get_results': False}):
     for size in sizes:
         for number in numbers:
             print('Querying for %i results with size %i'%(number*number, size))
@@ -146,5 +145,9 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={}):
             new_filters['params']['run_time'] = 1.0
             t, res = timer(db, db.query, new_filters, fields, settings)
             logging.info('root query %i %i %f', number, size, t)
-            assert len(res) == number*number
+            print(res)
+            #if settings['get_results']:
+            #    assert len(res) == number*number
+            #else:
+            #    assert res['n_new'] + res['n_existing'] == number*number
             print('Finished in %f seconds'%(t))

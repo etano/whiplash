@@ -120,84 +120,89 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
     global.timer.get_timer('setup_query').start();
     // Commit query
     var max_chunk_size = 10000;
-    var query = [{'filters': filters, 'fields': fields, 'settings':settings}];
+    var query = [{'filters': filters, 'fields': fields, 'settings': settings}];
     common.commit(collection, query, user_id, res, function(res, err, query_ids) {
         if (!err) {
             var query_id = new ObjectID(query_ids[0]);
-            // Query for query
-            common.query(collection, {'_id': query_id}, ['_id','input_model_ids','executable','property_ids'], user_id, res, function(res, err, query_objs) {
+            // Get input model objects from filters
+            common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
                 if (!err) {
-                    // Get input model objects from filters
-                    common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
+                    var input_model_ids = [];
+                    for (var i=0; i<input_model_objs.length; i++) {
+                        input_model_ids.push(input_model_objs[i]['_id']);
+                    }
+                    // Get executable objects from filters
+                    common.query(executables, filters['executable'], ['_id'].concat(fields['executable']), user_id, res, function(res, err, executable_objs) {
                         if (!err) {
-                            var input_model_ids = [];
-                            for (var i=0; i<input_model_objs.length; i++) {
-                                input_model_ids.push(input_model_objs[i]['_id']);
+                            var executable_ids = [];
+                            for (var i=0; i<executable_objs.length; i++) {
+                                executable_ids.push(executable_objs[i]['_id']);
                             }
-                            // Get executable objects from filters
-                            common.query(executables, filters['executable'], ['_id'].concat(fields['executable']), user_id, res, function(res, err, executable_objs) {
+                            // Form properties
+                            log.debug('form properties');
+                            var props = [];
+                            for (var i=0; i<input_model_ids.length; i++) {
+                                for (var j=0; j<executable_ids.length; j++) {
+                                    var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{}};
+                                    for (var key in filters['params']) {
+                                        prop['params'][key] = filters['params'][key];
+                                    }
+                                    props.push(prop);
+                                }
+                            }
+                            props = expand_props(props);
+                            for (var i=0; i<props.length; i++) {
+                                props[i].md5 = common.hash({
+                                                   input_model_id: props[i]['input_model_id'],
+                                                   executable_id: props[i]['executable_id'],
+                                                   owner: user_id,
+                                                   params: props[i].params
+                                               });
+                            }
+                            log.debug('formed %d properties', props.length);
+                            // Commit new properties and look for existing properties
+                            global.timer.get_timer('commit_new_properties').start();
+                            log.debug('committing properties', props.length);
+                            var batch = properties.initializeUnorderedBulkOp();
+                            for (var i=0; i<props.length; i++) {
+                                batch.find({md5: props[i].md5}).upsert().updateOne({
+                                    "$setOnInsert": {
+                                        "input_model_id": props[i]["input_model_id"],
+                                        "executable_id": props[i]["executable_id"],
+                                        "owner": user_id,
+                                        "params": props[i]["params"],
+                                        "md5": props[i]["md5"]
+                                    },
+                                    "$set": {"query_id": query_id}
+                                });
+                            }
+                            batch.execute(function(err, result) {
+                                global.timer.get_timer('commit_new_properties').stop();
                                 if (!err) {
-                                    var executable_ids = [];
-                                    for (var i=0; i<executable_objs.length; i++) {
-                                        executable_ids.push(executable_objs[i]['_id']);
-                                    }
-                                    // Form properties
-                                    log.debug('form properties');
-                                    var props = [];
-                                    for (var i=0; i<input_model_ids.length; i++) {
-                                        for (var j=0; j<executable_ids.length; j++) {
-                                            var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{}};
-                                            for (var key in filters['params']) {
-                                                prop['params'][key] = filters['params'][key];
-                                            }
-                                            props.push(prop);
+                                    var property_stats = {"n_existing": result.nMatched, "n_new": result.nUpserted};
+                                    // Check if there are any properties or not
+                                    if (settings.get_results) {
+                                        // Form property filter
+                                        var property_objs = [];
+                                        var property_filter = {'query_id': query_id};
+                                        var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
+                                        for (var j=0; i<fields['params'].length; j++) {
+                                            property_fields.push('params.'+fields['params'][j]);
                                         }
-                                    }
-                                    props = expand_props(props);
-                                    log.debug('formed %d properties', props.length);
-                                    // No need to randomize, but here it is
-                                    // props = shuffle_array(props);
-                                    // Commit properties
-                                    common.commit(properties, props, user_id, res, function(res, err, property_ids) {
-                                        if (!err) {
-                                            // Check if there are any properties or not
-                                            if (property_ids.length > 0) {
-                                                // Form property filter
-                                                var prop_ids = [];
-                                                for (var i=0; i<property_ids.length; i++) {
-                                                    prop_ids.push(new ObjectID(property_ids[i]));
-                                                }
-                                                var property_objs = [];
-                                                var query_next_chunk = function(chunk_i, chunk_j) {
-                                                    if (chunk_i === prop_ids.length) {
-                                                        cb(query_ids, input_model_objs, executable_objs, property_objs, res);
-                                                    } else {
-                                                        var property_filter = {'_id':{'$in':prop_ids.slice(chunk_i,chunk_j)}};
-                                                        var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
-                                                        for (var j=0; i<fields['params'].length; j++) {
-                                                            property_fields.push('params.'+fields['params'][j]);
-                                                        }
-                                                        // Get property objects
-                                                        common.query(properties, property_filter, property_fields, user_id, res, function(res, err, chunk_property_objs) {
-                                                            if (!err) {
-                                                                property_objs.push.apply(property_objs, chunk_property_objs);
-                                                                query_next_chunk(chunk_j, Math.min(prop_ids.length, chunk_j+max_chunk_size));
-                                                            } else {
-                                                                global.timer.get_timer('setup_query').stop();
-                                                                common.return(res, err, 0);
-                                                            }
-                                                        });
-                                                    }
-                                                };
-                                                query_next_chunk(0, Math.min(prop_ids.length, max_chunk_size));
+                                        // Get property objects
+                                        common.query(properties, property_filter, property_fields, user_id, res, function(res, err, chunk_property_objs) {
+                                            if (!err) {
+                                                property_objs.push.apply(property_objs, chunk_property_objs);
+                                                cb(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res);
                                             } else {
-                                                cb(query_ids, input_model_objs, executable_objs, [], res);
+                                                global.timer.get_timer('setup_query').stop();
+                                                common.return(res, err, 0);
                                             }
-                                        } else {
-                                            global.timer.get_timer('setup_query').stop();
-                                            common.return(res, err, 0);
-                                        }
-                                    });
+                                        });
+                                    } else {
+                                        global.timer.get_timer('setup_query').stop();
+                                        cb(query_ids, input_model_objs, executable_objs, [], property_stats, res);
+                                    }
                                 } else {
                                     global.timer.get_timer('setup_query').stop();
                                     common.return(res, err, 0);
@@ -227,7 +232,7 @@ function get_status(filters, fields, user_id, res, cb) {
     var query = {'md5': md5};
     fields = {'input_model': [], 'executable': [], 'output_model': [], 'params': []};
     var settings = {};
-    setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+    setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res) {
         // Get stats
         for (var i=0; i<property_objs.length; i++) {
             stats_obj[property_objs[i]['status']]++;
@@ -251,7 +256,7 @@ router.get('/submit', passport.authenticate('bearer', { session: false }), funct
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and property objects
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
-        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
+        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats,res) {
             common.return(res, 0, property_objs);
         });
     });
@@ -265,57 +270,61 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     var user_id = String(req.user._id);
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
         // Commit query, get input model objects, executable objects, and commit properties
-        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, res) {
-            // Get output model info
-            var output_model_ids = [];
-            for (var i=0; i<property_objs.length; i++) {
-                if (property_objs[i].hasOwnProperty('output_model_id')) {
-                    output_model_ids.push(new ObjectID(property_objs[i]['output_model_id']));
+        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res) {
+            if (settings.get_results) {
+                // Get output model info
+                var output_model_ids = [];
+                for (var i=0; i<property_objs.length; i++) {
+                    if (property_objs[i].hasOwnProperty('output_model_id')) {
+                        output_model_ids.push(new ObjectID(property_objs[i]['output_model_id']));
+                    }
                 }
-            }
-            filters['output_model']['_id'] = {'$in': output_model_ids};
-            common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
-                if (!err) {
-                    common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
-                        log.debug('sorting');
-                        if (!err) {
-                            // Sort everything
-                            var input_model_indexes = {};
-                            for (var i=0; i<input_model_objs.length; i++) {
-                                input_model_indexes[String(input_model_objs[i]['_id'])] = i;
-                            }
-                            var output_model_indexes = {};
-                            for (var i=0; i<output_model_objs.length; i++) {
-                                output_model_indexes[String(output_model_objs[i]['_id'])] = i;
-                            }
-                            var executable_indexes = {};
-                            for (var i=0; i<executable_objs.length; i++) {
-                                executable_indexes[String(executable_objs[i]['_id'])] = i;
-                            }
-                            var objs = [];
-                            for (var i=0; i<property_objs.length; i++) {
-                                var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
-                                           'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
-                                           'params': property_objs[i]['params'],
-                                           'status': property_objs[i]['status']};
-                                if (property_objs[i]['status'] === 'resolved') {
-                                    obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
-                                } else {
-                                    obj['output_model'] = '';
+                filters['output_model']['_id'] = {'$in': output_model_ids};
+                common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
+                    if (!err) {
+                        common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
+                            log.debug('sorting');
+                            if (!err) {
+                                // Sort everything
+                                var input_model_indexes = {};
+                                for (var i=0; i<input_model_objs.length; i++) {
+                                    input_model_indexes[String(input_model_objs[i]['_id'])] = i;
                                 }
-                                objs.push(obj);
+                                var output_model_indexes = {};
+                                for (var i=0; i<output_model_objs.length; i++) {
+                                    output_model_indexes[String(output_model_objs[i]['_id'])] = i;
+                                }
+                                var executable_indexes = {};
+                                for (var i=0; i<executable_objs.length; i++) {
+                                    executable_indexes[String(executable_objs[i]['_id'])] = i;
+                                }
+                                var objs = [];
+                                for (var i=0; i<property_objs.length; i++) {
+                                    var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
+                                               'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
+                                               'params': property_objs[i]['params'],
+                                               'status': property_objs[i]['status']};
+                                    if (property_objs[i]['status'] === 'resolved') {
+                                        obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
+                                    } else {
+                                        obj['output_model'] = '';
+                                    }
+                                    objs.push(obj);
+                                }
+                                // Return
+                                log.debug('returning');
+                                common.return(res, 0, objs);
+                            } else {
+                                common.return(res, err, 0);
                             }
-                            // Return
-                            log.debug('returning');
-                            common.return(res, err, objs);
-                        } else {
-                            common.return(res, err, 0);
-                        }
-                    });
-                } else {
-                    common.return(res, err, 0);
-                }
-            });
+                        });
+                    } else {
+                        common.return(res, err, 0);
+                    }
+                });
+            } else {
+                common.return(res, 0, property_stats);
+            }
         });
     });
 });

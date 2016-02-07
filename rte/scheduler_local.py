@@ -44,18 +44,19 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
 
 def commit_resolved(db, pid, result):
     logging.info('worker %i has began committing back models and properties', pid)
-    t0 = time.time()
-    ids = db.models.commit(result['good']['models'])
-    t1 = time.time()
-    logging.info('worker %i commited %i models in %f seconds', pid, len(result['good']['models']), t1-t0)
-    for i in range(len(ids)):
-        result['good']['properties'][i]['output_model_id'] = ids[i]
+    if len(result['good']['models']) > 0:
+        t0 = time.time()
+        ids = db.models.commit(result['good']['models'])
+        t1 = time.time()
+        logging.info('worker %i committed %i models in %f seconds', pid, len(result['good']['models']), t1-t0)
+        for i in range(len(ids)):
+            result['good']['properties'][i]['output_model_id'] = ids[i]
     t0 = time.time()
     all_properties = result['good']['properties']+result['bad']['properties']
     db.properties.replace(all_properties)
     t1 = time.time()
     elapsed1 = t1-t0
-    logging.info('worker %i commited %i properties in %f seconds', pid, len(all_properties), t1-t0)
+    logging.info('worker %i committed %i properties in %f seconds', pid, len(all_properties), t1-t0)
 
 def resolve_object(args, pid, property, models, executables):
     file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'

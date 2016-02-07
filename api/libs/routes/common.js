@@ -215,12 +215,12 @@ module.exports = {
                                     ids.push(objs[i]['_id']);
                                 }
                                 if (ids.length > 0) {
-                                    filter['$or'] = {'owner': {'$in': [user_id,'whiplash']}, 'collaboration': {'$in': ids}};
+                                    filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
                                 } else {
-                                    filter.owner = {'$in': [user_id,'whiplash']};
+                                    filter.owner = user_id;
                                 }
                             } else {
-                                filter.owner = {'$in': [user_id,'whiplash']};
+                                filter.owner = user_id;
                             }
                         }
                     }
@@ -397,6 +397,12 @@ module.exports = {
                                                         fields: objs[i]['fields']
                                                      });
                                     objs[i]['filters'] = smart_stringify(objs[i].filters);
+                                } else if (collection.collectionName === "executables") {
+                                    objs[i]['md5'] = hash({
+                                                        name: objs[i]['name'],
+                                                        owner: objs[i]['owner'],
+                                                        path: objs[i]['path']
+                                                     });
                                 }
                             }
                             log.debug('form commit filter');
@@ -406,22 +412,15 @@ module.exports = {
                                 var filter = {};
                                 if (collection.collectionName === "fs.files") {
                                     filter['metadata'] = {};
-                                    filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
-                                    filter['metadata']['owner'] = objs[i]['metadata']['owner'];
                                     filter['metadata']['md5'] = objs[i]['metadata']['md5'];
                                 }
                                 else if(collection.collectionName === "executables") {
-                                    filter['name'] = objs[i]['name'];
-                                    filter['algorithm'] = objs[i]['algorithm'];
-                                    filter['version'] = objs[i]['version'];
-                                    filter['build'] = objs[i]['build'];
-                                    filter['owner'] = objs[i]['owner'];
+                                    filter['md5'] = objs[i]['md5'];
                                 }
                                 else if (collection.collectionName === "properties") {
                                     filter['md5'] = objs[i]['md5'];
                                 }
                                 else if (collection.collectionName === "queries") {
-                                    filter['owner'] = objs[i]['owner'];
                                     filter['md5'] = objs[i]['md5'];
                                 }
                                 else if (collection.collectionName === "collaborations") {
