@@ -406,7 +406,7 @@ module.exports = {
                                 }
                             }
                             log.debug('form commit filter');
-                            global.timer.get_timer('commit_update_'+collection.collectionName).start();
+                            global.timer.get_timer('commit_place_tag_'+collection.collectionName).start();
                             var batch = [];
                             for(var i=0; i<objs.length; i++) {
                                 var filter = {};
@@ -436,24 +436,38 @@ module.exports = {
                                     filter['timestamp'] = objs[i]['timestamp'];
                                 }
                                 batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                                batch.push({ insertOne: { document: objs[i] }});
                             }
                             log.debug('apply commit tag');
                             collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
-                                global.timer.get_timer('commit_update_'+collection.collectionName).stop();
+                                global.timer.get_timer('commit_place_tag_'+collection.collectionName).stop();
                                 if (result.ok) {
                                     log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
                                     log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
                                     log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
-                                    res.nInserted = result.nInserted;
-                                    log.debug('get object ids');
-                                    collection.find({'commit_tag': commit_tag}).project({'_id':1}).toArray(function (err, objs) {
-                                        if (!err) {
-                                            for(var j=0; j<objs.length; j++) {
-                                                ids.push(objs[j]['_id']);
-                                            }
-                                            log.debug('found %d objects',objs.length);
-                                            commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
+                                    var batch = [];
+                                    for(var i=0; i<objs.length; i++) {
+                                        batch.push({ insertOne: { document : objs[i] } });
+                                    }
+                                    log.debug('attempt insertion');
+                                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
+                                        if (result.ok) {
+                                            log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
+                                            log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
+                                            log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
+                                            res.nInserted = result.nInserted;
+                                            log.debug('get object ids');
+                                            collection.find({'commit_tag': commit_tag}).project({'_id':1}).toArray(function (err, objs) {
+                                                if (!err) {
+                                                    for(var j=0; j<objs.length; j++) {
+                                                        ids.push(objs[j]['_id']);
+                                                    }
+                                                    log.debug('found %d objects',objs.length);
+                                                    commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
+                                                } else {
+                                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                                                    cb(res,err,0);
+                                                }
+                                            });
                                         } else {
                                             global.timer.get_timer('commit_'+collection.collectionName).stop();
                                             cb(res,err,0);
