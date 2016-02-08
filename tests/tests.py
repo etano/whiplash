@@ -28,7 +28,7 @@ for i in range(N):
 tags = {"n_spins":N, "name":"test"}
 model = {"content":{"edges":hamiltonian}}
 model.update(tags)
-model_id = db.models.commit(model)[0]
+model_id = db.models.commit(model)['ids'][0]
 
 print("Query model")
 assert model_id == db.models.query(tags,'_id')[0]['_id']
