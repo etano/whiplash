@@ -14,7 +14,7 @@ try{ db.createUser({user:"scheduler",pwd:"c93lbcp0hc[5209sebf10{3ca",roles:[{rol
 try{ db.fs.files.createIndex({"metadata.md5" : 1, "metadata.property_id" : 1, "metadata.owner" : 1},{unique : true}); } catch(err) {}
 try{ db.executables.createIndex({name: 1, path: 1, md5: 1, owner: 1},{unique: true}); } catch(err) {}
 try{ db.properties.createIndex({md5: 1},{unique: true}); } catch(err) {}
-try{ db.queries.createIndex({owner: 1, "md5": 1},{unique: true}); } catch(err) {}
+try{ db.queries.createIndex({owner: 1, md5: 1},{unique: true}); } catch(err) {}
 try{ db.collaborations.createIndex({name: 1},{unique: true}); } catch(err) {}
 try{ db.users.createIndex({username: 1},{unique: true}); } catch(err) {}
 try{ db.clients.createIndex({name: 1},{unique: true}); } catch(err) {}
