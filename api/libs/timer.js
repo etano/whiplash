@@ -66,7 +66,7 @@ class GlobalTimer {
         for (var key in this.timers) {
             var report = this.timers[key].report();
             report['percent_time'] = 100*(report['total_time']/total_time);
-            reports.key = report;
+            reports[key]= report;
         }
         this.get_timer('global').start();
         return {

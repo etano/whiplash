@@ -19,6 +19,8 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     var user_id = String(req.user._id);
     var objs = common.get_payload(req,'objs');
     var ids = [];
+    var n_existing = 0;
+    var n_new = 0;
     var write_file = function(i) {
         if(i < objs.length) {
             var metadata = {};
@@ -45,6 +47,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                 } else if(prev_objs.length > 0) {
                     log.error("Duplicate file with md5: %s",metadata.md5);
                     ids.push(prev_objs[0]._id);
+                    n_existing++;
                     write_file(i+1);
                 } else {
                     var fileId = new ObjectID();
@@ -65,6 +68,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
                                             log.error("Error closing file: %s",err.message);
                                         } else {
                                             ids.push(String(fileId));
+                                            n_new++;
                                         }
                                         write_file(i+1);
                                     });
@@ -76,7 +80,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             });
         } else {
             global.timer.get_timer('commit_models').stop();
-            common.return(res, 0, ids);
+            common.return(res, 0, {'n_existing': n_existing, 'n_new': n_new, 'ids': ids});
         }
     };
     write_file(0);

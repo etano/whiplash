@@ -35,7 +35,7 @@ assert model_id == db.models.query(tags,'_id')[0]['_id']
 
 print("Commit executable")
 executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test", "params":{"required":["sleep_time"], "optional":[]}}
-executable_id = db.executables.commit(executable)[0]
+executable_id = db.executables.commit(executable)['ids'][0]
 
 print("Query executable")
 assert executable_id == db.executables.query(executable,'_id')[0]['_id']

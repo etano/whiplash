@@ -121,9 +121,10 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
     // Commit query
     var max_chunk_size = 10000;
     var query = [{'filters': filters, 'fields': fields, 'settings': settings}];
-    common.commit(collection, query, user_id, res, function(res, err, query_ids) {
+    common.commit(collection, query, user_id, res, function(res, err, result) {
         if (!err) {
-            var query_id = new ObjectID(query_ids[0]);
+            var query_ids = result.ids;
+            var query_id = query_ids[0];
             // Get input model objects from filters
             common.query(models, filters['input_model'], ['_id'].concat(fields['input_model']), user_id, res, function(res, err, input_model_objs) {
                 if (!err) {
@@ -143,7 +144,15 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                             var props = [];
                             for (var i=0; i<input_model_ids.length; i++) {
                                 for (var j=0; j<executable_ids.length; j++) {
-                                    var prop = {'executable_id':executable_ids[j],'input_model_id':input_model_ids[i],'timeout':settings['timeout'],'params':{}};
+                                    var prop = {
+                                        'executable_id': executable_ids[j],
+                                        'input_model_id': input_model_ids[i],
+                                        'timeout': settings['timeout'],
+                                        'params': {},
+                                        'status': 'unresolved',
+                                        'timestamp': Date.now,
+                                        'owner': user_id
+                                    };
                                     for (var key in filters['params']) {
                                         prop['params'][key] = filters['params'][key];
                                     }
@@ -151,35 +160,32 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                 }
                             }
                             props = expand_props(props);
+                            // Hash properties for ids
+                            global.timer.get_timer('commit_form_ids_properties').start();
+                            log.debug('hashing properties', props.length);
                             for (var i=0; i<props.length; i++) {
-                                props[i].md5 = common.hash({
+                                props[i]._id = common.hash({
                                                    input_model_id: props[i]['input_model_id'],
                                                    executable_id: props[i]['executable_id'],
-                                                   owner: user_id,
-                                                   params: props[i].params
+                                                   owner: props[i]['owner'],
+                                                   params: props[i]['params']
                                                });
                             }
-                            log.debug('formed %d properties', props.length);
+                            global.timer.get_timer('commit_form_ids_properties').stop();
                             // Commit new properties and look for existing properties
-                            global.timer.get_timer('commit_new_properties').start();
+                            global.timer.get_timer('commit_commit_properties').start();
                             log.debug('committing properties', props.length);
                             var batch = properties.initializeUnorderedBulkOp();
                             for (var i=0; i<props.length; i++) {
-                                batch.find({md5: props[i].md5}).upsert().updateOne({
-                                    "$setOnInsert": {
-                                        "input_model_id": props[i]["input_model_id"],
-                                        "executable_id": props[i]["executable_id"],
-                                        "owner": user_id,
-                                        "params": props[i]["params"],
-                                        "md5": props[i]["md5"]
-                                    },
+                                batch.find({_id: props[i]._id}).upsert().updateOne({
+                                    "$setOnInsert": props[i],
                                     "$set": {"query_id": query_id}
                                 });
                             }
                             batch.execute(function(err, result) {
-                                global.timer.get_timer('commit_new_properties').stop();
+                                global.timer.get_timer('commit_commit_properties').stop();
                                 if (!err) {
-                                    var property_stats = {"n_existing": result.nMatched, "n_new": result.nUpserted};
+                                    var property_stats = {"n_existing": result.nModified, "n_new": result.nUpserted};
                                     // Check if there are any properties or not
                                     if (settings.get_results) {
                                         // Form property filter
@@ -227,11 +233,8 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
 
 function get_status(filters, fields, user_id, res, cb) {
     global.timer.get_timer('get_status').start();
-    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total': 0};
-    var md5 = common.hash(filters) + common.hash(fields);
-    var query = {'md5': md5};
-    fields = {'input_model': [], 'executable': [], 'output_model': [], 'params': []};
-    var settings = {};
+    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total':0};
+    var settings = {'get_results': 1};
     setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res) {
         // Get stats
         for (var i=0; i<property_objs.length; i++) {

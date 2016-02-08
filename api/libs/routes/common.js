@@ -188,17 +188,17 @@ module.exports = {
     form_filter: function(collection, filter, user_id, cb) {
         global.timer.get_timer('form_filter_'+collection.collectionName).start();
         // Regularize ids
-        if ('_id' in filter) {
-            if (typeof(filter['_id']) === 'object') {
-                if ('$in' in filter['_id']) {
-                    for (var i=0; i<filter['_id']['$in'].length; i++) {
-                        filter['_id']['$in'][i] = new ObjectID(filter['_id']['$in'][i]);
-                    }
-                }
-            } else {
-                filter['_id'] = new ObjectID(filter['_id']);
-            }
-        }
+        //if ('_id' in filter) {
+        //    if (typeof(filter['_id']) === 'object') {
+        //        if ('$in' in filter['_id']) {
+        //            for (var i=0; i<filter['_id']['$in'].length; i++) {
+        //                filter['_id']['$in'][i] = new ObjectID(filter['_id']['$in'][i]);
+        //            }
+        //        }
+        //    } else {
+        //        filter['_id'] = new ObjectID(filter['_id']);
+        //    }
+        //}
 
         // Set permissions
         //
@@ -361,129 +361,63 @@ module.exports = {
     // Commit
     //
 
-    commit: function(collection, orig_objs, user_id, res, cb) {
+    commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
-        var ids = [];
-        var max_chunk_size = 10000;
-        var commit_next_chunk = function(chunk_i, chunk_j) {
-            if (chunk_i === orig_objs.length) {
-                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                cb(res,0,ids);
-            } else {
-                validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
-                    if(err) {
+        validate(collection, objs, user_id, function(err, objs) {
+            if(!err) {
+                log.debug('form object ids');
+                global.timer.get_timer('commit_form_ids_'+collection.collectionName).start();
+                var batch = collection.initializeUnorderedBulkOp();
+                var ids = [];
+                for(var i=0; i<objs.length; i++) {
+                    if (collection.collectionName === "properties") {
+                        objs[i]['_id'] = hash({
+                                             input_model_id: objs[i]['input_model_id'],
+                                             executable_id: objs[i]['executable_id'],
+                                             owner: objs[i]['owner'],
+                                             params: objs[i]['params']
+                                         });
+                    } else if (collection.collectionName === "queries") {
+                        objs[i]['_id'] = hash({
+                                             filters: objs[i]['filters'],
+                                             fields: objs[i]['fields']
+                                         });
+                        objs[i]['filters'] = smart_stringify(objs[i]['filters']); // TODO: If too big, instead of this, move to gridfs
+                    } else if (collection.collectionName === "executables") {
+                        objs[i]['_id'] = hash({
+                                             name: objs[i]['name'],
+                                             owner: objs[i]['owner'],
+                                             path: objs[i]['path']
+                                         });
+                    } else if (collection.collectionName === "collaborations") {
+                        objs[i]['_id'] = hash(objs[i]['name']);
+                    } else if (collection.collectionName === "users") {
+                        objs[i]['_id'] = hash(objs[i]['username']);
+                    } else if (collection.collectionName === "clients") {
+                        objs[i]['_id'] = hash(objs[i]['clients']);
+                    }
+                    ids.push(objs[i]['_id']);
+                    batch.find({_id: objs[i]._id}).upsert().updateOne({"$setOnInsert": objs[i]});
+                }
+                global.timer.get_timer('commit_form_ids_'+collection.collectionName).stop();
+                log.debug('do commit');
+                global.timer.get_timer('commit_commit_'+collection.collectionName).start();
+                batch.execute(function(err, result) {
+                    global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
+                    if (!err) {
                         global.timer.get_timer('commit_'+collection.collectionName).stop();
-                        cb(res,err,0);
+                        cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids});
                     } else {
-                        if(objs.length === 0) {
-                            global.timer.get_timer('commit_'+collection.collectionName).stop();
-                            cb(res,0,[]);
-                        } else {
-                            log.debug('hash objects');
-                            var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
-                            for(var i=0; i<objs.length; i++) {
-                                objs[i]['commit_tag'] = commit_tag;
-                                if (collection.collectionName === "properties") {
-                                    objs[i]['md5'] = hash({
-                                                         input_model_id: objs[i]['input_model_id'],
-                                                         executable_id: objs[i]['executable_id'],
-                                                         owner: objs[i]['owner'],
-                                                         params: objs[i].params
-                                                     });
-                                } else if (collection.collectionName === "queries") {
-                                    objs[i]['md5'] = hash({
-                                                        filters: objs[i]['filters'],
-                                                        fields: objs[i]['fields']
-                                                     });
-                                    objs[i]['filters'] = smart_stringify(objs[i].filters);
-                                } else if (collection.collectionName === "executables") {
-                                    objs[i]['md5'] = hash({
-                                                        name: objs[i]['name'],
-                                                        owner: objs[i]['owner'],
-                                                        path: objs[i]['path']
-                                                     });
-                                }
-                            }
-                            log.debug('form commit filter');
-                            global.timer.get_timer('commit_place_tag_'+collection.collectionName).start();
-                            var batch = [];
-                            for(var i=0; i<objs.length; i++) {
-                                var filter = {};
-                                if (collection.collectionName === "fs.files") {
-                                    filter['metadata'] = {};
-                                    filter['metadata']['md5'] = objs[i]['metadata']['md5'];
-                                }
-                                else if(collection.collectionName === "executables") {
-                                    filter['md5'] = objs[i]['md5'];
-                                }
-                                else if (collection.collectionName === "properties") {
-                                    filter['md5'] = objs[i]['md5'];
-                                }
-                                else if (collection.collectionName === "queries") {
-                                    filter['md5'] = objs[i]['md5'];
-                                }
-                                else if (collection.collectionName === "collaborations") {
-                                    filter['name'] = objs[i]['name'];
-                                }
-                                else if (collection.collectionName === "users") {
-                                    filter['username'] = objs[i]['username'];
-                                }
-                                else if (collection.collectionName === "clients") {
-                                    filter['name'] = objs[i]['name'];
-                                }
-                                else if (collection.collectionName === "work_batches") {
-                                    filter['timestamp'] = objs[i]['timestamp'];
-                                }
-                                batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
-                            }
-                            log.debug('apply commit tag');
-                            collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
-                                global.timer.get_timer('commit_place_tag_'+collection.collectionName).stop();
-                                if (result.ok) {
-                                    log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
-                                    log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
-                                    log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
-                                    var batch = [];
-                                    for(var i=0; i<objs.length; i++) {
-                                        batch.push({ insertOne: { document : objs[i] } });
-                                    }
-                                    log.debug('attempt insertion');
-                                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
-                                        if (result.ok) {
-                                            log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
-                                            log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
-                                            log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
-                                            res.nInserted = result.nInserted;
-                                            log.debug('get object ids');
-                                            collection.find({'commit_tag': commit_tag}).project({'_id':1}).toArray(function (err, objs) {
-                                                if (!err) {
-                                                    for(var j=0; j<objs.length; j++) {
-                                                        ids.push(objs[j]['_id']);
-                                                    }
-                                                    log.debug('found %d objects',objs.length);
-                                                    commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
-                                                } else {
-                                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                                    cb(res,err,0);
-                                                }
-                                            });
-                                        } else {
-                                            global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                            cb(res,err,0);
-                                        }
-                                    });
-                                } else {
-                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                    cb(res,err,0);
-                                }
-                            });
-                        }
+                        global.timer.get_timer('commit_'+collection.collectionName).stop();
+                        cb(res, err, 0);
                     }
                 });
+            } else {
+                global.timer.get_timer('commit_'+collection.collectionName).stop();
+                cb(res,err,0);
             }
-        };
-        commit_next_chunk(0, Math.min(orig_objs.length, max_chunk_size));
+        });
     },
 
     //
@@ -518,7 +452,7 @@ module.exports = {
         // FIXME: user can inadvertantly give access to someone else
         var batch = [];
         for(var i=0; i<objs.length; i++) {
-            var id = new ObjectID(objs[i]._id);
+            var id = objs[i]._id;
             delete objs[i]._id;
             batch.push({ replaceOne: { filter: {_id: id}, replacement: objs[i] } });
         }
