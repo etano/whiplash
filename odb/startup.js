@@ -11,8 +11,6 @@ try{ db.createUser({user:"scheduler",pwd:"c93lbcp0hc[5209sebf10{3ca",roles:[{rol
 
 // unique indexes (other than _id)
 
-try{ db.fs.files.createIndex({"metadata.md5": 1},{unique : true}); } catch(err) {}
-
 // speed indexes
 
 try{ db.work_batches.createIndex({timestamp : 1}); } catch(err) {}

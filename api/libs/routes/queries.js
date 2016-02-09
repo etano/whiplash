@@ -9,9 +9,8 @@ var models_routes = require(libs + 'routes/models');
 var GridStore = require('mongodb').GridStore;
 var collection = db.get().collection('queries');
 var ObjType = require(libs + 'schemas/query');
-var ObjectID = require('mongodb').ObjectID;
 var executables = db.get().collection('executables');
-var models = db.get().collection('fs.files');
+var models = db.get().collection('models');
 var properties = db.get().collection('properties');
 
 //
@@ -190,7 +189,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     if (settings.get_results) {
                                         // Form property filter
                                         var property_objs = [];
-                                        var property_filter = {'query_id': query_id, 'status': 'resolved'};
+                                        var property_filter = {'query_id': query_id};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                         for (var j=0; i<fields['params'].length; j++) {
                                             property_fields.push('params.'+fields['params'][j]);
@@ -279,7 +278,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 var output_model_ids = [];
                 for (var i=0; i<property_objs.length; i++) {
                     if (property_objs[i].hasOwnProperty('output_model_id')) {
-                        output_model_ids.push(new ObjectID(property_objs[i]['output_model_id']));
+                        output_model_ids.push(property_objs[i]['output_model_id']);
                     }
                 }
                 filters['output_model']['_id'] = {'$in': output_model_ids};

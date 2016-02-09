@@ -42,21 +42,12 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
     else:
         logging.info('worker %i found no work batches in %f seconds', pid, t1-t0)
 
-def commit_resolved(db, pid, result):
+def commit_resolved(db, pid, results):
     logging.info('worker %i has began committing back models and properties', pid)
-    if len(result['good']['models']) > 0:
-        t0 = time.time()
-        ids = db.models.commit(result['good']['models'])
-        t1 = time.time()
-        logging.info('worker %i committed %i models in %f seconds', pid, len(result['good']['models']), t1-t0)
-        for i in range(len(ids)):
-            result['good']['properties'][i]['output_model_id'] = ids[i]
     t0 = time.time()
-    all_properties = result['good']['properties']+result['bad']['properties']
-    db.properties.replace(all_properties)
+    db.collection('work_batches').request("POST", "/resolved", results)
     t1 = time.time()
-    elapsed1 = t1-t0
-    logging.info('worker %i committed %i properties in %f seconds', pid, len(all_properties), t1-t0)
+    logging.info('worker %i committed %i model/property combos in %f seconds', pid, len(results), t1-t0)
 
 def resolve_object(args, pid, property, models, executables):
     file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'
@@ -77,7 +68,7 @@ def resolve_object(args, pid, property, models, executables):
         t1 = time.time()
         property['status'] = "resolved"
         with open(host_file_name, 'r') as io_file:
-            result = json.load(io_file)
+            output_model = json.load(io_file)
     except sp.TimeoutExpired as e:
         t1 = time.time()
         property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'
@@ -94,32 +85,29 @@ def resolve_object(args, pid, property, models, executables):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    #os.remove(host_file_name)
+    os.remove(host_file_name)
+    output_model['property_id'] = property['_id']
+    output_model['owner'] = property['owner']
 
-    if 'content' not in result: result['content'] = {}
-    if 'None' in result['content']: result['content'] = {}
-    result['property_id'] = property['_id']
-
-    return {'property':property,'model':result}
+    return {'property':property,'model':output_model}
 
 def resolve_work_batch(args, pid, work_batch, end_time):
-    good_results = {'properties':[],'models':[]}
-    bad_results = {'properties':[],'models':[]}
+    results = []
     t0 = time.time()
+    good_results, bad_results = 0, 0
     for property in work_batch['properties']:
         if time_left(end_time) > property['timeout']:
-            resolved = resolve_object(args, pid, property, work_batch['models'], work_batch['executables'])
-            if resolved['property']['status'] == "resolved":
-                good_results['properties'].append(resolved['property'])
-                good_results['models'].append(resolved['model'])
+            result = resolve_object(args, pid, property, work_batch['models'], work_batch['executables'])
+            if (result['property']['status'] == 'resolved'):
+                good_results += 1
             else:
-                bad_results['properties'].append(resolved['property'])
-                bad_results['models'].append(resolved['model'])
+                bad_results += 1
+            results.append(result)
         else:
             break
     t1 = time.time()
-    logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, len(good_results['properties']), len(bad_results['properties']), t1-t0)
-    return {'good':good_results, 'bad':bad_results}
+    logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, good_results, bad_results, t1-t0)
+    return results
 
 def worker(pid, db, args, end_time):
     logging.info('worker %i active', pid)
@@ -134,8 +122,8 @@ def worker(pid, db, args, end_time):
             fetch_thread.start()
         if (len(work_batches) > 0):
             logging.info('worker %i has started resolving a work batch', pid)
-            result = resolve_work_batch(args, pid, work_batches.pop(0), end_time)
-            commit_thread = th.Thread(target = commit_resolved, args = (db,pid,result,))
+            results = resolve_work_batch(args, pid, work_batches.pop(0), end_time)
+            commit_thread = th.Thread(target = commit_resolved, args = (db,pid,results,))
             commit_thread.start()
         if (len(work_batches) == 0):
             if (not is_work(db, end_time)):
@@ -202,4 +190,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/local_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    stderrLogger = logging.StreamHandler()
+    stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+    logging.getLogger().addHandler(stderrLogger)
     scheduler(args)
