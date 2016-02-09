@@ -10,6 +10,7 @@
     "dependencies": {
         "body-parser": "~1.8.x",
         "cookie-parser": "~1.3.x",
+        "emailjs": "latest",
         "debug": "~2.0.x",
         "express": "~4.10.x",
         "method-override": "^2.3.x",
