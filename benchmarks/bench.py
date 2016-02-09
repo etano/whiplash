@@ -28,7 +28,7 @@ for collection, required_fields in collections:
 
 print("Benchmarking query")
 bench.query(db, sizes, numbers, settings={'get_results': False})
-#bench.query(db, sizes, numbers, settings={'get_results': False})
-#db.properties.delete({})
-#bench.query(db, sizes, numbers, settings={'get_results': True})
-#bench.query(db, sizes, numbers, settings={'get_results': True})
+bench.query(db, sizes, numbers, settings={'get_results': False})
+db.properties.delete({})
+bench.query(db, sizes, numbers, settings={'get_results': True})
+bench.query(db, sizes, numbers, settings={'get_results': True})

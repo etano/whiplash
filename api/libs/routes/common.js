@@ -3,11 +3,20 @@ var log = require(libs + 'log')(module);
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-//var hash = require('object-hash');
 var crypto = require('crypto');
-var Property = require(libs + 'schemas/property');
+
 var Executable = require(libs + 'schemas/executable');
-var collections = {'executables': Executable, 'properties': Property};
+var Model = require(libs + 'schemas/model');
+var Property = require(libs + 'schemas/property');
+var Query = require(libs + 'schemas/query');
+var WorkBatch = require(libs + 'schemas/work_batch');
+var collections = {
+    'executables': Executable,
+    'models': Model,
+    'properties': Property,
+    'queries': Query,
+    'work_batches': WorkBatch
+};
 
 function validate(collection, objs, user_id, cb) {
     global.timer.get_timer('validate_'+collection.collectionName).start();
@@ -296,11 +305,11 @@ module.exports = {
                 collection.find(filter).project(proj).toArray(function (err, objs) {
                     if (!err) {
                         if (collection.collectionName === "fs.files") {
-                            for(var i=0; i<objs.length; i++){
-                                if(objs[i].hasOwnProperty('metadata')) {
+                            for (var i=0; i<objs.length; i++){
+                                if (objs[i].hasOwnProperty('metadata')) {
                                     var metadata = objs[i].metadata;
                                     delete objs[i].metadata;
-                                    for(var key in metadata){
+                                    for (var key in metadata) {
                                         objs[i][key] = metadata[key];
                                     }
                                 }
@@ -308,10 +317,10 @@ module.exports = {
                         }
                         log.debug('found %d objects',objs.length);
                         global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,0,objs);
+                        cb(res, 0, objs);
                     } else {
                         global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,err,0);
+                        cb(res, err, 0);
                     }
                 });
             } else {

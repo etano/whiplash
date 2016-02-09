@@ -190,15 +190,15 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     if (settings.get_results) {
                                         // Form property filter
                                         var property_objs = [];
-                                        var property_filter = {'query_id': query_id};
+                                        var property_filter = {'query_id': query_id, 'status': 'resolved'};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                         for (var j=0; i<fields['params'].length; j++) {
                                             property_fields.push('params.'+fields['params'][j]);
                                         }
                                         // Get property objects
-                                        common.query(properties, property_filter, property_fields, user_id, res, function(res, err, chunk_property_objs) {
+                                        common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
                                             if (!err) {
-                                                property_objs.push.apply(property_objs, chunk_property_objs);
+                                                global.timer.get_timer('setup_query').stop();
                                                 cb(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res);
                                             } else {
                                                 global.timer.get_timer('setup_query').stop();
