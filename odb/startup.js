@@ -1,6 +1,6 @@
 // settings
 
-try{ db.setProfilingLevel(2); } catch(err) {}
+try{ db.setProfilingLevel(0); } catch(err) {}
 
 // users
 
@@ -9,20 +9,11 @@ try{ db.createUser({user:"api",pwd:"haYrv{Ak9UJiaDsqVTe7rLJTc",roles:[{role:"rea
 try{ db.createUser({user:"pwn",pwd:"cftXzdrjheHEARuJKT39x]3sV",roles:[{role:"dbOwner",db:"wdb"}]}); } catch(err) {}
 try{ db.createUser({user:"scheduler",pwd:"c93lbcp0hc[5209sebf10{3ca",roles:[{role:"read",db:"wdb"}]}); } catch(err) {}
 
-// unique indexes
-
-try{ db.fs.files.createIndex({"metadata.md5" : 1, "metadata.property_id" : 1, "metadata.owner" : 1},{unique : true}); } catch(err) {}
-try{ db.executables.createIndex({name: 1, path: 1, md5: 1, owner: 1},{unique: true}); } catch(err) {}
-try{ db.properties.createIndex({md5: 1},{unique: true}); } catch(err) {}
-try{ db.queries.createIndex({owner: 1, md5: 1},{unique: true}); } catch(err) {}
-try{ db.collaborations.createIndex({name: 1},{unique: true}); } catch(err) {}
-try{ db.users.createIndex({username: 1},{unique: true}); } catch(err) {}
-try{ db.clients.createIndex({name: 1},{unique: true}); } catch(err) {}
+// unique indexes (other than _id)
 
 // speed indexes
 
-try{ db.work_batches.createIndex({timestamp : 1},{unique: false}); } catch(err) {}
-try{ db.properties.createIndex({owner: 1, status: 1},{unique: false}); } catch(err) {}
-try{ db.properties.createIndex({commit_tag: 1},{unique: false}); } catch(err) {}
-try{ db.properties.createIndex({status: 1, timeout: 1},{unique: false}); } catch(err) {}
-try{ db.properties.createIndex({input_model_id: 1, executable_id: 1},{unique: false}); } catch(err) {}
+try{ db.work_batches.createIndex({timestamp : 1}); } catch(err) {}
+try{ db.work_batches.createIndex({owner: 1, total_time : 1}); } catch(err) {}
+try{ db.properties.createIndex({owner: 1, input_model_id: 1, executable_id: 1}); } catch(err) {}
+try{ db.properties.createIndex({owner: 1, status: 1}); } catch(err) {}

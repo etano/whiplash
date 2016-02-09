@@ -54,7 +54,7 @@ class GlobalTimer {
 
     get_timer(function_name) {
         if (!this.timers.hasOwnProperty(function_name)) {
-            this.timers[function_name] = new Timer(function_name, this.enabled);
+            this.timers[function_name] = new Timer(this.enabled);
         }
         return this.timers[function_name];
     }
@@ -62,11 +62,11 @@ class GlobalTimer {
     report() {
         this.get_timer('global').stop();
         var total_time = this.get_timer('global').report()['total_time'];
-        var reports = [];
+        var reports = {};
         for (var key in this.timers) {
             var report = this.timers[key].report();
             report['percent_time'] = 100*(report['total_time']/total_time);
-            reports.push(report);
+            reports[key]= report;
         }
         this.get_timer('global').start();
         return {
@@ -77,8 +77,7 @@ class GlobalTimer {
 }
 
 class Timer {
-    constructor(name, enabled) {
-        this.name = name;
+    constructor(enabled) {
         this.enabled = enabled;
         this.reset();
     }
@@ -111,7 +110,6 @@ class Timer {
 
     report() {
         var res = {
-            'name': this.name,
             'average_time': this.average_time,
             'total_time': this.average_time*this.count,
             'count': this.count

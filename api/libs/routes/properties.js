@@ -6,7 +6,6 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('properties');
-var ObjectID = require('mongodb').ObjectID;
 
 //
 // Commit
@@ -25,7 +24,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.get('/id/:id/log', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, {_id: new ObjectID(req.params.id)}, String(req.user._id), res, function(res, err, objs) {
+    common.query(collection, {_id: req.params.id}, String(req.user._id), res, function(res, err, objs) {
         if (!err) {
             if (objs.length > 0) {
                 return res.json({status: 'OK', result: objs[0]["log"]});
@@ -57,7 +56,7 @@ router.put('/replace/', passport.authenticate('bearer', { session: false }), fun
 router.put('/refresh/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.form_filter(collection, {"status":"timed out"}, String(req.user._id), function(filter){
         collection.find(filter).forEach(function(doc) {
-            collection.updateOne({"_id":new ObjectID(doc._id)},{"$set":{"timeout":2*doc.timeout,"status":"unresolved"}});
+            collection.updateOne({"_id": doc._id},{"$set":{"timeout":2*doc.timeout,"status":"unresolved"}});
         }, function(err) {
             if(!err) {
                 common.return(res, 0, 'done');
@@ -81,16 +80,16 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 //
 
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
-   var map = function () {
-                 emit(this.owner,
-                     {sum: this[field],
+    var map = function () {
+                  emit(this.owner, {
+                      sum: this[field],
                       max: this[field],
                       min: this[field],
                       count: 1,
                       diff: 0
-                     });
-             };
-   common.stats(collection,req,res,map);
+                  });
+              };
+    common.stats(collection, common.get_payload(req,'filter'), common.get_payload(req,'field'), map, String(req.user._id), res, common.return);
 });
 
 router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {

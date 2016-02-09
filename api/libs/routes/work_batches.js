@@ -6,11 +6,10 @@ var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
 var collection = db.get().collection('work_batches');
-var models = db.get().collection('fs.files');
+var models = db.get().collection('models');
 var executables = db.get().collection('executables');
 var properties = db.get().collection('properties');
 var ObjType = require(libs + 'schemas/work_batch');
-var ObjectID = require('mongodb').ObjectID;
 
 //
 // Commit
@@ -18,6 +17,28 @@ var ObjectID = require('mongodb').ObjectID;
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.commit(collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
+});
+
+//
+// Resolved
+//
+
+router.post('/resolved', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var results = common.get_payload(req, 'results');
+    var good_models = [];
+    var all_properties = [];
+    for (var i=0; i<results.length; i++) {
+        if (results[i]['property']['status'] === 'resolved') {
+            good_models.push(results[i]['model']);
+            results[i]['property']['output_model_id'] = common.hash(results[i]['model']);
+            all_properties.push(results[i]['property']);
+        } else {
+            all_properties.push(results[i]['property']);
+        }
+    }
+    common.commit(models, good_models, String(req.user._id), res, function(res, err, objs) {
+        common.commit(properties, all_properties, String(req.user._id), res, common.return);
+    });
 });
 
 //
@@ -30,33 +51,15 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     common.pop(collection, filter, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
         if (!err) {
             if (work_batch) {
-                var property_ids = [];
-                for (var i=0; i<work_batch['property_ids'].length; i++) {
-                    property_ids.push(new ObjectID(work_batch['property_ids'][i]));
-                }
-                common.update(properties, {'_id':{'$in':property_ids}}, {'status':'running'}, user_id, res, function(res, err, count) {
+                common.update(properties, {'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, user_id, res, function(res, err, count) {
                     if (!err) {
-                        common.query(properties, {'_id':{'$in':property_ids}}, [], user_id, res, function(res, err, property_objs) {
+                        common.query(properties, {'_id':{'$in':work_batch['property_ids']}}, [], user_id, res, function(res, err, property_objs) {
                             if (!err) {
-                                var model_ids = [];
-                                for (var i=0; i<work_batch['model_ids'].length; i++) {
-                                    model_ids.push(new ObjectID(work_batch['model_ids'][i]));
-                                }
-                                common.query(models, {'_id':{'$in':model_ids}}, [], user_id, res, function(res, err, model_objs) {
+                                common.query(models, {'_id':{'$in':work_batch['model_ids']}}, [], user_id, res, function(res, err, model_objs) {
                                     if (!err) {
-                                        common.get_gridfs_objs(model_objs, [], res, function(res, err, model_objs) {
+                                        common.query(executables, {'_id':{'$in':work_batch['executable_ids']}}, [], user_id, res, function(res, err, executable_objs) {
                                             if (!err) {
-                                                var executable_ids = [];
-                                                for (var i=0; i<work_batch['executable_ids'].length; i++) {
-                                                    executable_ids.push(new ObjectID(work_batch['executable_ids'][i]));
-                                                }
-                                                common.query(executables, {'_id':{'$in':executable_ids}}, [], user_id, res, function(res, err, executable_objs) {
-                                                    if (!err) {
-                                                        common.return(res, 0, {'properties':property_objs, 'models':model_objs, 'executables':executable_objs});
-                                                    } else {
-                                                        common.return(res, err, 0);
-                                                    }
-                                                });
+                                                common.return(res, 0, {'properties':property_objs, 'models':model_objs, 'executables':executable_objs});
                                             } else {
                                                 common.return(res, err, 0);
                                             }
