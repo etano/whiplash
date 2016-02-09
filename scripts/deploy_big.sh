@@ -35,33 +35,38 @@ router_ports=(27017)
 router_log_dir=${log_dir}/routers
 
 num_replicas=3
-shard_names=("rs0" "rs1" "rs2")
+#shard_names=("rs0" "rs1" "rs2")
+shard_names=("rs0" "rs1")
 #assume flattened arrays of hosts and ports
-replica_hosts=(127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1)
-replica_ports=(27018 27019 27020 27021 27022 27023 27024 27025 27026)
+#replica_hosts=(127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1)
+replica_hosts=(127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1 127.0.0.1)
+#replica_ports=(27018 27019 27020 27021 27022 27023 27024 27025 27026)
+replica_ports=(27018 27019 27020 27021 27022 27023)
 shard_log_dir=${log_dir}/shards
 shard_data_dir=${data_dir}/shards
 
 #should be some of the replicas
-shard_hosts=(127.0.0.1 127.0.0.1 127.0.0.1)
-shard_ports=(27018 27021 27024)
+#shard_hosts=(127.0.0.1 127.0.0.1 127.0.0.1)
+shard_hosts=(127.0.0.1 127.0.0.1)
+#shard_ports=(27018 27021 27024)
+shard_ports=(27018 27021)
 
 ############
 
 
 #kill database
 
-#echo "Killing database"
+echo "Killing database"
 
-#killall mongod
-#killall mongos
-#sleep 3
+killall mongod
+killall mongos
+sleep 3
 
 #prepare
 
 echo "Preparing"
 
-#rm -rf ${data_dir} ${log_dir} #WARNING: debug
+rm -rf ${data_dir} ${log_dir} #WARNING: debug
 
 mkdir -p ${data_dir}
 mkdir -p ${log_dir}
@@ -136,9 +141,8 @@ storage:
       enabled: true" > mongo.config
 
     numactl --interleave=all mongod --config mongo.config
+    sleep 10
 done
-
-sleep 10
 
 #initiate replica set
 
@@ -186,10 +190,9 @@ sharding:
    configDB: ${sharding}" > mongo.config
 
 numactl --interleave=all mongos --config mongo.config
+sleep 10
 
 done
-
-sleep 10
 
 #deploy shards
 
@@ -268,9 +271,8 @@ replication:
     replSetName: \"${shard_names[${i}]}\"" > mongo.config
 
        numactl --interleave=all mongod --config mongo.config
+       sleep 10
     done
-
-    sleep 10
 
     members=""
     for (( j=0; j<${num_replicas}; j++ ))
@@ -296,7 +298,7 @@ do
     echo "db.auth(\"${root_admin_username}\", \"${root_admin_password}\");" > config.js
     echo "sh.addShard(\"${shard_names[${i}]}/${shard_hosts[${i}]}:${shard_ports[${i}]}\")" >> config.js
     mongo ${router_hosts[0]}:${router_ports[0]}/admin config.js
-    sleep 1
+    sleep 10
 done
 
 #enable sharding
@@ -306,7 +308,7 @@ echo "Enabling sharding"
 echo "db.auth(\"${root_admin_username}\", \"${root_admin_password}\");" > config.js
 echo "sh.enableSharding(\"${database_name}\")" >> config.js
 mongo ${router_hosts[0]}:${router_ports[0]}/admin config.js
-sleep 1
+sleep 10
 
 #shard collections
 
@@ -348,6 +350,8 @@ echo "db.auth(\"${wdb_owner_username}\", \"${wdb_owner_password}\");" > config.j
 
 #unique indexes
 
+#TODO: use odb/startup.js
+
 echo "db.fs.files.createIndex({\"metadata.md5\" : 1, \"metadata.property_id\" : 1, \"metadata.owner\" : 1},{unique : true});" >> config.js
 echo "db.executables.createIndex({name: 1, path: 1, md5: 1, owner: 1},{unique: true});" >> config.js
 echo "db.properties.createIndex({md5: 1},{unique: true});" >> config.js
@@ -366,4 +370,4 @@ echo "db.properties.createIndex({input_model_id: 1, executable_id: 1},{unique: f
 
 mongo ${router_hosts[0]}:${router_ports[0]}/wdb config.js
 
-sleep 1
+sleep 10
