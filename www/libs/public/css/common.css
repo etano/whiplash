@@ -194,7 +194,7 @@ input::-moz-placeholder {
     opacity: 1;
 }
 
-input.login, input.passwd, input.submit, input.client {
+input.email, input.login, input.passwd, input.submit, input.client {
     display: block;
     margin: 0;
     padding: 0;

@@ -4,10 +4,16 @@ var mongoose = require('mongoose'),
     User = new Schema({
         username: { type: String, unique: true, required: true },
         hashedPassword: { type: String, required: true },
+        email: { type: String, default: "auto@whiplash.ethz.com" },
         salt: { type: String, required: true },
         created: { type: Date, default: Date.now },
-        projects: { type: Array, default: [] }
+        projects: { type: Array, default: [] },
+        activated: { type: Boolean, default: false }
     });
+
+User.methods.generateHash = function(hash) {
+    return crypto.createHmac('sha1', this.salt).update(this.username).digest('hex');
+};
 
 User.methods.encryptPassword = function(password) {
     return crypto.createHmac('sha1', this.salt).update(password).digest('hex');
@@ -28,6 +34,10 @@ User.virtual('password').set(function(password) {
 
 User.methods.checkPassword = function(password) {
     return this.encryptPassword(password) === this.hashedPassword;
+};
+
+User.methods.checkHash = function(hash) {
+    return hash === this.generateHash();
 };
 
 module.exports = mongoose.model('User', User);
