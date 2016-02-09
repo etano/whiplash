@@ -6,15 +6,17 @@ echo 'Killing node'
 killall node
 echo 'Killing mongo'
 killall mongod
+killall mongos
 echo 'Sleeping 5'
 sleep 5
 
 HOME="/users/whiplash/whiplash"
 
-echo 'Setup mongo'
-bash ${HOME}/scripts/mongo_setup.sh
+#echo 'Setup mongo'
+#bash ${HOME}/scripts/mongo_setup.sh
 echo 'Starting mongo'
-bash ${HOME}/scripts/mongo_startup.sh
+#bash ${HOME}/scripts/mongo_startup.sh
+bash ${HOME}/scripts/deploy_big.sh
 echo 'Preparing RTE'
 bash ${HOME}/scripts/prepare_rte.sh
 echo 'Starting node'

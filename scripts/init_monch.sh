@@ -19,7 +19,7 @@ export NWORKERS=8
 export LOGPATH=/mnt/lnec/whiplash/logs/node/all.log
 
 # Mongo
-export PATH=/users/whiplash/mongodb-linux-x86_64-3.0.7/bin:$PATH
+export PATH=/users/whiplash/mongodb-linux-x86_64-3.2.1/bin:$PATH
 export MONGO_API_USERNAME=api
 export MONGO_API_PASSWORD=haYrv{Ak9UJiaDsqVTe7rLJTc
 export MONGO_PORT_27017_TCP_ADDR=localhost
