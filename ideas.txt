@@ -1,2 +1,0 @@
--- cloud based memory, compute, storage, graphics rendering. compiler
-   cloudifies shared memory parallel/gpu-based program
