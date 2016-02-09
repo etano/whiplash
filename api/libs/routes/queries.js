@@ -284,42 +284,36 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 filters['output_model']['_id'] = {'$in': output_model_ids};
                 common.query(models, filters['output_model'], ['_id'].concat(fields['output_model']), user_id, res, function(res, err, output_model_objs) {
                     if (!err) {
-                        common.get_gridfs_objs(output_model_objs, ['_id'].concat(fields['output_model']), res, function(res, err, output_model_objs) {
-                            log.debug('sorting');
-                            if (!err) {
-                                // Sort everything
-                                var input_model_indexes = {};
-                                for (var i=0; i<input_model_objs.length; i++) {
-                                    input_model_indexes[String(input_model_objs[i]['_id'])] = i;
-                                }
-                                var output_model_indexes = {};
-                                for (var i=0; i<output_model_objs.length; i++) {
-                                    output_model_indexes[String(output_model_objs[i]['_id'])] = i;
-                                }
-                                var executable_indexes = {};
-                                for (var i=0; i<executable_objs.length; i++) {
-                                    executable_indexes[String(executable_objs[i]['_id'])] = i;
-                                }
-                                var objs = [];
-                                for (var i=0; i<property_objs.length; i++) {
-                                    var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
-                                               'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
-                                               'params': property_objs[i]['params'],
-                                               'status': property_objs[i]['status']};
-                                    if (property_objs[i]['status'] === 'resolved') {
-                                        obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
-                                    } else {
-                                        obj['output_model'] = '';
-                                    }
-                                    objs.push(obj);
-                                }
-                                // Return
-                                log.debug('returning');
-                                common.return(res, 0, objs);
+                        log.debug('sorting');
+                        // Sort everything
+                        var input_model_indexes = {};
+                        for (var i=0; i<input_model_objs.length; i++) {
+                            input_model_indexes[String(input_model_objs[i]['_id'])] = i;
+                        }
+                        var output_model_indexes = {};
+                        for (var i=0; i<output_model_objs.length; i++) {
+                            output_model_indexes[String(output_model_objs[i]['_id'])] = i;
+                        }
+                        var executable_indexes = {};
+                        for (var i=0; i<executable_objs.length; i++) {
+                            executable_indexes[String(executable_objs[i]['_id'])] = i;
+                        }
+                        var objs = [];
+                        for (var i=0; i<property_objs.length; i++) {
+                            var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
+                                       'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
+                                       'params': property_objs[i]['params'],
+                                       'status': property_objs[i]['status']};
+                            if (property_objs[i]['status'] === 'resolved') {
+                                obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
                             } else {
-                                common.return(res, err, 0);
+                                obj['output_model'] = '';
                             }
-                        });
+                            objs.push(obj);
+                        }
+                        // Return
+                        log.debug('returning');
+                        common.return(res, 0, objs);
                     } else {
                         common.return(res, err, 0);
                     }
