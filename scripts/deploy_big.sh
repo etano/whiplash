@@ -325,7 +325,7 @@ do
 done
 
 echo "db.auth(\"${root_admin_username}\", \"${root_admin_password}\");" > config.js
-echo "sh.shardCollection(\"${database_name}.fs.chunks\",{file_id: 1})" >> config.js
+echo "sh.shardCollection(\"${database_name}.fs.chunks\",{files_id: 1})" >> config.js
 mongo ${router_hosts[0]}:${router_ports[0]}/admin config.js
 sleep 10
 
