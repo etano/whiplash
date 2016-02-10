@@ -56,7 +56,7 @@ def resolve_object(args, pid, property, models, executables):
         obj = models[property['model_index']]
         obj['params'] = property['params']
         io_file.write(json.dumps(obj).replace(" ",""))
-    result = {}
+    output_model = {}
     t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
