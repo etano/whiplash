@@ -405,76 +405,80 @@ module.exports = {
     commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
-        validate(collection, objs, user_id, function(err, objs) {
-            if(!err) {
-                log.debug('form object ids');
-                global.timer.get_timer('commit_form_ids_'+collection.collectionName).start();
-                var batch = collection.initializeUnorderedBulkOp();
-                var ids = [];
-                for(var i=0; i<objs.length; i++) {
-                    if (collection.collectionName === "properties") {
-                        objs[i]['_id'] = hash({
-                                             input_model_id: objs[i]['input_model_id'],
-                                             executable_id: objs[i]['executable_id'],
-                                             owner: objs[i]['owner'],
-                                             params: objs[i]['params']
-                                         });
-                    } else if (collection.collectionName === "queries") {
-                        objs[i]['_id'] = hash({
-                                             filters: objs[i]['filters'],
-                                             fields: objs[i]['fields']
-                                         });
-                        objs[i]['filters'] = smart_stringify(objs[i]['filters']); // TODO: If too big, instead of this, move to gridfs
-                    } else if (collection.collectionName === "executables") {
-                        objs[i]['_id'] = hash({
-                                             name: objs[i]['name'],
-                                             owner: objs[i]['owner'],
-                                             path: objs[i]['path']
-                                         });
-                    } else if (collection.collectionName === "models") {
-                        var tmp_obj = {};
-                        for (var key in objs[i]) {
-                            if ((key !== 'timestamp') && (key !== '_id')) {
-                                tmp_obj[key] = objs[i][key];
+        if (objs.length > 0) {
+            validate(collection, objs, user_id, function(err, objs) {
+                if(!err) {
+                    log.debug('form object ids');
+                    global.timer.get_timer('commit_form_ids_'+collection.collectionName).start();
+                    var batch = collection.initializeUnorderedBulkOp();
+                    var ids = [];
+                    for(var i=0; i<objs.length; i++) {
+                        if (collection.collectionName === "properties") {
+                            objs[i]['_id'] = hash({
+                                                 input_model_id: objs[i]['input_model_id'],
+                                                 executable_id: objs[i]['executable_id'],
+                                                 owner: objs[i]['owner'],
+                                                 params: objs[i]['params']
+                                             });
+                        } else if (collection.collectionName === "queries") {
+                            objs[i]['_id'] = hash({
+                                                 filters: objs[i]['filters'],
+                                                 fields: objs[i]['fields']
+                                             });
+                            objs[i]['filters'] = smart_stringify(objs[i]['filters']); // TODO: If too big, instead of this, move to gridfs
+                        } else if (collection.collectionName === "executables") {
+                            objs[i]['_id'] = hash({
+                                                 name: objs[i]['name'],
+                                                 owner: objs[i]['owner'],
+                                                 path: objs[i]['path']
+                                             });
+                        } else if (collection.collectionName === "models") {
+                            var tmp_obj = {};
+                            for (var key in objs[i]) {
+                                if ((key !== 'timestamp') && (key !== '_id')) {
+                                    tmp_obj[key] = objs[i][key];
+                                }
                             }
+                            objs[i]['_id'] = hash(tmp_obj);
+                        } else if (collection.collectionName === "collaborations") {
+                            objs[i]['_id'] = hash(objs[i]['name']);
+                        } else if (collection.collectionName === "users") {
+                            objs[i]['_id'] = hash(objs[i]['username']);
+                        } else if (collection.collectionName === "clients") {
+                            objs[i]['_id'] = hash(objs[i]['clients']);
+                        } else {
+                            objs[i]['_id'] = new ObjectID();
                         }
-                        objs[i]['_id'] = hash(tmp_obj);
-                    } else if (collection.collectionName === "collaborations") {
-                        objs[i]['_id'] = hash(objs[i]['name']);
-                    } else if (collection.collectionName === "users") {
-                        objs[i]['_id'] = hash(objs[i]['username']);
-                    } else if (collection.collectionName === "clients") {
-                        objs[i]['_id'] = hash(objs[i]['clients']);
-                    } else {
-                        objs[i]['_id'] = new ObjectID();
+                        ids.push(objs[i]['_id']);
+                        if (objs[i].hasOwnProperty('content')) {
+                            var tmp_obj = {};
+                            tmp_obj['content'] = objs[i].content;
+                            commit_gridfs_obj(objs[i]._id, tmp_obj.content);
+                            delete objs[i].content;
+                        }
+                        batch.find({_id: objs[i]._id}).upsert().updateOne({"$setOnInsert": objs[i]});
                     }
-                    ids.push(objs[i]['_id']);
-                    if (objs[i].hasOwnProperty('content')) {
-                        var tmp_obj = {};
-                        tmp_obj['content'] = objs[i].content;
-                        commit_gridfs_obj(objs[i]._id, tmp_obj.content);
-                        delete objs[i].content;
-                    }
-                    batch.find({_id: objs[i]._id}).upsert().updateOne({"$setOnInsert": objs[i]});
+                    global.timer.get_timer('commit_form_ids_'+collection.collectionName).stop();
+                    log.debug('do commit '+collection.collectionName);
+                    global.timer.get_timer('commit_commit_'+collection.collectionName).start();
+                    batch.execute(function(err, result) {
+                        global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
+                        if (!err) {
+                            global.timer.get_timer('commit_'+collection.collectionName).stop();
+                            cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids});
+                        } else {
+                            global.timer.get_timer('commit_'+collection.collectionName).stop();
+                            cb(res, err, 0);
+                        }
+                    });
+                } else {
+                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                    cb(res,err,0);
                 }
-                global.timer.get_timer('commit_form_ids_'+collection.collectionName).stop();
-                log.debug('do commit '+collection.collectionName);
-                global.timer.get_timer('commit_commit_'+collection.collectionName).start();
-                batch.execute(function(err, result) {
-                    global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
-                    if (!err) {
-                        global.timer.get_timer('commit_'+collection.collectionName).stop();
-                        cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids});
-                    } else {
-                        global.timer.get_timer('commit_'+collection.collectionName).stop();
-                        cb(res, err, 0);
-                    }
-                });
-            } else {
-                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                cb(res,err,0);
-            }
-        });
+            });
+        } else {
+            cb(res, 0, {"n_existing": 0, "n_new": 0, "ids": []});
+        }
     },
 
     //
