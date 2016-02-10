@@ -20,6 +20,10 @@ var webAuth = function(req, res, next){
     }
 };
 
+router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+});
+
 router.post('/', webAuth, function(req, res){
 
     var user = new User({ username: common.get_payload(req,'username'),
@@ -63,23 +67,76 @@ router.get('/confirm', function(req, res) {
     var hash = req.query['hash'];
 
     User.findById(uid, function(err, user){
-        if(err) throw err;
-        if(user.checkHash(hash)){
-            user.activated = true;
-            user.save(function(err){
-                if (err) throw err;
-                log.info('User successfully activated!');
-                res.redirect('http://whiplash.ethz.ch');
-            });
-        }else{
-            res.send("Not Authorized");
+        if(!err){
+            if(user.checkHash(hash)){
+                user.activated = true;
+                user.save(function(err){
+                    if(!err){
+                        log.info('User successfully activated!');
+                        res.redirect('http://whiplash.ethz.ch');
+                    }
+                });
+            }else{
+                res.send("Not Authorized");
+            }
         }
     });
 
 });
 
-router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+router.post('/recover', webAuth, function(req, res){
+
+    var new_pwd = common.get_payload(req,'password');
+    var user = common.get_payload(req,'username');
+
+    User.findOne({ username: user }, function(err, user){
+        if(!err){
+            var hash = user.generateHash();
+            var code = user.encryptPassword(new_pwd);
+            var activation = "http://whiplash.ethz.ch/api/users/recover?uid=" +user.userId+ "&hash=" +hash+ "&code=" +code;
+            var email_text = "You have provided a new password. To active the new password follow the link: " +activation;
+            var email_html = "<html>You have provided a new password. To activate the new password follow <a href='" +activation+ "'>this link</a>.</html>";
+            
+            emailjs.server
+            .connect({
+              host:    "smtp.phys.ethz.ch",
+              ssl:     true
+            })
+            .send({
+              from:    "Project Whiplash <auto@whiplash.ethz.ch>", 
+              to:      user.email,
+              subject: "password reset",
+              text:    email_text,
+              attachment: [{ data: email_html, alternative:true }]
+            }, function(err, message){ log.info(err || message); });
+
+            log.info("Recovery for user: %s", user.username);
+            res.send("OK");
+        }
+    });
+});
+
+router.get('/recover', function(req, res) {
+
+    var uid = req.query['uid'];
+    var hash = req.query['hash'];
+    var code = req.query['code'];
+
+    User.findById(uid, function(err, user){
+        if(!err){
+            if(user.checkHash(hash)){
+                user.hashedPassword = code;
+                user.save(function(err){
+                    if(!err){
+                        log.info('User successfully activated!');
+                        res.redirect('http://whiplash.ethz.ch');
+                    }
+                });
+            }else{
+                res.send("Not Authorized");
+            }
+        }
+    });
 });
 
 module.exports = router;

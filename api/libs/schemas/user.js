@@ -11,7 +11,7 @@ var mongoose = require('mongoose'),
         activated: { type: Boolean, default: false }
     });
 
-User.methods.generateHash = function(hash) {
+User.methods.generateHash = function() {
     return crypto.createHmac('sha1', this.salt).update(this.username).digest('hex');
 };
 
