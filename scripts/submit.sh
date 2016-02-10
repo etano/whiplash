@@ -10,5 +10,5 @@
 #SBATCH --output=whiplash_week.out
 #SBATCH --error=whiplash_week.err
 #======START===============================
-srun /users/ebrown/src/whiplash/sleeper.sh
+srun /users/ebrown/src/whiplash/scripts/sleeper.sh
 #======END================================= 
