@@ -37,7 +37,7 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
         }
     }
     common.commit(models, good_models, String(req.user._id), res, function(res, err, objs) {
-        common.commit(properties, all_properties, String(req.user._id), res, common.return);
+        common.replace(properties, all_properties, String(req.user._id), res, common.return);
     });
 });
 
