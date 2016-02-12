@@ -679,6 +679,23 @@ module.exports = {
         });
     },
 
+    distinct: function(collection, filter, fields, user_id, res, cb) {
+      global.timer.get_timer('query_'+collection.collectionName).start();
+      log.debug('count '+collection.collectionName);
+      this.form_filter(collection, filter, user_id, function(filter) {
+          collection.distinct(fields,filter,function (err, objs) {
+              if (!err) {
+                  return res.send({status: "OK",result:objs});
+              }
+              else{
+                res.statusCode = 500;
+                log.error('Internal error(%d): %s',res.statusCode,err.message);
+                return res.send({error: "Server Error"});
+              };
+            });
+      });
+  },
+
     //
     // GridFS helpers
     //
