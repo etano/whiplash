@@ -215,7 +215,7 @@ class collection:
         '''
         return self.request("GET", "mapreduce", {"filter":filter, "map":mapper, "reduce":reducer, "finalize":finalizer})
 
-    def distinct(self,filter={},field):
+    def distinct(self,filter,field):
         '''
         Fetches the destinct values of the sepecified field.
         The value field needs to be a nonempty string.
