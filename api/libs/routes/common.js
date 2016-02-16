@@ -4,8 +4,10 @@ var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
 var crypto = require('crypto');
+require(libs + '/timer');
 
 var AccessToken = require(libs + 'schemas/accessToken');
+var Client = require(libs + 'schemas/client');
 var Collaboration = require(libs + 'schemas/collaboration');
 var Executable = require(libs + 'schemas/executable');
 var Model = require(libs + 'schemas/model');
@@ -15,13 +17,14 @@ var RefreshToken = require(libs + 'schemas/refreshToken');
 var User = require(libs + 'schemas/user');
 var WorkBatch = require(libs + 'schemas/work_batch');
 var collections = {
-    'accessToken': AccessToken,
+    'accesstokens': AccessToken,
+    'clients': Client,
     'collaborations': Collaboration,
     'executables': Executable,
     'models': Model,
     'properties': Property,
     'queries': Query,
-    'refreshToken': RefreshToken,
+    'refreshtokens': RefreshToken,
     'users': User,
     'work_batches': WorkBatch
 };
@@ -79,7 +82,7 @@ function form_ids(collection, objs, user_id, cb) {
                         id_obj[key] = objs[i][key];
                     }
                 }
-                if (id_obj === {}) {
+                if (Object.keys(id_obj).length === 0) {
                     objs[i]['_id'] = new ObjectID();
                 } else {
                     objs[i]['_id'] = hash(id_obj);
@@ -283,6 +286,81 @@ function concaternate(o1, o2) {
     return o1;
 }
 
+function form_filter(collection, filter, user_id, cb) {
+    global.timer.get_timer('form_filter_'+collection.collectionName).start();
+    // Set permissions
+    //
+    // scheduler is god
+    // passport gets a pass
+    // whiplash user is open to everyone
+    if ((!('collaboration' in filter)) && (!(user_id === "passport"))) {
+        db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
+            db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
+                if(objs2) {
+                    if(objs2[0]['username'] !== "scheduler") { // scheduler is god
+                        if(!err) {
+                            var ids = [];
+                            for(var i=0; i<objs.length; i++) {
+                                ids.push(objs[i]['_id']);
+                            }
+                            if (ids.length > 0) {
+                                filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
+                            } else {
+                                filter.owner = user_id;
+                            }
+                        } else {
+                            filter.owner = user_id;
+                        }
+                    }
+                }
+
+                // Callback with filter
+                global.timer.get_timer('form_filter_'+collection.collectionName).stop();
+                cb(filter);
+            });
+        });
+    } else {
+        // Callback with filter
+        global.timer.get_timer('form_filter_'+collection.collectionName).stop();
+        cb(filter);
+    }
+}
+
+function query(collection, filter, fields, user_id, res, cb) {
+    global.timer.get_timer('query_'+collection.collectionName).start();
+    log.debug('query '+collection.collectionName);
+    form_filter(collection, filter, user_id, function(filter) {
+        if (fields.length > 0) {
+            var proj = {};
+            for(var i=0; i<fields.length; i++) {
+                proj[fields[i]] = 1;
+            }
+            collection.find(filter).project(proj).toArray(function (err, objs) {
+                if (!err) {
+                    log.debug('found %d objects',objs.length);
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    get_gridfs_objs(objs, fields, res, cb);
+                } else {
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    cb(res, err, 0);
+                }
+            });
+        } else {
+            collection.find(filter).toArray(function (err, objs) {
+                if (!err) {
+                    log.debug('found %d objects',objs.length);
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    get_gridfs_objs(objs, fields, res, cb);
+                } else {
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    cb(res,err,0);
+                }
+            });
+        }
+    });
+}
+
+
 module.exports = {
     //
     // Hash
@@ -325,42 +403,7 @@ module.exports = {
     //
 
     form_filter: function(collection, filter, user_id, cb) {
-        global.timer.get_timer('form_filter_'+collection.collectionName).start();
-        // Set permissions
-        //
-        // scheduler is god
-        // whiplash user is open to everyone
-        if (!('collaboration' in filter)) {
-            db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
-                db.get().collection('users').find({"_id":new ObjectID(user_id)}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
-                    if(objs2) {
-                        if(objs2[0]['username'] !== "scheduler") { // scheduler is god
-                            if(!err) {
-                                var ids = [];
-                                for(var i=0; i<objs.length; i++) {
-                                    ids.push(objs[i]['_id']);
-                                }
-                                if (ids.length > 0) {
-                                    filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
-                                } else {
-                                    filter.owner = user_id;
-                                }
-                            } else {
-                                filter.owner = user_id;
-                            }
-                        }
-                    }
-
-                    // Callback with filter
-                    global.timer.get_timer('form_filter_'+collection.collectionName).stop();
-                    cb(filter);
-                });
-            });
-        } else {
-            // Callback with filter
-            global.timer.get_timer('form_filter_'+collection.collectionName).stop();
-            cb(filter);
-        }
+        form_filter(collection, filter, user_id, cb);
     },
 
     //
@@ -397,35 +440,19 @@ module.exports = {
     //
 
     query: function(collection, filter, fields, user_id, res, cb) {
-        global.timer.get_timer('query_'+collection.collectionName).start();
-        log.debug('query '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
-            if (fields.length > 0) {
-                var proj = {};
-                for(var i=0; i<fields.length; i++) {
-                    proj[fields[i]] = 1;
+        query(collection, filter, fields, user_id, res, cb);
+    },
+
+    query_one: function(collection, filter, fields, user_id, res, cb) {
+        query(collection, filter, fields, user_id, res, function(res, err, objs) {
+            if (!err) {
+                if (objs.length > 0) {
+                    cb(res, err, objs[0]);
+                } else {
+                    cb(res, {message: "No objects found in "+collection.collectionName}, 0);
                 }
-                collection.find(filter).project(proj).toArray(function (err, objs) {
-                    if (!err) {
-                        log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        get_gridfs_objs(objs, fields, res, cb);
-                    } else {
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res, err, 0);
-                    }
-                });
             } else {
-                collection.find(filter).toArray(function (err, objs) {
-                    if (!err) {
-                        log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        get_gridfs_objs(objs, fields, res, cb);
-                    } else {
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,err,0);
-                    }
-                });
+                cb(res, err, 0);
             }
         });
     },
@@ -433,7 +460,7 @@ module.exports = {
     count: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('count '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
@@ -508,7 +535,7 @@ module.exports = {
     update: function(collection, filter, update, user_id, res, cb) {
         global.timer.get_timer('update_'+collection.collectionName).start();
         log.debug('update '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.debug('updated %d objects',result.modifiedCount);
@@ -554,7 +581,7 @@ module.exports = {
     pop: function(collection, filter, sort, user_id, res, cb) {
         global.timer.get_timer('pop_'+collection.collectionName).start();
         log.debug('pop '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
@@ -580,7 +607,7 @@ module.exports = {
     delete: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.deleteMany(filter, {}, function (err, result) {
                 if (!err) {
                     log.debug('deleted %d objects', result.deletedCount);
@@ -602,7 +629,7 @@ module.exports = {
     stats: function(collection, filter, field, map, user_id, res, cb) {
         global.timer.get_timer('stats_'+collection.collectionName).start();
         log.debug('stats '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -665,7 +692,7 @@ module.exports = {
             req.query.reduce=req.body.reduce;
             req.query.finalize=req.body.finalize;
         }
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+        form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
             eval(String(req.query.map));
             eval(String(req.query.reduce));
             eval(String(req.query.finalize));
