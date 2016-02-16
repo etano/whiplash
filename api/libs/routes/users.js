@@ -32,6 +32,7 @@ router.post('/', webAuth, function(req, res){
         email: common.get_payload(req, 'email'),
         salt: salt,
         hashed_password: pass.encrypt_password(salt, password),
+        activated: false
     };
     common.commit(users, [user], "passport", res, function(res, err, result) {
         if(!err) {
@@ -42,7 +43,7 @@ router.post('/', webAuth, function(req, res){
             var email_addr = user.email;
             var activation = "http://whiplash.ethz.ch/api/users/confirm?uid=" +user._id+ "&hash=" +hash;
             var email_text = "You are now signed up to the Whiplash. Activation link: " +activation;
-            var email_html = "<html>You <i>are</i> now signed up in the Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
+            var email_html = "<html>You <i>are</i> now signed up for Project Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
 
             emailjs.server
             .connect({
@@ -82,7 +83,6 @@ router.get('/confirm', function(req, res) {
             }
         }
     });
-
 });
 
 router.post('/recover', webAuth, function(req, res){
