@@ -57,32 +57,14 @@ function checksum(str) {
     return res;
 }
 
-function get_sorted_keys(obj) {
-    global.timer.get_timer('get_sorted_keys').start();
-    var keys = [];
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            keys.push(key);
-        }
-    }
-    keys.sort();
-    global.timer.get_timer('get_sorted_keys').stop();
-    return keys;
-}
-
 function smart_stringify(obj) {
+    if(typeof(obj) !== 'object') return JSON.stringify(obj);
     global.timer.get_timer('smart_stringify').start();
-    var keys = get_sorted_keys(obj);
-    var str = "{";
-    for(var i=0; i<keys.length; i++) {
-        str += "\""+keys[i]+"\":";
-        if (typeof(obj[keys[i]]) === 'object') {
-            str += smart_stringify(obj[keys[i]]);
-        } else {
-            str += JSON.stringify(obj[keys[i]])+",";
-        }
-    }
-    str += "}";
+    var keys = Object.keys(obj).sort();
+    var str = '{';
+    for(var i = 0; i < keys.length; i++)
+        str += '"' + keys[i] + '":' + smart_stringify(obj[keys[i]]) + ',';
+    str += '}';
     global.timer.get_timer('smart_stringify').stop();
     return str;
 }
