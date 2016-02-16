@@ -7,9 +7,9 @@ var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var config = require(libs + 'config');
-var User = require(libs + 'schemas/user');
 var db = require(libs + 'db/mongo');
-var collection = db.get().collection('users');
+var users = db.get().collection('users');
+var pass = require(libs + 'auth/pass');
 
 var webAuth = function(req, res, next){
     var token = common.get_payload(req,'server_token');
@@ -21,37 +21,41 @@ var webAuth = function(req, res, next){
 };
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    common.query(users, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 router.post('/', webAuth, function(req, res){
-
-    var user = new User({ username: common.get_payload(req,'username'),
-                          password: common.get_payload(req,'password'),
-                          email:    common.get_payload(req,'email'   ) });
-
-    user.save(function(err, user){
+    var salt = pass.generate_salt();
+    var password = common.get_payload(req, 'password');
+    var user = {
+        username: common.get_payload(req, 'username'),
+        email: common.get_payload(req, 'email'),
+        salt: salt,
+        hashed_password: pass.encrypt_password(salt, password),
+        activated: false
+    };
+    common.commit(users, [user], "passport", res, function(res, err, result) {
         if(!err) {
             log.info("New user: %s", user.username);
             res.send("OK");
 
-            var hash = user.generateHash();
-            var email_addr = common.get_payload(req,'email');
-            var activation = "http://whiplash.ethz.ch/api/users/confirm?uid=" +user.userId+ "&hash=" +hash;
+            var hash = pass.generate_hash(user.salt, user.username);
+            var email_addr = user.email;
+            var activation = "http://whiplash.ethz.ch/api/users/confirm?uid=" +user._id+ "&hash=" +hash;
             var email_text = "You are now signed up to the Whiplash. Activation link: " +activation;
-            var email_html = "<html>You <i>are</i> now signed up in the Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
-        
+            var email_html = "<html>You <i>are</i> now signed up for Project Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
+
             emailjs.server
             .connect({
-              host:    "smtp.phys.ethz.ch",
-              ssl:     true
+                host:    "smtp.phys.ethz.ch",
+                ssl:     true
             })
             .send({
-              from:    "Project Whiplash <auto@whiplash.ethz.ch>", 
-              to:      email_addr,
-              subject: "Welcome to Whiplash",
-              text:    email_text,
-              attachment: [{ data: email_html, alternative:true }]
+                from:    "Project Whiplash <auto@whiplash.ethz.ch>",
+                to:      email_addr,
+                subject: "Welcome to Whiplash",
+                text:    email_text,
+                attachment: [{ data: email_html, alternative:true }]
             }, function(err, message){ log.info(err || message); });
         } else {
             log.error(err);
@@ -62,16 +66,14 @@ router.post('/', webAuth, function(req, res){
 });
 
 router.get('/confirm', function(req, res) {
-
     var uid = req.query['uid'];
     var hash = req.query['hash'];
-
-    User.findById(uid, function(err, user){
+    common.query_one(users, {'_id': uid}, [], "passport", res, function(res, err, user) {
         if(!err){
-            if(user.checkHash(hash)){
+            if(pass.check_hash(hash, user.salt, user.username)){
                 user.activated = true;
-                user.save(function(err){
-                    if(!err){
+                common.replace(users, [user], "passport", res, function(res, err, n_modified) {
+                    if(!err) {
                         log.info('User successfully activated!');
                         res.redirect('http://whiplash.ethz.ch');
                     }
@@ -81,33 +83,32 @@ router.get('/confirm', function(req, res) {
             }
         }
     });
-
 });
 
 router.post('/recover', webAuth, function(req, res){
 
     var new_pwd = common.get_payload(req,'password');
-    var user = common.get_payload(req,'username');
+    var username = common.get_payload(req,'username');
 
-    User.findOne({ username: user }, function(err, user){
+    common.query_one(users, {'username': username}, [], "passport", res, function(res, err, user) {
         if(!err){
-            var hash = user.generateHash();
-            var code = user.encryptPassword(new_pwd);
-            var activation = "http://whiplash.ethz.ch/api/users/recover?uid=" +user.userId+ "&hash=" +hash+ "&code=" +code;
+            var hash = pass.generate_hash(user.salt, user.username);
+            var code = pass.encrypt_password(user.salt, new_pwd);
+            var activation = "http://whiplash.ethz.ch/api/users/recover?uid=" +user._id+ "&hash=" +hash+ "&code=" +code;
             var email_text = "You have provided a new password. To active the new password follow the link: " +activation;
             var email_html = "<html>You have provided a new password. To activate the new password follow <a href='" +activation+ "'>this link</a>.</html>";
-            
+
             emailjs.server
             .connect({
-              host:    "smtp.phys.ethz.ch",
-              ssl:     true
+                host:    "smtp.phys.ethz.ch",
+                ssl:     true
             })
             .send({
-              from:    "Project Whiplash <auto@whiplash.ethz.ch>", 
-              to:      user.email,
-              subject: "password reset",
-              text:    email_text,
-              attachment: [{ data: email_html, alternative:true }]
+                from:    "Project Whiplash <auto@whiplash.ethz.ch>", 
+                to:      user.email,
+                subject: "password reset",
+                text:    email_text,
+                attachment: [{ data: email_html, alternative:true }]
             }, function(err, message){ log.info(err || message); });
 
             log.info("Recovery for user: %s", user.username);
@@ -122,11 +123,11 @@ router.get('/recover', function(req, res) {
     var hash = req.query['hash'];
     var code = req.query['code'];
 
-    User.findById(uid, function(err, user){
+    common.query_one(users, {'_id': uid}, [], "passport", res, function(res, err, user) {
         if(!err){
-            if(user.checkHash(hash)){
-                user.hashedPassword = code;
-                user.save(function(err){
+            if(pass.check_hash(hash, user.salt, user.username)){
+                user.hashed_password = code;
+                common.replace(users, [user], "passport", res, function(res, err, n_modified) {
                     if(!err){
                         log.info('User successfully activated!');
                         res.redirect('http://whiplash.ethz.ch');

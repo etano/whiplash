@@ -23,7 +23,6 @@ var properties = require('./routes/properties');
 var queries = require('./routes/queries');
 var work_batches = require('./routes/work_batches');
 var oauth2 = require('./auth/oauth2');
-require('./timer');
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');

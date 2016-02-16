@@ -119,7 +119,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
     global.timer.get_timer('setup_query').start();
     // Commit query
     var max_chunk_size = 10000;
-    var query = [{'filters': filters, 'fields': fields, 'settings': settings}];
+    var query = [{'filters': common.smart_stringify(filters), 'fields': fields, 'settings': settings}];
     common.commit(collection, query, user_id, res, function(res, err, result) {
         if (!err) {
             var query_ids = result.ids;
@@ -140,6 +140,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                             }
                             // Form properties
                             log.debug('form properties');
+                            global.timer.get_timer('form_properties').start();
                             var props = [];
                             for (var i=0; i<input_model_ids.length; i++) {
                                 for (var j=0; j<executable_ids.length; j++) {
@@ -158,38 +159,17 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     props.push(prop);
                                 }
                             }
+                            global.timer.get_timer('form_properties').stop();
                             props = expand_props(props);
-                            // Hash properties for ids
-                            global.timer.get_timer('commit_form_ids_properties').start();
-                            log.debug('hashing properties', props.length);
-                            for (var i=0; i<props.length; i++) {
-                                props[i]._id = common.hash({
-                                                   input_model_id: props[i]['input_model_id'],
-                                                   executable_id: props[i]['executable_id'],
-                                                   owner: props[i]['owner'],
-                                                   params: props[i]['params']
-                                               });
-                            }
-                            global.timer.get_timer('commit_form_ids_properties').stop();
-                            // Commit new properties and look for existing properties
-                            global.timer.get_timer('commit_commit_properties').start();
-                            log.debug('committing properties', props.length);
-                            var batch = properties.initializeUnorderedBulkOp();
-                            for (var i=0; i<props.length; i++) {
-                                batch.find({_id: props[i]._id}).upsert().updateOne({
-                                    "$setOnInsert": props[i],
-                                    "$set": {"query_id": query_id}
-                                });
-                            }
-                            batch.execute(function(err, result) {
-                                global.timer.get_timer('commit_commit_properties').stop();
+                            // Commit properties
+                            common.commit(properties, props, user_id, res, function(res, err, result) {
                                 if (!err) {
-                                    var property_stats = {"n_existing": result.nModified, "n_new": result.nUpserted};
+                                    var property_stats = {"n_existing": result["n_exisiting"], "n_new": result["n_new"]};
                                     // Check if there are any properties or not
                                     if (settings.get_results) {
                                         // Form property filter
                                         var property_objs = [];
-                                        var property_filter = {'query_id': query_id};
+                                        var property_filter = {'commit_tag': result['commit_tag']};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
                                         for (var j=0; i<fields['params'].length; j++) {
                                             property_fields.push('params.'+fields['params'][j]);
@@ -198,7 +178,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                         common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
                                             if (!err) {
                                                 global.timer.get_timer('setup_query').stop();
-                                                cb(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res);
+                                                cb(query_id, input_model_objs, executable_objs, property_objs, property_stats, res);
                                             } else {
                                                 global.timer.get_timer('setup_query').stop();
                                                 common.return(res, err, 0);
@@ -206,7 +186,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                         });
                                     } else {
                                         global.timer.get_timer('setup_query').stop();
-                                        cb(query_ids, input_model_objs, executable_objs, [], property_stats, res);
+                                        cb(query_id, input_model_objs, executable_objs, [], property_stats, res);
                                     }
                                 } else {
                                     global.timer.get_timer('setup_query').stop();
@@ -234,7 +214,7 @@ function get_status(filters, fields, user_id, res, cb) {
     global.timer.get_timer('get_status').start();
     var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total':0};
     var settings = {'get_results': 1};
-    setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res) {
+    setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_objs, property_stats, res) {
         // Get stats
         for (var i=0; i<property_objs.length; i++) {
             stats_obj[property_objs[i]['status']]++;
@@ -258,7 +238,7 @@ router.get('/submit', passport.authenticate('bearer', { session: false }), funct
     var user_id = String(req.user._id);
     // Commit query, get input model objects, executable objects, and property objects
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
-        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats,res) {
+        setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_objs, property_stats,res) {
             common.return(res, 0, property_objs);
         });
     });
@@ -272,7 +252,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     var user_id = String(req.user._id);
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
         // Commit query, get input model objects, executable objects, and commit properties
-        setup_query(filters, fields, settings, user_id, res, function(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res) {
+        setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_objs, property_stats, res) {
             if (settings.get_results) {
                 // Get output model info
                 var output_model_ids = [];
