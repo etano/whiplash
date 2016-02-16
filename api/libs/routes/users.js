@@ -2,6 +2,7 @@ var express = require('express');
 var passport = require('passport');
 var emailjs = require('emailjs');
 var router = express.Router();
+var crypto = require('crypto');
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
@@ -24,19 +25,49 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
+
+function hash_password(password) {
+    var salt = crypto.randomBytes(32).toString('hex');
+    //more secure - this.salt = crypto.randomBytes(128).toString('hex');
+    return crypto.createHmac('sha1', salt).update(password).digest('hex');
+}
+
+function generate_hash(salt, username) {
+    return crypto.createHmac('sha1', salt).update(username).digest('hex');
+}
+
+function check_password(salt, password, hashed_password) {
+    return encrypt_password(salt, password) === hashed_password;
+}
+
+function check_hash(hash, salt, username) {
+    return hash === generate_hash(salt, username);
+}
+
+function generate_salt() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+function encrypt_password(salt, password) {
+    return crypto.createHmac('sha1', salt).update(password).digest('hex');
+}
+
 router.post('/', webAuth, function(req, res){
-
-    var user = new User({ username: common.get_payload(req,'username'),
-                          password: common.get_payload(req,'password'),
-                          email:    common.get_payload(req,'email'   ) });
-
-    user.save(function(err, user){
+    var salt = generate_salt();
+    var password = common.get_payload(req, 'password');
+    var user = {
+        username: common.get_payload(req, 'username'),
+        email: common.get_payload(req, 'email'),
+        salt: salt,
+        hashedPassword: encrypt_password(salt, password),
+    };
+    common.commit(collection, [user], "", res, function(res, err, result) {
         if(!err) {
             log.info("New user: %s", user.username);
             res.send("OK");
 
-            var hash = user.generateHash();
-            var email_addr = common.get_payload(req,'email');
+            var hash = generate_hash(user.salt, user.username);
+            var email_addr = user.email;
             var activation = "http://whiplash.ethz.ch/api/users/confirm?uid=" +user.userId+ "&hash=" +hash;
             var email_text = "You are now signed up to the Whiplash. Activation link: " +activation;
             var email_html = "<html>You <i>are</i> now signed up in the Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
@@ -62,16 +93,15 @@ router.post('/', webAuth, function(req, res){
 });
 
 router.get('/confirm', function(req, res) {
-
     var uid = req.query['uid'];
     var hash = req.query['hash'];
-
-    User.findById(uid, function(err, user){
+    common.query(collection, {'_id': uid}, [], "", res, function(res, err, user_objs) {
         if(!err){
-            if(user.checkHash(hash)){
+            var user = user_objs[0];
+            if(check_hash(hash, user.salt, user.username)){
                 user.activated = true;
-                user.save(function(err){
-                    if(!err){
+                common.replace(collection, [user], "", res, function(res, err, n_modified) {
+                    if(!err) {
                         log.info('User successfully activated!');
                         res.redirect('http://whiplash.ethz.ch');
                     }
@@ -124,7 +154,7 @@ router.get('/recover', function(req, res) {
 
     User.findById(uid, function(err, user){
         if(!err){
-            if(user.checkHash(hash)){
+            if(user.check_hash(hash)){
                 user.hashedPassword = code;
                 user.save(function(err){
                     if(!err){
