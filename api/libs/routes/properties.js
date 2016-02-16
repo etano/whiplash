@@ -96,4 +96,8 @@ router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), f
    common.mapreduce(collection,req,res);
 });
 
+router.get('/distinct/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.distinct(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+});
+
 module.exports = router;
