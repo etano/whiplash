@@ -70,7 +70,7 @@ class connection:
 
     def check_token(self):
         '''
-        checks if token in valid 
+        checks if token in valid
         '''
         status, reason, res = self.request("GET", "", json.dumps({}))
         if status != 200:
@@ -214,6 +214,15 @@ class collection:
         };
         '''
         return self.request("GET", "mapreduce", {"filter":filter, "map":mapper, "reduce":reducer, "finalize":finalizer})
+
+    def distinct(self,filter,field):
+        '''
+        Fetches the destinct values of the sepecified field.
+        The value field needs to be a nonempty string.
+        '''
+        if (not isinstance(field, str)) or field == "":
+            return []
+        return self.request("GET", "distinct", {"fields":field,"filter":filter})
 
 class properties_collection(collection):
 
