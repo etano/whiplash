@@ -164,7 +164,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                             // Commit properties
                             common.commit(properties, props, user_id, res, function(res, err, result) {
                                 if (!err) {
-                                    var property_stats = {"n_existing": result["n_exisiting"], "n_new": result["n_new"]};
+                                    var property_stats = {"n_existing": result["n_existing"], "n_new": result["n_new"]};
                                     // Check if there are any properties or not
                                     if (settings.get_results) {
                                         // Form property filter
