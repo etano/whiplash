@@ -3,7 +3,7 @@ var log = require(libs + 'log')(module);
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-var crypto = require('crypto');
+var XXHash = require('xxhash').XXHash64;
 require(libs + '/timer');
 
 var AccessToken = require(libs + 'schemas/accessToken');
@@ -98,8 +98,13 @@ function form_ids(collection, objs, user_id, cb) {
 }
 
 function checksum(str) {
+    // original version:
+    // crypto.createHash('md5').update(str, 'utf8').digest('hex');
     global.timer.get_timer('checksum').start();
-    var res = crypto.createHash('md5').update(str, 'utf8').digest('hex');
+    var hash = new XXHash(0xCAFEBABE); // note: same seed each time
+    var buffer = new Buffer(str, 'utf8');
+    hash.update(buffer);
+    var res = hash.digest('hex');
     global.timer.get_timer('checksum').stop();
     return res;
 }
