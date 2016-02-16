@@ -146,9 +146,8 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={'get_results': Fa
             new_filters['params']['run_time'] = 1.0
             t, res = timer(db, db.query, new_filters, fields, settings)
             logging.info('root query %i %i %f', number, size, t)
-            print(res)
-            #if settings['get_results']:
-            #    assert len(res) == number*number
-            #else:
-            #    assert res['n_new'] + res['n_existing'] == number*number
+            if settings['get_results']:
+                assert len(res) == number*number
+            else:
+                assert res['n_new'] + res['n_existing'] == number*number
             print('Finished in %f seconds\n'%(t))
