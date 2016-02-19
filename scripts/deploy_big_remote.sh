@@ -1,5 +1,7 @@
 #!/bin/bash
 
+IFS='%'
+
 #params
 
 #config assumes a distributed file-system between the hosts
@@ -51,6 +53,11 @@ shard_data_dir=${data_dir}/shards
 shard_hosts=("monchc301.cscs.ch" "monchc302.cscs.ch" "monchc303.cscs.ch")
 shard_ports=(27018 27019 27020)
 
+mongo_dir="/users/whiplash/mongodb-linux-x86_64-3.2.1/bin"
+mongo="${mongo_dir}/mongo"
+mongod="${mongo_dir}/mongod"
+mongos="${mongo_dir}/mongos"
+
 ############
 
 #kill database
@@ -68,7 +75,7 @@ sleep 3
 
 echo "Preparing"
 
-#sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
+sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
 
 sh scripts/remote_command.sh ${main_machine} "mkdir -p ${data_dir}; mkdir -p ${log_dir}; openssl rand -base64 741 > ${key_file}; chmod 600 ${key_file}"
 
@@ -80,37 +87,34 @@ sh scripts/remote_command.sh ${main_machine} "mkdir -p ${server_log_dir}; mkdir 
 
 #set access control
 
-sh scripts/remote_command.sh ${server_hosts[0]} "
+server_data_dir_n=${server_data_dir}/db_0
 
-server_data_dir_n=${server_data_dir}/db_0\n
-mkdir -p ${server_data_dir_n}\n
-\n
-echo \"processManagement:\n
-\t fork: true\n
-systemLog:\n
-\t destination: file\n
-\t path: \"${server_log_dir}/0.o\"\n
-net:\n
-\t bindIp: ${server_hosts[0]}\n
-\t port: ${server_ports[0]}\n
-storage:\n
-\t dbPath: \"${server_data_dir_n}\"\n
-\t journal:\n
-\t \t enabled: true\" > mongo.config\n
-\n
-mongod --config mongo.config\n
-\n
-sleep 10\n
-\n
-echo \"db.createUser({user: \"${user_admin_username}\",pwd: \"${user_admin_password}\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]});\" > config.js\n
-echo \"db.createUser({user: \"${root_admin_username}\",pwd: \"${root_admin_password}\",roles: [ { role: \"root\", db: \"admin\"}]});\" >> config.js\n
-mongo ${server_hosts[0]}:${server_ports[0]}/admin config.js\n
-sleep 1\n
-\n
-kill \$(cat ${server_data_dir_n}/mongod.lock)\n
-\n
-sleep 1\n
-"
+sh scripts/remote_command.sh ${server_hosts[0]} '
+mkdir -p '"${server_data_dir_n}"';
+echo "
+processManagement:
+ fork: true
+systemLog:
+ destination: file
+ path: \"'"${server_log_dir}"'/0.o\"
+net:
+ bindIp: '"${server_hosts[0]}"'
+ port: '"${server_ports[0]}"'
+storage:
+ dbPath: \"'"${server_data_dir_n}"'\"
+ journal:
+  enabled: true" > mongo.config;
+'"${mongod}"' --config mongo.config;
+sleep 10;
+echo "db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]});" > config.js;
+echo "db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]});" >> config.js;
+'"${mongo}"' '"${server_hosts[0]}"':'"${server_ports[0]}"'/admin config.js;
+sleep 1;
+kill $(cat '"${server_data_dir_n}"'/mongod.lock);
+sleep 1;
+'
+
+exit;
 
 #deploy
 
