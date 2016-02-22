@@ -354,7 +354,7 @@ module.exports = {
     //
 
     hash: function(obj) {
-        return hash(smart_stringify(obj));
+        return hash(obj);
     },
 
     //
