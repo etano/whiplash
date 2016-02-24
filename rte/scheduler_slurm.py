@@ -39,7 +39,7 @@ def submit_job(args):
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True,timeout=5)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True,timeout=5)
     except sp.TimeoutExpired as e:
-        logging.error('ERROR: Timed out in %i second(s) with %s'%(timeout, e.cmd))
+        logging.error('ERROR: Timed out in %i second(s) with %s'%(e.timeout, e.cmd))
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)
