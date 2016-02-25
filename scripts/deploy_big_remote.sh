@@ -75,7 +75,7 @@ sleep 3
 
 echo "Preparing"
 
-sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
+#sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
 
 sh scripts/remote_command.sh ${main_machine} "mkdir -p ${data_dir}; mkdir -p ${log_dir}; openssl rand -base64 741 > ${key_file}; chmod 600 ${key_file}"
 
