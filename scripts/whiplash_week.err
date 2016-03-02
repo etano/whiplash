@@ -1,0 +1,26 @@
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: got SIGCONT
+slurmstepd: *** STEP 5190348.0 CANCELLED AT 2016-02-17T13:12:57 *** on monchhm12
+slurmstepd: *** JOB 5190348 CANCELLED AT 2016-02-17T13:12:57 *** on monchhm12
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82010 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82023 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82020 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82008 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82021 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82013 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82014 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82011 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82016 Terminated              sleep 10
+srun: forcing job termination
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82024 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82015 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82017 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82022 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82007 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82025 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82026 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82018 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82012 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82009 Terminated              sleep 10
+/users/ebrown/src/whiplash/scripts/sleeper.sh: line 6: 82019 Terminated              sleep 10
+srun: error: monchhm12: tasks 0-19: Terminated
