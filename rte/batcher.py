@@ -52,12 +52,16 @@ def get_times(args,db):
     th = int(11.8*3600)
     timeouts = db.properties.stats("timeout",{"status":{"$in":["unresolved"]}})
     logging.info(json.dumps(timeouts))
-    if timeouts['count'] == 0 or timeouts['min'] > th:
+    try:
+        if timeouts['count'] == 0 or timeouts['min'] > th:
+            return 0
+        else:
+            th_min = 60
+            time_window = min(th,max(1.2*timeouts['max'],th_min))
+            return time_window
+    except Exception as e:
+        logging.error(e)
         return 0
-    else:
-        th_min = 60
-        time_window = min(th,max(1.2*timeouts['max'],th_min))
-        return time_window
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)
@@ -80,10 +84,12 @@ if __name__ == '__main__':
     parser.add_argument('--user',dest='user',required=True,type=str)
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
+    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/batcher_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    stderrLogger = logging.StreamHandler()
-    stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
-    logging.getLogger().addHandler(stderrLogger)
+    if args.verbose:
+        stderrLogger = logging.StreamHandler()
+        stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logging.getLogger().addHandler(stderrLogger)
     scheduler(args)

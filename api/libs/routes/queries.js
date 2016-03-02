@@ -181,38 +181,43 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     "$set": {"query_id": query_id}
                                 });
                             }
-                            batch.execute(function(err, result) {
-                                global.timer.get_timer('commit_commit_properties').stop();
-                                if (!err) {
-                                    var property_stats = {"n_existing": result.nModified, "n_new": result.nUpserted};
-                                    // Check if there are any properties or not
-                                    if (settings.get_results) {
-                                        // Form property filter
-                                        var property_objs = [];
-                                        var property_filter = {'query_id': query_id};
-                                        var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
-                                        for (var j=0; i<fields['params'].length; j++) {
-                                            property_fields.push('params.'+fields['params'][j]);
-                                        }
-                                        // Get property objects
-                                        common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
-                                            if (!err) {
-                                                global.timer.get_timer('setup_query').stop();
-                                                cb(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res);
-                                            } else {
-                                                global.timer.get_timer('setup_query').stop();
-                                                common.return(res, err, 0);
+                            if (props.length > 0) {
+                                batch.execute(function(err, result) {
+                                    global.timer.get_timer('commit_commit_properties').stop();
+                                    if (!err) {
+                                        var property_stats = {"n_existing": result.nModified, "n_new": result.nUpserted};
+                                        // Check if there are any properties or not
+                                        if (settings.get_results) {
+                                            // Form property filter
+                                            var property_objs = [];
+                                            var property_filter = {'query_id': query_id};
+                                            var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
+                                            for (var j=0; j<fields['params'].length; j++) {
+                                                property_fields.push('params.'+fields['params'][j]);
                                             }
-                                        });
+                                            // Get property objects
+                                            common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
+                                                if (!err) {
+                                                    global.timer.get_timer('setup_query').stop();
+                                                    cb(query_ids, input_model_objs, executable_objs, property_objs, property_stats, res);
+                                                } else {
+                                                    global.timer.get_timer('setup_query').stop();
+                                                    common.return(res, err, 0);
+                                                }
+                                            });
+                                        } else {
+                                            global.timer.get_timer('setup_query').stop();
+                                            cb(query_ids, input_model_objs, executable_objs, [], property_stats, res);
+                                        }
                                     } else {
                                         global.timer.get_timer('setup_query').stop();
-                                        cb(query_ids, input_model_objs, executable_objs, [], property_stats, res);
+                                        common.return(res, err, 0);
                                     }
-                                } else {
-                                    global.timer.get_timer('setup_query').stop();
-                                    common.return(res, err, 0);
-                                }
-                            });
+                                });
+                            } else {
+                                global.timer.get_timer('setup_query').stop();
+                                common.return(res, "No props found. Possible bad '$in' operator", 0);
+                            }
                         } else {
                             global.timer.get_timer('setup_query').stop();
                             common.return(res, err, 0);
