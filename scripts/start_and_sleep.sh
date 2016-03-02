@@ -3,7 +3,7 @@
 echo "Starting whiplash on ${HOSTNAME}..."
 cd $HOME/src/whiplash
 source scripts/init_monch.sh
-sh scripts/restart_all_solo_monch.sh ${HOSTNAME}
+sh scripts/restart_all_solo_monch.sh
 
 echo "Going to sleep now..."
 for (( ; ; ))

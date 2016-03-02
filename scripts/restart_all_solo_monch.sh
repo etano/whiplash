@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# ${1} : node
-
 echo 'Killing python'
 killall python3
 echo 'Killing node'
@@ -24,4 +22,4 @@ bash ${WHIPLASH_HOME}/scripts/node_startup.sh
 echo 'Sleeping 30'
 sleep 30
 echo 'Starting RTE'
-bash ${WHIPLASH_HOME}/scripts/rte_startup.sh ${1}.cscs.ch
+bash ${WHIPLASH_HOME}/scripts/rte_startup.sh
