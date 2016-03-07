@@ -169,9 +169,9 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
                                     if (settings.get_results) {
                                         // Form property filter
                                         var property_objs = [];
-                                        var property_filter = {'commit_tag': result['commit_tag']};
+                                        var property_filter = {'commit_tag': result['commit_tag'], 'status': 'resolved'};
                                         var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
-                                        for (var j=0; i<fields['params'].length; j++) {
+                                        for (var j=0; j<fields['params'].length; j++) {
                                             property_fields.push('params.'+fields['params'][j]);
                                         }
                                         // Get property objects

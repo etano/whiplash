@@ -9,24 +9,19 @@ def start_batcher(args, flags):
     if args.test:
         flags += " --test"
     command = args.rte_dir+"/batcher.py"+flags
-    logging.info(command)
     sp.call(command, shell=True)
 
 def start_slurm_scheduler(args, flags):
     command = args.rte_dir+"/scheduler_slurm.py"+flags
-    logging.info(command)
     sp.call(command, shell=True)
 
 def start_local_scheduler(args, flags):
     command = args.rte_dir+"/scheduler_local.py"+flags
-    logging.info(command)
     sp.call(command, shell=True)
 
 def get_users(args, db):
     all_users = db.collection('users').query({})
-    logging.info(all_users)
     all_tokens = db.collection('accesstokens').query({})
-    logging.info(all_tokens)
     db_users = []
     for user in all_users:
         if user['username'] != "scheduler":
@@ -86,8 +81,6 @@ def scheduler(args):
                     running_users.append(username)
             if args.test:
                 break
-            else:
-                time.sleep(1)
         else:
             logging.info('no users found')
         time.sleep(5)

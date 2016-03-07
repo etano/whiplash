@@ -468,51 +468,55 @@ module.exports = {
     commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
-        validate(collection, objs, user_id, function(err, objs) {
-            if(!err) {
-                form_ids(collection, objs, user_id, function(err, objs) {
-                    if (!err) {
-                        log.debug('form commit '+collection.collectionName);
-                        global.timer.get_timer('commit_form_commit_'+collection.collectionName).start();
-                        var batch = collection.initializeUnorderedBulkOp();
-                        var ids = [];
-                        var commit_tag = new ObjectID();
-                        for(var i=0; i<objs.length; i++) {
-                            ids.push(objs[i]['_id']);
-                            if (objs[i].hasOwnProperty('content')) {
-                                var tmp_obj = {};
-                                tmp_obj['content'] = objs[i].content;
-                                commit_gridfs_obj(objs[i]._id, tmp_obj.content);
-                                delete objs[i].content;
+        if (objs.length > 0) {
+            validate(collection, objs, user_id, function(err, objs) {
+                if(!err) {
+                    form_ids(collection, objs, user_id, function(err, objs) {
+                        if (!err) {
+                            log.debug('form commit '+collection.collectionName);
+                            global.timer.get_timer('commit_form_commit_'+collection.collectionName).start();
+                            var batch = collection.initializeUnorderedBulkOp();
+                            var ids = [];
+                            var commit_tag = new ObjectID();
+                            for(var i=0; i<objs.length; i++) {
+                                ids.push(objs[i]['_id']);
+                                if (objs[i].hasOwnProperty('content')) {
+                                    var tmp_obj = {};
+                                    tmp_obj['content'] = objs[i].content;
+                                    commit_gridfs_obj(objs[i]._id, tmp_obj.content);
+                                    delete objs[i].content;
+                                }
+                                batch.find({_id: objs[i]._id}).upsert().updateOne({
+                                    "$setOnInsert": objs[i],
+                                    "$set": {"commit_tag": commit_tag}
+                                });
                             }
-                            batch.find({_id: objs[i]._id}).upsert().updateOne({
-                                "$setOnInsert": objs[i],
-                                "$set": {"commit_tag": commit_tag}
+                            global.timer.get_timer('commit_form_commit_'+collection.collectionName).stop();
+                            log.debug('do commit '+collection.collectionName);
+                            global.timer.get_timer('commit_commit_'+collection.collectionName).start();
+                            batch.execute(function(err, result) {
+                                global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
+                                if (!err) {
+                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                                    cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
+                                } else {
+                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                                    cb(res, err, 0);
+                                }
                             });
+                        } else {
+                            global.timer.get_timer('commit_'+collection.collectionName).stop();
+                            cb(res,err,0);
                         }
-                        global.timer.get_timer('commit_form_commit_'+collection.collectionName).stop();
-                        log.debug('do commit '+collection.collectionName);
-                        global.timer.get_timer('commit_commit_'+collection.collectionName).start();
-                        batch.execute(function(err, result) {
-                            global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
-                            if (!err) {
-                                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
-                            } else {
-                                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                cb(res, err, 0);
-                            }
-                        });
-                    } else {
-                        global.timer.get_timer('commit_'+collection.collectionName).stop();
-                        cb(res,err,0);
-                    }
-                });
-            } else {
-                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                cb(res,err,0);
-            }
-        });
+                    });
+                } else {
+                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                    cb(res,err,0);
+                }
+            });
+        } else {
+            cb(res, 0, {"n_existing": 0, "n_new": 0, "ids": []});
+        }
     },
 
     //

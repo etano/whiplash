@@ -279,8 +279,8 @@ class db:
         '''
         self.query(filters, fields, settings)
         while True:
-            status = self.status(filters,fields)
-            if status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
+            status = self.status(filters, fields)
+            if status['total'] != 0 and status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
                 break
             time.sleep(freq)
         return self.query(filters, fields, settings)

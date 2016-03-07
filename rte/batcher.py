@@ -4,10 +4,8 @@ import sys, logging, argparse, time, json
 import whiplash
 
 def make_batches(db,time_window):
-    logging.info('querying properties')
     properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
 
-    logging.info('building batches')
     batches = []
     times_left = []
     ids_in_batches = []
@@ -40,18 +38,14 @@ def make_batches(db,time_window):
         batch['executable_ids'] = list(set(batch['executable_ids']))
 
     if len(batches) > 0:
-        logging.info('committing batches')
         db.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
         db.collection('work_batches').commit(batches)
-        logging.info('done')
     else:
         logging.info('no suitable work')
 
 def get_times(args,db):
-    logging.info('getting times')
     th = int(11.8*3600)
     timeouts = db.properties.stats("timeout",{"status":{"$in":["unresolved"]}})
-    logging.info(json.dumps(timeouts))
     if timeouts['count'] == 0 or timeouts['min'] > th:
         return 0
     else:
@@ -67,7 +61,7 @@ def scheduler(args):
         time_window = get_times(args,db)
         if time_window > 0:
             make_batches(db,time_window)
-        time.sleep(5)
+        time.sleep(1)
         if args.test:
             break
 

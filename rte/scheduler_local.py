@@ -130,7 +130,7 @@ def worker(pid, db, args, end_time):
             commit_thread.start()
         if (len(work_batches) == 0):
             if (not is_work(db, end_time)):
-                time.sleep(5)
+                time.sleep(0.5)
                 if num_alive() == 0:
                     if (len(work_batches) == 0):
                         logging.info('worker %i has no live threads and no suitable work, shutting down', pid)
@@ -158,7 +158,7 @@ def scheduler(args):
         procs[pid].start()
 
     while True:
-        time.sleep(5)
+        time.sleep(1)
         n_alive = 0
         for pid in procs:
             if is_work(db, end_time) and (not procs[pid].is_alive()):
@@ -170,11 +170,11 @@ def scheduler(args):
             elif procs[pid].is_alive():
                 n_alive += 1
 
-        if n_alive == 0:
-            logging.info('stopping workers')
-            for pid in procs:
-                procs[pid].join()
-            sys.exit(0)
+        #if n_alive == 0:
+        #    logging.info('stopping workers')
+        #    for pid in procs:
+        #        procs[pid].join()
+        #    sys.exit(0)
 
     logging.info('local scheduler shutting down')
 
