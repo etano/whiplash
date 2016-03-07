@@ -49,7 +49,7 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var user_id = String(req.user._id);
     var filter = common.get_payload(req, 'filter');
-    common.pop(collection, filter, {timestamp: -1}, user_id, res, function (res, err, work_batch) {
+    common.pop(collection, filter, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
         if (!err) {
             if (work_batch) {
                 common.update(properties, {'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, user_id, res, function(res, err, count) {
