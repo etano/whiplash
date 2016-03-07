@@ -36,8 +36,9 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
             all_properties.push(results[i]['property']);
         }
     }
-    common.commit(models, good_models, String(req.user._id), res, function(res, err, objs) {
-        common.replace(properties, all_properties, String(req.user._id), res, common.return);
+    var user_id = String(req.user._id);
+    common.commit(models, good_models, user_id, res, function(res, err, objs) {
+        common.replace(properties, all_properties, user_id, res, common.return);
     });
 });
 

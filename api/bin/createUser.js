@@ -1,19 +1,22 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
-var User = require(libs + 'schemas/user');
+var common = require(libs + 'routes/common');
+var pass = require(libs + 'auth/pass');
 
 db.connect(function(err) {
     if(!err) {
-        var user = new User({
+        var salt = pass.generate_salt();
+        var password = process.argv[3];
+        var user = {
             username: process.argv[2],
-            password: process.argv[3]
-        });
-
-        user.validateSync();
-        db.get().collection('users').insertOne(user.toObject(), function(err, res) {
+            email: process.argv[4],
+            salt: salt,
+            hashed_password: pass.encrypt_password(salt, password),
+        };
+        common.commit(db.get().collection('users'), [user], "", {}, function(res, err, result) {
             if(!err) {
-                log.info("New user - %s:%s", user.username, user.password);
+                log.info("New user - %s:%s:%s", user.username, password, user.email);
             } else {
                 log.error(err);
             }

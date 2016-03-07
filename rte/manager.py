@@ -26,6 +26,7 @@ def get_users(args, db):
     all_users = db.collection('users').query({})
     logging.info(all_users)
     all_tokens = db.collection('accesstokens').query({})
+    logging.info(all_tokens)
     db_users = []
     for user in all_users:
         if user['username'] != "scheduler":

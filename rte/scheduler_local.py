@@ -68,7 +68,10 @@ def resolve_object(args, pid, property, models, executables):
         t1 = time.time()
         property['status'] = "resolved"
         with open(host_file_name, 'r') as io_file:
-            output_model = json.load(io_file)
+            try:
+                output_model = json.load(io_file)
+            except:
+                property['status'] = "wrong output"
     except sp.TimeoutExpired as e:
         t1 = time.time()
         property['log'] = e.output + '\n' + 'Timed out after: ' + str(e.timeout) + ' seconds'

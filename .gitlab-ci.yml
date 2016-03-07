@@ -18,9 +18,10 @@ build:
 test:
   stage: test
   script:
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/pre-tests.py ${DOCKERHOST:-localhost} 1337
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./rte/create_token.py ${DOCKERHOST:-localhost} 1337 test test
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/tests.py ${DOCKERHOST:-localhost} 1337
     - PYTHONPATH=$PWD/python:$PYTHONPATH ./rte/manager.py --local --host ${DOCKERHOST:-localhost} --port 1337 --num_cpus 1 --test
+    - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/post-tests.py ${DOCKERHOST:-localhost} 1337
     - cat *.log
   tags:
     - docker

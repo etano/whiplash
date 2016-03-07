@@ -43,7 +43,7 @@ assert executable_id == db.executables.query(executable,'_id')[0]['_id']
 print("Query for some results")
 n_seeds = 10
 filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0, "seed":{"$in":list(range(n_seeds))}}, 'output_model':{}}
-fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["content.edges"]}
+fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["number"]}
 settings = {'timeout':300}
 print(db.query(filters, fields, settings))
 print(db.status(filters, fields))

@@ -66,7 +66,7 @@ sleep 3
 
 echo "Preparing"
 
-rm -rf ${data_dir} ${log_dir} #WARNING: debug
+#rm -rf ${data_dir} ${log_dir} #WARNING: debug
 
 mkdir -p ${data_dir}
 mkdir -p ${log_dir}
@@ -347,27 +347,10 @@ sleep 10
 echo "Adding indexes"
 
 echo "db.auth(\"${wdb_owner_username}\", \"${wdb_owner_password}\");" > config.js
-
-#unique indexes
-
-#TODO: use odb/startup.js
-
-echo "db.fs.files.createIndex({\"metadata.md5\" : 1, \"metadata.property_id\" : 1, \"metadata.owner\" : 1},{unique : true});" >> config.js
-echo "db.executables.createIndex({name: 1, path: 1, md5: 1, owner: 1},{unique: true});" >> config.js
-echo "db.properties.createIndex({md5: 1},{unique: true});" >> config.js
-echo "db.queries.createIndex({owner: 1, md5: 1},{unique: true});" >> config.js
-echo "db.collaborations.createIndex({name: 1},{unique: true});" >> config.js
-echo "db.users.createIndex({username: 1},{unique: true});" >> config.js
-echo "db.clients.createIndex({name: 1},{unique: true});" >> config.js
-
-#speed indexes
-
 echo "db.work_batches.createIndex({timestamp : 1},{unique: false});" >> config.js
+echo "db.work_batches.createIndex({owner : 1, total_time: 1},{unique: false});" >> config.js
 echo "db.properties.createIndex({owner: 1, status: 1},{unique: false});" >> config.js
-echo "db.properties.createIndex({commit_tag: 1},{unique: false});" >> config.js
-echo "db.properties.createIndex({status: 1, timeout: 1},{unique: false});" >> config.js
-echo "db.properties.createIndex({input_model_id: 1, executable_id: 1},{unique: false});" >> config.js
-
+echo "db.properties.createIndex({owner: 1, input_model_id: 1, executable_id: 1},{unique: false});" >> config.js
 mongo ${router_hosts[0]}:${router_ports[0]}/wdb config.js
 
 sleep 10
