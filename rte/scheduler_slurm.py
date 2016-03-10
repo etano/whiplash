@@ -40,14 +40,17 @@ def submit_job(args):
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True,timeout=5)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True,timeout=5)
     except sp.TimeoutExpired as e:
-        logging.error('ERROR: Timed out in %i second(s) with %s'%(timeout, e.cmd))
+        logging.error('ERROR: Timed out in 5 second(s) with %s'%(e.cmd))
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)
     logging.info('slurm scheduler connected to db')
 
     while True:
-        num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
+        try:
+            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
+        except:
+            num_pending = 1
         if (db.collection('work_batches').count({}) > 0) and (num_pending == 0):
             submit_job(args)
         time.sleep(5)
@@ -67,7 +70,12 @@ if __name__ == '__main__':
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--cluster',dest='cluster',required=True,type=str,default='')
     parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='.')
+    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/slurm_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    if args.verbose:
+        stderrLogger = logging.StreamHandler()
+        stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logging.getLogger().addHandler(stderrLogger)
     scheduler(args)
