@@ -75,7 +75,7 @@ sleep 3
 
 echo "Preparing"
 
-sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
+#sh scripts/remote_command.sh ${main_machine} "rm -rf ${data_dir} ${log_dir}" #WARNING: debug
 
 sh scripts/remote_command.sh ${main_machine} "mkdir -p ${data_dir}; mkdir -p ${log_dir}; openssl rand -base64 741 > ${key_file}; chmod 600 ${key_file}"
 
@@ -106,8 +106,8 @@ storage:
   enabled: true" > mongo.config;
 '"${mongod}"' --config mongo.config;
 sleep 10;
-echo "db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]});" > config.js;
-echo "db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]});" >> config.js;
+echo "try{ db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
+echo "try{ db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${server_hosts[0]}:${server_ports[0]}/admin"' config.js;
 sleep 1;
 kill $(cat '"${server_data_dir_n}"'/mongod.lock);
@@ -232,8 +232,8 @@ storage:
   enabled: true" > mongo.config;
 '"${mongod}"' --config mongo.config;
 sleep 10;
-echo "db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]});" > config.js;
-echo "db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]});" >> config.js;
+echo "try{ db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
+echo "try{ db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${replica_hosts[${ind0}]}:${replica_ports[${ind0}]}/admin"' config.js;
 sleep 1;
 kill $(cat '"${replica_data_dir_n}"'/mongod.lock);
@@ -324,7 +324,7 @@ do
     collection=${sharded_collections[${i}]}
     sh scripts/remote_command.sh ${router_hosts[0]} '
     echo "db.auth(\"'"${root_admin_username}"'\", \"'"${root_admin_password}"'\");" > config.js;
-    echo "db.getSiblingDB(\"'"${database_name}"'\").'"${collection}"'.createIndex({_id:\"hashed\"})" >> config.js;
+    echo "try{ db.getSiblingDB(\"'"${database_name}"'\").'"${collection}"'.createIndex({_id:\"hashed\"}); } catch(err) {}" >> config.js;
     echo "sh.shardCollection(\"'"${database_name}.${collection}"'\",{_id:\"hashed\"})" >> config.js;
     '"${mongo}"' '"${router_hosts[0]}:${router_ports[0]}/admin"' config.js;
     sleep 10;
@@ -344,10 +344,10 @@ echo "Adding users"
 
 sh scripts/remote_command.sh ${router_hosts[0]} '
 echo "db.auth(\"'"${user_admin_username}"'\", \"'"${user_admin_password}"'\");" > config.js;
-echo "db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"www\",pwd:\"7cJgeAkHdw{oktPNYdgYE3nJ\",roles:[{role:\"readWrite\",db:\"wdb\"}]});" >> config.js;
-echo "db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"api\",pwd:\"haYrv{Ak9UJiaDsqVTe7rLJTc\",roles:[{role:\"readWrite\",db:\"wdb\"}]});" >> config.js;
-echo "db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"'"${wdb_owner_username}"'\",pwd:\"'"${wdb_owner_password}"'\",roles:[{role:\"dbOwner\",db:\"wdb\"}]});" >> config.js;
-echo "db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"scheduler\",pwd:\"c93lbcp0hc[5209sebf10{3ca\",roles:[{role:\"read\",db:\"wdb\"}]});" >> config.js;
+echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"www\",pwd:\"7cJgeAkHdw{oktPNYdgYE3nJ\",roles:[{role:\"readWrite\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
+echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"api\",pwd:\"haYrv{Ak9UJiaDsqVTe7rLJTc\",roles:[{role:\"readWrite\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
+echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"'"${wdb_owner_username}"'\",pwd:\"'"${wdb_owner_password}"'\",roles:[{role:\"dbOwner\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
+echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"scheduler\",pwd:\"c93lbcp0hc[5209sebf10{3ca\",roles:[{role:\"read\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${router_hosts[0]}:${router_ports[0]}/admin"' config.js;
 sleep 10;
 '
@@ -358,10 +358,10 @@ echo "Adding indexes"
 
 sh scripts/remote_command.sh ${router_hosts[0]} '
 echo "db.auth(\"'"${wdb_owner_username}"'\", \"'"${wdb_owner_password}"'\");" > config.js;
-echo "db.work_batches.createIndex({timestamp : 1},{unique: false});" >> config.js;
-echo "db.work_batches.createIndex({owner : 1, total_time: 1},{unique: false});" >> config.js;
-echo "db.properties.createIndex({owner: 1, status: 1},{unique: false});" >> config.js;
-echo "db.properties.createIndex({owner: 1, input_model_id: 1, executable_id: 1},{unique: false});" >> config.js;
+echo "try{ db.work_batches.createIndex({timestamp : 1},{unique: false}); } catch(err) {}" >> config.js;
+echo "try{ db.work_batches.createIndex({owner : 1, total_time: 1},{unique: false}); } catch(err) {}" >> config.js;
+echo "try{ db.properties.createIndex({owner: 1, status: 1},{unique: false}); } catch(err) {}" >> config.js;
+echo "try{ db.properties.createIndex({owner: 1, input_model_id: 1, executable_id: 1},{unique: false}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${router_hosts[0]}:${router_ports[0]}/wdb"' config.js;
 sleep 10;
 '
