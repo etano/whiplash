@@ -155,12 +155,6 @@ class collection:
         '''
         return self.request("PUT", "", {'filter':filter,'update':update})
 
-    def replace(self,replacements): # FIXME: Only for properties
-        '''
-        replaces objects in the collection with the replacements
-        '''
-        return self.request("PUT", "replace", replacements)
-
     def delete(self,filter): # FIXME: No deleting ?
         '''
         deletes the objects in the collection which satisfy the filter

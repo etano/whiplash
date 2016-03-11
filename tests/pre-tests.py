@@ -43,7 +43,7 @@ executable = {
     "description": "test",
     "params": {
         "required": ["sleep_time"],
-        "optional":[]
+        "optional": []
     }
 }
 executable_id = db.executables.commit(executable)['ids'][0]
@@ -58,7 +58,7 @@ filters = {
     'executable': {"name": "test"},
     'params':{
         "sleep_time": 1.0,
-        "seed": {"$in":list(range(n_seeds))}
+        "seed": {"$in": list(range(n_seeds))}
     },
     'output_model': {}
 }
@@ -69,6 +69,13 @@ fields = {
     'output_model': ["number"]
 }
 settings = {'timeout': 300}
-print(db.query(filters, fields, settings))
-print(db.query(filters, fields, settings))
-assert db.status(filters, fields)['unresolved'] == n_seeds
+query_0 = db.query(filters, fields, settings)
+assert query_0['n_new'] == n_seeds
+assert query_0['n_existing'] == 0
+assert db.status(filters, fields)['total'] == n_seeds
+
+print("Query for some results again")
+query_1 = db.query(filters, fields, settings)
+assert query_1['n_new'] == 0
+assert query_1['n_existing'] == n_seeds
+assert db.status(filters, fields)['total'] == n_seeds

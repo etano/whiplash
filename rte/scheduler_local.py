@@ -170,11 +170,11 @@ def scheduler(args):
             elif procs[pid].is_alive():
                 n_alive += 1
 
-        if n_alive == 0:
-            logging.info('stopping workers')
-            for pid in procs:
-                procs[pid].join()
-            sys.exit(0)
+        #if n_alive == 0:
+        #    logging.info('stopping workers')
+        #    for pid in procs:
+        #        procs[pid].join()
+        #    sys.exit(0)
 
     logging.info('local scheduler shutting down')
 

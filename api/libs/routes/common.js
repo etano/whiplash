@@ -4,30 +4,8 @@ var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
 var XXHash = require('xxhash').XXHash64;
+var collections = require(libs + 'collections');
 require(libs + '/timer');
-
-var AccessToken = require(libs + 'schemas/accessToken');
-var Client = require(libs + 'schemas/client');
-var Collaboration = require(libs + 'schemas/collaboration');
-var Executable = require(libs + 'schemas/executable');
-var Model = require(libs + 'schemas/model');
-var Property = require(libs + 'schemas/property');
-var Query = require(libs + 'schemas/query');
-var RefreshToken = require(libs + 'schemas/refreshToken');
-var User = require(libs + 'schemas/user');
-var WorkBatch = require(libs + 'schemas/work_batch');
-var collections = {
-    'accesstokens': AccessToken,
-    'clients': Client,
-    'collaborations': Collaboration,
-    'executables': Executable,
-    'models': Model,
-    'properties': Property,
-    'queries': Query,
-    'refreshtokens': RefreshToken,
-    'users': User,
-    'work_batches': WorkBatch
-};
 
 function validate(collection, objs, user_id, cb) {
     global.timer.get_timer('validate_'+collection.collectionName).start();
@@ -63,10 +41,11 @@ function form_ids(collection, objs, user_id, cb) {
     log.debug('form object ids');
     global.timer.get_timer('form_ids_'+collection.collectionName).start();
     if (collections.hasOwnProperty(collection.collectionName)) {
+        var i, id_obj, key;
         if (collection.collectionName === 'models') {
-            for (var i=0; i<objs.length; i++) {
-                var id_obj = {};
-                for (var key in objs[i]) {
+            for (i=0; i<objs.length; i++) {
+                id_obj = {};
+                for (key in objs[i]) {
                     if ((key !== 'timestamp') && (key !== '_id')) {
                         id_obj[key] = objs[i][key];
                     }
@@ -75,9 +54,9 @@ function form_ids(collection, objs, user_id, cb) {
             }
         } else {
             var schema = collections[collection.collectionName];
-            for (var i=0; i<objs.length; i++) {
-                var id_obj = {};
-                for (var key in schema) {
+            for (i=0; i<objs.length; i++) {
+                id_obj = {};
+                for (key in schema) {
                     if (schema[key].unique) {
                         id_obj[key] = objs[i][key];
                     }
@@ -110,12 +89,15 @@ function checksum(str) {
 }
 
 function smart_stringify(obj) {
-    if(typeof(obj) !== 'object') return JSON.stringify(obj);
+    if(typeof(obj) !== 'object') {
+        return JSON.stringify(obj);
+    }
     global.timer.get_timer('smart_stringify').start();
     var keys = Object.keys(obj).sort();
     var str = '{';
-    for(var i = 0; i < keys.length; i++)
+    for(var i = 0; i < keys.length; i++) {
         str += '"' + keys[i] + '":' + smart_stringify(obj[keys[i]]) + ',';
+    }
     str += '}';
     global.timer.get_timer('smart_stringify').stop();
     return str;
@@ -280,7 +262,7 @@ function form_filter(collection, filter, user_id, cb) {
     // scheduler is god
     // passport gets a pass
     // whiplash user is open to everyone
-    if ((!('collaboration' in filter)) && (!(user_id === "passport"))) {
+    if (!(('collaboration' in filter) || (user_id === "passport"))) {
         db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
             db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
                 if(objs2) {
@@ -347,27 +329,15 @@ function query(collection, filter, fields, user_id, res, cb) {
     });
 }
 
-
 module.exports = {
-    //
-    // Hash
-    //
 
     hash: function(obj) {
         return hash(obj);
     },
 
-    //
-    // Stringify
-    //
-
     smart_stringify: function(obj) {
         return smart_stringify(obj);
     },
-
-    //
-    // Get payload
-    //
 
     get_payload: function(req, key) {
         global.timer.get_timer('get_payload').start();
@@ -385,17 +355,9 @@ module.exports = {
         }
     },
 
-    //
-    // Permissions
-    //
-
     form_filter: function(collection, filter, user_id, cb) {
         form_filter(collection, filter, user_id, cb);
     },
-
-    //
-    // Return
-    //
 
     return: function(res, err, obj) {
         global.timer.get_timer('return').start();
@@ -421,10 +383,6 @@ module.exports = {
             return res.send({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
-
-    //
-    // Query
-    //
 
     query: function(collection, filter, fields, user_id, res, cb) {
         query(collection, filter, fields, user_id, res, cb);
@@ -460,10 +418,6 @@ module.exports = {
             });
         });
     },
-
-    //
-    // Commit
-    //
 
     commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
@@ -519,10 +473,6 @@ module.exports = {
         }
     },
 
-    //
-    // Update
-    //
-
     update: function(collection, filter, update, user_id, res, cb) {
         global.timer.get_timer('update_'+collection.collectionName).start();
         log.debug('update '+collection.collectionName);
@@ -539,10 +489,6 @@ module.exports = {
             });
         });
     },
-
-    //
-    // Replace
-    //
 
     replace: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('replace_'+collection.collectionName).start();
@@ -564,10 +510,6 @@ module.exports = {
             }
         });
     },
-
-    //
-    // Pop
-    //
 
     pop: function(collection, filter, sort, user_id, res, cb) {
         global.timer.get_timer('pop_'+collection.collectionName).start();
@@ -591,10 +533,6 @@ module.exports = {
         });
     },
 
-    //
-    // Delete
-    //
-
     delete: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
@@ -612,10 +550,6 @@ module.exports = {
             });
         });
     },
-
-    //
-    // Map-reduce
-    //
 
     stats: function(collection, filter, field, map, user_id, res, cb) {
         global.timer.get_timer('stats_'+collection.collectionName).start();
@@ -674,18 +608,12 @@ module.exports = {
         });
     },
 
-    mapreduce: function(collection,req,res) {
+    mapreduce: function(collection, filter, field, map, reduce, finalize, user_id, res, cb) {
         log.debug('mapreduce '+collection.collectionName);
-        if (!req.query.field) {
-            req.query.filter = req.body.filter;
-            req.query.map = req.body.map;
-            req.query.reduce=req.body.reduce;
-            req.query.finalize=req.body.finalize;
-        }
-        form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            eval(String(req.query.map));
-            eval(String(req.query.reduce));
-            eval(String(req.query.finalize));
+        form_filter(collection, filter, user_id, function(filter) {
+            eval(String(map));
+            eval(String(reduce));
+            eval(String(finalize));
             var o = {};
             o.finalize = finalize;
             o.query = filter;
@@ -727,12 +655,11 @@ module.exports = {
             collection.distinct(fields,filter,function (err, objs) {
                 if (!err) {
                     return res.send({status: "OK",result:objs});
-                }
-                else{
+                } else {
                   res.statusCode = 500;
                   log.error('Internal error(%d): %s',res.statusCode,err.message);
                   return res.send({error: "Server Error"});
-                };
+                }
             });
         });
     },

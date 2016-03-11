@@ -11,7 +11,7 @@ def make_batches(db,time_window):
     times_left = []
     ids_in_batches = []
     for i in range(len(properties)):
-        if len(batches)==1000: # TODO set limit on server
+        if len(batches)==1000:
             break
         found = False
         for j in range(len(batches)):

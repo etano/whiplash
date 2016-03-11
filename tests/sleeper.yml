@@ -1,0 +1,3 @@
+sleeper:
+    build: .
+    dockerfile: sleeper.Dockerfile

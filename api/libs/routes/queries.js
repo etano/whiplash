@@ -5,17 +5,10 @@ var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
 var db = require(libs + 'db/mongo');
-var models_routes = require(libs + 'routes/models');
-var GridStore = require('mongodb').GridStore;
-var collection = db.get().collection('queries');
-var ObjType = require(libs + 'schemas/query');
+var queries = db.get().collection('queries');
 var executables = db.get().collection('executables');
 var models = db.get().collection('models');
 var properties = db.get().collection('properties');
-
-//
-// Helper functions
-//
 
 function shuffle_array(array) {
     global.timer.get_timer('shuffle_array').start();
@@ -120,7 +113,7 @@ function setup_query(filters, fields, settings, user_id, res, cb) {
     // Commit query
     var max_chunk_size = 10000;
     var query = [{'filters': common.smart_stringify(filters), 'fields': fields, 'settings': settings}];
-    common.commit(collection, query, user_id, res, function(res, err, result) {
+    common.commit(queries, query, user_id, res, function(res, err, result) {
         if (!err) {
             var query_ids = result.ids;
             var query_id = query_ids[0];
@@ -278,10 +271,6 @@ function get_status(filters, fields, user_id, res, cb) {
     });
 }
 
-//
-// Submit/Retrieve
-//
-
 router.get('/submit', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get filters, fields, settings, and user id
     var filters = common.get_payload(req,'filters');
@@ -374,20 +363,12 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    common.count(queries, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
-
-//
-// Delete
-//
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    common.delete(queries, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
-
-//
-// Stats
-//
 
 router.get('/status', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filters = common.get_payload(req,'filters');
@@ -400,16 +381,16 @@ router.get('/status', passport.authenticate('bearer', { session: false }), funct
 
 router.get('/status/all', passport.authenticate('bearer', { session: false }), function(req, res) {
     var user_id = String(req.user._id);
-    common.query(collection, {}, [], user_id, res, function(res, err, queries) {
+    common.query(queries, {}, [], user_id, res, function(res, err, query_objs) {
         if (!err) {
             var stats_objs = [];
             var append_stats = function(count) {
-                if (count<queries.length) {
-                    var filters = JSON.parse(queries[count]['filters']);
-                    var fields = queries[count]['fields'];
+                if (count<query_objs.length) {
+                    var filters = JSON.parse(query_objs[count]['filters']);
+                    var fields = query_objs[count]['fields'];
                     get_status(filters, fields, user_id, res, function(res, err, stats_obj) {
-                        stats_obj['timestamp'] = queries[count]['timestamp'];
-                        stats_obj['_id'] = queries[count]['_id'];
+                        stats_obj['timestamp'] = query_objs[count]['timestamp'];
+                        stats_obj['_id'] = query_objs[count]['_id'];
                         stats_objs.push(stats_obj);
                         append_stats(count+1);
                     });

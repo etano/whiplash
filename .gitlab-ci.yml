@@ -9,8 +9,8 @@ stages:
 build:
   stage: build
   script:
-    - docker-compose -f test.yml build
-    - docker-compose -f test.yml up -d
+    - docker-compose -f develop.yml build
+    - docker-compose -f develop.yml up -d
     - sleep 30
   tags:
     - docker
@@ -29,7 +29,7 @@ test:
 cleanup:
   stage: cleanup
   script:
-    - docker-compose -f test.yml stop
-    - docker-compose -f test.yml rm -f
+    - docker-compose -f develop.yml stop
+    - docker-compose -f develop.yml rm -f
   tags:
     - docker

@@ -15,11 +15,11 @@ api:
     links:
         - odb:mongo
     command: sh -c "node --use_strict bin/createUser.js test test test@test.com; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca scheduler@whiplash.ethz.ch; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"
-# scheduler:
-#     image: whiplash/scheduler
-#     restart: always
-#     links:
-#         - api:api
-#     volumes:
-#         - $PWD:/host
-#     command: sh -c "sleep 30; python3 scheduler/create_token.py api 1337 test test && python3 scheduler/scheduler_users.py --local --host api --port 1337"
+rte:
+    image: whiplash/rte
+    restart: always
+    links:
+        - api:api
+    volumes:
+        - $PWD:/host
+    command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose"
