@@ -18,4 +18,5 @@ api/node_modules
 *.swp
 *.swo
 *.swn
+*.swm
 *.pyc
