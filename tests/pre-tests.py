@@ -70,5 +70,5 @@ fields = {
 }
 settings = {'timeout': 300}
 print(db.query(filters, fields, settings))
-print(db.status(filters, fields))
+print(db.query(filters, fields, settings))
 assert db.status(filters, fields)['unresolved'] == n_seeds
