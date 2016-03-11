@@ -674,7 +674,6 @@ module.exports = {
         });
     },
 
-
     mapreduce: function(collection,req,res) {
         log.debug('mapreduce '+collection.collectionName);
         if (!req.query.field) {

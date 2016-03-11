@@ -170,11 +170,11 @@ def scheduler(args):
             elif procs[pid].is_alive():
                 n_alive += 1
 
-        #if n_alive == 0:
-        #    logging.info('stopping workers')
-        #    for pid in procs:
-        #        procs[pid].join()
-        #    sys.exit(0)
+        if n_alive == 0:
+            logging.info('stopping workers')
+            for pid in procs:
+                procs[pid].join()
+            sys.exit(0)
 
     logging.info('local scheduler shutting down')
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
-    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/local_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')

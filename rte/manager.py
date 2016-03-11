@@ -57,6 +57,8 @@ def scheduler(args):
                 username = db_user['username']
                 if username not in running_users:
                     flags = " --user "+db_user['username']+" --token "+db_user['token']+" --host "+args.host+" --port "+str(args.port)+" --log_dir "+args.log_dir
+                    if (args.verbose):
+                        flags += " --verbose"
                     logging.info('starting batcher for user %s', db_user['username'])
                     p = th.Thread(target=start_batcher, args=(args,flags,))
                     p.start()
@@ -101,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
-    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/manager_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')

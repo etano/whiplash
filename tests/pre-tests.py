@@ -34,7 +34,18 @@ print("Query model")
 assert model_id == db.models.query(tags,'_id')[0]['_id']
 
 print("Commit executable")
-executable = {"name":"test", "algorithm":"test", "version":"test", "build":"test", "path":os.getcwd()+"/tests/sleeper.py", "description":"test", "params":{"required":["sleep_time"], "optional":[]}}
+executable = {
+    "name": "test",
+    "algorithm": "test",
+    "version": "test",
+    "build": "test",
+    "path": os.getcwd()+"/tests/sleeper.py",
+    "description": "test",
+    "params": {
+        "required": ["sleep_time"],
+        "optional":[]
+    }
+}
 executable_id = db.executables.commit(executable)['ids'][0]
 
 print("Query executable")
@@ -42,9 +53,22 @@ assert executable_id == db.executables.query(executable,'_id')[0]['_id']
 
 print("Query for some results")
 n_seeds = 10
-filters = {'input_model':{"name":"test"}, 'executable':{"name":"test"}, 'params':{"sleep_time":1.0, "seed":{"$in":list(range(n_seeds))}}, 'output_model':{}}
-fields = {'input_model':["name"], 'executable':["name"], 'params':["sleep_time"], 'output_model':["number"]}
-settings = {'timeout':300}
+filters = {
+    'input_model': {"name": "test"},
+    'executable': {"name": "test"},
+    'params':{
+        "sleep_time": 1.0,
+        "seed": {"$in":list(range(n_seeds))}
+    },
+    'output_model': {}
+}
+fields = {
+    'input_model': ["name"],
+    'executable': ["name"],
+    'params': ["sleep_time"],
+    'output_model': ["number"]
+}
+settings = {'timeout': 300}
 print(db.query(filters, fields, settings))
 print(db.status(filters, fields))
 assert db.status(filters, fields)['unresolved'] == n_seeds

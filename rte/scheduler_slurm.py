@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--cluster',dest='cluster',required=True,type=str,default='')
     parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='.')
-    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/slurm_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')

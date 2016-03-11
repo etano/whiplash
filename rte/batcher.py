@@ -80,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--user',dest='user',required=True,type=str)
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
-    parser.add_argument('--verbose',dest='verbose',required=False,type=bool,default=False)
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/batcher_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
