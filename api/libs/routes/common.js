@@ -7,6 +7,15 @@ var XXHash = require('xxhash').XXHash64;
 var collections = require(libs + 'collections');
 require(libs + '/timer');
 
+function omit(obj, omitKey) {
+    return Object.keys(obj).reduce((result, key) => {
+        if (key !== omitKey) {
+            result[key] = obj[key];
+        }
+        return result;
+    }, {});
+}
+
 function validate(collection, objs, user_id, cb) {
     global.timer.get_timer('validate_'+collection.collectionName).start();
     log.debug('validate '+collection.collectionName);
@@ -110,7 +119,7 @@ function hash(obj) {
     return res;
 }
 
-function commit_gridfs_obj(obj_id, obj_content) {
+function commit_gridfs_obj(obj_id, obj_content, cb) {
     log.debug('committing gridfs obj');
     global.timer.get_timer('commit_gridfs_obj').start();
     var options = { metadata: {} };
@@ -119,17 +128,23 @@ function commit_gridfs_obj(obj_id, obj_content) {
         if(err) {
             global.timer.get_timer('commit_gridfs_obj').stop();
             log.error("Error opening file: %s",err.message);
+            cb(1, 0);
         } else {
             gridStore.write(JSON.stringify(obj_content), function(err, gridStore) {
                 if(err) {
                     global.timer.get_timer('commit_gridfs_obj').stop();
                     log.error("Error writing file: %s",err.message);
+                    cb(1, 0);
                 } else {
                     gridStore.close(function(err, result) {
                         if(err) {
+                            global.timer.get_timer('commit_gridfs_obj').stop();
                             log.error("Error closing file: %s",err.message);
+                            cb(1, 0);
+                        } else {
+                            global.timer.get_timer('commit_gridfs_obj').stop();
+                            cb(0, obj_id);
                         }
-                        global.timer.get_timer('commit_gridfs_obj').stop();
                     });
                 }
             });
@@ -198,50 +213,19 @@ function get_gridfs_objs(objs, fields, res, cb) {
     }
 }
 
-function delete_gridfs_by_id(id, cb) {
+function delete_gridfs_by_id(id) {
     var gridStore = new GridStore(db.get(), id, String(id), 'w');
     gridStore.open(function(err, gs) {
-        if(err) {
+        if (err) {
             log.error('Error opening file: %s',err.message);
-            cb(err,gs);
         } else {
             gridStore.unlink(function(err, result) {
-                if(err){
+                if (err) {
                     log.error('Error deleting file: %s',err.message);
+                } else {
+                    log.debug('deleted 1 gridfs object');
                 }
-                cb(err,result);
             });
-        }
-    });
-}
-
-function delete_gridfs_by_filter(filter, res, cb) {
-    var proj = {};
-    proj._id = 1;
-    db.get().collection('fs.files').find(filter).project(proj).toArray(function(err, objs) {
-        if(!err) {
-            if(objs.length > 0) {
-                var items = [];
-                var delete_objs = function(i){
-                    if (i<objs.length) {
-                        delete_gridfs_by_id(objs[i]._id, function(err, data) {
-                            if(!err) {
-                                delete_objs(i+1);
-                            } else {
-                                cb(res, err, 0);
-                            }
-                        });
-                    } else {
-                        log.debug('deleted %d objects', objs.length);
-                        cb(res, 0, objs.length);
-                    }
-                };
-                delete_objs(0);
-            } else {
-                cb(res, 0, 0);
-            }
-        } else {
-            cb(res, err, 0);
         }
     });
 }
@@ -434,15 +418,9 @@ module.exports = {
                             var commit_tag = new ObjectID();
                             for(var i=0; i<objs.length; i++) {
                                 ids.push(objs[i]['_id']);
-                                if (objs[i].hasOwnProperty('content')) {
-                                    var tmp_obj = {};
-                                    tmp_obj['content'] = objs[i].content;
-                                    commit_gridfs_obj(objs[i]._id, tmp_obj.content);
-                                    delete objs[i].content;
-                                }
                                 batch.find({_id: objs[i]._id}).upsert().updateOne({
-                                    "$setOnInsert": objs[i],
-                                    "$set": {"commit_tag": commit_tag}
+                                    "$setOnInsert": omit(objs[i], 'content'),
+                                    "$set": {"commit_tag": commit_tag, "has_content": 0},
                                 });
                             }
                             global.timer.get_timer('commit_form_commit_'+collection.collectionName).stop();
@@ -451,6 +429,15 @@ module.exports = {
                             batch.execute(function(err, result) {
                                 global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
                                 if (!err) {
+                                    for(var i=0; i<objs.length; i++) {
+                                        if (objs[i].hasOwnProperty('content')) {
+                                            commit_gridfs_obj(objs[i]._id, objs[i].content, function(err, id) {
+                                                if (!err) {
+                                                    collection.updateOne({"_id": id}, {"$set": {"has_content": 1}}, {w:1}, function(err, result) {});
+                                                }
+                                            });
+                                        }
+                                    }
                                     global.timer.get_timer('commit_'+collection.collectionName).stop();
                                     cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
                                 } else {
@@ -537,12 +524,23 @@ module.exports = {
         global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
         form_filter(collection, filter, user_id, function(filter) {
-            collection.deleteMany(filter, {}, function (err, result) {
+            query(collection, filter, ['_id', 'has_content'], user_id, res, function(res, err, objs) {
                 if (!err) {
-                    log.debug('deleted %d objects', result.deletedCount);
-                    global.timer.get_timer('delete_'+collection.collectionName).stop();
-                    // FIXME: Need to delete gridfs things too
-                    cb(res, 0, result.deletedCount);
+                    for (var i=0; i<objs.length; i++) {
+                        if (objs[i].has_content) {
+                            delete_gridfs_by_id(objs[i]._id);
+                        }
+                    }
+                    collection.deleteMany(filter, {}, function(err, result) {
+                        if (!err) {
+                            log.debug('deleted %d objects', result.deletedCount);
+                            global.timer.get_timer('delete_'+collection.collectionName).stop();
+                            cb(res, 0, result.deletedCount);
+                        } else {
+                            global.timer.get_timer('delete_'+collection.collectionName).stop();
+                            cb(res, err, 0);
+                        }
+                    });
                 } else {
                     global.timer.get_timer('delete_'+collection.collectionName).stop();
                     cb(res, err, 0);

@@ -1,3 +1,6 @@
 sleeper:
     build: .
     dockerfile: sleeper.Dockerfile
+runner:
+    build: .
+    dockerfile: runner.Dockerfile

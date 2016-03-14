@@ -12,7 +12,7 @@ props = db.properties.query({}, ['output_model_id'])
 id_dict = {}
 for prop in props:
     id_dict[prop['output_model_id']] = prop['_id']
-output_models = db.models.query({"number": 8}, ['property_id'])
+output_models = db.models.query({"time": {"$gt": 0.0}}, ['property_id'])
 assert len(output_models) == len(props)
 for model in output_models:
     assert model['property_id'] == id_dict[model['_id']]

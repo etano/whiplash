@@ -30,6 +30,9 @@ model = {"content":{"edges":hamiltonian}}
 model.update(tags)
 model_id = db.models.commit(model)['ids'][0]
 
+print("Commit model again")
+assert model_id == db.models.commit(model)['ids'][0]
+
 print("Query model")
 assert model_id == db.models.query(tags,'_id')[0]['_id']
 
@@ -39,7 +42,7 @@ executable = {
     "algorithm": "test",
     "version": "test",
     "build": "test",
-    "path": os.getcwd()+"/tests/sleeper.py",
+    "path": "whiplash/sleeper",
     "description": "test",
     "params": {
         "required": ["sleep_time"],
@@ -47,6 +50,9 @@ executable = {
     }
 }
 executable_id = db.executables.commit(executable)['ids'][0]
+
+print("Commit executable again")
+assert executable_id == db.executables.commit(executable)['ids'][0]
 
 print("Query executable")
 assert executable_id == db.executables.query(executable,'_id')[0]['_id']

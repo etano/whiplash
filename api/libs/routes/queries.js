@@ -333,10 +333,12 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                                 }
                                 var objs = [];
                                 for (var i=0; i<property_objs.length; i++) {
-                                    var obj = {'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
-                                               'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
-                                               'params': property_objs[i]['params'],
-                                               'status': property_objs[i]['status']};
+                                    var obj = {
+                                        'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
+                                        'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
+                                        'params': property_objs[i]['params'],
+                                        'status': property_objs[i]['status']
+                                    };
                                     if (property_objs[i]['status'] === 'resolved') {
                                         obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
                                     } else {

@@ -32,7 +32,7 @@ def get_users(args, db):
                         work_dir = '/mnt/lnec/'+user['username']+'/.whiplash_run'
                     else:
                         cluster = ''
-                        work_dir = '.'
+                        work_dir = os.path.dirname(os.path.realpath(__file__))
                     db_users.append({'username':user['username'],'token':token['token'],'cluster':cluster,'work_dir':work_dir})
                     break
     return db_users

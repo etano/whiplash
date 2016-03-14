@@ -30,8 +30,7 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
             if container not in pulled_containers:
                 pulled_containers.append(container)
                 sp.call("docker pull "+container, shell=True)
-        else:
-            executable_indices[work_batch['executables'][i]['_id']] = i
+        executable_indices[work_batch['executables'][i]['_id']] = i
     for prop in work_batch['properties']:
         prop['model_index'] = model_indices[prop['input_model_id']]
         prop['executable_index'] = executable_indices[prop['executable_id']]
@@ -170,11 +169,11 @@ def scheduler(args):
             elif procs[pid].is_alive():
                 n_alive += 1
 
-        #if n_alive == 0:
-        #    logging.info('stopping workers')
-        #    for pid in procs:
-        #        procs[pid].join()
-        #    sys.exit(0)
+        if n_alive == 0:
+            logging.info('stopping workers')
+            for pid in procs:
+                procs[pid].join()
+            break
 
     logging.info('local scheduler shutting down')
 
