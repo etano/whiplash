@@ -20,7 +20,7 @@ www_dev:
         file: www/docker-compose.yml
         service: www
     ports:
-        - "80:80"
+        - "880:80"
     volumes:
         - $PWD/www/libs:/src/libs
     command: sh -c "cp config.dev.json config.json; node bin/www"
