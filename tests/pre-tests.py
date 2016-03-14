@@ -63,7 +63,7 @@ filters = {
     'input_model': {"name": "test"},
     'executable': {"name": "test"},
     'params':{
-        "sleep_time": 1.0,
+        "sleep_time": 4.0,
         "seed": {"$in": list(range(n_seeds))}
     },
     'output_model': {}

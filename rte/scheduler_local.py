@@ -16,7 +16,7 @@ def is_work(db, end_time):
     logging.info('counted %i work batches in %f seconds', n_work_batches, t1-t0)
     return n_work_batches > 0
 
-def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
+def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[], pulling_containers=[]):
     logging.info('worker %i has begun trying to fetch a work batch', pid)
     t0 = time.time()
     work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
@@ -25,11 +25,6 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[]):
         model_indices[work_batch['models'][i]['_id']] = i
     executable_indices = {}
     for i in range(len(work_batch['executables'])):
-        if args.docker:
-            container = work_batch['executables'][i]['path']
-            if container not in pulled_containers:
-                pulled_containers.append(container)
-                sp.call("docker pull "+container, shell=True)
         executable_indices[work_batch['executables'][i]['_id']] = i
     for prop in work_batch['properties']:
         prop['model_index'] = model_indices[prop['input_model_id']]
@@ -116,11 +111,12 @@ def worker(pid, db, args, end_time):
 
     work_batches = []
     pulled_containers = []
+    pulling_containers = []
     fetch_thread, commit_thread = th.Thread(), th.Thread()
     num_alive = lambda: fetch_thread.is_alive() + commit_thread.is_alive()
     while True:
         if (not fetch_thread.is_alive()) and (len(work_batches) < 2):
-            fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,pulled_containers,))
+            fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,pulled_containers,pulling_containers,))
             fetch_thread.start()
         if (len(work_batches) > 0):
             logging.info('worker %i has started resolving a work batch', pid)
