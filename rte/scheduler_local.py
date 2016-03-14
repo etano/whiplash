@@ -25,6 +25,15 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[], 
         model_indices[work_batch['models'][i]['_id']] = i
     executable_indices = {}
     for i in range(len(work_batch['executables'])):
+        if args.docker:
+            container = work_batch['executables'][i]['path']
+            if (container not in pulled_containers) and (container not in pulling_containers):
+                pulling_containers.append(container)
+                sp.call("docker pull "+container, shell=True)
+                pulling_containers.remove(container)
+                pulled_containers.append(container)
+            while container in pulling_containers:
+                time.sleep(1)
         executable_indices[work_batch['executables'][i]['_id']] = i
     for prop in work_batch['properties']:
         prop['model_index'] = model_indices[prop['input_model_id']]
@@ -124,7 +133,9 @@ def worker(pid, db, args, end_time):
             commit_thread = th.Thread(target = commit_resolved, args = (db,pid,results,))
             commit_thread.start()
         if (len(work_batches) == 0):
-            if (not is_work(db, end_time)):
+            if (len(pulling_containers) > 0):
+                time.sleep(1)
+            elif (not is_work(db, end_time)):
                 time.sleep(0.5)
                 if num_alive() == 0:
                     if (len(work_batches) == 0):
