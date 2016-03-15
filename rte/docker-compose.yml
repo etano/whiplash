@@ -1,3 +1,2 @@
 rte:
-    build: ../
-    dockerfile: rte/Dockerfile
+    build: .
