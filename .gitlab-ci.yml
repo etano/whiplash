@@ -21,6 +21,7 @@ test:
     - export PYTHONPATH=$PWD/python:$PYTHONPATH
     - ./tests/pre-tests.py ${DOCKERHOST:-localhost} 1337
     - sleep 30
+    - docker logs whiplash_rte_1
     - ./tests/post-tests.py ${DOCKERHOST:-localhost} 1337
   tags:
     - docker
