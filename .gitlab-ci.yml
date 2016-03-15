@@ -11,6 +11,8 @@ build:
   script:
     - docker-compose -f develop.yml build
     - docker-compose -f develop.yml up -d
+    - git clean -fdx
+    - git reset --hard
     - sleep 30
   tags:
     - docker
