@@ -21,7 +21,7 @@ rte:
         service: rte
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
-        - /usr/local/bin/docker:/bin/docker
+        - $DOCKER:/bin/docker
         - $PWD:/input
     links:
         - api:api
