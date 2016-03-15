@@ -7,3 +7,4 @@ WORKDIR /
 COPY rte/*.py /rte/
 COPY python/whiplash.py /rte/
 RUN chmod 755 /rte/*.py
+RUN mkdir -p /input

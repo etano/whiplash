@@ -15,9 +15,10 @@ api/results
 api/libs/public/docs
 api/npm-debug.log
 api/node_modules
-*.swp
-*.swo
-*.swn
+*.swl
 *.swm
+*.swn
+*.swo
+*.swp
 *.pyc
 rte/whiplash.py

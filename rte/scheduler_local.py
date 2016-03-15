@@ -64,7 +64,7 @@ def resolve_object(args, pid, property, models, executables):
     try:
         path = executables[property['executable_index']]['path']
         if args.docker:
-            command = 'docker run --rm=true -i -v ' + args.work_dir + ':/input ' + path + ' /input/' + file_name
+            command = 'docker run --rm=true -i --volumes-from whiplash_rte_1 ' + path + ' /input/' + file_name
         else:
             command = path+' '+host_file_name
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
