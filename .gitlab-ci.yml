@@ -20,7 +20,7 @@ build:
 test:
   stage: test
   script:
-    - export PYTHONPATH=$PWD/python:$PYTHONPATH
+    - export PYTHONPATH=$PWD/rte:$PYTHONPATH
     - ./tests/pre-tests.py ${DOCKERHOST:-localhost} 1337
     - sleep 30
     - docker logs whiplash_rte_1
