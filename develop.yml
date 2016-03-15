@@ -23,6 +23,7 @@ rte:
         - $PWD/rte:/rte
         - /var/run/docker.sock:/var/run/docker.sock
         - /usr/local/bin/docker:/bin/docker
+        - $PWD:/input
     links:
         - api:api
     command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose --docker"
