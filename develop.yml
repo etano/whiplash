@@ -20,7 +20,6 @@ rte:
         file: rte/docker-compose.yml
         service: rte
     volumes:
-        - $PWD/rte:/rte
         - /var/run/docker.sock:/var/run/docker.sock
         - /usr/local/bin/docker:/bin/docker
         - $PWD:/input
