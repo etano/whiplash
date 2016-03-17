@@ -21,8 +21,9 @@ rte:
         service: rte
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
+        - $PWD:/input
     environment:
-        WORKDIR: $PWD
+        - WORKDIR=$PWD
     links:
         - api:api
     command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose --docker"
