@@ -30,13 +30,13 @@ ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 url = response['Reservations'][0]['Instances'][0]['PublicDnsName']
 host = 'ec2-user@'+url
 pem = 'benchmarks.pem'
-f = open('api.cfg','w')
+f = open('rte.cfg','w')
 f.write(ip+' '+url)
 f.close()
 
-print('installing api...')
-f = open('db.cfg','r')
-[db_ip, db_url] = f.readline().rstrip().split(' ')
+print('installing rte...')
+f = open('api.cfg','r')
+[api_ip, api_url] = f.readline().rstrip().split(' ')
 f.close()
 print(ssh(host, pem, 'sudo yum update -y && sudo yum install -y docker && sudo service docker start && sudo usermod -a -G docker ec2-user'))
-print(ssh(host, pem, 'docker run -d -e "MONGO_PORT_27017_TCP_ADDR='+db_ip+'" -e "MONGO_PORT_27017_TCP_PORT=27017" -e "MONGO_API_USERNAME=api" -e "MONGO_API_PASSWORD=haYrv{Ak9UJiaDsqVTe7rLJTc" -p 1337:1337 whiplash/api sh -c "node --use_strict bin/createUser.js test test test@test.com; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca scheduler@whiplash.ethz.ch; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"'))
+print(ssh(host, pem, 'docker run -d -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/bin/docker -v $PWD:/input -p 1337:1337 whiplash/rte sh -c "./rte/create_token.py '+api_ip+' 1337 test test && ./rte/manager.py --local --host '+api_ip+' --port 1337 --verbose --docker"'))

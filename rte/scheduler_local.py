@@ -29,6 +29,7 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[], 
             container = work_batch['executables'][i]['path']
             if (container not in pulled_containers) and (container not in pulling_containers):
                 pulling_containers.append(container)
+                logging.info('worker %i is pulling container %s', pid, container)
                 sp.call("docker pull "+container, shell=True)
                 pulling_containers.remove(container)
                 pulled_containers.append(container)
@@ -53,9 +54,8 @@ def commit_resolved(db, pid, results):
     logging.info('worker %i committed %i model/property combos in %f seconds', pid, len(results), t1-t0)
 
 def resolve_object(args, pid, property, models, executables):
-    file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'
-    host_file_name = args.work_dir+'/'+file_name
-    with open(host_file_name, 'w') as io_file:
+    file_name = args.work_dir+'/object_'+str(pid)+'_'+str(property['_id'])+'.json'
+    with open(file_name, 'w') as io_file:
         obj = models[property['model_index']]
         obj['params'] = property['params']
         io_file.write(json.dumps(obj).replace(" ",""))
@@ -64,13 +64,13 @@ def resolve_object(args, pid, property, models, executables):
     try:
         path = executables[property['executable_index']]['path']
         if args.docker:
-            command = 'docker run --rm=true -i --volumes-from whiplash_rte_1 ' + path + ' /input/' + file_name
+            command = 'docker run --rm=true -i -v '+os.environ['WORKDIR']+':/input '+path+' '+file_name
         else:
-            command = path+' '+host_file_name
+            command = path+' '+file_name
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
-        with open(host_file_name, 'r') as io_file:
+        with open(file_name, 'r') as io_file:
             try:
                 output_model = json.load(io_file)
             except:
@@ -91,7 +91,7 @@ def resolve_object(args, pid, property, models, executables):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    os.remove(host_file_name)
+    os.remove(file_name)
     output_model['property_id'] = property['_id']
     output_model['owner'] = property['owner']
 

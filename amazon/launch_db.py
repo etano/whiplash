@@ -28,12 +28,12 @@ response = client.describe_instances(
 )
 ip = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 url = response['Reservations'][0]['Instances'][0]['PublicDnsName']
+host = 'ec2-user@'+url
+pem = 'benchmarks.pem'
 f = open('db.cfg','w')
 f.write(ip+' '+url)
 f.close()
 
 print('installing db...')
-host = 'ec2-user@'+url
-pem = 'benchmarks.pem'
 ssh(host, pem, 'sudo yum update -y && sudo yum install -y docker && sudo service docker start && sudo usermod -a -G docker ec2-user')
 ssh(host, pem, 'docker run -d -p 27017:27017 whiplash/odb --auth')
