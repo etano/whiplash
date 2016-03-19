@@ -19,6 +19,10 @@ def start_local_scheduler(args, flags):
     command = args.rte_dir+"/scheduler_local.py"+flags
     sp.call(command, shell=True)
 
+def start_cloud_scheduler(args, flags):
+    command = args.rte_dir+"/scheduler_cloud.py"+flags
+    sp.call(command, shell=True)
+
 def get_users(args, db):
     try:
         all_users = db.collection('users').query({})
@@ -28,13 +32,13 @@ def get_users(args, db):
             if user['username'] != "scheduler":
                 for token in all_tokens:
                     if (str(user['_id']) == token['userId']) and (token['clientId'] == user['username']+'-scheduler'):
+                        db_user = {'username':user['username'], 'token':token['token']}
                         if args.cluster:
-                            cluster = "monch.cscs.ch" #TODO: dedicated collection of clusters
-                            work_dir = '/mnt/lnec/'+user['username']+'/.whiplash_run'
+                            db_user['cluster'] = "monch.cscs.ch" #TODO: dedicated collection of clusters
+                            db_user['work_dir'] = '/mnt/lnec/'+user['username']+'/.whiplash_run'
                         else:
-                            cluster = ''
-                            work_dir = '/input'
-                        db_users.append({'username':user['username'],'token':token['token'],'cluster':cluster,'work_dir':work_dir})
+                            db_user['work_dir'] = '/input'
+                        db_users.append(db_user)
                         break
         return db_users
     except:
@@ -65,6 +69,8 @@ def scheduler(args):
                     schedulers[username] = {'batcher': th.Thread()}
                     if args.cluster:
                         schedulers[username]['slurm'] = th.Thread()
+                    elif args.cloud:
+                        schedulers[username]['cloud'] = th.Thread()
                     else:
                         schedulers[username]['local'] = th.Thread()
 
@@ -90,6 +96,11 @@ def scheduler(args):
                             schedulers[username]['slurm'].start()
                         else:
                             logging.info('access denied for user %s', username)
+                elif args.cloud:
+                    if not schedulers[username]['cloud'].is_alive():
+                        logging.info('starting cloud scheduler for user %s', username)
+                        schedulers[username]['cloud'] = th.Thread(target=start_cloud_scheduler, args=(args,flags,))
+                        schedulers[username]['cloud'].start()
                 else:
                     if not schedulers[username]['local'].is_alive():
                         logging.info('starting local scheduler for user %s', username)
@@ -105,6 +116,8 @@ def scheduler(args):
         schedulers[username]['batcher'].join()
         if args.cluster:
             schedulers[username]['slurm'].join()
+        elif args.cloud:
+            schedulers[username]['cloud'].join()
         else:
             schedulers[username]['local'].join()
     logging.info('user scheduler exiting')
@@ -118,9 +131,9 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     parser.add_argument('--rte_dir',dest='rte_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
-    parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
+    parser.add_argument('--cloud',dest='cloud',required=False,default=False,action='store_true')
     parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
