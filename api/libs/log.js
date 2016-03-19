@@ -10,7 +10,7 @@ function logger(module) {
         transports : [
             new winston.transports.File({
                 level: 'info',
-                filename: process.env.LOGPATH || config.get('logpath') || process.cwd() + '/logs/all.log',
+                filename: process.env.NODE_LOG || config.get('logpath') || process.cwd() + '/logs/all.log',
                 handleException: true,
                 json: true,
                 maxSize: 5242880, //5mb
