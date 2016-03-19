@@ -132,6 +132,7 @@ if __name__ == '__main__':
     parser.add_argument('--rte_dir',dest='rte_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
+    parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
     parser.add_argument('--cloud',dest='cloud',required=False,default=False,action='store_true')
     parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
