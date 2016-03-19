@@ -11,10 +11,8 @@ build:
   script:
     - git clean -fdx
     - git reset --hard
-    - cd deployment/dev
-    - docker-compose build
-    - docker-compose up -d
-    - cd ../../
+    - docker-compose -f develop.yml build
+    - docker-compose -f develop.yml up -d
     - sleep 30
   tags:
     - docker
@@ -33,9 +31,7 @@ test:
 cleanup:
   stage: cleanup
   script:
-    - cd deployment/dev
-    - docker-compose stop
-    - docker-compose rm -f
-    - cd ../../
+    - docker-compose -f develop.yml stop
+    - docker-compose -f develop.yml rm -f
   tags:
     - docker

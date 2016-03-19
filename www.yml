@@ -1,0 +1,8 @@
+www:
+    extends:
+        file: www/docker-compose.yml
+        service: www
+    ports:
+        - 880:80
+    restart: always
+    command: sh -c "node bin/www"

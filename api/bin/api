@@ -8,7 +8,7 @@ var db = require(libs + 'db/mongo');
 
 var throng = require('throng');
 throng(start, {
-    workers: process.env.NODE_WORKERS || config.get('n_workers') || 1,
+    workers: process.env.NWORKERS || config.get('n_workers') || 1,
     lifetime: Infinity,
     grace: 10000
 });
@@ -17,7 +17,7 @@ function start() {
     db.connect(function(err) {
         if(!err) {
             var app = require(libs + 'app');
-            app.set('port', process.env.NODE_PORT || config.get('port') || 3000);
+            app.set('port', process.env.PORT || config.get('port') || 3000);
             var server = app.listen(app.get('port'), function() {
                 debug('Express server listening on port ' + app.get('port'));
                 log.info('Express server listening on port ' + app.get('port'));
