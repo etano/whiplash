@@ -1,9 +1,9 @@
 # Start development environment
-    cd deployment/development
+    cd deployment/dev
     docker-compose up -d
 
 # restart container
-    cd deployment/development
+    cd deployment/dev
     docker-compose restart
 
 # access to development database

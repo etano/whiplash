@@ -11,10 +11,8 @@ build:
   script:
     - git clean -fdx
     - git reset --hard
-    - cd deployment/dev
-    - docker-compose build
-    - docker-compose up -d
-    - cd ../../
+    - docker-compose -f deployment/dev/docker-compose.yml build
+    - docker-compose -f deployment/dev/docker-compose.yml up -d
     - sleep 30
   tags:
     - docker
@@ -25,7 +23,7 @@ test:
     - export PYTHONPATH=$PWD/rte:$PYTHONPATH
     - ./tests/pre-tests.py ${DOCKERHOST:-localhost} 1337
     - sleep 30
-    - docker logs whiplash_rte_1
+    - docker logs dev_rte_1
     - ./tests/post-tests.py ${DOCKERHOST:-localhost} 1337
   tags:
     - docker
@@ -33,9 +31,7 @@ test:
 cleanup:
   stage: cleanup
   script:
-    - cd deployment/dev
-    - docker-compose stop
-    - docker-compose rm -f
-    - cd ../../
+    - docker-compose -f deployment/dev/docker-compose.yml stop
+    - docker-compose -f deployment/dev/docker-compose.yml rm -f
   tags:
     - docker
