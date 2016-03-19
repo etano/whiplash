@@ -1,3 +1,3 @@
 #!/bin/bash
 
-(cd api && node --use_strict bin/api > /dev/null 2>&1 &)
+(cd $WHIPLASH_HOME/api && node --use_strict bin/api > /dev/null 2>&1 &)
