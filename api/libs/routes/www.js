@@ -1,4 +1,3 @@
-var fs = require('fs');
 var express = require('express');
 var router = express.Router();
 var libs = process.cwd() + '/libs/';
@@ -15,7 +14,11 @@ var client = {
 
 common.commit(db.get().collection('clients'), [client], "passport", {}, function(res, err, result) {
     if(!err) {
-        log.info("New client - %s:%s", client.clientId, client.clientSecret);
+        if (result["n_new"]>0) {
+            log.info("New client - %s:%s", client.clientId, client.clientSecret);
+        } else {
+            log.debug("Client already exists - %s:%s", client.clientId, client.clientSecret);
+        }
     } else {
         log.error(err);
     }
