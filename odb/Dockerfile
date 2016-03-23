@@ -4,7 +4,7 @@ FROM debian:wheezy
 RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+    && apt-get install -y --force-yes --no-install-recommends \
         ca-certificates curl \
         numactl \
     && rm -rf /var/lib/apt/lists/*

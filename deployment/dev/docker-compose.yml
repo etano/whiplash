@@ -27,12 +27,3 @@ rte:
     links:
         - api:api
     command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose --docker"
-www:
-    extends:
-        file: ../../www/docker-compose.yml
-        service: www
-    ports:
-        - "880:80"
-    volumes:
-        - ../../www/libs:/src/libs
-    command: sh -c "cp config.dev.json config.json; node bin/www"

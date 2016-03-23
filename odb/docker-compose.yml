@@ -1,3 +1,2 @@
 odb:
     build: .
-    command: --auth
