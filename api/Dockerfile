@@ -11,6 +11,6 @@ WORKDIR /src
 COPY *.json /src/
 RUN npm install
 COPY bin /src/bin
-RUN mkdir /src/logs
 COPY libs /src/libs
+RUN mkdir /src/logs
 EXPOSE 1337
