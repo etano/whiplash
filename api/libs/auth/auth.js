@@ -13,7 +13,7 @@ var clients = db.get().collection('clients');
 
 passport.use(new BasicStrategy(
     function(username, password, done) {
-        common.query_one(clients, {'clientId': username}, [], "passport", {}, function(res, err, client) {
+        common.query_one(clients, {'clientId': username}, [], "user_admin", {}, function(res, err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false, { message: 'Wrong username or password' }); }
             if (client.clientSecret !== password) { return done(null, false, { message: 'Wrong username or password' }); }
@@ -24,7 +24,7 @@ passport.use(new BasicStrategy(
 
 passport.use(new ClientPasswordStrategy(
     function(clientId, clientSecret, done) {
-        common.query_one(clients, {'clientId': clientId}, [], "passport", {}, function(res, err, client) {
+        common.query_one(clients, {'clientId': clientId}, [], "user_admin", {}, function(res, err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
             if (client.clientSecret !== clientSecret) { return done(null, false, { message: 'Wrong client id or secret' }); }
@@ -35,7 +35,7 @@ passport.use(new ClientPasswordStrategy(
 
 passport.use(new BearerStrategy(
     function(access_token, done) {
-        common.query_one(access_tokens, {'token': access_token}, [], "passport", {}, function(res, err, token) {
+        common.query_one(access_tokens, {'token': access_token}, [], "user_admin", {}, function(res, err, token) {
             if (err) { return done(err); }
             if (!token) {  return done(null, false); }
             // Tokens don't expire when this is commented out
@@ -46,7 +46,7 @@ passport.use(new BearerStrategy(
             //    });
             //    return done(null, false, { message: 'Token expired' });
             //}
-            common.query_one(users, {'_id': token.userId}, [], "passport", {}, function(res, err, user) {
+            common.query_one(users, {'_id': token.owner}, [], token.owner, {}, function(res, err, user) {
                 if (err) { return done(err); }
                 if (!user) { return done(null, false, { message: 'Unknown user' }); }
                 var info = { scope: '*' };

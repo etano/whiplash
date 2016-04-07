@@ -23,13 +23,14 @@ export NODE_HOME=$HOME
 export PATH=$NODE_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$NODE_HOME/lib:$LD_LIBRARY_PATH
 export NODE_PORT=1337
-export NODE_WORKERS=8
+Kxport NODE_WORKERS=8
 export NODE_LOG=/mnt/lnec/$USER/whiplash/logs/node/all.log
 
 # Mongo
 export MONGO_HOME=$HOME
 export PATH=$MONGO_HOME/bin:$PATH
-export MONGO_API_USERNAME=api
-export MONGO_API_PASSWORD=haYrv{Ak9UJiaDsqVTe7rLJTc
 export MONGO_PORT_27017_TCP_ADDR=127.0.0.1
 export MONGO_PORT_27017_TCP_PORT=27017
+
+# Passwords
+source $WHIPLASH_HOME/deployment/passwords.sh

@@ -31,7 +31,7 @@ def get_users(args, db):
         for user in all_users:
             if user['username'] != "scheduler":
                 for token in all_tokens:
-                    if (str(user['_id']) == token['userId']) and (token['clientId'] == user['username']+'-scheduler'):
+                    if (str(user['_id']) == token['owner']) and (token['clientId'] == user['username']+'-scheduler'):
                         db_user = {'username':user['username'], 'token':token['token']}
                         if args.cluster:
                             db_user['cluster'] = "monch.cscs.ch" #TODO: dedicated collection of clusters
@@ -55,7 +55,7 @@ def check_access(db_user):
         return 0
 
 def scheduler(args):
-    db = whiplash.db(args.host,args.port,username="scheduler",password="c93lbcp0hc[5209sebf10{3ca",save_token=True)
+    db = whiplash.db(args.host,args.port,username="user_admin",password=os.environ['USER_ADMIN_PASSWORD'],save_token=True)
     logging.info('user scheduler connected to db')
 
     time_limit = 24*3600

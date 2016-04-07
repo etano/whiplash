@@ -12,7 +12,7 @@ var client = {
     clientSecret: "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba"
 };
 
-common.commit(db.get().collection('clients'), [client], "passport", {}, function(res, err, result) {
+common.commit(db.get().collection('clients'), [client], "www", {}, function(res, err, result) {
     if(!err) {
         if (result["n_new"]>0) {
             log.info("New client - %s:%s", client.clientId, client.clientSecret);

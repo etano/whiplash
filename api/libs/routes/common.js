@@ -21,7 +21,7 @@ function validate(collection, objs, user_id, cb) {
     log.debug('validate '+collection.collectionName);
     var bad_objs = [];
     if (collections.hasOwnProperty(collection.collectionName)) {
-        var schema = collections[collection.collectionName];
+        var schema = collections[collection.collectionName].schema;
         for (var i=0; i<objs.length; i++) {
             objs[i]['owner'] = user_id;
             for (var key in schema) {
@@ -62,7 +62,7 @@ function form_ids(collection, objs, user_id, cb) {
                 objs[i]['_id'] = hash(id_obj);
             }
         } else {
-            var schema = collections[collection.collectionName];
+            var schema = collections[collection.collectionName].schema;
             for (i=0; i<objs.length; i++) {
                 id_obj = {};
                 for (key in schema) {
@@ -242,15 +242,20 @@ function concaternate(o1, o2) {
 function form_filter(collection, filter, user_id, cb) {
     global.timer.get_timer('form_filter_'+collection.collectionName).start();
     // Set permissions
-    //
-    // scheduler is god
-    // passport gets a pass
-    // whiplash user is open to everyone
-    if (!(('collaboration' in filter) || (user_id === "passport"))) {
+    if (!('collaboration' in filter) && (user_id !== "user_admin")) {
         db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
             db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
                 if(objs2) {
-                    if(objs2[0]['username'] !== "scheduler") { // scheduler is god
+                    if(!(
+                        (objs2[0]['username'] === "user_admin") &&
+                            (
+                                (collection.collectionName === "users") ||
+                                (collection.collectionName === "clients") ||
+                                (collection.collectionName === "refreshtokens") ||
+                                (collection.collectionName === "accesstokens")
+                            )
+                        )
+                    ) { // user_admin can search users
                         if(!err) {
                             var ids = [];
                             for(var i=0; i<objs.length; i++) {
@@ -413,6 +418,11 @@ module.exports = {
                         if (!err) {
                             log.debug('form commit '+collection.collectionName);
                             global.timer.get_timer('commit_form_commit_'+collection.collectionName).start();
+                            if (collection.collectionName === "users") {
+                                for(var i=0; i<objs.length; i++) {
+                                    objs[i]['owner'] = objs[i]._id;
+                                }
+                            }
                             var batch = collection.initializeUnorderedBulkOp();
                             var ids = [];
                             var commit_tag = new ObjectID();
