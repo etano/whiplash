@@ -35,8 +35,8 @@ def submit_job(args):
             sbatch.write("#SBATCH --ntasks=20\n")
             sbatch.write("module load python/3.4.1-gcc-4.8.1\n")
             sbatch.write("module load mkl\n")
-            sbatch.write("export PYTHONPATH=/mnt/lnec/ebrown/rte:$PYTHONPATH\n")
-            sbatch.write("python3 /mnt/lnec/ebrown/rte/scheduler_local.py"+flags+"\n")
+            sbatch.write("export PYTHONPATH=/mnt/lnec/$USER/rte:$PYTHONPATH\n")
+            sbatch.write("python3 /mnt/lnec/$USER/rte/scheduler_local.py"+flags+"\n")
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True,timeout=5)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True,timeout=5)
     except sp.TimeoutExpired as e:
