@@ -1,4 +1,4 @@
-import benchmark,sys,json
+import benchmark,sys,os,json
 
 def perform_benchmark(bm,N):
     bm.clean()
@@ -37,8 +37,8 @@ port = "1337"
 N = 10000
 
 # Instatiate benchmark objects
-bm_pymongo = benchmark.benchmark(server,port,True)
-bm_api = benchmark.benchmark(server,port,False)
+bm_pymongo = benchmark.benchmark(server, port, "api", os.environ['MONGO_API_PASSWORD'], True)
+bm_api = benchmark.benchmark(server, port, "test", "test", False)
 
 print('Using PyMongo')
 perform_benchmark(bm_pymongo,N)

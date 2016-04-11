@@ -11,13 +11,13 @@ var access_tokens = db.get().collection('access_tokens');
 var refresh_tokens = db.get().collection('refresh_tokens');
 
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res){
+    var user_id = String(req.user._id);
     var client = {
         name: common.get_payload(req,'client_name'),
         clientId: common.get_payload(req,'client_id'),
-        clientSecret: common.get_payload(req,'client_secret'),
-        userId: String(req.user._id)
+        clientSecret: common.get_payload(req,'client_secret')
     };
-    common.commit(clients, [client], "passport", res, function(res, err, result) {
+    common.commit(clients, [client], user_id, res, function(res, err, result) {
         if(!err) {
             log.info("New user client %s", client.clientId);
             return res.json({ status: 'OK' });
@@ -29,14 +29,14 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 });
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var filter = {userId: String(req.user._id)};
-    common.query(clients, filter, [], "passport", res, function(res, err, client_objs) {
+    var user_id = String(req.user._id);
+    common.query(clients, {}, [], user_id, res, function(res, err, client_objs) {
         if(!clients || err) {
             return res.send("Buf");
         } else {
-            common.query(refresh_tokens, filter, [], "passport", res, function(res, err, refresh_token_objs) {
+            common.query(refresh_tokens, filter, [], user_id, res, function(res, err, refresh_token_objs) {
                 if (err) { return res.send("Buf"); }
-                common.query(access_tokens, filter, [], "passport", res, function(res, err, access_token_objs) {
+                common.query(access_tokens, filter, [], user_id, res, function(res, err, access_token_objs) {
                     if (err) { return res.send("Buf"); }
                     for(var i=0; i<client_objs.length; i++) {
                         for(var j=0; j<refresh_token_objs.length; j++) {
@@ -59,18 +59,18 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
     var client_id = common.get_payload(req,'client_id');
+    var user_id = String(req.user._id);
     var filter = {
-        userId: String(req.user._id),
         clientId: client_id
     };
-    common.delete(clients, filter, "passport", res, function(res, err, count) {
+    common.delete(clients, filter, user_id, res, function(res, err, count) {
         if(err) {
             log.error('Error removing client',client_id,'for user',String(req.user._id));
             return res.send(err);
         } else {
             log.info('Removing client',client_id,'for user',String(req.user._id));
-            common.delete(access_tokens, filter, "passport", res, function(res, err, count) {});
-            common.delete(refresh_tokens, filter, "passport", res, function(res, err, count) {});
+            common.delete(access_tokens, filter, user_id, res, function(res, err, count) {});
+            common.delete(refresh_tokens, filter, user_id, res, function(res, err, count) {});
             return res.json({ status: 'OK' });
         }
     });
