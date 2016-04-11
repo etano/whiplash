@@ -57,6 +57,7 @@ db.connect(function(err) {
                 make_clients(0);
             } else {
                 log.error(err);
+                db.close();
             }
         });
     }

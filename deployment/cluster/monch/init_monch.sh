@@ -23,7 +23,7 @@ export NODE_HOME=$HOME
 export PATH=$NODE_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$NODE_HOME/lib:$LD_LIBRARY_PATH
 export NODE_PORT=1337
-Kxport NODE_WORKERS=8
+export NODE_WORKERS=8
 export NODE_LOG=/mnt/lnec/$USER/whiplash/logs/node/all.log
 
 # Mongo

@@ -9,8 +9,6 @@ killall mongod
 echo 'Sleeping 5'
 sleep 5
 
-echo 'Setup mongo'
-bash ${WHIPLASH_HOME}/deployment/cluster/monch/solo/mongo_setup.sh
 echo 'Starting mongo'
 bash ${WHIPLASH_HOME}/deployment/cluster/monch/solo/mongo_startup.sh
 echo 'Starting node'
