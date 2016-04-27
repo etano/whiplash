@@ -439,6 +439,7 @@ module.exports = {
                             batch.execute(function(err, result) {
                                 global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
                                 if (!err) {
+                                    log.debug('checking for content '+collection.collectionName);
                                     for(var i=0; i<objs.length; i++) {
                                         if (objs[i].hasOwnProperty('content')) {
                                             commit_gridfs_obj(objs[i]._id, objs[i].content, function(err, id) {
@@ -593,7 +594,7 @@ module.exports = {
                 if(!err){
                     out_collection.find().toArray(function (err, result) {
                         if(!err) {
-                            log.info("Computing statistics for %s",field);
+                            log.debug("Computing statistics for %s",field);
                             if(result.length>0) {
                                 global.timer.get_timer('stats_'+collection.collectionName).stop();
                                 cb(res, 0, result[0].value);
