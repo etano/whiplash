@@ -4,16 +4,16 @@ import time,whiplash,pymongo,sys
 import subprocess as sp
 
 class benchmark:
-    def __init__(self,server,port,use_pymongo=False):
+    def __init__(self, server, port, username, password, use_pymongo=False):
         self.log_file = "benchmark_" + str(int(time.time())) + '.dat'
         self.log_handle = open(self.log_file,'w')
         self.use_pymongo = use_pymongo
         if self.use_pymongo:
             client = pymongo.MongoClient(server,27017)
-            client.wdb.authenticate('api','haYrv{Ak9UJiaDsqVTe7rLJTc',mechanism='SCRAM-SHA-1')
+            client.wdb.authenticate(username, password ,mechanism='SCRAM-SHA-1')
             self.wdb = client.wdb
         else:
-            self.wdb = whiplash.wdb(server,port,'','test','test','test','test')
+            self.wdb = whiplash.db(server, port, username=username,password=password, save_token=True)
 
     def __enter__(self):
         return self

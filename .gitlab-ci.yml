@@ -11,8 +11,11 @@ build:
   script:
     - git clean -fdx
     - git reset --hard
-    - docker-compose -f develop.yml build
-    - docker-compose -f develop.yml up -d
+    - source deployment/passwords.sh
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash stop
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash rm -f
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash build
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash up -d
     - sleep 30
   tags:
     - docker
@@ -31,7 +34,7 @@ test:
 cleanup:
   stage: cleanup
   script:
-    - docker-compose -f develop.yml stop
-    - docker-compose -f develop.yml rm -f
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash stop
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash rm -f
   tags:
     - docker

@@ -1,8 +1,10 @@
 # Start development environment
-    docker-compose -f develop.yml up -d
+    cd deployment/dev
+    docker-compose up -d
 
 # restart container
-docker-compose -f develop.yml restart
+    cd deployment/dev
+    docker-compose restart
 
 # access to development database
 docker exec -it whiplash_odb_dev_1 mongo 127.0.0.1:27017/wdb -u pwn -p cftXzdrjheHEARuJKT39x]3sV

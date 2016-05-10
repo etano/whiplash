@@ -1,7 +1,9 @@
-FROM debian:stretch
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install -y python3.4 python3.4-numpy
+FROM alpine:latest
+
+RUN apk add --update \
+        python3 \
+    && rm -rf /var/cache/apk/*
+
 RUN mkdir -p /exec && mkdir -p /data
 WORKDIR /exec
 COPY sleeper.py /exec/

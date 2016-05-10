@@ -257,6 +257,7 @@ function get_status(filters, fields, user_id, res, cb) {
         common.query(properties, property_filter, property_fields, user_id, res, function(res, err, property_objs) {
             if (!err) {
                 // Get stats
+                log.debug('organizing statuses');
                 for (var i=0; i<property_objs.length; i++) {
                     stats_obj[property_objs[i]['status']]++;
                 }

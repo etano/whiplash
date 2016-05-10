@@ -9,14 +9,14 @@ import whiplash
 def time_left(end_time):
     return end_time - time.time()
 
-def is_work(db, end_time):
+def check_for_work(db, end_time):
     t0 = time.time()
     n_work_batches = db.collection('work_batches').count({'total_time':{"$lt": time_left(end_time)}})
     t1 = time.time()
     logging.info('counted %i work batches in %f seconds', n_work_batches, t1-t0)
     return n_work_batches > 0
 
-def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[], pulling_containers=[]):
+def get_work_batch(args, db, pid, work_batches, end_time, is_work, pulled_containers=[], pulling_containers=[]):
     logging.info('worker %i has begun trying to fetch a work batch', pid)
     t0 = time.time()
     work_batch = db.collection('work_batches').query({'total_time':{"$lt": time_left(end_time)}})
@@ -45,6 +45,7 @@ def get_work_batch(args, db, pid, work_batches, end_time, pulled_containers=[], 
         logging.info('worker %i fetched a work batch with %i properties, %i models, and %i executables in %f seconds', pid, len(work_batch['properties']), len(work_batch['models']), len(work_batch['executables']), t1-t0)
     else:
         logging.info('worker %i found no work batches in %f seconds', pid, t1-t0)
+        is_work = 0
 
 def commit_resolved(db, pid, results):
     logging.info('worker %i has began committing back models and properties', pid)
@@ -115,7 +116,7 @@ def resolve_work_batch(args, pid, work_batch, end_time):
     logging.info('worker %i resolved %i and fumbled %i properties in %f seconds', pid, good_results, bad_results, t1-t0)
     return results
 
-def worker(pid, db, args, end_time):
+def worker(pid, db, args, end_time, is_work):
     logging.info('worker %i active', pid)
 
     work_batches = []
@@ -125,7 +126,7 @@ def worker(pid, db, args, end_time):
     num_alive = lambda: fetch_thread.is_alive() + commit_thread.is_alive()
     while True:
         if (not fetch_thread.is_alive()) and (len(work_batches) < 2):
-            fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,pulled_containers,pulling_containers,))
+            fetch_thread = th.Thread(target = get_work_batch, args = (args,db,pid,work_batches,end_time,is_work,pulled_containers,pulling_containers,))
             fetch_thread.start()
         if (len(work_batches) > 0):
             logging.info('worker %i has started resolving a work batch', pid)
@@ -135,7 +136,7 @@ def worker(pid, db, args, end_time):
         if (len(work_batches) == 0):
             if (len(pulling_containers) > 0):
                 time.sleep(1)
-            elif (not is_work(db, end_time)):
+            elif (not is_work):
                 time.sleep(0.5)
                 if num_alive() == 0:
                     if (len(work_batches) == 0):
@@ -156,18 +157,20 @@ def scheduler(args):
         num_cpus = min(args.num_cpus,num_cpus)
     assert num_cpus > 0
 
+    is_work = check_for_work(db, end_time)
+
     logging.info('starting workers')
     context = mp.get_context('fork')
     procs = {}
     for pid in range(num_cpus):
-        procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,))
+        procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,is_work,))
         procs[pid].start()
 
     while True:
         time.sleep(1)
         n_alive = 0
         for pid in procs:
-            if is_work(db, end_time) and (not procs[pid].is_alive()):
+            if is_work and (not procs[pid].is_alive()):
                 logging.info('worker %i restarting', pid)
                 procs[pid].join()
                 procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,))

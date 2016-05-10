@@ -1,0 +1,64 @@
+var libs = process.cwd() + '/libs/';
+var log = require(libs + 'log')(module);
+var db = require(libs + 'db/mongo');
+var common = require(libs + 'routes/common');
+var pass = require(libs + 'auth/pass');
+var token = require(libs + 'auth/oauth2');
+
+var username = process.argv[2];
+var password = "";
+var email = "";
+if (username === "user_admin") {
+    password = process.env.USER_ADMIN_PASSWORD;
+    email = "user_admin@whiplash.ethz.ch";
+} else {
+    password = process.argv[3];
+    email = process.argv[4];
+}
+
+db.connect(function(err) {
+    if(!err) {
+        var salt = pass.generate_salt();
+        var user = {
+            username: username,
+            email: email,
+            salt: salt,
+            hashed_password: pass.encrypt_password(salt, password),
+        };
+        common.commit(db.get().collection('users'), [user], "", {}, function(res, err, result) {
+            if(!err) {
+                log.info("New user - %s:%s:%s", user.username, password, user.email);
+                var user_id = result['ids'][0];
+                var clients = ['python', 'scheduler'];
+                var make_clients = function(i) {
+                    if (i < clients.length) {
+                        var client = {
+                            name: username+'-'+clients[i],
+                            clientId: username+'-'+clients[i],
+                            clientSecret: password
+                        };
+                        common.commit(db.get().collection('clients'), [client], user_id, {}, function(res, err, result) {
+                            if(!err) {
+                                log.info("New client - %s:%s", client.clientId, client.clientSecret);
+                                token.generate_tokens(user_id, client.clientId, function(err, access_token, refresh_token, message) {
+                                    if(err) {
+                                        log.error(err);
+                                    }
+                                    make_clients(i+1);
+                                });
+                            } else {
+                                log.error(err);
+                            }
+                        });
+                    } else {
+                        db.close();
+                    }
+                }
+                make_clients(0);
+            } else {
+                log.error(err);
+                db.close();
+            }
+        });
+    }
+});

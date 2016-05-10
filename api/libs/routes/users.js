@@ -34,7 +34,7 @@ router.post('/', webAuth, function(req, res){
         hashed_password: pass.encrypt_password(salt, password),
         activated: false
     };
-    common.commit(users, [user], "passport", res, function(res, err, result) {
+    common.commit(users, [user], "user_admin", res, function(res, err, result) {
         if(!err) {
             log.info("New user: %s", user.username);
             res.send("OK");
@@ -68,11 +68,11 @@ router.post('/', webAuth, function(req, res){
 router.get('/confirm', function(req, res) {
     var uid = req.query['uid'];
     var hash = req.query['hash'];
-    common.query_one(users, {'_id': uid}, [], "passport", res, function(res, err, user) {
+    common.query_one(users, {'_id': uid}, [], "user_admin", res, function(res, err, user) {
         if(!err){
             if(pass.check_hash(hash, user.salt, user.username)){
                 user.activated = true;
-                common.replace(users, [user], "passport", res, function(res, err, n_modified) {
+                common.replace(users, [user], "user_admin", res, function(res, err, n_modified) {
                     if(!err) {
                         log.info('User successfully activated!');
                         res.redirect('http://whiplash.ethz.ch');
@@ -90,7 +90,7 @@ router.post('/recover', webAuth, function(req, res){
     var new_pwd = common.get_payload(req,'password');
     var username = common.get_payload(req,'username');
 
-    common.query_one(users, {'username': username}, [], "passport", res, function(res, err, user) {
+    common.query_one(users, {'username': username}, [], "user_admin", res, function(res, err, user) {
         if(!err){
             var hash = pass.generate_hash(user.salt, user.username);
             var code = pass.encrypt_password(user.salt, new_pwd);
@@ -123,11 +123,11 @@ router.get('/recover', function(req, res) {
     var hash = req.query['hash'];
     var code = req.query['code'];
 
-    common.query_one(users, {'_id': uid}, [], "passport", res, function(res, err, user) {
+    common.query_one(users, {'_id': uid}, [], "user_admin", res, function(res, err, user) {
         if(!err){
             if(pass.check_hash(hash, user.salt, user.username)){
                 user.hashed_password = code;
-                common.replace(users, [user], "passport", res, function(res, err, n_modified) {
+                common.replace(users, [user], "user_admin", res, function(res, err, n_modified) {
                     if(!err){
                         log.info('User successfully activated!');
                         res.redirect('http://whiplash.ethz.ch');

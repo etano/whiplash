@@ -1,0 +1,11 @@
+var libs = process.cwd() + '/libs/';
+var log = require(libs + 'log')(module);
+var db = require(libs + 'db/mongo');
+
+db.init(function(err) {
+    if(!err) {
+        log.info("Database successfully initialized!");
+    } else {
+        log.error("Error in initializing database!", err);
+    }
+});
