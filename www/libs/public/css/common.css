@@ -61,7 +61,7 @@ section.centered {
     -webkit-transform: translateX(-50%) translateY(-50%);
 }
 
-section div, div.button, input, h2, label, center, select, textarea {
+section div, div#confirm, div.button, input, h2, label, center, select, textarea {
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     font-size: 13px;
@@ -194,7 +194,7 @@ input::-moz-placeholder {
     opacity: 1;
 }
 
-input.login, input.passwd, input.submit, input.client {
+input.email, input.login, input.passwd, input.submit, input.client {
     display: block;
     margin: 0;
     padding: 0;
@@ -253,7 +253,6 @@ div#confirm {
     padding-top: 41px;
     width: 444px;
     height: 60px;
-    font-size: 15px;
     text-align: center;
     transition: left 500ms;
 }

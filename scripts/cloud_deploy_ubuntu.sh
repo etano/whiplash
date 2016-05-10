@@ -1,19 +1,19 @@
 #!/bin/bash
 
 ec2_host=$1
+SRCDIR=${HOME}/src
 ssh -t ${ec2_host} 'sudo apt-get update -y'
 ssh -t ${ec2_host} 'sudo apt-get install -y build-essential make g++ python3-pip'
 ssh -t ${ec2_host} 'sudo apt-get install -y python-numpy'
-ssh -t ${ec2_host} 'pip3 install requests python-daemon==2.0.6'
 scp -r rte ${ec2_host}:
 ssh -t ${ec2_host} 'mkdir -p python'
-scp python/whiplash.py ${ec2_host}:python/
-scp -r tsp_ising_mapper ${ec2_host}:
+scp ${SRCDIR}/whiplash/python/whiplash.py ${ec2_host}:python/
+scp -r ${SRCDIR}/tsp_ising_mapper ${ec2_host}:
 ssh -t ${ec2_host} 'chmod 755 tsp_ising_mapper/tsp_ising_mapper.py'
-scp -r spins2route ${ec2_host}:
+scp -r ${SRCDIR}/spins2route ${ec2_host}:
 ssh -t ${ec2_host} 'chmod 755 spins2route/spins2route.py'
 (cd DT-SQA && git checkout demo)
-scp -r DT-SQA ${ec2_host}:
+scp -r ${SRCDIR}/DT-SQA ${ec2_host}:
 ssh -t ${ec2_host} 'cd DT-SQA && make clean && make'
 ssh -t ${ec2_host} 'wget -qO- https://get.docker.com/ | sh'
 ssh -t ${ec2_host} 'sudo usermod -aG docker ubuntu'

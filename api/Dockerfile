@@ -1,18 +1,16 @@
-FROM node:latest
-RUN apt-get update
-RUN apt-get install -y libkrb5-dev
+FROM alpine:latest
 
-# workdir
+RUN apk add --update \
+        build-base \
+        python \
+        krb5 \
+        nodejs \
+    && rm -rf /var/cache/apk/*
+
 WORKDIR /src
-
-# building node
 COPY *.json /src/
 RUN npm install
-
-# copy in sources
 COPY bin /src/bin
-RUN mkdir /src/logs
 COPY libs /src/libs
-
-# expose port
+RUN mkdir /src/logs
 EXPOSE 1337

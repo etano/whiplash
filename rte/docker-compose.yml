@@ -1,3 +1,4 @@
 rte:
-    build: ../
-    dockerfile: rte/Dockerfile
+    build: .
+    environment:
+        USER_ADMIN_PASSWORD: ${USER_ADMIN_PASSWORD}

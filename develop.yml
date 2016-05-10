@@ -1,10 +1,10 @@
-odb_dev:
+odb:
     extends:
         file: odb/docker-compose.yml
         service: odb
     ports:
         - "27017:27017"
-api_dev:
+api:
     extends:
         file: api/docker-compose.yml
         service: api
@@ -13,14 +13,26 @@ api_dev:
     volumes:
         - $PWD/api/libs:/src/libs
     links:
-        - odb_dev:mongo
-    command: sh -c "node --use_strict bin/createUser.js test test; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"
-www_dev:
+        - odb:mongo
+    command: sh -c "node --use_strict bin/createUser.js test test test@test.com; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca scheduler@whiplash.ethz.ch; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"
+rte:
+    extends:
+        file: rte/docker-compose.yml
+        service: rte
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - $PWD:/input
+    environment:
+        - WORKDIR=$PWD
+    links:
+        - api:api
+    command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose --docker"
+www:
     extends:
         file: www/docker-compose.yml
         service: www
     ports:
-        - "80:80"
+        - "880:80"
     volumes:
         - $PWD/www/libs:/src/libs
     command: sh -c "cp config.dev.json config.json; node bin/www"

@@ -3,23 +3,27 @@ var log = require(libs + 'log')(module);
 var GridStore = require('mongodb').GridStore;
 var ObjectID = require('mongodb').ObjectID;
 var db = require(libs + 'db/mongo');
-//var hash = require('object-hash');
-var crypto = require('crypto');
-var Property = require(libs + 'schemas/property');
-var Executable = require(libs + 'schemas/executable');
-var collections = {'executables': Executable, 'properties': Property};
+var XXHash = require('xxhash').XXHash64;
+var collections = require(libs + 'collections');
+require(libs + '/timer');
+
+function omit(obj, omitKey) {
+    return Object.keys(obj).reduce((result, key) => {
+        if (key !== omitKey) {
+            result[key] = obj[key];
+        }
+        return result;
+    }, {});
+}
 
 function validate(collection, objs, user_id, cb) {
     global.timer.get_timer('validate_'+collection.collectionName).start();
     log.debug('validate '+collection.collectionName);
-    var t0 = i
-    for (var i=0; i<objs.length; i++) {
-        objs[i]['owner'] = user_id;
-    }
     var bad_objs = [];
     if (collections.hasOwnProperty(collection.collectionName)) {
-        var schema = collections[collection.collectionName];
+        var schema = collections[collection.collectionName].schema;
         for (var i=0; i<objs.length; i++) {
+            objs[i]['owner'] = user_id;
             for (var key in schema) {
                 if (!objs[i].hasOwnProperty(key)) {
                     if (schema[key].required) {
@@ -42,39 +46,68 @@ function validate(collection, objs, user_id, cb) {
     }
 }
 
+function form_ids(collection, objs, user_id, cb) {
+    log.debug('form object ids');
+    global.timer.get_timer('form_ids_'+collection.collectionName).start();
+    if (collections.hasOwnProperty(collection.collectionName)) {
+        var i, id_obj, key;
+        if (collection.collectionName === 'models') {
+            for (i=0; i<objs.length; i++) {
+                id_obj = {};
+                for (key in objs[i]) {
+                    if ((key !== 'timestamp') && (key !== '_id')) {
+                        id_obj[key] = objs[i][key];
+                    }
+                }
+                objs[i]['_id'] = hash(id_obj);
+            }
+        } else {
+            var schema = collections[collection.collectionName].schema;
+            for (i=0; i<objs.length; i++) {
+                id_obj = {};
+                for (key in schema) {
+                    if (schema[key].unique) {
+                        id_obj[key] = objs[i][key];
+                    }
+                }
+                if (Object.keys(id_obj).length === 0) {
+                    objs[i]['_id'] = new ObjectID();
+                } else {
+                    objs[i]['_id'] = hash(id_obj);
+                }
+            }
+        }
+        global.timer.get_timer('form_ids_'+collection.collectionName).stop();
+        cb(0, objs);
+    } else {
+        global.timer.get_timer('form_ids_'+collection.collectionName).stop();
+        cb({'message': 'Unrecognized collection '+collection.collectionName}, 0);
+    }
+}
+
 function checksum(str) {
+    // original version:
+    // crypto.createHash('md5').update(str, 'utf8').digest('hex');
     global.timer.get_timer('checksum').start();
-    var res = crypto.createHash('md5').update(str, 'utf8').digest('hex');
+    var hash = new XXHash(0xCAFEBABE); // note: same seed each time
+    var buffer = new Buffer(str, 'utf8');
+    hash.update(buffer);
+    var res = hash.digest('hex');
     global.timer.get_timer('checksum').stop();
     return res;
 }
 
-function get_sorted_keys(obj) {
-    global.timer.get_timer('get_sorted_keys').start();
-    var keys = [];
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            keys.push(key);
-        }
-    }
-    keys.sort();
-    global.timer.get_timer('get_sorted_keys').stop();
-    return keys;
-}
-
 function smart_stringify(obj) {
-    global.timer.get_timer('smart_stringify').start();
-    var keys = get_sorted_keys(obj);
-    var str = "{";
-    for(var i=0; i<keys.length; i++) {
-        str += "\""+keys[i]+"\":";
-        if (typeof(obj[keys[i]]) === 'object') {
-            str += smart_stringify(obj[keys[i]]);
-        } else {
-            str += JSON.stringify(obj[keys[i]])+",";
-        }
+    if(typeof(obj) !== 'object') {
+        return JSON.stringify(obj);
     }
-    str += "}";
+    global.timer.get_timer('smart_stringify').start();
+    var keys = Object.keys(obj).sort();
+    var str = '{';
+    for(var i = 0; i < keys.length; i++) {
+        str += '"' + keys[i] + '":' + smart_stringify(obj[keys[i]]) + ',';
+    }
+    str += '}';
     global.timer.get_timer('smart_stringify').stop();
     return str;
 }
@@ -86,41 +119,37 @@ function hash(obj) {
     return res;
 }
 
-function get_gridfs_filter(filter) {
-    global.timer.get_timer('get_gridfs_filter').start();
-    var special = ['$or','$and','$not','$nor'];
-    var new_filter = {};
-    for(var key in filter) {
-        if(key === '_id') {
-            new_filter['_id'] = filter[key];
-        } else if(~special.indexOf(key)) {
-            new_filter[key] = [];
-            for (var i = 0; i < filter[key].length; i++) {
-                new_filter[key].push(get_gridfs_filter(filter[key][i]));
-            }
+function commit_gridfs_obj(obj_id, obj_content, cb) {
+    log.debug('committing gridfs obj');
+    global.timer.get_timer('commit_gridfs_obj').start();
+    var options = { metadata: {} };
+    var gridStore = new GridStore(db.get(), obj_id, String(obj_id), 'w', options);
+    gridStore.open(function(err, gridStore) {
+        if(err) {
+            global.timer.get_timer('commit_gridfs_obj').stop();
+            log.error("Error opening file: %s",err.message);
+            cb(1, 0);
         } else {
-            if(filter.hasOwnProperty(key)) {
-                new_filter["metadata."+key] = filter[key];
-            }
+            gridStore.write(JSON.stringify(obj_content), function(err, gridStore) {
+                if(err) {
+                    global.timer.get_timer('commit_gridfs_obj').stop();
+                    log.error("Error writing file: %s",err.message);
+                    cb(1, 0);
+                } else {
+                    gridStore.close(function(err, result) {
+                        if(err) {
+                            global.timer.get_timer('commit_gridfs_obj').stop();
+                            log.error("Error closing file: %s",err.message);
+                            cb(1, 0);
+                        } else {
+                            global.timer.get_timer('commit_gridfs_obj').stop();
+                            cb(0, obj_id);
+                        }
+                    });
+                }
+            });
         }
-    }
-    global.timer.get_timer('get_gridfs_filter').stop();
-    return new_filter;
-}
-
-function get_gridfs_metadata_fields(fields) {
-    global.timer.get_timer('get_gridfs_metadata_fields').start();
-    var special = ['_id','filename','contentType','length','chunkSize','uploadDate','aliases','metadata','md5','content'];
-    var metadata_fields = [];
-    for(var i=0; i<fields.length; i++) {
-        if((!~special.indexOf(fields[i])) && (!~fields[i].indexOf('content.'))) {
-            metadata_fields.push('metadata.' + fields[i]);
-        } else {
-            metadata_fields.push(fields[i]);
-        }
-    }
-    global.timer.get_timer('get_gridfs_metadata_fields').stop();
-    return metadata_fields;
+    });
 }
 
 function get_gridfs_content_fields(fields) {
@@ -140,6 +169,67 @@ function get_gridfs_content_fields(fields) {
     }
 }
 
+function get_gridfs_objs(objs, fields, res, cb) {
+    log.debug('get_gridfs_objs');
+    global.timer.get_timer('get_gridfs_objs').start();
+    var content_fields = get_gridfs_content_fields(fields);
+    if (content_fields.length > 0) {
+        var apply_content = function(i){
+            if (i<objs.length) {
+                var name = String(objs[i]._id);
+                GridStore.read(db.get(), name, function(err, fileData) {
+                    if(!err) {
+                        var data = JSON.parse(fileData.toString());
+                        for(var j=0; j<content_fields.length; j++) {
+                            var subfields = content_fields[j].split('.');
+                            var obj = data;
+                            for(var k=1; k<subfields.length; k++) {
+                                if (obj[subfields[k]]) {
+                                    obj = obj[subfields[k]];
+                                } else {
+                                    err = {"message":"Field " + content_fields[j] + " not found in " + name};
+                                    global.timer.get_timer('get_gridfs_objs').stop();
+                                    cb(res,err,0);
+                                }
+                            }
+                            objs[i][content_fields[j]] = obj;
+                        }
+                        apply_content(i+1);
+                    } else {
+                        apply_content(i+1);
+                    }
+                });
+            } else {
+                log.debug('added content to %d objects',objs.length);
+                global.timer.get_timer('get_gridfs_objs').stop();
+                cb(res,0,objs);
+            }
+        };
+        apply_content(0);
+    } else {
+        log.debug('no added content');
+        global.timer.get_timer('get_gridfs_objs').stop();
+        cb(res,0,objs);
+    }
+}
+
+function delete_gridfs_by_id(id) {
+    var gridStore = new GridStore(db.get(), id, String(id), 'w');
+    gridStore.open(function(err, gs) {
+        if (err) {
+            log.error('Error opening file: %s',err.message);
+        } else {
+            gridStore.unlink(function(err, result) {
+                if (err) {
+                    log.error('Error deleting file: %s',err.message);
+                } else {
+                    log.debug('deleted 1 gridfs object');
+                }
+            });
+        }
+    });
+}
+
 function concaternate(o1, o2) {
     global.timer.get_timer('concaternate').start();
     for (var key in o2) {
@@ -149,21 +239,94 @@ function concaternate(o1, o2) {
     return o1;
 }
 
+function form_filter(collection, filter, user_id, cb) {
+    global.timer.get_timer('form_filter_'+collection.collectionName).start();
+    // Set permissions
+    if (!('collaboration' in filter) && (user_id !== "user_admin")) {
+        db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
+            db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
+                if(objs2) {
+                    if(!(
+                        (objs2[0]['username'] === "user_admin") &&
+                            (
+                                (collection.collectionName === "users") ||
+                                (collection.collectionName === "clients") ||
+                                (collection.collectionName === "refreshtokens") ||
+                                (collection.collectionName === "accesstokens")
+                            )
+                        )
+                    ) { // user_admin can search users
+                        if(!err) {
+                            var ids = [];
+                            for(var i=0; i<objs.length; i++) {
+                                ids.push(objs[i]['_id']);
+                            }
+                            if (ids.length > 0) {
+                                filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
+                            } else {
+                                filter.owner = user_id;
+                            }
+                        } else {
+                            filter.owner = user_id;
+                        }
+                    }
+                }
+
+                // Callback with filter
+                global.timer.get_timer('form_filter_'+collection.collectionName).stop();
+                cb(filter);
+            });
+        });
+    } else {
+        // Callback with filter
+        global.timer.get_timer('form_filter_'+collection.collectionName).stop();
+        cb(filter);
+    }
+}
+
+function query(collection, filter, fields, user_id, res, cb) {
+    global.timer.get_timer('query_'+collection.collectionName).start();
+    log.debug('query '+collection.collectionName);
+    form_filter(collection, filter, user_id, function(filter) {
+        if (fields.length > 0) {
+            var proj = {};
+            for(var i=0; i<fields.length; i++) {
+                proj[fields[i]] = 1;
+            }
+            collection.find(filter).project(proj).toArray(function (err, objs) {
+                if (!err) {
+                    log.debug('found %d objects',objs.length);
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    get_gridfs_objs(objs, fields, res, cb);
+                } else {
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    cb(res, err, 0);
+                }
+            });
+        } else {
+            collection.find(filter).toArray(function (err, objs) {
+                if (!err) {
+                    log.debug('found %d objects',objs.length);
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    get_gridfs_objs(objs, fields, res, cb);
+                } else {
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
+                    cb(res,err,0);
+                }
+            });
+        }
+    });
+}
+
 module.exports = {
-    //
-    // Hash
-    //
 
     hash: function(obj) {
-        global.timer.get_timer('hash').start();
-        var res = checksum(smart_stringify(obj));
-        global.timer.get_timer('hash').stop();
-        return res;
+        return hash(obj);
     },
 
-    //
-    // Get payload
-    //
+    smart_stringify: function(obj) {
+        return smart_stringify(obj);
+    },
 
     get_payload: function(req, key) {
         global.timer.get_timer('get_payload').start();
@@ -181,75 +344,9 @@ module.exports = {
         }
     },
 
-    //
-    // Permissions
-    //
-
     form_filter: function(collection, filter, user_id, cb) {
-        global.timer.get_timer('form_filter_'+collection.collectionName).start();
-        // Regularize ids
-        if ('_id' in filter) {
-            if (typeof(filter['_id']) === 'object') {
-                if ('$in' in filter['_id']) {
-                    for (var i=0; i<filter['_id']['$in'].length; i++) {
-                        filter['_id']['$in'][i] = new ObjectID(filter['_id']['$in'][i]);
-                    }
-                }
-            } else {
-                filter['_id'] = new ObjectID(filter['_id']);
-            }
-        }
-
-        // Set permissions
-        //
-        // scheduler is god
-        // whiplash user is open to everyone
-        if (!('collaboration' in filter)) {
-            db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
-                db.get().collection('users').find({"_id":new ObjectID(user_id)}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
-                    if(objs2) {
-                        if(objs2[0]['username'] !== "scheduler") { // scheduler is god
-                            if(!err) {
-                                var ids = [];
-                                for(var i=0; i<objs.length; i++) {
-                                    ids.push(objs[i]['_id']);
-                                }
-                                if (ids.length > 0) {
-                                    filter['$or'] = {'owner': {'$in': [user_id,'whiplash']}, 'collaboration': {'$in': ids}};
-                                } else {
-                                    filter.owner = {'$in': [user_id,'whiplash']};
-                                }
-                            } else {
-                                filter.owner = {'$in': [user_id,'whiplash']};
-                            }
-                        }
-                    }
-
-                    // Prepend metadata for models
-                    if (collection.collectionName === "fs.files") {
-                        filter = get_gridfs_filter(filter);
-                    }
-
-                    // Callback with filter
-                    global.timer.get_timer('form_filter_'+collection.collectionName).stop();
-                    cb(filter);
-                });
-            });
-        } else {
-            // Prepend metadata for models
-            if (collection.collectionName === "fs.files") {
-                filter = get_gridfs_filter(filter);
-            }
-
-            // Callback with filter
-            global.timer.get_timer('form_filter_'+collection.collectionName).stop();
-            cb(filter);
-        }
+        form_filter(collection, filter, user_id, cb);
     },
-
-    //
-    // Return
-    //
 
     return: function(res, err, obj) {
         global.timer.get_timer('return').start();
@@ -276,66 +373,20 @@ module.exports = {
         }
     },
 
-    //
-    // Query
-    //
-
     query: function(collection, filter, fields, user_id, res, cb) {
-        global.timer.get_timer('query_'+collection.collectionName).start();
-        log.debug('query '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
-            if (fields.length > 0) {
-                var new_fields = fields;
-                if (collection.collectionName === "fs.files") {
-                    new_fields = get_gridfs_metadata_fields(fields);
+        query(collection, filter, fields, user_id, res, cb);
+    },
+
+    query_one: function(collection, filter, fields, user_id, res, cb) {
+        query(collection, filter, fields, user_id, res, function(res, err, objs) {
+            if (!err) {
+                if (objs.length > 0) {
+                    cb(res, err, objs[0]);
+                } else {
+                    cb(res, {message: "No objects found in "+collection.collectionName}, 0);
                 }
-                var proj = {};
-                for(var i=0; i<new_fields.length; i++) {
-                    proj[new_fields[i]] = 1;
-                }
-                collection.find(filter).project(proj).toArray(function (err, objs) {
-                    if (!err) {
-                        if (collection.collectionName === "fs.files") {
-                            for(var i=0; i<objs.length; i++){
-                                if(objs[i].hasOwnProperty('metadata')) {
-                                    var metadata = objs[i].metadata;
-                                    delete objs[i].metadata;
-                                    for(var key in metadata){
-                                        objs[i][key] = metadata[key];
-                                    }
-                                }
-                            }
-                        }
-                        log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,0,objs);
-                    } else {
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,err,0);
-                    }
-                });
             } else {
-                collection.find(filter).toArray(function (err, objs) {
-                    if (!err) {
-                        if (collection.collectionName === "fs.files") {
-                            for(var i=0; i<objs.length; i++){
-                                if(objs[i].hasOwnProperty('metadata')) {
-                                    var metadata = objs[i].metadata;
-                                    delete objs[i].metadata;
-                                    for(var key in metadata){
-                                        objs[i][key] = metadata[key];
-                                    }
-                                }
-                            }
-                        }
-                        log.debug('found %d objects',objs.length);
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,0,objs);
-                    } else {
-                        global.timer.get_timer('query_'+collection.collectionName).stop();
-                        cb(res,err,0);
-                    }
-                });
+                cb(res, err, 0);
             }
         });
     },
@@ -343,154 +394,87 @@ module.exports = {
     count: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('count '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
-                    global.timer.get_timer('count_'+collection.collectionName).stop();
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
                     cb(res,0,count);
                 } else {
-                    global.timer.get_timer('count_'+collection.collectionName).stop();
+                    global.timer.get_timer('query_'+collection.collectionName).stop();
                     cb(res,err,0);
                 }
             });
         });
     },
 
-    //
-    // Commit
-    //
-
-    commit: function(collection, orig_objs, user_id, res, cb) {
+    commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
-        var ids = [];
-        var max_chunk_size = 10000;
-        var commit_next_chunk = function(chunk_i, chunk_j) {
-            if (chunk_i === orig_objs.length) {
-                global.timer.get_timer('commit_'+collection.collectionName).stop();
-                cb(res,0,ids);
-            } else {
-                validate(collection, orig_objs.slice(chunk_i, chunk_j), user_id, function(err, objs) {
-                    if(err) {
-                        global.timer.get_timer('commit_'+collection.collectionName).stop();
-                        cb(res,err,0);
-                    } else {
-                        if(objs.length === 0) {
-                            global.timer.get_timer('commit_'+collection.collectionName).stop();
-                            cb(res,0,[]);
-                        } else {
-                            log.debug('hash objects');
-                            var commit_tag = user_id + String(Math.round(new Date().getTime() / 1000)) + crypto.randomBytes(8).toString('hex');
-                            for(var i=0; i<objs.length; i++) {
-                                objs[i]['commit_tag'] = commit_tag;
-                                if (collection.collectionName === "properties") {
-                                    objs[i]['md5'] = hash(objs[i].params);
-                                } else if (collection.collectionName === "queries") {
-                                    objs[i]['md5'] = hash(objs[i]['filters']) + hash(objs[i]['fields']);
-                                    objs[i]['filters'] = smart_stringify(objs[i].filters);
+        if (objs.length > 0) {
+            validate(collection, objs, user_id, function(err, objs) {
+                if(!err) {
+                    form_ids(collection, objs, user_id, function(err, objs) {
+                        if (!err) {
+                            log.debug('form commit '+collection.collectionName);
+                            global.timer.get_timer('commit_form_commit_'+collection.collectionName).start();
+                            if (collection.collectionName === "users") {
+                                for(var i=0; i<objs.length; i++) {
+                                    objs[i]['owner'] = objs[i]._id;
                                 }
                             }
-                            log.debug('form commit filter');
-                            var batch = [];
+                            var batch = collection.initializeUnorderedBulkOp();
+                            var ids = [];
+                            var commit_tag = new ObjectID();
                             for(var i=0; i<objs.length; i++) {
-                                var filter = {};
-                                if (collection.collectionName === "fs.files") {
-                                    filter['metadata'] = {};
-                                    filter['metadata']['property_id'] = objs[i]['metadata']['property_id'];
-                                    filter['metadata']['owner'] = objs[i]['metadata']['owner'];
-                                    filter['metadata']['md5'] = objs[i]['metadata']['md5'];
-                                }
-                                else if(collection.collectionName === "executables") {
-                                    filter['name'] = objs[i]['name'];
-                                    filter['algorithm'] = objs[i]['algorithm'];
-                                    filter['version'] = objs[i]['version'];
-                                    filter['build'] = objs[i]['build'];
-                                    filter['owner'] = objs[i]['owner'];
-                                }
-                                else if (collection.collectionName === "properties") {
-                                    filter['input_model_id'] = objs[i]['input_model_id'];
-                                    filter['executable_id'] = objs[i]['executable_id'];
-                                    filter['md5'] = objs[i]['md5'];
-                                    filter['owner'] = objs[i]['owner'];
-                                }
-                                else if (collection.collectionName === "queries") {
-                                    filter['owner'] = objs[i]['owner'];
-                                    filter['md5'] = objs[i]['md5'];
-                                }
-                                else if (collection.collectionName === "collaborations") {
-                                    filter['name'] = objs[i]['name'];
-                                }
-                                else if (collection.collectionName === "users") {
-                                    filter['username'] = objs[i]['username'];
-                                }
-                                else if (collection.collectionName === "clients") {
-                                    filter['name'] = objs[i]['name'];
-                                }
-                                else if (collection.collectionName === "work_batches") {
-                                    filter['timestamp'] = objs[i]['timestamp'];
-                                }
-                                batch.push({ updateOne: { filter: filter, update: {$set:{'commit_tag':commit_tag}}, upsert: false }});
+                                ids.push(objs[i]['_id']);
+                                batch.find({_id: objs[i]._id}).upsert().updateOne({
+                                    "$setOnInsert": omit(objs[i], 'content'),
+                                    "$set": {"commit_tag": commit_tag, "has_content": 0},
+                                });
                             }
-                            log.debug('apply commit tag');
-                            collection.bulkWrite(batch, {ordered: false, w:1}, function(err, result) {
-                                if (result.ok) {
-                                    log.info("%s objects modified on commit tag update to %s collection", String(result.nModified),collection.collectionName);
-                                    log.info("%s objects inserted on commit tag update to %s collection", String(result.nInserted),collection.collectionName);
-                                    log.info("%s objects upserted on commit tag update to %s collection", String(result.nUpserted),collection.collectionName);
-                                    var batch = [];
+                            global.timer.get_timer('commit_form_commit_'+collection.collectionName).stop();
+                            log.debug('do commit '+collection.collectionName);
+                            global.timer.get_timer('commit_commit_'+collection.collectionName).start();
+                            batch.execute(function(err, result) {
+                                global.timer.get_timer('commit_commit_'+collection.collectionName).stop();
+                                if (!err) {
+                                    log.debug('checking for content '+collection.collectionName);
                                     for(var i=0; i<objs.length; i++) {
-                                        batch.push({ insertOne: { document : objs[i] } });
-                                    }
-                                    log.debug('attempt insertion');
-                                    collection.bulkWrite(batch,{ordered: false, w:1},function(err,result) {
-                                        if (result.ok) {
-                                            log.info("%s objects modified on insert to %s collection", String(result.nModified),collection.collectionName);
-                                            log.info("%s objects inserted on insert to %s collection", String(result.nInserted),collection.collectionName);
-                                            log.info("%s objects upserted on insert to %s collection", String(result.nUpserted),collection.collectionName);
-                                            res.nInserted = result.nInserted;
-                                            var tag_filter = {'commit_tag': commit_tag};
-                                            var proj = {'_id':1};
-                                            log.debug('get object ids');
-                                            collection.find(tag_filter).project(proj).toArray(function (err, objs) {
+                                        if (objs[i].hasOwnProperty('content')) {
+                                            commit_gridfs_obj(objs[i]._id, objs[i].content, function(err, id) {
                                                 if (!err) {
-                                                    for(var j=0; j<objs.length; j++) {
-                                                        ids.push(objs[j]['_id']);
-                                                    }
-                                                    log.debug('found %d objects',objs.length);
-                                                    commit_next_chunk(chunk_j, Math.min(orig_objs.length, chunk_j+max_chunk_size));
-                                                } else {
-                                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                                    cb(res,err,0);
+                                                    collection.updateOne({"_id": id}, {"$set": {"has_content": 1}}, {w:1}, function(err, result) {});
                                                 }
                                             });
-                                        } else {
-                                            global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                            cb(res,err,0);
                                         }
-                                    });
+                                    }
+                                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                                    cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
                                 } else {
                                     global.timer.get_timer('commit_'+collection.collectionName).stop();
-                                    cb(res,err,0);
+                                    cb(res, err, 0);
                                 }
                             });
+                        } else {
+                            global.timer.get_timer('commit_'+collection.collectionName).stop();
+                            cb(res,err,0);
                         }
-                    }
-                });
-            }
-        };
-        commit_next_chunk(0, Math.min(orig_objs.length, max_chunk_size));
+                    });
+                } else {
+                    global.timer.get_timer('commit_'+collection.collectionName).stop();
+                    cb(res,err,0);
+                }
+            });
+        } else {
+            cb(res, 0, {"n_existing": 0, "n_new": 0, "ids": []});
+        }
     },
-
-    //
-    // Update
-    //
 
     update: function(collection, filter, update, user_id, res, cb) {
         global.timer.get_timer('update_'+collection.collectionName).start();
         log.debug('update '+collection.collectionName);
-        // FIXME: user can inadvertantly give access to someone else
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.debug('updated %d objects',result.modifiedCount);
@@ -504,17 +488,12 @@ module.exports = {
         });
     },
 
-    //
-    // Replace
-    //
-
     replace: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('replace_'+collection.collectionName).start();
         log.debug('replace '+collection.collectionName);
-        // FIXME: user can inadvertantly give access to someone else
         var batch = [];
         for(var i=0; i<objs.length; i++) {
-            var id = new ObjectID(objs[i]._id);
+            var id = objs[i]._id;
             delete objs[i]._id;
             batch.push({ replaceOne: { filter: {_id: id}, replacement: objs[i] } });
         }
@@ -530,18 +509,14 @@ module.exports = {
         });
     },
 
-    //
-    // Pop
-    //
-
     pop: function(collection, filter, sort, user_id, res, cb) {
         global.timer.get_timer('pop_'+collection.collectionName).start();
         log.debug('pop '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             collection.findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
-                        log.debug('popped %d objects', result.deletedCount);
+                        log.debug('popped 1 objects');
                         global.timer.get_timer('pop_'+collection.collectionName).stop();
                         cb(res, 0, result.value);
                     } else {
@@ -556,19 +531,27 @@ module.exports = {
         });
     },
 
-    //
-    // Delete
-    //
-
     delete: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
-        this.form_filter(collection, filter, user_id, function(filter) {
-            collection.deleteMany(filter, {}, function (err, result) {
+        form_filter(collection, filter, user_id, function(filter) {
+            query(collection, filter, ['_id', 'has_content'], user_id, res, function(res, err, objs) {
                 if (!err) {
-                    log.debug('deleted %d objects', result.deletedCount);
-                    global.timer.get_timer('delete_'+collection.collectionName).stop();
-                    cb(res, 0, result.deletedCount);
+                    for (var i=0; i<objs.length; i++) {
+                        if (objs[i].has_content) {
+                            delete_gridfs_by_id(objs[i]._id);
+                        }
+                    }
+                    collection.deleteMany(filter, {}, function(err, result) {
+                        if (!err) {
+                            log.debug('deleted %d objects', result.deletedCount);
+                            global.timer.get_timer('delete_'+collection.collectionName).stop();
+                            cb(res, 0, result.deletedCount);
+                        } else {
+                            global.timer.get_timer('delete_'+collection.collectionName).stop();
+                            cb(res, err, 0);
+                        }
+                    });
                 } else {
                     global.timer.get_timer('delete_'+collection.collectionName).stop();
                     cb(res, err, 0);
@@ -577,19 +560,10 @@ module.exports = {
         });
     },
 
-    //
-    // Map-reduce
-    //
-
-    stats: function(collection,req,res,map) {
+    stats: function(collection, filter, field, map, user_id, res, cb) {
         global.timer.get_timer('stats_'+collection.collectionName).start();
         log.debug('stats '+collection.collectionName);
-        if (!req.query.field) {
-            req.query.field = req.body.field;
-            req.query.filter = req.body.filter;
-        }
-        var field = req.query.field;
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
+        form_filter(collection, filter, user_id, function(filter) {
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -620,50 +594,35 @@ module.exports = {
                 if(!err){
                     out_collection.find().toArray(function (err, result) {
                         if(!err) {
-                            log.info("Computing statistics for %s",field);
+                            log.debug("Computing statistics for %s",field);
                             if(result.length>0) {
                                 global.timer.get_timer('stats_'+collection.collectionName).stop();
-                                return res.send({
-                                    status: 'OK',
-                                    result: result[0].value
-                                });
+                                cb(res, 0, result[0].value);
                             } else {
                                 global.timer.get_timer('stats_'+collection.collectionName).stop();
-                                return res.send({
-                                    status: 'OK',
-                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
-                                });
+                                cb(res, 0, {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0});
                             }
                         } else {
-                            res.statusCode = 500;
                             log.error('Internal error(%d): %s',res.statusCode,err.message);
                             global.timer.get_timer('stats_'+collection.collectionName).stop();
-                            return res.send({ error: 'Server error' });
+                            cb(res, err, 0);
                         }
                     });
                 } else {
-                    res.statusCode = 500;
                     log.error('Internal error(%d): %s',res.statusCode,err.message);
                     global.timer.get_timer('stats_'+collection.collectionName).stop();
-                    return res.send({ error: 'Server error' });
+                    cb(res, err, 0);
                 }
             });
         });
     },
 
-
-    mapreduce: function(collection,req,res) {
+    mapreduce: function(collection, filter, field, map, reduce, finalize, user_id, res, cb) {
         log.debug('mapreduce '+collection.collectionName);
-        if (!req.query.field) {
-            req.query.filter = req.body.filter;
-            req.query.map = req.body.map;
-            req.query.reduce=req.body.reduce;
-            req.query.finalize=req.body.finalize;
-        }
-        this.form_filter(collection,req.body.filter,String(req.user._id), function(filter) {
-            eval(String(req.query.map));
-            eval(String(req.query.reduce));
-            eval(String(req.query.finalize));
+        form_filter(collection, filter, user_id, function(filter) {
+            eval(String(map));
+            eval(String(reduce));
+            eval(String(finalize));
             var o = {};
             o.finalize = finalize;
             o.query = filter;
@@ -698,51 +657,20 @@ module.exports = {
         });
     },
 
-    //
-    // GridFS helpers
-    //
-
-    get_gridfs_objs: function(objs, fields, res, cb) {
-        log.debug('get_gridfs_objs');
-        var content_fields = get_gridfs_content_fields(fields);
-        if (content_fields.length > 0) {
-            var apply_content = function(i){
-                if (i<objs.length) {
-                    var name = String(objs[i]._id);
-                    GridStore.read(db.get(), name, function(err, fileData) {
-                        if(!err) {
-                            var data = JSON.parse(fileData.toString());
-                            for(var j=0; j<content_fields.length; j++) {
-                                var subfields = content_fields[j].split('.');
-                                var obj = data;
-                                for(var k=1; k<subfields.length; k++) {
-                                    if (obj[subfields[k]]) {
-                                        obj = obj[subfields[k]];
-                                    } else {
-                                        err = {"message":"Field " + content_fields[j] + " not found in " + name};
-                                        cb(res,err,0);
-                                    }
-                                }
-                                objs[i][content_fields[j]] = obj;
-                            }
-                            apply_content(i+1);
-                        } else {
-                            cb(res,err,0);
-                        }
-                    });
+    distinct: function(collection, filter, fields, user_id, res, cb) {
+        global.timer.get_timer('query_'+collection.collectionName).start();
+        log.debug('count '+collection.collectionName);
+        this.form_filter(collection, filter, user_id, function(filter) {
+            collection.distinct(fields,filter,function (err, objs) {
+                if (!err) {
+                    return res.send({status: "OK",result:objs});
                 } else {
-                    log.debug('added content to %d objects',objs.length);
-                    cb(res,0,objs);
+                  res.statusCode = 500;
+                  log.error('Internal error(%d): %s',res.statusCode,err.message);
+                  return res.send({error: "Server Error"});
                 }
-            };
-            apply_content(0);
-        } else {
-            for(var i=0; i<objs.length; i++) {
-                objs[i]['content'] = {};
-            }
-            log.debug('no added content');
-            cb(res,0,objs);
-        }
+            });
+        });
     },
 
 };

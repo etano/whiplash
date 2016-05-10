@@ -1,10 +1,18 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+var WorkBatch = {
+    schema: {
+        owner: {type: String, required: true},
+        timestamp: {type: Date, default: Date.now, required: true}
+    },
+    indexes: [
+        {
+            "fieldOrSpec": {timestamp: 1},
+            "options": {}
+        },
+        {
+            "fieldOrSpec": {owner: 1, total_time : 1},
+            "options": {}
+        }
+    ]
+};
 
-// Work_batch
-var Work_batch = new Schema({
-    owner: { type: String, required: true},
-    timestamp: { type: Date, default: Date.now, required : true}
-});
-
-module.exports = mongoose.model('Work_batch', Work_batch);
+module.exports = WorkBatch;

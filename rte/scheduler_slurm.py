@@ -32,21 +32,25 @@ def submit_job(args):
             sbatch.write("#SBATCH --time=" + seconds2time(args.time_limit) + "\n")
             sbatch.write("#SBATCH --nodes=1\n")
             sbatch.write("#SBATCH --exclusive\n")
-            sbatch.write("#SBATCH --ntasks=1\n")
+            sbatch.write("#SBATCH --ntasks=20\n")
             sbatch.write("module load python/3.4.1-gcc-4.8.1\n")
-            sbatch.write("export PYTHONPATH=/mnt/lnec/whiplash/rte/python_packages:/mnt/lnec/whiplash/rte:$PYTHONPATH\n")
-            sbatch.write("srun python /mnt/lnec/whiplash/rte/scheduler_local.py"+flags+"\n")
+            sbatch.write("module load mkl\n")
+            sbatch.write("export PYTHONPATH=/mnt/lnec/$USER/whiplash/rte:$PYTHONPATH\n")
+            sbatch.write("python3 /mnt/lnec/$USER/whiplash/rte/scheduler_local.py"+flags+"\n")
         sp.call("scp " + job_file + " " + args.user + "@" + args.cluster + ":" + user_job_file,shell=True,timeout=5)
         sp.call("ssh " + args.user + "@" + args.cluster + " \"bash -lc \'" + "sbatch ~/" + user_job_file + "\'\"",shell=True,timeout=5)
     except sp.TimeoutExpired as e:
-        logging.error('ERROR: Timed out in %i second(s) with %s'%(timeout, e.cmd))
+        logging.error('ERROR: Timed out in 5 second(s) with %s'%(e.cmd))
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)
     logging.info('slurm scheduler connected to db')
 
     while True:
-        num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
+        try:
+            num_pending = int(sp.check_output("ssh " + args.user + "@" + args.cluster + " \'squeue -u " + args.user + " | grep \" PD \" | grep \"whiplash\" | wc -l\'", shell=True))
+        except:
+            num_pending = 1
         if (db.collection('work_batches').count({}) > 0) and (num_pending == 0):
             submit_job(args)
         time.sleep(5)
@@ -66,7 +70,12 @@ if __name__ == '__main__':
     parser.add_argument('--time_limit',dest='time_limit',required=True,type=float)
     parser.add_argument('--cluster',dest='cluster',required=True,type=str,default='')
     parser.add_argument('--work_dir',dest='work_dir',required=False,type=str,default='.')
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/slurm_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    if args.verbose:
+        stderrLogger = logging.StreamHandler()
+        stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logging.getLogger().addHandler(stderrLogger)
     scheduler(args)

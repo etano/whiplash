@@ -2,20 +2,20 @@
     "name": "WhiplashAPI",
     "version": "1.0.0",
     "author": "Ethan Brown",
-    "description": "RESTful API with Node.js and passport",
+    "description": "Whiplash API",
     "private": true,
     "scripts": {
-        "start": "node ./bin/www"
+        "start": "node ./bin/api"
     },
     "dependencies": {
         "body-parser": "~1.8.x",
-        "cookie-parser": "~1.3.x",
+        "emailjs": "latest",
+        "xxhash": "latest",
         "debug": "~2.0.x",
         "express": "~4.10.x",
         "method-override": "^2.3.x",
-        "mongoose": "^4",
         "nconf": "^0.6.x",
-        "oauth2orize": "^1.0.x",
+        "oauth2orize": "^1.2.x",
         "passport": "^0.2.x",
         "passport-http": "^0.2.x",
         "passport-http-bearer": "^1.0.x",
@@ -26,24 +26,13 @@
         "compression": "1.6.1"
     },
     "jshintConfig":{
-        "curly": true,
-        "eqeqeq": true,
-        "immed": true,
-        "latedef": false,
-        "newcap": false,
-        "noarg": true,
+        "curly": false,
+        "eqeqeq": false,
+        "evil": false,
         "sub": true,
-        "undef": true,
-        "boss": true,
-        "eqnull": true,
-        "strict": false,
-        "scripturl": true,
-        "evil": true,
-        "globals" : {
-            "location": true,
-            "printStackTrace": false
-        },
-        "browser" : true,
+        "shadow": true,
+        "asi": true,
+        "esversion": 6,
         "node": true
     }
 }

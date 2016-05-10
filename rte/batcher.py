@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
-import sys, logging, argparse, time, json
+import sys, logging, argparse, time, json, random
 import whiplash
 
 def make_batches(db,time_window):
-    logging.info('querying properties')
     properties = db.properties.query({"status":"unresolved","timeout":{"$lt":time_window}},['_id','timeout','input_model_id','executable_id'])
+    random.shuffle(properties)
 
-    logging.info('building batches')
     batches = []
     times_left = []
     ids_in_batches = []
     for i in range(len(properties)):
-        if len(batches)==1000: # TODO set limit on server
+        if len(batches)==1000:
             break
         found = False
         for j in range(len(batches)):
@@ -40,24 +39,25 @@ def make_batches(db,time_window):
         batch['executable_ids'] = list(set(batch['executable_ids']))
 
     if len(batches) > 0:
-        logging.info('committing batches')
         db.properties.update({'_id': {'$in': ids_in_batches}},{'status':"pulled"})
         db.collection('work_batches').commit(batches)
-        logging.info('done')
     else:
         logging.info('no suitable work')
 
 def get_times(args,db):
-    logging.info('getting times')
     th = int(11.8*3600)
     timeouts = db.properties.stats("timeout",{"status":{"$in":["unresolved"]}})
     logging.info(json.dumps(timeouts))
-    if timeouts['count'] == 0 or timeouts['min'] > th:
+    try:
+        if timeouts['count'] == 0 or timeouts['min'] > th:
+            return 0
+        else:
+            th_min = 60
+            time_window = min(th,max(1.2*timeouts['max'],th_min))
+            return time_window
+    except Exception as e:
+        logging.error(e)
         return 0
-    else:
-        th_min = 60
-        time_window = min(th,max(1.2*timeouts['max'],th_min))
-        return time_window
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)
@@ -67,7 +67,7 @@ def scheduler(args):
         time_window = get_times(args,db)
         if time_window > 0:
             make_batches(db,time_window)
-        time.sleep(5)
+        time.sleep(1)
         if args.test:
             break
 
@@ -80,7 +80,12 @@ if __name__ == '__main__':
     parser.add_argument('--user',dest='user',required=True,type=str)
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
+    parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(filename=args.log_dir+'/batcher_'+args.user+'_'+str(int(time.time()))+'.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    if args.verbose:
+        stderrLogger = logging.StreamHandler()
+        stderrLogger.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logging.getLogger().addHandler(stderrLogger)
     scheduler(args)

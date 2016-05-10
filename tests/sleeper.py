@@ -1,6 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
-import json,sys,time
+import json, sys, time
+
+t0 = time.time()
 
 file_name = sys.argv[1]
 
@@ -9,5 +11,7 @@ with open(file_name, 'r') as infile:
 
 time.sleep(data["params"]["sleep_time"])
 
+t1 = time.time()
+
 with open(file_name, 'w') as outfile:
-    json.dump({"number":8}, outfile)
+    json.dump({"time": t1-t0}, outfile)

@@ -1,0 +1,30 @@
+odb:
+    image: whiplash/odb
+    cpu_shares: 100
+    mem_limit: 262144000
+    ports:
+        - "27017:27017"
+    command: "--auth"
+api:
+    image: whiplash/api
+    cpu_shares: 100
+    mem_limit: 262144000
+    environment:
+        MONGO_API_USERNAME: api
+        MONGO_API_PASSWORD: haYrv{Ak9UJiaDsqVTe7rLJTc
+    ports:
+        - "1337:1337"
+    links:
+        - odb:mongo
+    command: sh -c "node --use_strict bin/createUser.js test test test@test.com; node --use_strict bin/createClient.js test-python test-python test; node --use_strict bin/createClient.js test-scheduler test-scheduler test; node --use_strict bin/createUser.js scheduler c93lbcp0hc[5209sebf10{3ca scheduler@whiplash.ethz.ch; node --use_strict bin/createClient.js scheduler scheduler-python c93lbcp0hc[5209sebf10{3ca; node --use_strict bin/api"
+rte:
+    image: whiplash/rte
+    cpu_shares: 100
+    mem_limit: 262144000
+    links:
+        - api:api
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /usr/bin/docker:/bin/docker
+        - $PWD:/input
+    command: sh -c "sleep 10; ./rte/create_token.py api 1337 test test && ./rte/manager.py --local --host api --port 1337 --verbose --docker"

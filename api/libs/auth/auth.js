@@ -5,20 +5,18 @@ var BearerStrategy = require('passport-http-bearer').Strategy;
 
 var libs = process.cwd() + '/libs/';
 var config = require(libs + 'config');
-var User = require(libs + 'schemas/user');
-var Client = require(libs + 'schemas/client');
-var AccessToken = require(libs + 'schemas/accessToken');
-var RefreshToken = require(libs + 'schemas/refreshToken');
+var common = require(libs + 'routes/common');
+var db = require(libs + 'db/mongo');
+var users = db.get().collection('users');
+var access_tokens = db.get().collection('accesstokens');
+var clients = db.get().collection('clients');
 
 passport.use(new BasicStrategy(
     function(username, password, done) {
-        Client.findOne({ clientId: username }, function(err, client) {
+        common.query_one(clients, {'clientId': username}, [], "user_admin", {}, function(res, err, client) {
             if (err) { return done(err); }
-
             if (!client) { return done(null, false, { message: 'Wrong username or password' }); }
-
             if (client.clientSecret !== password) { return done(null, false, { message: 'Wrong username or password' }); }
-
             return done(null, client);
         });
     }
@@ -26,25 +24,20 @@ passport.use(new BasicStrategy(
 
 passport.use(new ClientPasswordStrategy(
     function(clientId, clientSecret, done) {
-        Client.findOne({ clientId: clientId }, function(err, client) {
+        common.query_one(clients, {'clientId': clientId}, [], "user_admin", {}, function(res, err, client) {
             if (err) { return done(err); }
-
             if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
-
             if (client.clientSecret !== clientSecret) { return done(null, false, { message: 'Wrong client id or secret' }); }
-
             return done(null, client);
         });
     }
 ));
 
 passport.use(new BearerStrategy(
-    function(accessToken, done) {
-        AccessToken.findOne({ token: accessToken }, function(err, token) {
+    function(access_token, done) {
+        common.query_one(access_tokens, {'token': access_token}, [], "user_admin", {}, function(res, err, token) {
             if (err) { return done(err); }
-
             if (!token) {  return done(null, false); }
-
             // Tokens don't expire when this is commented out
             //
             //if( Math.round((Date.now()-token.created)/1000) > config.get('security:tokenLife') ) {
@@ -53,12 +46,9 @@ passport.use(new BearerStrategy(
             //    });
             //    return done(null, false, { message: 'Token expired' });
             //}
-
-            User.findById(token.userId, function(err, user) {
+            common.query_one(users, {'_id': token.owner}, [], token.owner, {}, function(res, err, user) {
                 if (err) { return done(err); }
-
                 if (!user) { return done(null, false, { message: 'Unknown user' }); }
-
                 var info = { scope: '*' };
                 done(null, user, info);
             });

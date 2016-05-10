@@ -9,8 +9,13 @@ stages:
 build:
   stage: build
   script:
-    - docker-compose -f test.yml build
-    - docker-compose -f test.yml up -d
+    - git clean -fdx
+    - git reset --hard
+    - source deployment/passwords.sh
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash stop
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash rm -f
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash build
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash up -d
     - sleep 30
   tags:
     - docker
@@ -18,17 +23,18 @@ build:
 test:
   stage: test
   script:
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./rte/create_token.py ${DOCKERHOST:-localhost} 1337 test test
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./tests/tests.py ${DOCKERHOST:-localhost} 1337
-    - PYTHONPATH=$PWD/python:$PYTHONPATH ./rte/manager.py --local --host ${DOCKERHOST:-localhost} --port 1337 --num_cpus 1 --test
-    - cat *.log
+    - export PYTHONPATH=$PWD/rte:$PYTHONPATH
+    - ./tests/pre-tests.py ${DOCKERHOST:-localhost} 1337
+    - sleep 30
+    - docker logs whiplash_rte_1
+    - ./tests/post-tests.py ${DOCKERHOST:-localhost} 1337
   tags:
     - docker
 
 cleanup:
   stage: cleanup
   script:
-    - docker-compose -f test.yml stop
-    - docker-compose -f test.yml rm -f
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash stop
+    - docker-compose -f deployment/dev/docker-compose.yml -p whiplash rm -f
   tags:
     - docker

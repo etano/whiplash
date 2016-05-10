@@ -15,7 +15,9 @@ api/results
 api/libs/public/docs
 api/npm-debug.log
 api/node_modules
-*.swp
-*.swo
+*.swl
+*.swm
 *.swn
+*.swo
+*.swp
 *.pyc

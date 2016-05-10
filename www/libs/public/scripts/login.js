@@ -39,11 +39,12 @@ function login(){
 function register(){
     var user = $("section#register > input.login").val();
     var pass = $("section#register > input.passwd").val();
+    var email = $("section#register > input.email").val();
 
     $.ajax({
         type: 'POST',
         url: api_addr+"/api/users",
-        data: { "username": user, "password": pass, "server_token": server_token },
+        data: { "username": user, "password": pass, "email": email, "server_token": server_token },
         success: function(data){
             if($.trim(data) != "OK"){
                 inputFailFeedback($("section#register"));
@@ -139,9 +140,9 @@ function forgot(){
     var pass = $("section#forgot > input.passwd").val();
 
     $.ajax({
-        type: 'PUT',
-        url: api_addr+"/api/users/"+user,
-        data: { "user": user, "pass": pass },
+        type: 'POST',
+        url: api_addr+"/api/users/recover",
+        data: { "username": user, "password": pass, "server_token": server_token },
         success: function(data){
             if($.trim(data) != "OK"){
                 inputFailFeedback($("section#forgot"));

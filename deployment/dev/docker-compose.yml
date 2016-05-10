@@ -1,0 +1,29 @@
+odb:
+    extends:
+        file: ../../odb/docker-compose.yml
+        service: odb
+    ports:
+        - "27017:27017"
+api:
+    extends:
+        file: ../../api/docker-compose.yml
+        service: api
+    ports:
+        - "1337:1337"
+    volumes:
+        - ../../api/libs:/src/libs
+    links:
+        - odb:mongo
+    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user user_admin; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
+rte:
+    extends:
+        file: ../../rte/docker-compose.yml
+        service: rte
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - $PWD:/input
+    environment:
+        - WORKDIR=$PWD
+    links:
+        - api:api
+    command: sh -c "sleep 20; ./rte/manager.py --local --host api --port 1337 --verbose --docker"
