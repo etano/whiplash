@@ -8,8 +8,22 @@ def submit_job(args):
     logging.info('submitting job: %s', args.user)
     flags = " --host "+args.host+" --port "+str(args.port)+" --token "+args.token+" --time_limit "+str(args.time_limit)+" --work_dir "+args.work_dir+" --num_cpus "+str(args.num_cpus)+" --log_dir "+args.log_dir+" --user "+args.user+" --docker"
     n_running = sp.check_output("docker-machine ls | grep \"aws-rte\" | wc -l\'", shell=True)
-    sp.call('docker-machine create --driver amazonec2 --amazonec2-security-group RTE --amazonec2-access-key AKIAILHRQR3JM3DER2RA --amazonec2-secret-key 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 --amazonec2-region eu-central-1 aws-rte-'+n_running, shell=True)
-    sp.call('eval $(docker-machine env aws-rte) && docker run -d -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/bin/docker -v $PWD:/input -e "WORKDIR=$PWD" -p 1337:1337 whiplash/rte sh -c "./rte/scheduler_local.py '+flags+'"', shell=True)
+    docker_machine_command = 'docker-machine create --driver amazonec2 ' \
+                             '--amazonec2-security-group whiplash-rte ' \
+                             '--amazonec2-access-key '+os.environ['AWS_ACCESS_KEY']+' ' \
+                             '--amazonec2-secret-key '+os.environ['AWS_SECRET_KEY']+' ' \
+                             '--amazonec2-region eu-central-1 ' \
+                             'aws-rte-'+n_running
+    sp.call(docker_machine_command, shell=True)
+    docker_run_command = 'eval $(docker-machine env aws-rte) && ' \
+                         'docker run -d ' \
+                         '-v /var/run/docker.sock:/var/run/docker.sock ' \
+                         '-v /usr/bin/docker:/bin/docker ' \
+                         '-v $PWD:/input ' \
+                         '-e "WORKDIR=$PWD" ' \
+                         '-p 1337:1337 ' \
+                         'whiplash/rte sh -c "./rte/scheduler_local.py '+flags+'"'
+    sp.call(docker_run_command, shell=True)
 
 def scheduler(args):
     db = whiplash.db(args.host,args.port,token=args.token)

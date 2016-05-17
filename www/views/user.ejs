@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Project Whiplash - <%= user.username %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1>Project Whiplash</h1>
+    <ul>
+        <li><a href="/docs">Documentation</a></li>
+        <li><a href="#" id="logout">Logout</a></li>
+    </ul>
+    <h2><%= user.username %></h2>
+    <h3>Statistics</h3>
+    <div id="statistics"></div>
+
+    <script src="/javascripts/vendor/jquery-2.2.3.min.js"></script>
+    <script src="/javascripts/common.js"></script>
+    <script src="/javascripts/user.js"></script>
+  </body>
+</html>

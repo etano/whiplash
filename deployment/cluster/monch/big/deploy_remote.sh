@@ -18,8 +18,8 @@ key_file="/mnt/lnec/whiplash/mongodb.keyfile"
 
 sharded_collections=("properties" "executables")
 
-user_admin_username="UserAdmin"
-user_admin_password="pass0"
+admin_username="UserAdmin"
+admin_password="pass0"
 
 root_admin_username="RootAdmin"
 root_admin_password="pass1"
@@ -106,7 +106,7 @@ storage:
   enabled: true" > mongo.config;
 '"${mongod}"' --config mongo.config;
 sleep 10;
-echo "try{ db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
+echo "try{ db.createUser({user: \"'"${admin_username}"'\",pwd: \"'"${admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
 echo "try{ db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${server_hosts[0]}:${server_ports[0]}/admin"' config.js;
 sleep 1;
@@ -232,7 +232,7 @@ storage:
   enabled: true" > mongo.config;
 '"${mongod}"' --config mongo.config;
 sleep 10;
-echo "try{ db.createUser({user: \"'"${user_admin_username}"'\",pwd: \"'"${user_admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
+echo "try{ db.createUser({user: \"'"${admin_username}"'\",pwd: \"'"${admin_password}"'\",roles: [ { role: \"userAdminAnyDatabase\", db: \"admin\"}]}); } catch(err) {}" > config.js;
 echo "try{ db.createUser({user: \"'"${root_admin_username}"'\",pwd: \"'"${root_admin_password}"'\",roles: [ { role: \"root\", db: \"admin\"}]}); } catch(err) {}" >> config.js;
 '"${mongo}"' '"${replica_hosts[${ind0}]}:${replica_ports[${ind0}]}/admin"' config.js;
 sleep 1;
@@ -343,7 +343,7 @@ sleep 10;
 echo "Adding users"
 
 sh deployment/cluster/monch/big/remote_command.sh ${router_hosts[0]} '
-echo "db.auth(\"'"${user_admin_username}"'\", \"'"${user_admin_password}"'\");" > config.js;
+echo "db.auth(\"'"${admin_username}"'\", \"'"${admin_password}"'\");" > config.js;
 echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"www\",pwd:\"7cJgeAkHdw{oktPNYdgYE3nJ\",roles:[{role:\"readWrite\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
 echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"api\",pwd:\"haYrv{Ak9UJiaDsqVTe7rLJTc\",roles:[{role:\"readWrite\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;
 echo "try{ db.getSiblingDB(\"'"${database_name}"'\").createUser({user:\"'"${wdb_owner_username}"'\",pwd:\"'"${wdb_owner_password}"'\",roles:[{role:\"dbOwner\",db:\"wdb\"}]}); } catch(err) {}" >> config.js;

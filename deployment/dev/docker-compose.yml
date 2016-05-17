@@ -14,7 +14,7 @@ api:
         - ../../api/libs:/src/libs
     links:
         - odb:mongo
-    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user user_admin; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
+    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
 rte:
     extends:
         file: ../../rte/docker-compose.yml

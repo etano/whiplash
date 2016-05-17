@@ -1,5 +1,2 @@
 api:
     build: .
-    environment:
-        MONGO_API_PASSWORD: ${MONGO_API_PASSWORD}
-        USER_ADMIN_PASSWORD: ${USER_ADMIN_PASSWORD}

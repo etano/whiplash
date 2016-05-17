@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Project Whiplash</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1>Project Whiplash</h1>
+    <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/docs">Documentation</a></li>
+    </ul>
+    <%= message %>
+    <% if (fresh) { %>
+        <p>Please choose an admin password for this fresh installation (user name is "admin"):</p>
+        <div class="form" id="admin-register">
+            <label for="password">Password:</label>
+            <input autocapitalize="off" spellcheck="false" autocorrect="false" type="password" id="password" placeholder="Your password" name="password" />
+            <br/><br/>
+            <label for="password2">Confirm password:</label>
+            <input autocapitalize="off" spellcheck="false" autocorrect="false" type="password" id="password2" placeholder="Your password again" name="password2" />
+            <br/><br/>
+            <input type="button" id="submit" value="Register">
+            <p id="response"></p>
+        </div>
+    <% } %>
+    <script src="/javascripts/vendor/jquery-2.2.3.min.js"></script>
+    <script src="/javascripts/common.js"></script>
+    <script src="/javascripts/index.js"></script>
+  </body>
+</html>

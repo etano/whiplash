@@ -13,10 +13,10 @@ var clients = db.get().collection('clients');
 
 passport.use(new BasicStrategy(
     function(username, password, done) {
-        common.query_one(clients, {'clientId': username}, [], "user_admin", {}, function(res, err, client) {
+        common.query_one(users, {'username': username}, [], "admin", {}, function(res, err, user) {
             if (err) { return done(err); }
-            if (!client) { return done(null, false, { message: 'Wrong username or password' }); }
-            if (client.clientSecret !== password) { return done(null, false, { message: 'Wrong username or password' }); }
+            if (!user) { return done(null, false, { message: 'Wrong username or password' }); }
+            if (!pass.check_password(user.salt, password, user.hashed_password)) { return done(null, false, { message: 'Wrong username or password' }); }
             return done(null, client);
         });
     }
@@ -24,7 +24,7 @@ passport.use(new BasicStrategy(
 
 passport.use(new ClientPasswordStrategy(
     function(clientId, clientSecret, done) {
-        common.query_one(clients, {'clientId': clientId}, [], "user_admin", {}, function(res, err, client) {
+        common.query_one(clients, {'clientId': clientId}, [], "admin", {}, function(res, err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
             if (client.clientSecret !== clientSecret) { return done(null, false, { message: 'Wrong client id or secret' }); }
@@ -35,7 +35,7 @@ passport.use(new ClientPasswordStrategy(
 
 passport.use(new BearerStrategy(
     function(access_token, done) {
-        common.query_one(access_tokens, {'token': access_token}, [], "user_admin", {}, function(res, err, token) {
+        common.query_one(access_tokens, {'token': access_token}, [], "admin", {}, function(res, err, token) {
             if (err) { return done(err); }
             if (!token) {  return done(null, false); }
             // Tokens don't expire when this is commented out

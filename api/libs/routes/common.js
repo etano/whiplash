@@ -242,12 +242,12 @@ function concaternate(o1, o2) {
 function form_filter(collection, filter, user_id, cb) {
     global.timer.get_timer('form_filter_'+collection.collectionName).start();
     // Set permissions
-    if (!('collaboration' in filter) && (user_id !== "user_admin")) {
+    if (!('collaboration' in filter) && (user_id !== "admin")) {
         db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
             db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
                 if(objs2) {
                     if(!(
-                        (objs2[0]['username'] === "user_admin") &&
+                        (objs2[0]['username'] === "admin") &&
                             (
                                 (collection.collectionName === "users") ||
                                 (collection.collectionName === "clients") ||
@@ -255,7 +255,7 @@ function form_filter(collection, filter, user_id, cb) {
                                 (collection.collectionName === "accesstokens")
                             )
                         )
-                    ) { // user_admin can search users
+                    ) { // admin can search users
                         if(!err) {
                             var ids = [];
                             for(var i=0; i<objs.length; i++) {
@@ -340,7 +340,7 @@ module.exports = {
             }
         } else {
             global.timer.get_timer('get_payload').stop();
-            return JSON.parse(req.query[key]);
+            return req.query[key];
         }
     },
 

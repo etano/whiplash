@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export AWS_ACCESS_KEY=AKIAJKXKTMSZDMVWAHSQ
+export AWS_SECRET_KEY=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
+export PATH_TO_AWS_SSH_KEY=$PWD/mms_key.pem
+export MONGO_PORT_27017_TCP_ADDR=ec2-52-58-165-46.eu-central-1.compute.amazonaws.com
+export MONGO_PORT_27017_TCP_PORT=27000
+export MONGO_API_PASSWORD=haYrv{Ak9UJiaDsqVTe7rLJTc
+export ADMIN_PASSWORD=c93lbcp0hc[5209sebf10{3ca

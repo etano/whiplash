@@ -55,7 +55,7 @@ def check_access(db_user):
         return 0
 
 def scheduler(args):
-    db = whiplash.db(args.host,args.port,username="user_admin",password=os.environ['USER_ADMIN_PASSWORD'],save_token=True)
+    db = whiplash.db(args.host,args.port,username="admin",password=os.environ['ADMIN_PASSWORD'],save_token=True)
     logging.info('user scheduler connected to db')
 
     time_limit = 24*3600

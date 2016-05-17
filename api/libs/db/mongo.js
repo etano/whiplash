@@ -15,6 +15,7 @@ var state = {
 exports.init = function() {
 
     var url = "mongodb://"+api_url+":"+api_port+"/wdb";
+    log.info("Attempting to connect to "+api_url+":"+api_port+"/wdb");
 
     // Add API user
     MongoClient.connect(url, function(err, db) {

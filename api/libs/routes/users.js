@@ -1,141 +1,93 @@
 var express = require('express');
 var passport = require('passport');
-var emailjs = require('emailjs');
 var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
-var config = require(libs + 'config');
 var db = require(libs + 'db/mongo');
 var users = db.get().collection('users');
 var pass = require(libs + 'auth/pass');
-
-var webAuth = function(req, res, next){
-    var token = common.get_payload(req,'server_token');
-    if(token === config.get('WebAccessToken')) {
-        next();
-    } else {
-        res.send("Bof");
-    }
-};
 
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query(users, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
-router.post('/', webAuth, function(req, res){
-    var salt = pass.generate_salt();
-    var password = common.get_payload(req, 'password');
-    var user = {
-        username: common.get_payload(req, 'username'),
-        email: common.get_payload(req, 'email'),
-        salt: salt,
-        hashed_password: pass.encrypt_password(salt, password),
-        activated: false
-    };
-    common.commit(users, [user], "user_admin", res, function(res, err, result) {
-        if(!err) {
-            log.info("New user: %s", user.username);
-            res.send("OK");
+router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    var user_id = String(req.user._id);
+    var filter = {};
+    if(req.body.filter) filter = JSON.parse(req.body.filter);
+    common.pop(users, filter, {}, user_id, res, function(res, err, obj) {
+        if (!err) {
+            common.delete(db.get().collection('accesstokens'), {owner: obj._id}, user_id, res, function(res, err, obj) {});
+            common.delete(db.get().collection('refreshtokens'), {owner: obj._id}, user_id, res, function(res, err, obj) {});
+            common.delete(db.get().collection('clients'), {userId: obj._id}, user_id, res, function(res, err, obj) {});
+        }
+        common.return(res, err, obj);
+    });
+});
 
-            var hash = pass.generate_hash(user.salt, user.username);
-            var email_addr = user.email;
-            var activation = "http://whiplash.ethz.ch/api/users/confirm?uid=" +user._id+ "&hash=" +hash;
-            var email_text = "You are now signed up to the Whiplash. Activation link: " +activation;
-            var email_html = "<html>You <i>are</i> now signed up for Project Whiplash! Activate your account by clicking <a href='" +activation+ "'>this link</a>.</html>";
+function make_user(username, email, password, res) {
+    if (username && email && password) {
+        var salt = pass.generate_salt();
+        var user = {
+            username: username,
+            email: email,
+            salt: salt,
+            hashed_password: pass.encrypt_password(salt, password),
+            activated: false
+        };
+        common.commit(users, [user], "admin", res, function(res, err, result) {
+            if(!err) {
+                log.info("New user: %s", user.username);
+                res.send("OK");
+            } else {
+                log.error(err);
+                res.send("Bad entry");
+            }
+        });
+    } else {
+        log.error("Invalid username and/or password");
+        res.send("Invalid username and/or password");
+    }
+}
 
-            emailjs.server
-            .connect({
-                host:    "smtp.phys.ethz.ch",
-                ssl:     true
-            })
-            .send({
-                from:    "Project Whiplash <auto@whiplash.ethz.ch>",
-                to:      email_addr,
-                subject: "Welcome to Whiplash",
-                text:    email_text,
-                attachment: [{ data: email_html, alternative:true }]
-            }, function(err, message){ log.info(err || message); });
+router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    if (req.user.username === "admin") {
+        var username = common.get_payload(req, 'username');
+        var email = common.get_payload(req, 'email');
+        var password = common.get_payload(req, 'password');
+        make_user(username, email, password, res);
+    } else {
+        res.send("Unauthorized access to user creation");
+    }
+});
+
+router.post('/admin', function(req, res) {
+    common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
+        if (!err && (result.length === 0)) {
+            var password = common.get_payload(req, 'password');
+            if (password) {
+                make_user("admin", "admin@ethz.ch", password, res);
+            } else {
+                res.send("Invalid password");
+            }
+        } else if (result.length > 0) {
+            res.send("Admin password already set");
         } else {
-            log.error(err);
-            res.send("Bof");
-        }
-    });
-
-});
-
-router.get('/confirm', function(req, res) {
-    var uid = req.query['uid'];
-    var hash = req.query['hash'];
-    common.query_one(users, {'_id': uid}, [], "user_admin", res, function(res, err, user) {
-        if(!err){
-            if(pass.check_hash(hash, user.salt, user.username)){
-                user.activated = true;
-                common.replace(users, [user], "user_admin", res, function(res, err, n_modified) {
-                    if(!err) {
-                        log.info('User successfully activated!');
-                        res.redirect('http://whiplash.ethz.ch');
-                    }
-                });
-            }else{
-                res.send("Not Authorized");
-            }
+            res.send("Unauthorized access to user creation");
         }
     });
 });
 
-router.post('/recover', webAuth, function(req, res){
-
-    var new_pwd = common.get_payload(req,'password');
-    var username = common.get_payload(req,'username');
-
-    common.query_one(users, {'username': username}, [], "user_admin", res, function(res, err, user) {
-        if(!err){
-            var hash = pass.generate_hash(user.salt, user.username);
-            var code = pass.encrypt_password(user.salt, new_pwd);
-            var activation = "http://whiplash.ethz.ch/api/users/recover?uid=" +user._id+ "&hash=" +hash+ "&code=" +code;
-            var email_text = "You have provided a new password. To active the new password follow the link: " +activation;
-            var email_html = "<html>You have provided a new password. To activate the new password follow <a href='" +activation+ "'>this link</a>.</html>";
-
-            emailjs.server
-            .connect({
-                host:    "smtp.phys.ethz.ch",
-                ssl:     true
-            })
-            .send({
-                from:    "Project Whiplash <auto@whiplash.ethz.ch>", 
-                to:      user.email,
-                subject: "password reset",
-                text:    email_text,
-                attachment: [{ data: email_html, alternative:true }]
-            }, function(err, message){ log.info(err || message); });
-
-            log.info("Recovery for user: %s", user.username);
-            res.send("OK");
-        }
-    });
-});
-
-router.get('/recover', function(req, res) {
-
-    var uid = req.query['uid'];
-    var hash = req.query['hash'];
-    var code = req.query['code'];
-
-    common.query_one(users, {'_id': uid}, [], "user_admin", res, function(res, err, user) {
-        if(!err){
-            if(pass.check_hash(hash, user.salt, user.username)){
-                user.hashed_password = code;
-                common.replace(users, [user], "user_admin", res, function(res, err, n_modified) {
-                    if(!err){
-                        log.info('User successfully activated!');
-                        res.redirect('http://whiplash.ethz.ch');
-                    }
-                });
-            }else{
-                res.send("Not Authorized");
-            }
+router.get('/fresh', function(req, res) {
+    common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
+        if (!err && (result.length === 0)) {
+            res.send({error: null, result: true});
+        } else if (result.length > 0) {
+            res.send({error: null, result: false});
+        } else {
+            res.send({error: err, result: false});
         }
     });
 });

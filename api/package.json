@@ -9,7 +9,6 @@
     },
     "dependencies": {
         "body-parser": "~1.8.x",
-        "emailjs": "latest",
         "xxhash": "latest",
         "debug": "~2.0.x",
         "express": "~4.10.x",

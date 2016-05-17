@@ -37,7 +37,7 @@ var generate_tokens = function (user_id, client_id, done) {
 
 // Exchange username & password for access token.
 aserver.exchange(oauth2orize.exchange.password(function(client, username, password, scope, done) {
-    common.query_one(db.get().collection('users'), {'username': username}, [], "user_admin", {}, function(res, err, user) {
+    common.query_one(db.get().collection('users'), {'username': username}, [], "admin", {}, function(res, err, user) {
         if (err) { return done(err); }
         if (!user || !pass.check_password(user.salt, password, user.hashed_password)) {
             return done(null, false);
@@ -48,7 +48,7 @@ aserver.exchange(oauth2orize.exchange.password(function(client, username, passwo
 
 // Exchange refreshToken for access token.
 aserver.exchange(oauth2orize.exchange.refreshToken(function(client, refresh_token, scope, done) {
-    common.query_one(db.get().collection('refreshtokens'), {token: refresh_token, clientId: client.clientId}, [], "user_admin", {}, function(res, err, token) {
+    common.query_one(db.get().collection('refreshtokens'), {token: refresh_token, clientId: client.clientId}, [], "admin", {}, function(res, err, token) {
         if (err) { return done(err); }
         if (!token) { return done(null, false); }
         common.query_one(db.get().collection('users'), {_id: token.owner}, [], token.owner, {}, function(res, err, user) {

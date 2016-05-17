@@ -8,9 +8,9 @@ var token = require(libs + 'auth/oauth2');
 var username = process.argv[2];
 var password = "";
 var email = "";
-if (username === "user_admin") {
-    password = process.env.USER_ADMIN_PASSWORD;
-    email = "user_admin@whiplash.ethz.ch";
+if (username === "admin") {
+    password = process.env.ADMIN_PASSWORD;
+    email = "admin@whiplash.ethz.ch";
 } else {
     password = process.argv[3];
     email = process.argv[4];

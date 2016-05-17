@@ -15,6 +15,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     var client = {
         name: common.get_payload(req,'client_name'),
         clientId: common.get_payload(req,'client_id'),
+        userId: user_id,
         clientSecret: common.get_payload(req,'client_secret')
     };
     common.commit(clients, [client], user_id, res, function(res, err, result) {
