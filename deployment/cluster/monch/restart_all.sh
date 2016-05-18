@@ -10,7 +10,7 @@ echo 'Sleeping 5'
 sleep 5
 
 echo 'Starting mongo'
-bash ${WHIPLASH_HOME}/deployment/cluster/monch/solo/mongo_startup.sh
+bash ${WHIPLASH_HOME}/deployment/cluster/monch/mongo_startup.sh
 echo 'Starting node'
 bash ${WHIPLASH_HOME}/deployment/cluster/monch/node_startup.sh
 echo 'Sleeping 30'

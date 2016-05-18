@@ -1,4 +1,2 @@
 rte:
     build: .
-    environment:
-        ADMIN_PASSWORD: ${ADMIN_PASSWORD}

@@ -10,5 +10,5 @@
 #SBATCH --output=whiplash_week.out
 #SBATCH --error=whiplash_week.err
 #======START===============================
-srun /users/$USER/src/whiplash/deployment/cluster/monch/solo/start_and_sleep.sh
+srun /users/$USER/src/whiplash/deployment/cluster/monch/start_and_sleep.sh
 #======END================================= 

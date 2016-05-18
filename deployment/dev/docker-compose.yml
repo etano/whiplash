@@ -1,9 +1,8 @@
 odb:
-    extends:
-        file: ../../odb/docker-compose.yml
-        service: odb
+    image: mongo:latest
     ports:
         - "27017:27017"
+
 api:
     extends:
         file: ../../api/docker-compose.yml
@@ -12,9 +11,33 @@ api:
         - "1337:1337"
     volumes:
         - ../../api/libs:/src/libs
+        - ../../api/bin:/src/bin
+    environment:
+        MONGO_PORT_27017_TCP_ADDR: odb
+        MONGO_PORT_27017_TCP_PORT: 27017
+        MONGO_API_PASSWORD: password
     links:
-        - odb:mongo
-    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
+        - odb:odb
+    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin password admin@whiplash.ethz.ch; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
+
+www:
+    extends:
+        file: ../../www/docker-compose.yml
+        service: www
+    ports:
+        - "3000:3000"
+    volumes:
+        - ../../www/public:/src/public
+        - ../../www/views:/src/views
+        - ../../www/routes:/src/routes
+    environment:
+        WHIPLASH_API_HOST: api
+        WHIPLASH_API_PORT: 1337
+    links:
+        - api:api
+    restart: always
+    command: sh -c "node --use_strict bin/www"
+
 rte:
     extends:
         file: ../../rte/docker-compose.yml
@@ -23,7 +46,8 @@ rte:
         - /var/run/docker.sock:/var/run/docker.sock
         - $PWD:/input
     environment:
-        - WORKDIR=$PWD
+        WORKDIR: ${PWD}
+        ADMIN_PASSWORD: password
     links:
         - api:api
     command: sh -c "sleep 20; ./rte/manager.py --local --host api --port 1337 --verbose --docker"

@@ -6,15 +6,8 @@ var pass = require(libs + 'auth/pass');
 var token = require(libs + 'auth/oauth2');
 
 var username = process.argv[2];
-var password = "";
-var email = "";
-if (username === "admin") {
-    password = process.env.ADMIN_PASSWORD;
-    email = "admin@whiplash.ethz.ch";
-} else {
-    password = process.argv[3];
-    email = process.argv[4];
-}
+var password = process.argv[3];
+var email = process.argv[4];
 
 db.connect(function(err) {
     if(!err) {

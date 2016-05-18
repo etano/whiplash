@@ -6,6 +6,9 @@ module load python/3.4.1-gcc-4.8.1
 # Whiplash
 export WHIPLASH_HOME="/users/$USER/src/whiplash"
 
+# Get passwords
+source $WHIPLASH_HOME/deployment/passwords.sh
+
 # Directory structure
 mkdir -p /mnt/lnec/$USER/whiplash
 mkdir -p /mnt/lnec/$USER/whiplash/data/db
