@@ -43,10 +43,13 @@ router.get('/:user', function(req, res, next) {
                     var user = chunk.result[0].username;
                     if (req.params.user === user) {
                         if (user === "admin") {
-                            res.render('admin', {});
+                            res.render('admin', {
+                                authorized: true
+                            });
                         } else {
                             res.render('user', {
-                                user: chunk.result[0]
+                                authorized: true,
+                                user: user
                             });
                         }
                     } else {

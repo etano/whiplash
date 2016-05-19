@@ -36,9 +36,14 @@ def get_users(args, db):
                         if args.cluster:
                             db_user['cluster'] = "monch.cscs.ch" #TODO: dedicated collection of clusters
                             db_user['work_dir'] = '/mnt/lnec/'+user['username']+'/.whiplash_run'
-                        else:
+                        elif args.dind:
                             db_user['work_dir'] = '/input'
-                        db_users.append(db_user)
+                        elif args.docker:
+                            db_user['work_dir'] = os.environ['WORKDIR']
+                        else:
+                            db_user['work_dir'] = os.environ['WORKDIR']
+                        if (db_user['username'] != 'admin'):
+                            db_users.append(db_user)
                         break
         return db_users
     except:
@@ -86,6 +91,8 @@ def scheduler(args):
                 flags += " --num_cpus "+str(args.num_cpus)+" --work_dir "+db_user['work_dir']+" --time_limit "+str(time_limit)
                 if args.docker:
                     flags += " --docker"
+                if args.dind:
+                    flags += " --dind"
 
                 if args.cluster:
                     if not schedulers[username]['slurm'].is_alive():
@@ -132,6 +139,7 @@ if __name__ == '__main__':
     parser.add_argument('--rte_dir',dest='rte_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))
     parser.add_argument('--test',dest='test',required=False,default=False,action='store_true')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
+    parser.add_argument('--dind',dest='dind',required=False,default=False,action='store_true')
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
     parser.add_argument('--cloud',dest='cloud',required=False,default=False,action='store_true')

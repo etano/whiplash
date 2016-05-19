@@ -50,4 +50,4 @@ rte:
         ADMIN_PASSWORD: password
     links:
         - api:api
-    command: sh -c "sleep 20; ./rte/manager.py --local --host api --port 1337 --verbose --docker"
+    command: sh -c "sleep 20; ./rte/manager.py --local --host api --port 1337 --verbose --docker --dind"

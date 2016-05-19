@@ -242,40 +242,17 @@ function concaternate(o1, o2) {
 function form_filter(collection, filter, user_id, cb) {
     global.timer.get_timer('form_filter_'+collection.collectionName).start();
     // Set permissions
-    if (!('collaboration' in filter) && (user_id !== "admin")) {
-        db.get().collection('collaborations').find({"users":user_id}).project({"_id":1}).toArray(function (err, objs) {
-            db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err2, objs2) {
-                if(objs2) {
-                    if(!(
-                        (objs2[0]['username'] === "admin") &&
-                            (
-                                (collection.collectionName === "users") ||
-                                (collection.collectionName === "clients") ||
-                                (collection.collectionName === "refreshtokens") ||
-                                (collection.collectionName === "accesstokens")
-                            )
-                        )
-                    ) { // admin can search users
-                        if(!err) {
-                            var ids = [];
-                            for(var i=0; i<objs.length; i++) {
-                                ids.push(objs[i]['_id']);
-                            }
-                            if (ids.length > 0) {
-                                filter['$or'] = {'owner': user_id, 'collaboration': {'$in': ids}};
-                            } else {
-                                filter.owner = user_id;
-                            }
-                        } else {
-                            filter.owner = user_id;
-                        }
-                    }
+    if (user_id !== "admin") {
+        db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err, objs) {
+            if(objs) {
+                if(objs[0]['username'] !== "admin") { // admin can do anything
+                    filter.owner = user_id;
                 }
+            }
 
-                // Callback with filter
-                global.timer.get_timer('form_filter_'+collection.collectionName).stop();
-                cb(filter);
-            });
+            // Callback with filter
+            global.timer.get_timer('form_filter_'+collection.collectionName).stop();
+            cb(filter);
         });
     } else {
         // Callback with filter
@@ -317,6 +294,16 @@ function query(collection, filter, fields, user_id, res, cb) {
         }
     });
 }
+
+/**
+ * @apiDefine admin Admin access only
+ * This method is only for the "admin" user
+ */
+
+/**
+ * @apiDefine user User access only
+ * This method can only affect what is owned by the user who calls it or the "admin" user.
+ */
 
 module.exports = {
 
@@ -373,6 +360,17 @@ module.exports = {
         }
     },
 
+    /**
+     * @apiDefine Query
+     * @apiName Query
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {String[]} [fields] Which fields should be returned.
+     *
+     * @apiSuccess {Object[]} result List of objects that matched the query filter, each with the specified fields plus the "_id" field.
+     *
+     *
+     */
     query: function(collection, filter, fields, user_id, res, cb) {
         query(collection, filter, fields, user_id, res, cb);
     },
@@ -391,6 +389,21 @@ module.exports = {
         });
     },
 
+    /**
+     * @apiDefine Count
+     * @apiName Count
+     *
+     * @apiParam {Object} filter Query filter.
+     *
+     * @apiSuccess {Number} result Number of matched objects.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": 2
+     *     }
+     *
+     */
     count: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('count '+collection.collectionName);
@@ -408,6 +421,31 @@ module.exports = {
         });
     },
 
+    /**
+     * @apiDefine Commit
+     * @apiName Commit
+     *
+     * @apiParam {Object[]} objs List of objects to commit.
+     * @apiParam {Object} [objs.content] Any extra content (e.g. full problem Hamiltonian) that is too large to be queryable, i.e. >16 MB.
+     *
+     * @apiSuccess {Object} result Object containing results.
+     * @apiSuccess {Number} result.n_existing Number of existing objects that would have been duplicated.
+     * @apiSuccess {Number} result.n_new Number of new objects committed.
+     * @apiSuccess {String[]} result.ids IDs of both duplicate and new objects.
+     * @apiSuccess {String} result.commit_tag Unique identifier for objects either touched or committed with this POST.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": {
+     *         "n_existing": 0,
+     *         "n_new": 1,
+     *         "ids": ["0f1f0asd3"],
+     *         "commit_tag": "13g0h3fhf"
+     *       }
+     *     }
+     *
+     */
     commit: function(collection, objs, user_id, res, cb) {
         global.timer.get_timer('commit_'+collection.collectionName).start();
         log.debug('commit '+collection.collectionName);
@@ -471,6 +509,22 @@ module.exports = {
         }
     },
 
+    /**
+     * @apiDefine Update
+     * @apiName Update
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {Object} update Update operation.
+     *
+     * @apiSuccess {Number} result Number of updated objects.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": 1
+     *     }
+     *
+     */
     update: function(collection, filter, update, user_id, res, cb) {
         global.timer.get_timer('update_'+collection.collectionName).start();
         log.debug('update '+collection.collectionName);
@@ -531,6 +585,21 @@ module.exports = {
         });
     },
 
+    /**
+     * @apiDefine Delete
+     * @apiName Delete
+     *
+     * @apiParam {Object} filter Query filter.
+     *
+     * @apiSuccess {Number} result Number of deleted objects.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": 1
+     *     }
+     *
+     */
     delete: function(collection, filter, user_id, res, cb) {
         global.timer.get_timer('delete_'+collection.collectionName).start();
         log.debug('delete '+collection.collectionName);
@@ -560,6 +629,40 @@ module.exports = {
         });
     },
 
+    /**
+     * @apiDefine Stats
+     * @apiName Stats
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {String} field Field on which to compute statistics.
+     *
+     *
+     * @apiSuccess {Object} result Statistics object.
+     * @apiSuccess {Number} result.diff Total variance of field.
+     * @apiSuccess {Number} result.sum Total of field.
+     * @apiSuccess {Number} result.count Number of matching objects.
+     * @apiSuccess {Number} result.min Minimum of field.
+     * @apiSuccess {Number} result.max Maximum of field.
+     * @apiSuccess {Number} result.mean Mean of field.
+     * @apiSuccess {Number} result.variance Variance of field.
+     * @apiSuccess {Number} result.stddev Standard deviation of field.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": {
+     *         'diff': 0,
+     *         'sum': 4,
+     *         'count': 1,
+     *         'min': 4,
+     *         'max': 4,
+     *         'mean': 4,
+     *         'variance': 0,
+     *         'stddev': 0
+     *       }
+     *     }
+     *
+     */
     stats: function(collection, filter, field, map, user_id, res, cb) {
         global.timer.get_timer('stats_'+collection.collectionName).start();
         log.debug('stats '+collection.collectionName);
@@ -617,57 +720,39 @@ module.exports = {
         });
     },
 
-    mapreduce: function(collection, filter, field, map, reduce, finalize, user_id, res, cb) {
-        log.debug('mapreduce '+collection.collectionName);
-        form_filter(collection, filter, user_id, function(filter) {
-            eval(String(map));
-            eval(String(reduce));
-            eval(String(finalize));
-            var o = {};
-            o.finalize = finalize;
-            o.query = filter;
-            o.out = {replace: 'mapreduce' + '_' + collection.collectionName};
-            collection.mapReduce(map, reduce, o, function (err, out_collection) {
-                if(!err){
-                    out_collection.find().toArray(function (err, result) {
-                        if(!err) {
-                            if(result.length>0) {
-                                return res.send({
-                                    status: 'OK',
-                                    result: result[0].value
-                                });
-                            } else {
-                                return res.send({
-                                    status: 'OK',
-                                    result: {'diff':0,'sum':0,'count':0,'min':0,'max':0,'mean':0,'variance':0,'stddev':0}
-                                });
-                            }
-                        } else {
-                            res.statusCode = 500;
-                            log.error('Internal error(%d): %s',res.statusCode,err.message);
-                            return res.send({ error: 'Server error' });
-                        }
-                    });
-                } else {
-                    res.statusCode = 500;
-                    log.error('Internal error(%d): %s',res.statusCode,err.message);
-                    return res.send({ error: 'Server error' });
-                }
-            });
-        });
-    },
-
+    /**
+     * @apiDefine Distinct
+     * @apiName Distinct
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {String[]} fields Field on which to determine distinctness.
+     *
+     * @apiParamExample {json} Request-Example:
+     *     {
+     *       "filter": {},
+     *       "fields": ["n_spins"]
+     *     }
+     *
+     * @apiSuccess {Object} result Object containing distinct values.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": [4, 5, 6]
+     *     }
+     *
+     */
     distinct: function(collection, filter, fields, user_id, res, cb) {
         global.timer.get_timer('query_'+collection.collectionName).start();
         log.debug('count '+collection.collectionName);
         this.form_filter(collection, filter, user_id, function(filter) {
-            collection.distinct(fields,filter,function (err, objs) {
+            collection.distinct(fields, filter, function (err, objs) {
                 if (!err) {
-                    return res.send({status: "OK",result:objs});
+                    return res.send({status: "OK", result: objs});
                 } else {
-                  res.statusCode = 500;
-                  log.error('Internal error(%d): %s',res.statusCode,err.message);
-                  return res.send({error: "Server Error"});
+                    res.statusCode = 500;
+                    log.error('Internal error(%d): %s',res.statusCode,err.message);
+                    return res.send({error: "Server Error"});
                 }
             });
         });

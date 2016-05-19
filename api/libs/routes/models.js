@@ -8,48 +8,143 @@ var db = require(libs + 'db/mongo');
 var GridStore = require('mongodb').GridStore;
 var collection = db.get().collection('models');
 
-//
-// Commit
-//
-
+/**
+ * @api {post} /models Commit
+ * @apiGroup Models
+ * @apiUse Commit
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "objs": [
+ *         {
+ *           "n_spins": 4,
+ *           "name": "example0",
+ *           "lattice": "square",
+ *           "content": 0
+ *         },
+ *         {
+ *           "n_spins": 5,
+ *           "name": "example1",
+ *           "lattice": "cubic"
+ *         },
+ *       ]
+ *     }
+ */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.commit(collection, common.get_payload(req,'objs'), String(req.user._id), res, common.return);
 });
 
-//
-// Query
-//
-
+/**
+ * @api {get} /models Query
+ * @apiGroup Models
+ * @apiUse Query
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "n_spins": {"$in": [4,5,6]}
+ *       },
+ *       "fields": [
+ *         "name",
+ *         "lattice"
+ *       ]
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": [
+ *         {
+ *           "_id": "130h0f1f0j",
+ *           "name": "example0",
+ *           "lattice": "square"
+ *         },
+ *         {
+ *           "_id": "10hf01h3fk",
+ *           "name": "example1",
+ *           "lattice": "cubic"
+ *         }
+ *       ]
+ *     }
+ */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = common.get_payload(req,'filter');
     var fields = common.get_payload(req,'fields');
     common.query(collection, filter, fields, String(req.user._id), res, common.return);
 });
 
+/**
+ * @api {get} /models/count Count
+ * @apiGroup Models
+ * @apiUse Count
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "n_spins": {"$in": [4,5,6]}
+ *       }
+ *     }
+ */
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.count(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
-//
-// Update
-//
-
+/**
+ * @api {put} /models Update
+ * @apiGroup Models
+ * @apiUse Update
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "name": "example0"
+ *       },
+ *       "update": {
+ *         "$set": {
+ *           "name": "example0b"
+ *         }
+ *       }
+ *     }
+ */
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.update(collection, common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
 });
 
-//
-// Delete
-//
-
+/**
+ * @api {delete} /models Delete
+ * @apiGroup Models
+ * @apiUse Delete
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "name": "example0"
+ *       }
+ *     }
+ */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.delete(collection, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
-//
-// Map-reduce
-//
-
+/**
+ * @api {stats} /models/stats Stats
+ * @apiGroup Models
+ * @apiUse Stats
+ * @apiPermission user
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "name": "example0"
+ *       },
+ *       "field": "n_spins"
+ *     }
+ */
 router.get('/stats/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var map = function () {
                   emit(this.owner, {
@@ -63,11 +158,12 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
     common.stats(collection, common.get_payload(req,'filter'), common.get_payload(req,'field'), map, String(req.user._id), res, common.return);
 });
 
-
-router.get('/mapreduce/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.mapreduce(collection,req,res);
-});
-
+/**
+ * @api {get} /models/distinct Distinct
+ * @apiGroup Models
+ * @apiUse Distinct
+ * @apiPermission user
+ */
 router.get('/distinct/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.distinct(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });

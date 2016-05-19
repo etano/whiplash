@@ -46,6 +46,7 @@ class connection:
             conn.request(protocol, 'http://'+uri, payload, self.headers)
         res = conn.getresponse()
         if res.status != 200:
+            print(protocol, uri, payload)
             print(res.status, res.reason, res.read())
         return res.status, res.reason, res.read()
 
@@ -273,17 +274,11 @@ class db:
         '''
         self.query(filters, fields, settings)
         while True:
-            status = self.status(filters, fields)
+            status = self.query(filters, fields)
             if status['total'] != 0 and status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
                 break
             time.sleep(freq)
         return self.query(filters, fields, settings)
-
-    def status(self, filters, fields):
-        '''
-        Checks how many properties are {unresolved, pulled, running, timed out, resolved, errored}
-        '''
-        return self.request("GET", "queries/status", {"filters":filters,"fields":fields})
 
     def collection(self, name):
         return collection(self, name)

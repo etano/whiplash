@@ -55,8 +55,8 @@ def commit_resolved(db, pid, results):
     logging.info('worker %i committed %i model/property combos in %f seconds', pid, len(results), t1-t0)
 
 def resolve_object(args, pid, property, models, executables):
-    file_name = args.work_dir+'/object_'+str(pid)+'_'+str(property['_id'])+'.json'
-    with open(file_name, 'w') as io_file:
+    file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'
+    with open(args.work_dir+'/'+file_name, 'w') as io_file:
         obj = models[property['model_index']]
         obj['params'] = property['params']
         io_file.write(json.dumps(obj).replace(" ",""))
@@ -64,14 +64,16 @@ def resolve_object(args, pid, property, models, executables):
     t0 = time.time()
     try:
         path = executables[property['executable_index']]['path']
-        if args.docker:
-            command = 'docker run --rm=true -i -v '+os.environ['WORKDIR']+':/input '+path+' '+file_name
+        if args.dind:
+            command = 'docker run --rm=true -i -v '+os.environ['WORKDIR']+':/input '+path+' /input/'+file_name
+        elif args.docker:
+            command = 'docker run --rm=true -i -v '+args.work_dir+':/input '+path+' /input/'+file_name
         else:
-            command = path+' '+file_name
+            command = path+' '+args.work_dir+'/'+file_name
         property['log'] = sp.check_output(command,timeout=property['timeout'],universal_newlines=True,stderr=sp.STDOUT,shell=True)
         t1 = time.time()
         property['status'] = "resolved"
-        with open(file_name, 'r') as io_file:
+        with open(args.work_dir+'/'+file_name, 'r') as io_file:
             try:
                 output_model = json.load(io_file)
             except:
@@ -92,7 +94,7 @@ def resolve_object(args, pid, property, models, executables):
     elapsed = t1-t0
     property['walltime'] = elapsed
 
-    os.remove(file_name)
+    os.remove(args.work_dir+'/'+file_name)
     output_model['property_id'] = property['_id']
     output_model['owner'] = property['owner']
 
@@ -136,7 +138,7 @@ def worker(pid, db, args, end_time, is_work):
         if (len(work_batches) == 0):
             if (len(pulling_containers) > 0):
                 time.sleep(1)
-            elif (not is_work):
+            else:
                 time.sleep(0.5)
                 if num_alive() == 0:
                     if (len(work_batches) == 0):
@@ -170,10 +172,11 @@ def scheduler(args):
         time.sleep(1)
         n_alive = 0
         for pid in procs:
+            is_work = check_for_work(db, end_time)
             if is_work and (not procs[pid].is_alive()):
                 logging.info('worker %i restarting', pid)
                 procs[pid].join()
-                procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,))
+                procs[pid] = context.Process(target=worker, args=(pid,db,args,end_time,is_work,))
                 procs[pid].start()
                 n_alive += 1
             elif procs[pid].is_alive():
@@ -199,6 +202,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     parser.add_argument('--docker',dest='docker',required=False,default=False,action='store_true')
+    parser.add_argument('--dind',dest='dind',required=False,default=False,action='store_true')
     parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 

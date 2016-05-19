@@ -104,6 +104,9 @@ function set_defaults(filters, fields, settings, cb) {
     if (!settings['timeout']) {
         settings['timeout'] = 3600;
     }
+    if (!settings['get_results']) {
+        settings['get_results'] = false;
+    }
     global.timer.get_timer('set_defaults').stop();
     cb(filters, fields, settings);
 }
@@ -272,21 +275,91 @@ function get_status(filters, fields, user_id, res, cb) {
     });
 }
 
-router.get('/submit', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // Get filters, fields, settings, and user id
-    var filters = common.get_payload(req,'filters');
-    var fields = common.get_payload(req,'fields');
-    var settings = common.get_payload(req,'settings');
-
-    var user_id = String(req.user._id);
-    // Commit query, get input model objects, executable objects, and property objects
-    set_defaults(filters, fields, settings, function(filters, fields, settings) {
-        setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_stats,res) {
-            common.return(res, 0, property_stats);
-        });
-    });
-});
-
+/**
+ * @api {get} /queries Query
+ * @apiGroup Queries
+ * @apiName Query
+ * @apiPermission user
+ *
+ * @apiParam {Object} filters Query filters.
+ * @apiParam {Object} filters.input_model Query filter for input model.
+ * @apiParam {Object} filters.executable Query filter for executable.
+ * @apiParam {Object} filters.params Query filter for running parameters.
+ * @apiParam {Object} filters.output_model Query filter for output model.
+ * @apiParam {Object} fields Return fields.
+ * @apiParam {Object} fields.input_model Return fields for input model.
+ * @apiParam {Object} fields.executable Return fields for executable.
+ * @apiParam {Object} fields.params Return fields for running parameters.
+ * @apiParam {Object} fields.output_model Return fields for output model.
+ * @apiParam {Object} settings Various extra settings.
+ * @apiParam {Number} timeout Maximum time allowed per property resolution.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       filters = {
+ *           "input_model": {"name": "example0"},
+ *           "executable": {"name": "example0"},
+ *           "params": {
+ *               "sleep_time": 1.0,
+ *               "seed": {"$in": [0,1]}
+ *           },
+ *           "output_model": {}
+ *       },
+ *       fields = {
+ *           "input_model": ["name"],
+ *           "executable": ["name"],
+ *           "params": ["sleep_time"],
+ *           "output_model": ["number"]
+ *       },
+ *       settings = {
+ *           "timeout": 300,
+ *           "get_results": false
+ *       }
+ *     }
+ *
+ * @apiSuccess {Object} result If settings.get_results = false, then the result is simply information on the properties resulting from the query. If settings.get_results = true, then the result will contain a list of objects containing the requested return fields.
+ * @apiSuccess {Number} result.resolved Number of resolved properties resulting from query.
+ * @apiSuccess {Number} result.pulled Number of queued properties resulting from query.
+ * @apiSuccess {Number} result.running Number of running properties resulting from query.
+ * @apiSuccess {Number} result.notfound Number of not found properties resulting from query.
+ * @apiSuccess {Number} result.errored Number of errored properties resulting from query.
+ * @apiSuccess {Number} result.timedout out Number of timed out properties resulting from query.
+ *
+ * @apiSuccessExample Success-Response (settings.get_results=false):
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *         "resolved": 2,
+ *         "pulled": 0,
+ *         "running": 0,
+ *         "not found": 0,
+ *         "errored": 0,
+ *         "timed out": 0,
+ *         "unresolved": 0,
+ *         "total": 0
+ *       }
+ *     }
+ *
+ * @apiSuccessExample Success-Response (settings.get_results=true):
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": [
+ *         {
+ *           "input_model": {"name": "example0"},
+ *           "executable": {"name": "example0"},
+ *           "params": {"sleep_time": 1.0},
+ *           "output_model": {"number": 0}
+ *         },
+ *         {
+ *           "input_model": {"name": "example0"},
+ *           "executable": {"name": "example0"},
+ *           "params": {"sleep_time": 1.0},
+ *           "output_model": {"number": 1}
+ *         },
+ *       ]
+ *     }
+ *
+ */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     // Get filters, fields, settings, and user id
     var filters = common.get_payload(req,'filters');
@@ -294,9 +367,11 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     var settings = common.get_payload(req,'settings');
     var user_id = String(req.user._id);
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
-        // Commit query, get input model objects, executable objects, and commit properties
-        setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
-            if (settings.get_results) {
+        if (!settings.get_results) {
+            get_status(filters, fields, user_id, res, common.return);
+        } else {
+            // Commit query, get input model objects, executable objects, and commit properties
+            setup_query(filters, fields, settings, user_id, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
                 // Form property filter
                 var property_objs = [];
                 var property_filter = {'commit_tag': property_stats['commit_tag'], 'status': 'resolved'};
@@ -358,54 +433,41 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                         common.return(res, err, 0);
                     }
                 });
-            } else {
-                common.return(res, 0, property_stats);
-            }
-        });
+            });
+        }
     });
 });
 
-router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.count(queries, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
-});
-
+/**
+ * @api {delete} /queries Delete
+ * @apiGroup Queries
+ * @apiUse Delete
+ * @apiPermission user
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "owner": "lkfa309jf1"
+ *       }
+ *     }
+ */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.delete(queries, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
-router.get('/status', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var filters = common.get_payload(req,'filters');
-    var fields = common.get_payload(req,'fields');
-    var user_id = String(req.user._id);
-    set_defaults(filters, fields, {}, function(filters, fields, settings) {
-        get_status(filters, fields, user_id, res, common.return);
-    });
-});
-
-router.get('/status/all', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var user_id = String(req.user._id);
-    common.query(queries, {}, [], user_id, res, function(res, err, query_objs) {
-        if (!err) {
-            var stats_objs = [];
-            var append_stats = function(count) {
-                if (count<query_objs.length) {
-                    var filters = JSON.parse(query_objs[count]['filters']);
-                    var fields = query_objs[count]['fields'];
-                    get_status(filters, fields, user_id, res, function(res, err, stats_obj) {
-                        stats_obj['timestamp'] = query_objs[count]['timestamp'];
-                        stats_obj['_id'] = query_objs[count]['_id'];
-                        stats_objs.push(stats_obj);
-                        append_stats(count+1);
-                    });
-                } else {
-                    common.return(res, 0, stats_objs);
-                }
-            };
-            append_stats(0);
-        } else {
-            common.return(res, err, 0);
-        }
-    });
+/**
+ * @api {get} /queries/count Delete
+ * @apiGroup Queries
+ * @apiUse Delete
+ * @apiPermission user
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "owner": "lkfa309jf1"
+ *       }
+ *     }
+ */
+router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    common.count(queries, common.get_payload(req,'filter'), String(req.user._id), res, common.return);
 });
 
 module.exports = router;

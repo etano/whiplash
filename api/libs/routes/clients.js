@@ -10,6 +10,28 @@ var clients = db.get().collection('clients');
 var access_tokens = db.get().collection('access_tokens');
 var refresh_tokens = db.get().collection('refresh_tokens');
 
+/**
+ * @api {post} /clients CommitClient
+ * @apiGroup Authentication
+ * @apiName CommitClient
+ * @apiPermission user
+ *
+ * @apiParam {String} client_name Name of client.
+ * @apiParam {String} client_id ID of client.
+ * @apiParam {String} client_secret Secret of client.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "client_name": "myScript",
+ *       "client_id": "myClientID",
+ *       "client_secret": "myClientSecret"
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     "OK"
+ *
+ */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res){
     var user_id = String(req.user._id);
     var client = {
@@ -29,35 +51,24 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     });
 });
 
-router.get('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var user_id = String(req.user._id);
-    common.query(clients, {}, [], user_id, res, function(res, err, client_objs) {
-        if(!clients || err) {
-            return res.send("Buf");
-        } else {
-            common.query(refresh_tokens, filter, [], user_id, res, function(res, err, refresh_token_objs) {
-                if (err) { return res.send("Buf"); }
-                common.query(access_tokens, filter, [], user_id, res, function(res, err, access_token_objs) {
-                    if (err) { return res.send("Buf"); }
-                    for(var i=0; i<client_objs.length; i++) {
-                        for(var j=0; j<refresh_token_objs.length; j++) {
-                            if(refresh_token_objs[j].clientId === client_objs[i].clientId) {
-                                client_objs[i].refresh_token = refresh_token_objs[j].token;
-                            }
-                        }
-                        for(var j=0; j<access_token_objs.length; j++) {
-                            if(access_token_objs[j].clientId === client_objs[i].clientId) {
-                                client_objs[i].access_token = access_token_objs[j].token;
-                            }
-                        }
-                    }
-                    return res.json({ status: 'OK', objs: client_objs });
-                });
-            });
-        }
-    });
-});
-
+/**
+ * @api {delete} /clients DeleteClient
+ * @apiGroup Authentication
+ * @apiName DeleteClient
+ * @apiPermission user
+ *
+ * @apiParam {String} client_id ID of client.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "client_id": "myClientID",
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     "OK"
+ *
+ */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
     var client_id = common.get_payload(req,'client_id');
     var user_id = String(req.user._id);

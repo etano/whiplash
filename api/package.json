@@ -4,6 +4,10 @@
     "author": "Ethan Brown",
     "description": "Whiplash API",
     "private": true,
+    "apidoc": {
+        "title": "Whiplash API",
+        "url" : "https://whiplash.ethz.ch/api"
+    },
     "scripts": {
         "start": "node ./bin/api"
     },

@@ -9,10 +9,53 @@ var db = require(libs + 'db/mongo');
 var users = db.get().collection('users');
 var pass = require(libs + 'auth/pass');
 
+/**
+ * @api {get} /users QueryUsers
+ * @apiGroup Authentication
+ * @apiUse Query
+ * @apiName QueryUsers
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "username": "myUsername"
+ *       },
+ *       "fields": [
+ *         "email",
+ *         "username"
+ *       ]
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": [
+ *         {
+ *           "_id": "130h0f1f0j",
+ *           "email": "myEmail@whiplash.ethz.ch",
+ *           "username": "myUsername"
+ *         }
+ *       ]
+ *     }
+ */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.query(users, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
+/**
+ * @api {delete} /users DeleteUser
+ * @apiGroup Authentication
+ * @apiUse Delete
+ * @apiName DeleteUser
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "username": "myUsername"
+ *       }
+ *     }
+ *
+ */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var user_id = String(req.user._id);
     var filter = {};
@@ -52,6 +95,28 @@ function make_user(username, email, password, res) {
     }
 }
 
+/**
+ * @api {post} /users CommitUser
+ * @apiGroup Authentication
+ * @apiName CommitUser
+ * @apiPermission admin
+ *
+ * @apiParam {String} username Username.
+ * @apiParam {String} email Email.
+ * @apiParam {String} password Password.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "username": "myUsername",
+ *       "email": "myEmail@whiplash.ethz.ch",
+ *       "password": "myPassword"
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     "OK"
+ *
+ */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     if (req.user.username === "admin") {
         var username = common.get_payload(req, 'username');
@@ -63,12 +128,30 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
     }
 });
 
+/**
+ * @api {post} /users/admin SetAdminPassword
+ * @apiGroup Authentication
+ * @apiName SetAdminPassword
+ * @apiPermission admin
+ *
+ * @apiParam {String} password Admin password.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "password": "myAdminPassword"
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     "OK"
+ *
+ */
 router.post('/admin', function(req, res) {
     common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
         if (!err && (result.length === 0)) {
             var password = common.get_payload(req, 'password');
             if (password) {
-                make_user("admin", "admin@ethz.ch", password, res);
+                make_user("admin", "admin@whiplash.ethz.ch", password, res);
             } else {
                 res.send("Invalid password");
             }
@@ -80,6 +163,20 @@ router.post('/admin', function(req, res) {
     });
 });
 
+/**
+ * @api {get} /users/fresh FreshInstallation
+ * @apiGroup Authentication
+ * @apiName FreshInstallation
+ * @apiDescription Determines whether or not the API server has an admin account yet or not.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       error: null,
+ *       result: true
+ *     }
+ *
+ */
 router.get('/fresh', function(req, res) {
     common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
         if (!err && (result.length === 0)) {

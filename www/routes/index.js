@@ -17,16 +17,19 @@ router.get('/', function(req, res, next) {
             if (chunk.error) {
                 res.render('index', {
                     fresh: false,
+                    authorized: false,
                     message: ""
                 });
             } else if (chunk.result) {
                 res.render('index', {
                     fresh: true,
+                    authorized: false,
                     message: ""
                 });
             } else {
                 res.render('index', {
                     fresh: false,
+                    authorized: false,
                     message: ""
                 });
             }
@@ -34,6 +37,7 @@ router.get('/', function(req, res, next) {
     }).on('error', function(e) {
         res.render('index', {
             fresh: false,
+            authorized: false,
             message: "Cannot find Whiplash API server!"
         });
     }).end();

@@ -1,7 +1,6 @@
 var libs = process.cwd() + '/libs/';
 var AccessToken = require(libs + 'schemas/accessToken');
 var Client = require(libs + 'schemas/client');
-var Collaboration = require(libs + 'schemas/collaboration');
 var Executable = require(libs + 'schemas/executable');
 var Model = require(libs + 'schemas/model');
 var Property = require(libs + 'schemas/property');
@@ -13,7 +12,6 @@ var WorkBatch = require(libs + 'schemas/work_batch');
 var collections = {
     'accesstokens': AccessToken,
     'clients': Client,
-    'collaborations': Collaboration,
     'executables': Executable,
     'models': Model,
     'properties': Property,

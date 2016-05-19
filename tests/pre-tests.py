@@ -74,14 +74,10 @@ fields = {
     'params': ["sleep_time"],
     'output_model': ["number"]
 }
-settings = {'timeout': 300}
+settings = {'timeout': 300, 'get_results': 1}
 query_0 = db.query(filters, fields, settings)
-assert query_0['n_new'] == n_seeds
-assert query_0['n_existing'] == 0
-assert db.status(filters, fields)['total'] == n_seeds
+assert db.query(filters, fields)['total'] == n_seeds
 
 print("Query for some results again")
 query_1 = db.query(filters, fields, settings)
-assert query_1['n_new'] == 0
-assert query_1['n_existing'] == n_seeds
-assert db.status(filters, fields)['total'] == n_seeds
+assert db.query(filters, fields)['total'] == n_seeds

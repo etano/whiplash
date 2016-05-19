@@ -1,28 +1,18 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Project Whiplash - Login</title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1>Project Whiplash</h1>
-    <ul>
-        <li><a href="/login">Login</a></li>
-        <li><a href="/docs">Documentation</a></li>
-    </ul>
-    <h2>Login</h2>
-    <div class="form" id="login">
-        <label for="username">Username:</label>
-        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" id="username" placeholder="Your username" name="username" />
-        <br/><br/>
-        <label for="password">Password:</label>
-        <input autocapitalize="off" spellcheck="false" autocorrect="false" type="password" id="password" placeholder="Your password" name="password" />
-        <br/><br/>
-        <input type="button" id="submit" value="Login">
-        <p id="response"></p>
-    </div>
-    <script src="/javascripts/vendor/jquery-2.2.3.min.js"></script>
-    <script src="/javascripts/common.js"></script>
-    <script src="/javascripts/login.js"></script>
-  </body>
-</html>
+<% include header %>
+<% include menu %>
+
+<h2>Login</h2>
+<div class="form" id="login">
+    <label for="username">Username:</label>
+    <input autocapitalize="off" spellcheck="false" autocorrect="false" type="text" id="username" placeholder="Your username" name="username" />
+    <br/><br/>
+    <label for="password">Password:</label>
+    <input autocapitalize="off" spellcheck="false" autocorrect="false" type="password" id="password" placeholder="Your password" name="password" />
+    <br/><br/>
+    <input type="button" id="submit" value="Login">
+    <p id="response"></p>
+</div>
+
+<% include bottom %>
+<script src="/javascripts/login.js"></script>
+<% include footer %>
