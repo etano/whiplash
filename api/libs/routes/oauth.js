@@ -7,6 +7,7 @@ var router = express.Router();
  * @api {post} /users/token GetTokens
  * @apiGroup Authentication
  * @apiName GetTokens
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} grant_type Type of authentication ("password").
  * @apiParam {String} username Username.

@@ -16,6 +16,7 @@ var ObjType = require(libs + 'schemas/work_batch');
  * @apiGroup WorkBatches
  * @apiUse Commit
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {String[]} objs.property_ids List of property IDs in work batch.
  * @apiParam {String[]} objs.model_ids List of model IDs in work batch.
@@ -49,6 +50,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  * @apiGroup WorkBatches
  * @apiName CommitResolved
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {Object[]} results List of pairs of resolved properties and output models.
  * @apiParam {Object} results.property Resolved property.
@@ -112,6 +114,7 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
  * @apiGroup WorkBatches
  * @apiName Pop
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {Object} filter Filter for querying work batches.
  *
@@ -219,6 +222,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup WorkBatches
  * @apiUse Count
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -238,6 +242,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  * @apiGroup WorkBatches
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {

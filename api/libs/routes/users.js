@@ -14,6 +14,8 @@ var pass = require(libs + 'auth/pass');
  * @apiGroup Authentication
  * @apiUse Query
  * @apiName QueryUsers
+ * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -47,6 +49,8 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Authentication
  * @apiUse Delete
  * @apiName DeleteUser
+ * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -100,6 +104,7 @@ function make_user(username, email, password, res) {
  * @apiGroup Authentication
  * @apiName CommitUser
  * @apiPermission admin
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} username Username.
  * @apiParam {String} email Email.
@@ -133,6 +138,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  * @apiGroup Authentication
  * @apiName SetAdminPassword
  * @apiPermission admin
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} password Admin password.
  *
@@ -168,6 +174,7 @@ router.post('/admin', function(req, res) {
  * @apiGroup Authentication
  * @apiName FreshInstallation
  * @apiDescription Determines whether or not the API server has an admin account yet or not.
+ * @apiVersion 1.0.0
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK

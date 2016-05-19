@@ -12,6 +12,7 @@ var collection = db.get().collection('properties');
  * @apiGroup Properties
  * @apiUse Query
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -46,6 +47,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Properties
  * @apiUse Count
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -63,6 +65,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  * @apiGroup Properties
  * @apiUse Update
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -83,6 +86,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Properties
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -100,6 +104,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
  * @apiGroup Properties
  * @apiUse Stats
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {

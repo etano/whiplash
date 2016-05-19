@@ -15,6 +15,7 @@ var refresh_tokens = db.get().collection('refresh_tokens');
  * @apiGroup Authentication
  * @apiName CommitClient
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} client_name Name of client.
  * @apiParam {String} client_id ID of client.
@@ -56,6 +57,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  * @apiGroup Authentication
  * @apiName DeleteClient
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} client_id ID of client.
  *

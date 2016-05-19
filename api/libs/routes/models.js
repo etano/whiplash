@@ -13,6 +13,7 @@ var collection = db.get().collection('models');
  * @apiGroup Models
  * @apiUse Commit
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -40,6 +41,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  * @apiGroup Models
  * @apiUse Query
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -80,6 +82,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Models
  * @apiUse Count
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -97,6 +100,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  * @apiGroup Models
  * @apiUse Update
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -119,6 +123,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Models
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -136,6 +141,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
  * @apiGroup Models
  * @apiUse Stats
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -163,6 +169,7 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
  * @apiGroup Models
  * @apiUse Distinct
  * @apiPermission user
+ * @apiVersion 1.0.0
  */
 router.get('/distinct/', passport.authenticate('bearer', { session: false }), function(req, res) {
     common.distinct(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);

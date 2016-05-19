@@ -12,6 +12,7 @@ var collection = db.get().collection('executables');
  * @apiGroup Executables
  * @apiUse Commit
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {String} objs.name Name of executable.
  * @apiParam {String} objs.path Path to executable or url of Docker container.
@@ -43,6 +44,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  * @apiGroup Executables
  * @apiUse Query
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -76,6 +78,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Executables
  * @apiUse Count
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -93,6 +96,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  * @apiGroup Executables
  * @apiUse Update
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {
@@ -115,6 +119,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Executables
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {

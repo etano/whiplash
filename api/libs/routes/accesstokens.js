@@ -14,6 +14,7 @@ var collection = db.get().collection('accesstokens');
  * @apiGroup Authentication
  * @apiUse Query
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParamExample {json} Request-Example:
  *     {

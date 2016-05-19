@@ -363,6 +363,7 @@ module.exports = {
     /**
      * @apiDefine Query
      * @apiName Query
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      * @apiParam {String[]} [fields] Which fields should be returned.
@@ -392,6 +393,7 @@ module.exports = {
     /**
      * @apiDefine Count
      * @apiName Count
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      *
@@ -424,6 +426,7 @@ module.exports = {
     /**
      * @apiDefine Commit
      * @apiName Commit
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object[]} objs List of objects to commit.
      * @apiParam {Object} [objs.content] Any extra content (e.g. full problem Hamiltonian) that is too large to be queryable, i.e. >16 MB.
@@ -512,6 +515,7 @@ module.exports = {
     /**
      * @apiDefine Update
      * @apiName Update
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      * @apiParam {Object} update Update operation.
@@ -588,6 +592,7 @@ module.exports = {
     /**
      * @apiDefine Delete
      * @apiName Delete
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      *
@@ -632,6 +637,7 @@ module.exports = {
     /**
      * @apiDefine Stats
      * @apiName Stats
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      * @apiParam {String} field Field on which to compute statistics.
@@ -723,6 +729,7 @@ module.exports = {
     /**
      * @apiDefine Distinct
      * @apiName Distinct
+     * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
      * @apiParam {String[]} fields Field on which to determine distinctness.

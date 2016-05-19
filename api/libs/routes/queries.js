@@ -280,6 +280,7 @@ function get_status(filters, fields, user_id, res, cb) {
  * @apiGroup Queries
  * @apiName Query
  * @apiPermission user
+ * @apiVersion 1.0.0
  *
  * @apiParam {Object} filters Query filters.
  * @apiParam {Object} filters.input_model Query filter for input model.
@@ -443,6 +444,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  * @apiGroup Queries
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  * @apiParamExample {json} Request-Example:
  *     {
  *       "filter": {
@@ -459,6 +461,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
  * @apiGroup Queries
  * @apiUse Delete
  * @apiPermission user
+ * @apiVersion 1.0.0
  * @apiParamExample {json} Request-Example:
  *     {
  *       "filter": {
