@@ -8,7 +8,7 @@ var db = require(libs + 'db/mongo');
 
 var throng = require('throng');
 throng(start, {
-    workers: process.env.NWORKERS || config.get('n_workers') || 1,
+    workers: process.env.NODE_WORKERS || config.get('n_workers') || 1,
     lifetime: Infinity,
     grace: 10000
 });
