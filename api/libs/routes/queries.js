@@ -457,7 +457,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
 });
 
 /**
- * @api {get} /queries/count Delete
+ * @api {get} /queries/count Count
  * @apiGroup Queries
  * @apiUse Delete
  * @apiPermission user
