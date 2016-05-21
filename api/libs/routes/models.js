@@ -5,7 +5,6 @@ var libs = process.cwd() + '/libs/';
 var common = require(libs + 'routes/common');
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
-var GridStore = require('mongodb').GridStore;
 var collection = db.get().collection('models');
 
 /**
