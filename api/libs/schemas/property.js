@@ -18,6 +18,10 @@ var Property = {
         {
             "fieldOrSpec": {owner: 1, status: 1},
             "options": {}
+        },
+        {
+            "fieldOrSpec": {owner: 1, commit_tag: 1},
+            "options": {}
         }
     ]
 };
