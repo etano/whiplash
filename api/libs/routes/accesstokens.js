@@ -5,9 +5,7 @@ var router = express.Router();
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
-var config = require(libs + 'config');
-var db = require(libs + 'db/mongo');
-var collection = db.get().collection('accesstokens');
+var AccessTokens = require(libs + 'collections/access_tokens');
 
 /**
  * @api {get} /accesstokens QueryAccessTokens
@@ -40,7 +38,7 @@ var collection = db.get().collection('accesstokens');
  *     }
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(collection, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 module.exports = router;

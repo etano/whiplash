@@ -1,7 +1,6 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
-var common = require(libs + 'routes/common');
 var pass = require(libs + 'auth/pass');
 var token = require(libs + 'auth/oauth2');
 
@@ -18,7 +17,8 @@ db.connect(function(err) {
             salt: salt,
             hashed_password: pass.encrypt_password(salt, password),
         };
-        common.commit(db.get().collection('users'), [user], "", {}, function(res, err, result) {
+        var Users = require(libs+'collections/users');
+        Users.commit([user], "", {}, function(res, err, result) {
             if(!err) {
                 log.info("New user - %s:%s:%s", user.username, password, user.email);
                 var user_id = result['ids'][0];
@@ -30,7 +30,8 @@ db.connect(function(err) {
                             clientId: username+'-'+clients[i],
                             clientSecret: password
                         };
-                        common.commit(db.get().collection('clients'), [client], user_id, {}, function(res, err, result) {
+                        var Clients = require(libs+'collections/clients');
+                        Clients.commit([client], user_id, {}, function(res, err, result) {
                             if(!err) {
                                 log.info("New client - %s:%s", client.clientId, client.clientSecret);
                                 token.generate_tokens(user_id, client.clientId, function(err, access_token, refresh_token, message) {

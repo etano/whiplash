@@ -1,4 +1,7 @@
-var Property = {
+var Collection = require(process.cwd()+'/libs/collections/collection');
+
+module.exports = new Collection({
+    name: "properties",
     schema: {
         owner: {type: String, unique: true, required: true},
         input_model_id: {type: String, unique: true, required: true},
@@ -24,6 +27,4 @@ var Property = {
             "options": {}
         }
     ]
-};
-
-module.exports = Property;
+});

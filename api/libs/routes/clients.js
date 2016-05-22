@@ -5,10 +5,9 @@ var router = express.Router();
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
-var db = require(libs + 'db/mongo');
-var clients = db.get().collection('clients');
-var access_tokens = db.get().collection('access_tokens');
-var refresh_tokens = db.get().collection('refresh_tokens');
+var Clients = require(libs + 'collections/clients');
+var AccessTokens = require(libs + 'collections/access_tokens');
+var RefreshTokens = require(libs + 'collections/refresh_tokens');
 
 /**
  * @api {post} /clients CommitClient
@@ -41,7 +40,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
         userId: user_id,
         clientSecret: common.get_payload(req,'client_secret')
     };
-    common.commit(clients, [client], user_id, res, function(res, err, result) {
+    Clients.commit([client], user_id, res, function(res, err, result) {
         if(!err) {
             log.info("New user client %s", client.clientId);
             return res.json({ status: 'OK' });
@@ -77,14 +76,14 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
     var filter = {
         clientId: client_id
     };
-    common.delete(clients, filter, user_id, res, function(res, err, count) {
+    Clients.delete(filter, user_id, res, function(res, err, count) {
         if(err) {
             log.error('Error removing client',client_id,'for user',String(req.user._id));
             return res.send(err);
         } else {
             log.info('Removing client',client_id,'for user',String(req.user._id));
-            common.delete(access_tokens, filter, user_id, res, function(res, err, count) {});
-            common.delete(refresh_tokens, filter, user_id, res, function(res, err, count) {});
+            AccessTokens.delete(filter, user_id, res, function(res, err, count) {});
+            RefreshTokens.delete(filter, user_id, res, function(res, err, count) {});
             return res.json({ status: 'OK' });
         }
     });

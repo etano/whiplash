@@ -1,7 +1,18 @@
 var MongoClient = require('mongodb').MongoClient;
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
-var collections = require(libs + 'collections');
+
+var AccessTokens = require(libs + 'collections/access_tokens');
+var Clients = require(libs + 'collections/clients');
+var Executables = require(libs + 'collections/executables');
+var Models = require(libs + 'collections/models');
+var Properties = require(libs + 'collections/properties');
+var Queries = require(libs + 'collections/queries');
+var RefreshTokens = require(libs + 'collections/refresh_tokens');
+var Users = require(libs + 'collections/users');
+var WorkBatches = require(libs + 'collections/work_batches');
+
+var collections = [AccessTokens, Clients, Executables, Models, Properties, Queries, RefreshTokens, Users, WorkBatches];
 
 var api_user = "api";
 var api_pass = process.env.MONGO_API_PASSWORD;
@@ -34,15 +45,15 @@ exports.init = function() {
     });
 
     // Create necessary collections and indexes
-    var create_collection = function(key) {
+    var create_collection = function(ind) {
         MongoClient.connect(url, function(err, db) {
             if (err) {
                 log.error("Error connecting to database: ", err.message);
             } else {
-                db.createCollection(key, {}, function(err, collection) {
+                db.createCollection(collections[ind].name, {}, function(err, collection) {
                     var create_index = function(i) {
-                        if (i<collections[key]["indexes"].length) {
-                            collection.createIndex(collections[key]["indexes"][i]["fieldOrSpec"], collections[key]["indexes"][i]["options"], function(err, result) {
+                        if (i<collections[ind].indexes.length) {
+                            collection.createIndex(collections[ind].indexes[i].fieldOrSpec, collections[ind].indexes[i].options, function(err, result) {
                                 if (err) {
                                     log.error("Error index", err.message);
                                 } else {
@@ -59,8 +70,8 @@ exports.init = function() {
             }
         });
     };
-    for (var key in collections) {
-        create_collection(key);
+    for (var i=0; i<collections.length; i++) {
+        create_collection(i);
     }
 };
 

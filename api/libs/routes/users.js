@@ -4,10 +4,13 @@ var router = express.Router();
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
-var common = require(libs + 'routes/common');
-var db = require(libs + 'db/mongo');
-var users = db.get().collection('users');
+
 var pass = require(libs + 'auth/pass');
+var common = require(libs + 'routes/common');
+var Users = require(libs + 'collections/users');
+var AccessTokens = require(libs + 'collections/access_tokens');
+var RefreshTokens = require(libs + 'collections/refresh_tokens');
+var Clients = require(libs + 'collections/clients');
 
 /**
  * @api {get} /users QueryUsers
@@ -41,7 +44,7 @@ var pass = require(libs + 'auth/pass');
  *     }
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    common.query(users, common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
 /**
@@ -64,11 +67,11 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
     var user_id = String(req.user._id);
     var filter = {};
     if(req.body.filter) filter = JSON.parse(req.body.filter);
-    common.pop(users, filter, {}, user_id, res, function(res, err, obj) {
+    Users.pop(filter, {}, user_id, res, function(res, err, obj) {
         if (!err) {
-            common.delete(db.get().collection('accesstokens'), {owner: obj._id}, user_id, res, function(res, err, obj) {});
-            common.delete(db.get().collection('refreshtokens'), {owner: obj._id}, user_id, res, function(res, err, obj) {});
-            common.delete(db.get().collection('clients'), {userId: obj._id}, user_id, res, function(res, err, obj) {});
+            AccessTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
+            RefreshTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
+            Clients.delete({userId: obj._id}, user_id, res, function(res, err, obj) {});
         }
         common.return(res, err, obj);
     });
@@ -84,7 +87,7 @@ function make_user(username, email, password, res) {
             hashed_password: pass.encrypt_password(salt, password),
             activated: false
         };
-        common.commit(users, [user], "admin", res, function(res, err, result) {
+        Users.commit([user], "admin", res, function(res, err, result) {
             if(!err) {
                 log.info("New user: %s", user.username);
                 res.send("OK");
@@ -153,7 +156,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  *
  */
 router.post('/admin', function(req, res) {
-    common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
+    Users.query({"username":"admin"}, [], "admin", res, function(res, err, result) {
         if (!err && (result.length === 0)) {
             var password = common.get_payload(req, 'password');
             if (password) {
@@ -185,7 +188,7 @@ router.post('/admin', function(req, res) {
  *
  */
 router.get('/fresh', function(req, res) {
-    common.query(users, {"username":"admin"}, [], "admin", res, function(res, err, result) {
+    Users.query({"username":"admin"}, [], "admin", res, function(res, err, result) {
         if (!err && (result.length === 0)) {
             res.send({error: null, result: true});
         } else if (result.length > 0) {

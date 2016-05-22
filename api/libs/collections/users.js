@@ -1,4 +1,7 @@
-var User = {
+var Collection = require(process.cwd()+'/libs/collections/collection');
+
+module.exports = new Collection({
+    name: "users",
     schema: {
         username: {type: String, unique: true, required: true},
         hashed_password: {type: String, required: true},
@@ -8,6 +11,4 @@ var User = {
         activated: {type: Boolean, default: false},
     },
     indexes: []
-};
-
-module.exports = User;
+});

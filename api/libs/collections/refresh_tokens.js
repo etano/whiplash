@@ -1,4 +1,7 @@
-var RefreshToken = {
+var Collection = require(process.cwd()+'/libs/collections/collection');
+
+module.exports = new Collection({
+    name: "refreshtokens",
     schema: {
         owner: {type: String, required: true},
         clientId: {type: String, required: true},
@@ -6,6 +9,4 @@ var RefreshToken = {
         created: {type: Date, default: Date.now}
     },
     indexes: []
-};
-
-module.exports = RefreshToken;
+});
