@@ -1,0 +1,9 @@
+var db = require(process.cwd()+'/libs/db');
+
+db.init(function(err) {
+    if(!err) {
+        console.log("Database successfully initialized!");
+    } else {
+        console.log("Error in initializing database!", err);
+    }
+});

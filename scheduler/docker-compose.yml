@@ -1,0 +1,20 @@
+db:
+    image: mongo:latest
+    ports:
+        - 27017:27017
+
+scheduler:
+    build: .
+    ports:
+        - 3000:3000
+    volumes:
+        - ./libs:/src/libs
+        - ./bin:/src/bin
+        - /var/run/docker.sock:/var/run/docker.sock
+        - $PWD:/input
+    environment:
+        - WORKDIR=$PWD
+        - MONGO_SCHEDULER_PASSWORD=scheduler
+    links:
+        - db:mongo
+    command: sh -c "node --use_strict bin/init_db; node --use_strict bin/scheduler"

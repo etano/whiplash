@@ -42,7 +42,7 @@ executable = {
     "algorithm": "test",
     "version": "test",
     "build": "test",
-    "path": "whiplash/sleeper",
+    "path": "whiplash/sleeper:latest",
     "description": "test",
     "params": {
         "required": ["sleep_time"],
