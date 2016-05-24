@@ -81,6 +81,27 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 /**
+ * @api {put} /properties UpdateOne
+ * @apiGroup Properties
+ * @apiUse UpdateOne
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "owner": "10fj909j0"
+ *       },
+ *       "update": {
+ *         "$set": {"status": "unresolved"}
+ *       }
+ *     }
+ */
+router.put('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Properties.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
+});
+
+/**
  * @api {delete} /properties Delete
  * @apiGroup Properties
  * @apiUse Delete

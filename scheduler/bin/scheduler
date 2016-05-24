@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Libraries
 var co = require('co');
 var jsonfile = require('jsonfile');
 var tmp = require('tmp-promise');
@@ -10,185 +11,174 @@ var fs = require('fs');
 Promise.promisifyAll(fs);
 var Docker = require("dockerode-bluebird");
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
-var db = require(process.cwd()+'/libs/db')
 
-var XXHash = require('xxhash').XXHash64;
-
-function checksum(str) {
-    var hash = new XXHash(0xCAFEBABE); // note: same seed each time
-    var buffer = new Buffer(str, 'utf8');
-    hash.update(buffer);
-    var res = hash.digest('hex');
-    return res;
+// Whiplash
+var host = process.env.WHIPLASH_API_HOST;
+var port = process.env.WHIPLASH_API_PORT;
+var access_token = process.env.WHIPLASH_SCHEDULER_TOKEN;
+var Whiplash = require(process.cwd()+'/libs/whiplash');
+var whiplash = new Whiplash(host, port, access_token);
+if (!access_token) {
+    whiplash.create_token('admin', process.env.WHIPLASH_ADMIN_PASSWORD)
 }
 
-function smart_stringify(obj) {
-    if(typeof(obj) !== 'object') {
-        return JSON.stringify(obj);
+// Global variables
+var working = false;
+var pulled_containers = [];
+
+// Main loop
+setInterval(function () {
+    if (!working) {
+        find_unresolved_properties();
     }
-    var keys = Object.keys(obj).sort();
-    var str = '{';
-    for(var i = 0; i < keys.length; i++) {
-        str += '"' + keys[i] + '":' + smart_stringify(obj[keys[i]]) + ',';
-    }
-    str += '}';
-    return str;
-}
+}, 1000);
 
-function hash(obj) {
-    return checksum(smart_stringify(obj));
-}
-
-db.connect(function() {
-
-    var Properties = db.get().collection("properties");
-    var Executables = db.get().collection("executables");
-    var Models = db.get().collection("models");
-    var working = false;
-    var pulled_containers = [];
-
-    setInterval(function () {
-        if (!working) {
-            look_for_something_to_do();
-        }
-    }, 1000);
-
-    function look_for_something_to_do() {
-        console.log('looking for something to do...');
-        if (!working) {
-            working = true;
-            co(function *() {
-                var res = yield Properties.findOneAndUpdate({status: "unresolved"}, {$set: {status: "running"}});
-                var property = res.value;
-                if (property) {
-                    console.log('found unresolved property', property._id);
-                    do_something(property);
-                } else {
-                    throw 'found nothing!';
-                }
-            }).catch(function(err) {
-                working = false;
-                console.log(err);
-            });
-        }
-    }
-
-    function do_something(property) {
-        var executable_id = property.executable_id;
-        var model_id = property.input_model_id;
+// Query whiplash for unresolved properties
+function find_unresolved_properties() {
+    console.log('querying for unresolved properties...');
+    if (!working) {
+        working = true;
         co(function *() {
-            var executable = yield Executables.findOne({_id: executable_id});
-            var model = yield Models.findOne({_id: model_id});
-            if (executable && model) {
-                resolve_property(executable, model, property);
+            var property = yield whiplash.request('PUT', 'properties/one', {
+                filter: {status: "unresolved"},
+                update: {status: "running"}
+            });
+            if (property) {
+                console.log('found unresolved property', property._id);
+                resolve_property(property);
             } else {
-                throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
+                throw 'found nothing!';
             }
         }).catch(function(err) {
-            set_errored(property._id, err);
-        });
-    }
-
-    function resolve_property(executable, model, property) {
-        if (pulled_containers.indexOf(executable.path) < 0) {
-            co(function *() {
-                console.log("pulling", executable.path);
-                var stream = yield docker.pullAsync(executable.path);
-                docker.modem.followProgress(stream, onFinished, onProgress);
-                function onFinished(err, output) {
-                    if (!err) {
-                        pulled_containers.push(executable.path);
-                        run_container(executable, model, property);
-                    } else {
-                        set_errored(property._id, err);
-                    }
-                }
-                function onProgress(event) {}
-            }).catch(function(err) {
-                set_errored(property._id, err);
-            });
-        } else {
-            console.log("container already pulled", executable.path);
-            run_container(executable, model, property);
-        }
-    }
-
-    function run_container(executable, model, property) {
-        console.log("running", executable.path);
-        var tmp_dir = process.env.PWD; //TODO: make sure this is secure
-        var in_file = tmp.tmpNameSync({template: tmp_dir+'/tmp-in-XXXXXX'});
-        var out_file = tmp.tmpNameSync({template: tmp_dir+'/tmp-out-XXXXXX'});
-        co(function *() {
-            var file_name = path.basename(in_file);
-            var work_dir = path.dirname(in_file);
-            model.params = property.params;
-            jsonfile.writeFileSync(in_file, model);
-
-            var container = yield docker.createContainerAsync({
-                Image: executable.path,
-                Cmd: ['/input/'+file_name],
-                Volumes: {'/input': {}}
-            });
-
-            var stream = yield container.attachAsync({
-                stream: true,
-                stdout: true,
-                stderr: true
-            });
-            stream.pipe(fs.createWriteStream(out_file));
-
-            yield container.startAsync({
-                'Binds': [work_dir+':/input']
-            });
-
-            data = yield container.waitAsync();
-
-            var log = yield fs.readFileAsync(out_file, 'ascii');
-            if (data.StatusCode !== 0) {
-                throw log;
-            }
-
-            yield container.removeAsync();
-
-            var result = jsonfile.readFileSync(in_file);
-            result.property_id = property._id;
-
-            var id_obj = {};
-            for (key in result) {
-                if ((key !== 'timestamp') && (key !== '_id')) {
-                    id_obj[key] = result[key];
-                }
-            }
-            result._id = hash(id_obj);
-            result.owner = property.owner;
-
-            var obj = yield Models.insertOne(result);
-            yield Properties.findOneAndUpdate({_id: property._id}, {
-                $set: {
-                    status: "resolved",
-                    output_model_id: obj.insertedId,
-                    log: log
-                }
-            });
-
-            console.log('resolved property', property._id);
             working = false;
-        }).catch(function(err) {
-            set_errored(property._id, err);
-        });
-    }
-
-    function set_errored(property_id, err) {
-        working = false;
-        console.log(err);
-        Properties.findOneAndUpdate({_id: property_id}, {
-            $set: {
-                status: "errored",
-                log: err
-            }
-        }, function (err, obj) {
             console.log(err);
         });
     }
+}
 
-});
+// Resolve unresolved property
+function resolve_property(property) {
+    var executable_id = property.executable_id;
+    var model_id = property.input_model_id;
+    co(function *() {
+        var executable = yield whiplash.request('GET', 'executables/one', {_id: executable_id});
+        var model = yield whiplash.request('GET', 'models/one', {_id: model_id});
+        if (executable && model) pull_container(executable, model, property);
+        else throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
+    }).catch(function(err) {
+        set_errored(property._id, err);
+    });
+}
+
+// Pull the container
+function pull_container(executable, model, property) {
+    if (pulled_containers.indexOf(executable.path) < 0) {
+        co(function *() {
+            console.log("pulling", executable.path);
+            var stream = yield docker.pullAsync(executable.path);
+            docker.modem.followProgress(stream, onFinished, onProgress);
+            function onFinished(err, output) {
+                if (err) set_errored(property._id, err);
+                else {
+                    pulled_containers.push(executable.path);
+                    run_container(executable, model, property);
+                }
+            }
+            function onProgress(event) {}
+        }).catch(function(err) {
+            set_errored(property._id, err);
+        });
+    } else {
+        console.log("container already pulled", executable.path);
+        run_container(executable, model, property);
+    }
+}
+
+// Run the container
+function run_container(executable, model, property) {
+    console.log("running", executable.path);
+    co(function *() {
+        // Make temporary files
+        var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
+        var in_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-in-XXXXXX'});
+        var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
+
+        // Write input
+        model.params = property.params;
+        jsonfile.writeFileSync(in_file, model);
+
+        // Create container
+        var run_work_dir = '/input';
+        var container = yield docker.createContainerAsync({
+            Image: executable.path,
+            Cmd: [run_work_dir+'/'+path.basename(in_file)],
+            Volumes: {run_work_dir: {}}
+        });
+
+        // Create stream from container to out_file
+        var stream = yield container.attachAsync({
+            stream: true,
+            stdout: true,
+            stderr: true
+        });
+        stream.pipe(fs.createWriteStream(out_file));
+
+        // Start container
+        var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
+        yield container.startAsync({
+            'Binds': [host_work_dir+':'+run_work_dir]
+        });
+
+        // Wait for container to finish
+        // TODO: add timeout
+        var data = yield container.waitAsync();
+
+        // Read output, check for errors, remove file
+        var log = yield fs.readFileAsync(out_file, 'ascii');
+        fs.unlink(out_file);
+        if (data.StatusCode !== 0) {
+            throw log;
+        }
+
+        // Remove container
+        container.removeAsync();
+
+        // Read result, remove file
+        var result = jsonfile.readFileSync(in_file);
+        fs.unlink(in_file);
+
+        // Set necessary fields
+        result.property_id = property._id;
+        result.owner = property.owner;
+
+        // Push result back to database
+        var obj = yield whiplash.request('POST', 'models', [result])
+        yield whiplash.request('PUT', 'properties/one', {
+            filter: {_id: property._id},
+            update: {
+                status: "resolved",
+                output_model_id: obj.ids[0],
+                log: log
+            }
+        });
+        console.log('resolved property', property._id);
+        working = false;
+    }).catch(function(err) {
+        set_errored(property._id, err);
+    });
+}
+
+// Catch all error function
+function set_errored(property_id, err) {
+    working = false;
+    console.log(err);
+    whiplash.request('PUT', 'properties/one', {
+        filter: {_id: property._id},
+        update: {
+            status: "errored",
+            log: log
+        }
+    }, function (err, property) {
+        console.log(err);
+    });
+}

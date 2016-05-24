@@ -74,6 +74,38 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 /**
+ * @api {get} /models QueryOne
+ * @apiGroup Models
+ * @apiUse QueryOne
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "n_spins": {"$in": [4,5,6]}
+ *       },
+ *       "fields": [
+ *         "name",
+ *         "lattice"
+ *       ]
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *           "_id": "130h0f1f0j",
+ *           "name": "example0",
+ *           "lattice": "square"
+ *       }
+ *     }
+ */
+router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Models.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+});
+
+/**
  * @api {get} /models/count Count
  * @apiGroup Models
  * @apiUse Count

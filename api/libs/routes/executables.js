@@ -73,6 +73,38 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 });
 
 /**
+ * @api {get} /executables QueryOne
+ * @apiGroup Executables
+ * @apiUse QueryOne
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "name": "udyn"
+ *       },
+ *       "fields": [
+ *         "owner",
+ *         "path"
+ *       ]
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *           "_id": "130h0f1f0j",
+ *           "owner": "10fj909j0",
+ *           "path": "/users/ebrown/src/udyn/udyn"
+ *       }
+ *     }
+ */
+router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Executables.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+});
+
+/**
  * @api {get} /executables/count Count
  * @apiGroup Executables
  * @apiUse Count

@@ -130,7 +130,7 @@ class Collection {
         log.debug('validate '+self.name);
         var bad_objs = [];
         for (var i=0; i<objs.length; i++) {
-            objs[i]['owner'] = user_id;
+            if (!objs[i].owner) objs[i].owner = user_id;
             for (var key in self.schema) {
                 if (!objs[i].hasOwnProperty(key)) {
                     if (self.schema[key].required) {
@@ -194,25 +194,31 @@ class Collection {
      * @apiDefine user User access only
      * This method can only affect what is owned by the user who calls it or the "admin" user.
      */
-    form_filter(filter, user_id, cb) {
+    attach_permissions(obj, user_id, cb) {
         var self = this;
-        global.timer.get_timer('form_filter_'+self.name).start();
+        global.timer.get_timer('attach_permissions_'+self.name).start();
         // Set permissions
         if (user_id !== "admin") {
-            db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err, objs) {
-                if(objs) {
-                    if(objs[0]['username'] !== "admin") { // admin can do anything
-                        filter.owner = user_id;
+            db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray(function (err, users) {
+                if(users.length>0) {
+                    if((users[0]['username'] !== "admin")) { // admin can do anything
+                        if (Array.isArray(obj)) {
+                            for (var i=0; i<obj.length; i++) {
+                                obj[i].owner = user_id;
+                            }
+                        } else {
+                            obj.owner = user_id;
+                        }
                     }
                 }
-                // Callback with filter
-                global.timer.get_timer('form_filter_'+self.name).stop();
-                cb(filter);
+                // Callback with obj
+                global.timer.get_timer('attach_permissions_'+self.name).stop();
+                cb(obj);
             });
         } else {
-            // Callback with filter
-            global.timer.get_timer('form_filter_'+self.name).stop();
-            cb(filter);
+            // Callback with obj
+            global.timer.get_timer('attach_permissions_'+self.name).stop();
+            cb(obj);
         }
     }
 
@@ -225,14 +231,12 @@ class Collection {
      * @apiParam {String[]} [fields] Which fields should be returned.
      *
      * @apiSuccess {Object[]} result List of objects that matched the query filter, each with the specified fields plus the "_id" field.
-     *
-     *
      */
     query(filter, fields, user_id, res, cb) {
         var self = this;
         global.timer.get_timer('query_'+self.name).start();
         log.debug('query '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             if (fields.length > 0) {
                 var proj = {};
                 for(var i=0; i<fields.length; i++) {
@@ -272,8 +276,6 @@ class Collection {
      * @apiParam {String[]} [fields] Which fields should be returned.
      *
      * @apiSuccess {Object} result Single object that matched the query filter, with the specified fields plus the "_id" field.
-     *
-     *
      */
     query_one(filter, fields, user_id, res, cb) {
         var self = this;
@@ -310,7 +312,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('query_'+self.name).start();
         log.debug('count '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             db.get().collection(self.name).count(filter, function (err, count) {
                 if (!err) {
                     log.debug('found %d objects', count);
@@ -355,59 +357,61 @@ class Collection {
         global.timer.get_timer('commit_'+self.name).start();
         log.debug('commit '+self.name);
         if (objs.length > 0) {
-            self.validate(objs, user_id, function(err, objs) {
-                if(!err) {
-                    self.form_ids(objs, user_id, function(err, objs) {
-                        if (!err) {
-                            log.debug('form commit '+self.name);
-                            global.timer.get_timer('commit_form_commit_'+self.name).start();
-                            if (self.name === "users") {
-                                for(var i=0; i<objs.length; i++) {
-                                    objs[i]['owner'] = objs[i]._id;
-                                }
-                            }
-                            var batch = db.get().collection(self.name).initializeUnorderedBulkOp();
-                            var ids = [];
-                            var commit_tag = new ObjectID();
-                            for(var i=0; i<objs.length; i++) {
-                                ids.push(objs[i]['_id']);
-                                batch.find({_id: objs[i]._id}).upsert().updateOne({
-                                    "$setOnInsert": common.omit(objs[i], 'content'),
-                                    "$set": {"commit_tag": commit_tag, "has_content": 0},
-                                });
-                            }
-                            global.timer.get_timer('commit_form_commit_'+self.name).stop();
-                            log.debug('do commit '+self.name);
-                            global.timer.get_timer('commit_commit_'+self.name).start();
-                            batch.execute(function(err, result) {
-                                global.timer.get_timer('commit_commit_'+self.name).stop();
-                                if (!err) {
-                                    log.debug('checking for content '+self.name);
+            self.attach_permissions(objs, user_id, function(objs) {
+                self.validate(objs, user_id, function(err, objs) {
+                    if(!err) {
+                        self.form_ids(objs, user_id, function(err, objs) {
+                            if (!err) {
+                                log.debug('form commit '+self.name);
+                                global.timer.get_timer('commit_form_commit_'+self.name).start();
+                                if (self.name === "users") {
                                     for(var i=0; i<objs.length; i++) {
-                                        if (objs[i].hasOwnProperty('content')) {
-                                            commit_gridfs_obj(objs[i]._id, objs[i].content, function(err, id) {
-                                                if (!err) {
-                                                    db.get().collection(self.name).updateOne({"_id": id}, {"$set": {"has_content": 1}}, {w:1}, function(err, result) {});
-                                                }
-                                            });
-                                        }
+                                        objs[i]['owner'] = objs[i]._id;
                                     }
-                                    global.timer.get_timer('commit_'+self.name).stop();
-                                    cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
-                                } else {
-                                    global.timer.get_timer('commit_'+self.name).stop();
-                                    cb(res, err, 0);
                                 }
-                            });
-                        } else {
-                            global.timer.get_timer('commit_'+self.name).stop();
-                            cb(res,err,0);
-                        }
-                    });
-                } else {
-                    global.timer.get_timer('commit_'+self.name).stop();
-                    cb(res,err,0);
-                }
+                                var batch = db.get().collection(self.name).initializeUnorderedBulkOp();
+                                var ids = [];
+                                var commit_tag = new ObjectID();
+                                for(var i=0; i<objs.length; i++) {
+                                    ids.push(objs[i]['_id']);
+                                    batch.find({_id: objs[i]._id}).upsert().updateOne({
+                                        "$setOnInsert": common.omit(objs[i], 'content'),
+                                        "$set": {"commit_tag": commit_tag, "has_content": 0},
+                                    });
+                                }
+                                global.timer.get_timer('commit_form_commit_'+self.name).stop();
+                                log.debug('do commit '+self.name);
+                                global.timer.get_timer('commit_commit_'+self.name).start();
+                                batch.execute(function(err, result) {
+                                    global.timer.get_timer('commit_commit_'+self.name).stop();
+                                    if (!err) {
+                                        log.debug('checking for content '+self.name);
+                                        for(var i=0; i<objs.length; i++) {
+                                            if (objs[i].hasOwnProperty('content')) {
+                                                commit_gridfs_obj(objs[i]._id, objs[i].content, function(err, id) {
+                                                    if (!err) {
+                                                        db.get().collection(self.name).updateOne({"_id": id}, {"$set": {"has_content": 1}}, {w:1}, function(err, result) {});
+                                                    }
+                                                });
+                                            }
+                                        }
+                                        global.timer.get_timer('commit_'+self.name).stop();
+                                        cb(res, 0, {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag});
+                                    } else {
+                                        global.timer.get_timer('commit_'+self.name).stop();
+                                        cb(res, err, 0);
+                                    }
+                                });
+                            } else {
+                                global.timer.get_timer('commit_'+self.name).stop();
+                                cb(res,err,0);
+                            }
+                        });
+                    } else {
+                        global.timer.get_timer('commit_'+self.name).stop();
+                        cb(res,err,0);
+                    }
+                });
             });
         } else {
             cb(res, 0, {"n_existing": 0, "n_new": 0, "ids": []});
@@ -435,7 +439,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('update_'+self.name).start();
         log.debug('update '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             db.get().collection(self.name).updateMany(filter, {'$set':update}, {w:1}, function (err, result) {
                 if (!err) {
                     log.debug('updated %d objects',result.modifiedCount);
@@ -443,6 +447,49 @@ class Collection {
                     cb(res,0,result.modifiedCount);
                 } else {
                     global.timer.get_timer('update_'+self.name).stop();
+                    cb(res,err,0);
+                }
+            });
+        });
+    }
+
+    /**
+     * @apiDefine UpdateOne
+     * @apiName UpdateOne
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {Object} update Update operation.
+     *
+     * @apiSuccess {Number} result Number of updated objects.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": {
+     *         _id: "13fjh013fj",
+     *         my: "information"
+     *     }
+     *
+     */
+    update_one(filter, update, user_id, res, cb) {
+        var self = this;
+        global.timer.get_timer('update_one_'+self.name).start();
+        log.debug('update_one '+self.name);
+        self.attach_permissions(filter, user_id, function(filter) {
+            db.get().collection(self.name).findOneAndUpdate(filter, {$set:update}, {w:1}, function (err, result) {
+                if (!err) {
+                    if (result.value) {
+                        log.debug('updated 1 objects');
+                        global.timer.get_timer('update_one_'+self.name).stop();
+                        cb(res,0,result.value);
+                    } else {
+                        log.debug('updated no objects');
+                        global.timer.get_timer('update_one_'+self.name).stop();
+                        cb(res,0,0);
+                    }
+                } else {
+                    global.timer.get_timer('update_one_'+self.name).stop();
                     cb(res,err,0);
                 }
             });
@@ -510,7 +557,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('pop_'+self.name).start();
         log.debug('pop '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             db.get().collection(self.name).findOneAndDelete(filter, {sort: sort}, function (err, result) {
                 if (!err) {
                     if (result.value) {
@@ -549,7 +596,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('delete_'+self.name).start();
         log.debug('delete '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             self.query(filter, ['_id', 'has_content'], user_id, res, function(res, err, objs) {
                 if (!err) {
                     for (var i=0; i<objs.length; i++) {
@@ -614,7 +661,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('stats_'+self.name).start();
         log.debug('stats '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -695,7 +742,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('query_'+self.name).start();
         log.debug('count '+self.name);
-        self.form_filter(filter, user_id, function(filter) {
+        self.attach_permissions(filter, user_id, function(filter) {
             db.get().collection(self.name).distinct(fields, filter, function (err, objs) {
                 if (!err) {
                     return res.send({status: "OK", result: objs});

@@ -38,16 +38,21 @@ www:
     restart: always
     command: sh -c "node --use_strict bin/www"
 
-rte:
+scheduler:
     extends:
-        file: ../../rte/docker-compose.yml
-        service: rte
+        file: ../../scheduler/docker-compose.yml
+        service: scheduler
     volumes:
+        - ../../scheduler/bin:/src/bin
+        - ../../scheduler/libs:/src/libs
         - /var/run/docker.sock:/var/run/docker.sock
         - $PWD:/input
     environment:
-        WORKDIR: ${PWD}
-        ADMIN_PASSWORD: password
+        WHIPLASH_HOST_WORK_DIR: $PWD
+        WHIPLASH_LAUNCH_WORK_DIR: '/input'
+        WHIPLASH_API_HOST: api
+        WHIPLASH_API_PORT: 1337
+        WHIPLASH_ADMIN_PASSWORD: password
     links:
         - api:api
-    command: sh -c "sleep 20; ./rte/manager.py --local --host api --port 1337 --verbose --docker --dind"
+    command: sh -c "sleep 20; node --use_strict bin/scheduler"
