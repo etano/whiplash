@@ -13,6 +13,5 @@ docker run -d \
            -e "MONGO_PORT_27017_TCP_ADDR=${MONGO_PORT_27017_TCP_ADDR}" \
            -e "MONGO_PORT_27017_TCP_PORT=${MONGO_PORT_27017_TCP_PORT}" \
            -e "MONGO_API_PASSWORD=${MONGO_API_PASSWORD}" \
-           -e "ADMIN_PASSWORD=${ADMIN_PASSWORD}" \
            -p 1337:1337 \
-           whiplash/api sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
+           whiplash/api sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin ${WHIPLASH_ADMIN_PASSWORD} admin@whiplash.ethz.ch; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"

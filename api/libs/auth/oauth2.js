@@ -14,7 +14,7 @@ var aserver = oauth2orize.createServer();
 
 // Destroys any old tokens and generates a new access and refresh token
 var generate_tokens = function (user_id, client_id, done) {
-    var data = { clientId: client_id };
+    var data = { client_id: client_id };
     RefreshTokens.delete(data, user_id, {}, function(res, err, count) {
         if (err) { return done(err); }
         AccessTokens.delete(data, user_id, {}, function(res, err, count) {
@@ -43,19 +43,19 @@ aserver.exchange(oauth2orize.exchange.password(function(client, username, passwo
         if (!user || !pass.check_password(user.salt, password, user.hashed_password)) {
             return done(null, false);
         }
-        generate_tokens(user._id, client.clientId, done);
+        generate_tokens(user._id, client.client_id, done);
     });
 }));
 
 // Exchange refreshToken for access token.
 aserver.exchange(oauth2orize.exchange.refreshToken(function(client, refresh_token, scope, done) {
-    RefreshTokens.query_one({token: refresh_token, clientId: client.clientId}, [], "admin", {}, function(res, err, token) {
+    RefreshTokens.query_one({token: refresh_token, client_id: client.client_id}, [], "admin", {}, function(res, err, token) {
         if (err) { return done(err); }
         if (!token) { return done(null, false); }
         Users.query_one({_id: token.owner}, [], token.owner, {}, function(res, err, user) {
             if (err) { return done(err); }
             if (!user) { return done(null, false); }
-            generate_tokens(user._id, client.clientId, done);
+            generate_tokens(user._id, client.client_id, done);
         });
     });
 }));

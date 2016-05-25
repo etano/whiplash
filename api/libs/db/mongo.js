@@ -11,6 +11,7 @@ var Queries = require(libs + 'collections/queries');
 var RefreshTokens = require(libs + 'collections/refresh_tokens');
 var Users = require(libs + 'collections/users');
 var WorkBatches = require(libs + 'collections/work_batches');
+var co = require('co');
 
 var collections = [AccessTokens, Clients, Executables, Models, Properties, Queries, RefreshTokens, Users, WorkBatches];
 
@@ -23,56 +24,38 @@ var state = {
     db: null,
 };
 
-exports.init = function() {
+exports.init = function(done) {
 
     var url = "mongodb://"+api_url+":"+api_port+"/wdb";
     log.info("Attempting to connect to "+api_url+":"+api_port+"/wdb");
 
-    // Add API user
     MongoClient.connect(url, function(err, db) {
-        if (err) {
-            log.error("Error connecting to database: ", err.message);
-        } else {
-            db.addUser(api_user, api_pass, {roles:[{role:"readWrite",db:"wdb"}]}, function (err, result) {
-                if (err) {
-                    log.error("Error creating API user", err.message);
-                } else {
-                    log.info(result);
+        if (!err) {
+            co(function *() {
+                // Create necessary collections and indexes
+                for (var i=0; i<collections.length; i++) {
+                    var collection = yield db.createCollection(collections[i].name, {});
+                    for (var j=0; j<collections[i].indexes.length; j++) {
+                        var index_result = yield collection.createIndex(collections[i].indexes[j].fieldOrSpec, collections[i].indexes[j].options);
+                    }
                 }
+
+                // Add API user
+                var user_result = yield db.addUser(api_user, api_pass, {roles:[{role:"readWrite",db:"wdb"}]});
+
+                // Close database
                 db.close();
+                done();
+            }).catch(function(err) {
+                db.close();
+                log.error("Error in initializing database!", err);
+                done();
             });
+        } else {
+            log.error("Error connecting to database!", err);
         }
     });
 
-    // Create necessary collections and indexes
-    var create_collection = function(ind) {
-        MongoClient.connect(url, function(err, db) {
-            if (err) {
-                log.error("Error connecting to database: ", err.message);
-            } else {
-                db.createCollection(collections[ind].name, {}, function(err, collection) {
-                    var create_index = function(i) {
-                        if (i<collections[ind].indexes.length) {
-                            collection.createIndex(collections[ind].indexes[i].fieldOrSpec, collections[ind].indexes[i].options, function(err, result) {
-                                if (err) {
-                                    log.error("Error index", err.message);
-                                } else {
-                                    log.info(result);
-                                }
-                                create_index(i+1);
-                            });
-                        } else {
-                            db.close();
-                        }
-                    };
-                    create_index(0);
-                });
-            }
-        });
-    };
-    for (var i=0; i<collections.length; i++) {
-        create_collection(i);
-    }
 };
 
 exports.connect = function(done) {

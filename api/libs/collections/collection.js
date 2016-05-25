@@ -284,7 +284,7 @@ class Collection {
                 if (objs.length > 0) {
                     cb(res, err, objs[0]);
                 } else {
-                    cb(res, {message: "No objects found in "+self.name}, 0);
+                    cb(res, "Could not find entry in "+self.name, 0);
                 }
             } else {
                 cb(res, err, 0);

@@ -47,6 +47,63 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
 });
 
+
+/**
+ * @api {get} /users QueryOneUsers
+ * @apiGroup Authentication
+ * @apiUse QueryOne
+ * @apiName QueryOneUsers
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "username": "myUsername"
+ *       },
+ *       "fields": [
+ *         "email",
+ *         "username"
+ *       ]
+ *     }
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *           "_id": "130h0f1f0j",
+ *           "email": "myEmail@whiplash.ethz.ch",
+ *           "username": "myUsername"
+ *         }
+ *     }
+ */
+router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Users.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+});
+
+/**
+ * @api {get} /users UpdateOneUsers
+ * @apiGroup Authentication
+ * @apiUse UpdateOne
+ * @apiName UpdateOneUsers
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "username": "myUsername"
+ *       },
+ *       "update": {
+ *         "$set": {"email": "new@email.com}},
+ *       }
+ *     }
+ *
+ */
+router.put('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Users.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
+});
+
 /**
  * @api {delete} /users DeleteUser
  * @apiGroup Authentication
@@ -71,7 +128,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
         if (!err) {
             AccessTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
             RefreshTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
-            Clients.delete({userId: obj._id}, user_id, res, function(res, err, obj) {});
+            Clients.delete({user_id: obj._id}, user_id, res, function(res, err, obj) {});
         }
         common.return(res, err, obj);
     });
@@ -90,10 +147,19 @@ function make_user(username, email, password, res) {
         Users.commit([user], "admin", res, function(res, err, result) {
             if(!err) {
                 log.info("New user: %s", user.username);
-                res.send("OK");
+                res.send({status: "OK", result: result});
             } else {
                 log.error(err);
-                res.send("Bad entry");
+                var message = "";
+                if (err.errmsg) {
+                    if (err.errmsg.indexOf('username')>0)
+                        message += "Username already in use. ";
+                    if (err.errmsg.indexOf('email')>0)
+                        message += "Email already in use. ";
+                } else {
+                    message = err;
+                }
+                res.send({status: 500, error: message});
             }
         });
     } else {
@@ -105,6 +171,7 @@ function make_user(username, email, password, res) {
 /**
  * @api {post} /users CommitUser
  * @apiGroup Authentication
+ * @apiUse Commit
  * @apiName CommitUser
  * @apiPermission admin
  * @apiVersion 1.0.0
@@ -119,10 +186,6 @@ function make_user(username, email, password, res) {
  *       "email": "myEmail@whiplash.ethz.ch",
  *       "password": "myPassword"
  *     }
- *
- * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
- *     "OK"
  *
  */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {

@@ -22,11 +22,11 @@ passport.use(new BasicStrategy(
 ));
 
 passport.use(new ClientPasswordStrategy(
-    function(clientId, clientSecret, done) {
-        Clients.query_one({'clientId': clientId}, [], "admin", {}, function(res, err, client) {
+    function(client_id, client_secret, done) {
+        Clients.query_one({'client_id': client_id}, [], "admin", {}, function(res, err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
-            if (client.clientSecret !== clientSecret) { return done(null, false, { message: 'Wrong client id or secret' }); }
+            if (client.client_secret !== client_secret) { return done(null, false, { message: 'Wrong client id or secret' }); }
             return done(null, client);
         });
     }

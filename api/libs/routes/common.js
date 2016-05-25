@@ -93,7 +93,10 @@ module.exports = {
                 res.statusCode = 500;
             }
             global.timer.get_timer('return').stop();
-            return res.send({status: res.statusCode, error: JSON.stringify(err)});
+            if ((typeof err) === "string")
+                return res.send({status: res.statusCode, error: err});
+            else
+                return res.send({status: res.statusCode, error: JSON.stringify(err)});
         }
     },
 

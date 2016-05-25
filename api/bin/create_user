@@ -22,19 +22,20 @@ db.connect(function(err) {
             if(!err) {
                 log.info("New user - %s:%s:%s", user.username, password, user.email);
                 var user_id = result['ids'][0];
-                var clients = ['python', 'scheduler'];
+                var clients = ['python', 'scheduler', 'www'];
                 var make_clients = function(i) {
                     if (i < clients.length) {
+                        var client_id = username+'-'+clients[i]
                         var client = {
                             name: username+'-'+clients[i],
-                            clientId: username+'-'+clients[i],
-                            clientSecret: password
+                            client_id: client_id,
+                            client_secret: pass.generate_hash(salt, client_id)
                         };
                         var Clients = require(libs+'collections/clients');
                         Clients.commit([client], user_id, {}, function(res, err, result) {
                             if(!err) {
-                                log.info("New client - %s:%s", client.clientId, client.clientSecret);
-                                token.generate_tokens(user_id, client.clientId, function(err, access_token, refresh_token, message) {
+                                log.info("New client - %s:%s", client.client_id, client.client_secret);
+                                token.generate_tokens(user_id, client.client_id, function(err, access_token, refresh_token, message) {
                                     if(err) {
                                         log.error(err);
                                     }

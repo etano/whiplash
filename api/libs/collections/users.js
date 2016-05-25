@@ -10,5 +10,14 @@ module.exports = new Collection({
         created: {type: Date, default: Date.now},
         activated: {type: Boolean, default: false},
     },
-    indexes: []
+    indexes: [
+        {
+            "fieldOrSpec": {username: 1},
+            "options": {unique: 1}
+        },
+        {
+            "fieldOrSpec": {email: 1},
+            "options": {unique: 1}
+        }
+    ]
 });

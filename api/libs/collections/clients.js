@@ -5,8 +5,8 @@ module.exports = new Collection({
     schema: {
         owner: {type: String, required: true},
         name: {type: String, unique: true, required: true},
-        clientId: {type: String, unique: true, required: true},
-        clientSecret: {type: String, required: true}
+        client_id: {type: String, unique: true, required: true},
+        client_secret: {type: String, required: true}
     },
     indexes: []
 });

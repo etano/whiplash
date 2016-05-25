@@ -17,7 +17,7 @@ var AccessTokens = require(libs + 'collections/access_tokens');
  * @apiParamExample {json} Request-Example:
  *     {
  *       "filter": {
- *         "clientId": "myClientID"
+ *         "client_id": "myClientID"
  *       },
  *       "fields": [
  *         "owner",

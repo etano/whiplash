@@ -13,7 +13,7 @@ var RefreshTokens = require(libs + 'collections/refresh_tokens');
  * @api {post} /clients CommitClient
  * @apiGroup Authentication
  * @apiName CommitClient
- * @apiPermission user
+ * @apiPermission admin
  * @apiVersion 1.0.0
  *
  * @apiParam {String} client_name Name of client.
@@ -32,30 +32,33 @@ var RefreshTokens = require(libs + 'collections/refresh_tokens');
  *     "OK"
  *
  */
-router.post('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var user_id = String(req.user._id);
-    var client = {
-        name: common.get_payload(req,'client_name'),
-        clientId: common.get_payload(req,'client_id'),
-        userId: user_id,
-        clientSecret: common.get_payload(req,'client_secret')
-    };
-    Clients.commit([client], user_id, res, function(res, err, result) {
-        if(!err) {
-            log.info("New user client %s", client.clientId);
-            return res.json({ status: 'OK' });
-        } else {
-            log.error(err);
-            res.send("Bof");
-        }
-    });
+router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    if (req.user.username === "admin") {
+        var client = {
+            name: common.get_payload(req,'client_name'),
+            client_id: common.get_payload(req,'client_id'),
+            client_secret: common.get_payload(req,'client_secret')
+        };
+        var owner = common.get_payload(req,'owner');
+        Clients.commit([client], owner, res, function(res, err, result) {
+            if(!err) {
+                log.info("New user client %s", client.client_id);
+                return res.json({ status: 'OK' });
+            } else {
+                log.error(err);
+                res.send("Bof");
+            }
+        });
+    } else {
+        return res.json({status: 666, error: "Unauthorized access to client deletion"});
+    }
 });
 
 /**
  * @api {delete} /clients DeleteClient
  * @apiGroup Authentication
  * @apiName DeleteClient
- * @apiPermission user
+ * @apiPermission admin
  * @apiVersion 1.0.0
  *
  * @apiParam {String} client_id ID of client.
@@ -71,22 +74,26 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  *
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    var client_id = common.get_payload(req,'client_id');
-    var user_id = String(req.user._id);
-    var filter = {
-        clientId: client_id
-    };
-    Clients.delete(filter, user_id, res, function(res, err, count) {
-        if(err) {
-            log.error('Error removing client',client_id,'for user',String(req.user._id));
-            return res.send(err);
-        } else {
-            log.info('Removing client',client_id,'for user',String(req.user._id));
-            AccessTokens.delete(filter, user_id, res, function(res, err, count) {});
-            RefreshTokens.delete(filter, user_id, res, function(res, err, count) {});
-            return res.json({ status: 'OK' });
-        }
-    });
+    if (req.user.username === "admin") {
+        var client_id = common.get_payload(req,'client_id');
+        var user_id = String(req.user._id);
+        var filter = {
+            client_id: client_id
+        };
+        Clients.delete(filter, user_id, res, function(res, err, count) {
+            if(err) {
+                log.error('Error removing client',client_id,'for user',String(req.user._id));
+                return res.send(err);
+            } else {
+                log.info('Removing client',client_id,'for user',String(req.user._id));
+                AccessTokens.delete(filter, user_id, res, function(res, err, count) {});
+                RefreshTokens.delete(filter, user_id, res, function(res, err, count) {});
+                return res.json({ status: 'OK' });
+            }
+        });
+    } else {
+        return res.json({status: 666, error: "Unauthorized access to client deletion"});
+    }
 });
 
 module.exports = router;

@@ -75,6 +75,7 @@ function create_user() {
                 if ($.trim(data) != "OK") {
                     inputFailFeedback("Bad input");
                 } else {
+                    var user_id = data.result.ids[0];
                     $.ajax({
                         type: 'POST',
                         url: api_addr+"/api/clients",
@@ -82,7 +83,8 @@ function create_user() {
                             "client_name"   : user+"-python",
                             "client_id"     : user+"-python",
                             "client_secret" : pass,
-                            "access_token"  : session_token
+                            "access_token"  : session_token,
+                            "owner"         : user_id
                         },
                         success: function(data) {
                             if (data.error) {
@@ -96,7 +98,8 @@ function create_user() {
                                         "client_name"   : user+"-scheduler",
                                         "client_id"     : user+"-scheduler",
                                         "client_secret" : pass,
-                                        "access_token"  : session_token
+                                        "access_token"  : session_token,
+                                        "owner"         : user_id
                                     },
                                     success: function(data){
                                         if (data.error) {
