@@ -419,6 +419,38 @@ class Collection {
     }
 
     /**
+     * @apiDefine CommitOne
+     * @apiName CommitOne
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {Object} content Any extra content (e.g. full problem Hamiltonian) that is too large to be queryable, i.e. >16 MB.
+     *
+     * @apiSuccess {Object} result Object containing results.
+     * @apiSuccess {Number} result.n_existing Number of existing objects that would have been duplicated.
+     * @apiSuccess {Number} result.n_new Number of new objects committed.
+     * @apiSuccess {String[]} result.ids IDs of both duplicate and new objects.
+     * @apiSuccess {String} result.commit_tag Unique identifier for objects either touched or committed with this POST.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": {
+     *         "n_existing": 0,
+     *         "n_new": 1,
+     *         "ids": ["0f1f0asd3"],
+     *         "commit_tag": "13g0h3fhf"
+     *       }
+     *     }
+     *
+     */
+    commit_one(obj, user_id, res, cb) {
+        var self = this;
+        global.timer.get_timer('commit_one'+self.name).start();
+        this.commit([obj], user_id, res, cb);
+        global.timer.get_timer('commit_one'+self.name).stop();
+    }
+
+    /**
      * @apiDefine Update
      * @apiName Update
      * @apiVersion 1.0.0

@@ -101,18 +101,13 @@ class whiplash {
             json: payload
         };
 
-        console.log(options);
         return new Promise(function(resolve, reject) {
             request_lib(options, function(err, res, body) {
                 if (err) {
-                    console.log("err");
-                    console.log(err);
                     reject(Error(err));
                 } else {
-                    console.log("no err");
                     if (body.error) reject(body.error);
                     else {
-                        console.log(body);
                         if (!body.result) resolve(0);
                         else resolve(body.result);
                     }
@@ -135,7 +130,7 @@ class whiplash {
     }
 
     commit_one(collection, access_token, obj) {
-        return this.request('POST', collection, access_token, obj);
+        return this.request('POST', collection, access_token, [obj]);
     }
 
 }

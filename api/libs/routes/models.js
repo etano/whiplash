@@ -35,6 +35,25 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 });
 
 /**
+ * @api {post} /models CommitOne
+ * @apiGroup Models
+ * @apiUse CommitOne
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "n_spins": 4,
+ *       "name": "example0",
+ *       "lattice": "square",
+ *       "content": 0
+ *     }
+ */
+router.post('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Models.commit_one(common.get_payload(req,''), String(req.user._id), res, common.return);
+});
+
+/**
  * @api {get} /models Query
  * @apiGroup Models
  * @apiUse Query

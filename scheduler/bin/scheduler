@@ -13,14 +13,8 @@ var Docker = require("dockerode-bluebird");
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 // Whiplash
-var host = process.env.WHIPLASH_API_HOST;
-var port = process.env.WHIPLASH_API_PORT;
-var access_token = process.env.WHIPLASH_SCHEDULER_TOKEN;
-var Whiplash = require(process.cwd()+'/libs/whiplash');
-var whiplash = new Whiplash(host, port, access_token);
-if (!access_token) {
-    whiplash.create_token('admin', process.env.WHIPLASH_ADMIN_PASSWORD)
-}
+var wdb = require(process.cwd()+'/libs/whiplash');
+wdb.connect(function() {
 
 // Global variables
 var working = false;
@@ -39,10 +33,7 @@ function find_unresolved_properties() {
     if (!working) {
         working = true;
         co(function *() {
-            var property = yield whiplash.request('PUT', 'properties/one', {
-                filter: {status: "unresolved"},
-                update: {status: "running"}
-            });
+            var property = yield wdb.get().update_one("properties", wdb.get().admin_access_token, {status: "unresolved"}, {status: "running"});
             if (property) {
                 console.log('found unresolved property', property._id);
                 resolve_property(property);
@@ -61,8 +52,8 @@ function resolve_property(property) {
     var executable_id = property.executable_id;
     var model_id = property.input_model_id;
     co(function *() {
-        var executable = yield whiplash.request('GET', 'executables/one', {_id: executable_id});
-        var model = yield whiplash.request('GET', 'models/one', {_id: model_id});
+        var executable = yield wdb.get().query_one("executables", wdb.get().admin_access_token, {_id: executable_id});
+        var model = yield wdb.get().query_one("models", wdb.get().admin_access_token, {_id: model_id});
         if (executable && model) pull_container(executable, model, property);
         else throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
     }).catch(function(err) {
@@ -152,15 +143,13 @@ function run_container(executable, model, property) {
         result.owner = property.owner;
 
         // Push result back to database
-        var obj = yield whiplash.request('POST', 'models', [result])
-        yield whiplash.request('PUT', 'properties/one', {
-            filter: {_id: property._id},
-            update: {
+        var obj = yield wdb.get().commit_one('models', wdb.get().admin_access_token, result);
+        yield wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, {
                 status: "resolved",
                 output_model_id: obj.ids[0],
                 log: log
             }
-        });
+        );
         console.log('resolved property', property._id);
         working = false;
     }).catch(function(err) {
@@ -172,13 +161,11 @@ function run_container(executable, model, property) {
 function set_errored(property_id, err) {
     working = false;
     console.log(err);
-    whiplash.request('PUT', 'properties/one', {
-        filter: {_id: property._id},
-        update: {
+    wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, {
             status: "errored",
             log: log
         }
-    }, function (err, property) {
-        console.log(err);
-    });
+    );
 }
+
+});
