@@ -27,9 +27,9 @@ db.connect(function(err) {
                     if (i < clients.length) {
                         var client_id = username+'-'+clients[i];
                         var client = {
-                            name: username+'-'+clients[i],
+                            name: client_id,
                             client_id: client_id,
-                            client_secret: pass.generate_hash(salt, client_id)
+                            client_secret: password // FIXME: client_secret same as password
                         };
                         var Clients = require(libs+'collections/clients');
                         Clients.commit([client], user_id, {}, function(res, err, result) {

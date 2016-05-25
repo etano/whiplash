@@ -50,7 +50,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
             }
         });
     } else {
-        return res.json({status: 666, error: "Unauthorized access to client deletion"});
+        return res.json({status: 666, error: "Unauthorized access to client creation"});
     }
 });
 

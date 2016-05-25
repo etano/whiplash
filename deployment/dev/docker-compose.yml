@@ -34,7 +34,7 @@ www:
     environment:
         WHIPLASH_API_HOST: api
         WHIPLASH_API_PORT: 1337
-        WHIPLASH_ADMIN_WWW_CLIENT_SECRET: "CAN ONLY BE SET LATER"
+        WHIPLASH_ADMIN_PASSWORD: password
     links:
         - api:api
     restart: always

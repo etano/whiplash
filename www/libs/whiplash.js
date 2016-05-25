@@ -3,7 +3,6 @@ var request_lib = require('request');
 var host = process.env.WHIPLASH_API_HOST;
 var port = process.env.WHIPLASH_API_PORT;
 var admin_access_token = process.env.WHIPLASH_ADMIN_WWW_TOKEN;
-var admin_client_secret = process.env.WHIPLASH_ADMIN_WWW_CLIENT_SECRET;
 var admin_password = process.env.WHIPLASH_ADMIN_PASSWORD;
 
 var state = {
@@ -21,7 +20,7 @@ exports.connect = function(done) {
         if (!admin_password)
             admin_password = "password";
         console.log("Creating new whiplash admin token!");
-        wdb.create_token('admin', admin_password, 'admin-www', admin_client_secret).then(function(access_token) {
+        wdb.create_token('admin', admin_password, 'admin-www', admin_password).then(function(access_token) { // FIXME: client_secret same as password
             wdb.admin_access_token = access_token;
             state.api = wdb;
             console.log("Connected to whiplash!");
@@ -80,6 +79,16 @@ class whiplash {
                 }
             });
         });
+    }
+
+    create_client(client_id, user_id, client_secret) {
+        var client = {
+            client_name: client_id,
+            client_id: client_id,
+            client_secret: client_secret,
+            owner: user_id
+        };
+        return commit_one("clients", this.admin_access_token, client);
     }
 
     request(protocol, path, access_token, payload) {
