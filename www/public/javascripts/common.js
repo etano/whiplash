@@ -1,8 +1,8 @@
 var api_addr = "http://localhost:1337";
 var session_token = "";
 var refresh_token = "";
-var www_client_id = "www-browser";
-var www_client_secret = "fd5834157ee2388e65ec195cd74b670570a9f4cea490444ff5c70bb4fd8243ba";
+var www_client_id = "admin-www";
+var www_client_secret = "c70de9b4b73029b87c08e6fa6710e7f87082573c";
 
 function getCookie(cname){
     var name = cname + "=";

@@ -72,7 +72,7 @@ function create_user() {
                 "access_token": session_token
             },
             success: function(data) {
-                if ($.trim(data) != "OK") {
+                if (data.status != "OK") {
                     inputFailFeedback("Bad input");
                 } else {
                     var user_id = data.result.ids[0];
