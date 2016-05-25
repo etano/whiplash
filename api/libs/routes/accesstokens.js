@@ -1,15 +1,14 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
-
-var libs = process.cwd() + '/libs/';
-var log = require(libs + 'log')(module);
-var common = require(libs + 'routes/common');
-var AccessTokens = require(libs + 'collections/access_tokens');
+var libs = process.cwd()+'/libs/';
+var log = require(libs+'log')(module);
+var common = require(libs+'routes/common');
+var AccessTokens = require(libs+'collections/access_tokens');
 
 /**
- * @api {get} /accesstokens QueryAccessTokens
- * @apiGroup Authentication
+ * @api {get} /accesstokens Query
+ * @apiGroup AccessTokens
  * @apiUse Query
  * @apiPermission user
  * @apiVersion 1.0.0
@@ -36,6 +35,7 @@ var AccessTokens = require(libs + 'collections/access_tokens');
  *         }
  *       ]
  *     }
+ *
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);

@@ -14,7 +14,7 @@ var Clients = require(libs + 'collections/clients');
 
 /**
  * @api {get} /users QueryUsers
- * @apiGroup Authentication
+ * @apiGroup Users
  * @apiUse Query
  * @apiName QueryUsers
  * @apiPermission user
@@ -49,10 +49,10 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
 
 
 /**
- * @api {get} /users QueryOneUsers
- * @apiGroup Authentication
+ * @api {get} /users QueryOne
+ * @apiGroup Users
  * @apiUse QueryOne
- * @apiName QueryOneUsers
+ * @apiName QueryOne
  * @apiPermission user
  * @apiVersion 1.0.0
  *
@@ -82,10 +82,9 @@ router.get('/one', passport.authenticate('bearer', { session: false }), function
 });
 
 /**
- * @api {get} /users UpdateOneUsers
- * @apiGroup Authentication
+ * @api {get} /users UpdateOne
+ * @apiGroup UpdateOne
  * @apiUse UpdateOne
- * @apiName UpdateOneUsers
  * @apiPermission user
  * @apiVersion 1.0.0
  *
@@ -105,10 +104,9 @@ router.put('/one', passport.authenticate('bearer', { session: false }), function
 });
 
 /**
- * @api {delete} /users DeleteUser
- * @apiGroup Authentication
+ * @api {delete} /users Delete
+ * @apiGroup Users
  * @apiUse Delete
- * @apiName DeleteUser
  * @apiPermission user
  * @apiVersion 1.0.0
  *
@@ -169,10 +167,9 @@ function make_user(username, email, password, res) {
 }
 
 /**
- * @api {post} /users CommitUser
- * @apiGroup Authentication
- * @apiUse Commit
- * @apiName CommitUser
+ * @api {post} /users CommitOne
+ * @apiGroup Users
+ * @apiUse CommitOne
  * @apiPermission admin
  * @apiVersion 1.0.0
  *
@@ -188,7 +185,7 @@ function make_user(username, email, password, res) {
  *     }
  *
  */
-router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.post('/one', passport.authenticate('bearer', {session: false}), function(req, res) {
     if (req.user.username === "admin") {
         var username = common.get_payload(req, 'username');
         var email = common.get_payload(req, 'email');
@@ -201,7 +198,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 
 /**
  * @api {post} /users/admin SetAdminPassword
- * @apiGroup Authentication
+ * @apiGroup Users
  * @apiName SetAdminPassword
  * @apiPermission admin
  * @apiVersion 1.0.0
@@ -237,7 +234,7 @@ router.post('/admin', function(req, res) {
 
 /**
  * @api {get} /users/fresh FreshInstallation
- * @apiGroup Authentication
+ * @apiGroup Users
  * @apiName FreshInstallation
  * @apiDescription Determines whether or not the API server has an admin account yet or not.
  * @apiVersion 1.0.0

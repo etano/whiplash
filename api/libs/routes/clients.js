@@ -10,9 +10,8 @@ var AccessTokens = require(libs + 'collections/access_tokens');
 var RefreshTokens = require(libs + 'collections/refresh_tokens');
 
 /**
- * @api {post} /clients CommitClient
- * @apiGroup Authentication
- * @apiName CommitClient
+ * @api {post} /clients CommitOne
+ * @apiGroup Clients
  * @apiPermission admin
  * @apiVersion 1.0.0
  *
@@ -32,7 +31,7 @@ var RefreshTokens = require(libs + 'collections/refresh_tokens');
  *     "OK"
  *
  */
-router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+router.post('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
     if (req.user.username === "admin") {
         var client = {
             name: common.get_payload(req,'client_name'),
@@ -43,7 +42,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
         Clients.commit([client], owner, res, function(res, err, result) {
             if(!err) {
                 log.info("New user client %s", client.client_id);
-                return res.json({ status: 'OK' });
+                return res.json({ status: 'OK', result: result });
             } else {
                 log.error(err);
                 res.send("Bof");

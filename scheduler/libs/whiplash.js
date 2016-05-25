@@ -20,7 +20,7 @@ exports.connect = function(done) {
         if (!admin_password)
             admin_password = "password";
         console.log("Creating new whiplash admin token!");
-        wdb.create_token('admin', admin_password, 'admin-www', admin_password).then(function(access_token) { // FIXME: client_secret same as password
+        wdb.create_token('admin', admin_password, 'admin-scheduler', admin_password).then(function(access_token) { // FIXME: client_secret same as password
             wdb.admin_access_token = access_token;
             state.api = wdb;
             console.log("Connected to whiplash!");
@@ -130,7 +130,7 @@ class whiplash {
     }
 
     commit_one(collection, access_token, obj) {
-        return this.request('POST', collection, access_token, [obj]);
+        return this.request('POST', collection+'/one', access_token, obj);
     }
 
 }

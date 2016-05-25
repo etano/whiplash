@@ -231,6 +231,7 @@ class Collection {
      * @apiParam {String[]} [fields] Which fields should be returned.
      *
      * @apiSuccess {Object[]} result List of objects that matched the query filter, each with the specified fields plus the "_id" field.
+     *
      */
     query(filter, fields, user_id, res, cb) {
         var self = this;

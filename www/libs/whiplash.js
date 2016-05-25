@@ -130,7 +130,7 @@ class whiplash {
     }
 
     commit_one(collection, access_token, obj) {
-        return this.request('POST', collection, access_token, [obj]);
+        return this.request('POST', collection+'/one', access_token, obj);
     }
 
 }
