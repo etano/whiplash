@@ -25,7 +25,7 @@ db.connect(function(err) {
                 var clients = ['python', 'scheduler', 'www'];
                 var make_clients = function(i) {
                     if (i < clients.length) {
-                        var client_id = username+'-'+clients[i]
+                        var client_id = username+'-'+clients[i];
                         var client = {
                             name: username+'-'+clients[i],
                             client_id: client_id,

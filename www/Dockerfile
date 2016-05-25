@@ -10,5 +10,6 @@ COPY bin /src/bin
 COPY views /src/views
 COPY routes /src/routes
 COPY public /src/public
+COPY libs /src/libs
 RUN npm install
 EXPOSE 3000
