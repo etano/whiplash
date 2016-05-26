@@ -7,16 +7,16 @@ host = sys.argv[1]
 port = int(sys.argv[2])
 db = whiplash.db(host,port,username="test",password="test")
 
-#print("Reset database")
-#db.collection("work_batches").delete({})
-#db.queries.delete({})
-#assert db.queries.count({}) == 0
-#db.models.delete({})
-#assert db.models.count({}) == 0
-#db.executables.delete({})
-#assert db.executables.count({}) == 0
-#db.properties.delete({})
-#assert db.properties.count({}) == 0
+print("Reset database")
+db.collection("work_batches").delete({})
+db.queries.delete({})
+assert db.queries.count({}) == 0
+db.models.delete({})
+assert db.models.count({}) == 0
+db.executables.delete({})
+assert db.executables.count({}) == 0
+db.properties.delete({})
+assert db.properties.count({}) == 0
 
 print("Commit models")
 n_models = 10
