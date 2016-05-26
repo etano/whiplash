@@ -19,7 +19,7 @@ db = whiplash.db(host,port,username="test",password="test")
 #assert db.properties.count({}) == 0
 
 print("Commit models")
-n_models = 20
+n_models = 10
 models = []
 random.seed(0)
 for k in range(n_models):
