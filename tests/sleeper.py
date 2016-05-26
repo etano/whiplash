@@ -11,7 +11,5 @@ with open(file_name, 'r') as infile:
 
 time.sleep(data["params"]["sleep_time"])
 
-t1 = time.time()
-
 with open(file_name, 'w') as outfile:
-    json.dump({"time": t1-t0}, outfile)
+    json.dump({"time": time.time()-t0}, outfile)

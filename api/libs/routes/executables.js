@@ -39,6 +39,38 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
 });
 
 /**
+ * @api {post} /executables CommitOne
+ * @apiGroup Executables
+ * @apiUse CommitOne
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParam {String} name Name of executable.
+ * @apiParam {String} path Path to executable or url of Docker container.
+ * @apiParam {Object} params Necessary parameters.
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       {
+ *         "name": "udyn",
+ *         "algorithm": "SQA-UE",
+ *         "version": "1.1",
+ *         "build": "O3",
+ *         "path": "/users/ebrown/src/udyn/udyn",
+ *         "description": "real-time evolution with RungeKutta",
+ *         "params": {
+ *             "required": ["integrator_type", "integrator_tolerance", "integrator_dt", "Ttot", "schedule"],
+ *             "optional": ["iter_lanczos", "do_lanczos_ortho"]
+ *         }
+ *       }
+ *     }
+ */
+router.post('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Executables.commit_one(common.get_payload(req,''), String(req.user._id), res, common.return);
+});
+
+
+
+/**
  * @api {get} /executables Query
  * @apiGroup Executables
  * @apiUse Query

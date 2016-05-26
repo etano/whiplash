@@ -370,6 +370,9 @@ class Collection {
                                         objs[i]['owner'] = objs[i]._id;
                                     }
                                 }
+                                for(var i=0; i<objs.length; i++) {
+                                    objs[i].created = new Date().getTime();
+                                }
                                 var batch = db.get().collection(self.name).initializeUnorderedBulkOp();
                                 var ids = [];
                                 var commit_tag = new ObjectID();
@@ -377,7 +380,11 @@ class Collection {
                                     ids.push(objs[i]['_id']);
                                     batch.find({_id: objs[i]._id}).upsert().updateOne({
                                         "$setOnInsert": common.omit(objs[i], 'content'),
-                                        "$set": {"commit_tag": commit_tag, "has_content": 0},
+                                        "$set": {
+                                            "commit_tag": commit_tag,
+                                            "has_content": 0,
+                                            "updated": new Date().getTime()
+                                        },
                                     });
                                 }
                                 global.timer.get_timer('commit_form_commit_'+self.name).stop();

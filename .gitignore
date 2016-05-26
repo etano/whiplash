@@ -16,6 +16,7 @@ api/libs/public/docs
 api/npm-debug.log
 api/node_modules
 www/node_modules
+scheduler/node_modules
 *.swl
 *.swm
 *.swn

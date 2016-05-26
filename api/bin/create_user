@@ -16,6 +16,7 @@ db.connect(function(err) {
             email: email,
             salt: salt,
             hashed_password: pass.encrypt_password(salt, password),
+            activated: true
         };
         var Users = require(libs+'collections/users');
         Users.commit([user], "", {}, function(res, err, result) {

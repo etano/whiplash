@@ -122,7 +122,10 @@ function run_container(executable, model, property) {
 
         // Wait for container to finish
         // TODO: add timeout
+        var hrstart = process.hrtime();
         var data = yield container.waitAsync();
+        var hrdiff = process.hrtime(hrstart);
+        var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
 
         // Read output, check for errors, remove file
         var log = yield fs.readFileAsync(out_file, 'ascii');
@@ -147,7 +150,8 @@ function run_container(executable, model, property) {
         yield wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, {
                 status: "resolved",
                 output_model_id: obj.ids[0],
-                log: log
+                log: log,
+                walltime: walltime
             }
         );
         console.log('resolved property', property._id);
