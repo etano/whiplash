@@ -15,11 +15,11 @@ var docker = new Docker({socketPath: '/var/run/docker.sock'});
 // Whiplash
 var wdb = require('project-whiplash');
 var options = {
-    host: process.env.WHIPLASH_API_HOST;
-    port: process.env.WHIPLASH_API_PORT;
-    admin_client: "admin-scheduler";
-    admin_access_token: process.env.WHIPLASH_ADMIN_SCHEDULER_TOKEN;
-    admin_password: process.env.WHIPLASH_ADMIN_PASSWORD;
+    host: process.env.WHIPLASH_API_HOST,
+    port: process.env.WHIPLASH_API_PORT,
+    admin_client: "admin-scheduler",
+    admin_access_token: process.env.WHIPLASH_ADMIN_SCHEDULER_TOKEN,
+    admin_password: process.env.WHIPLASH_ADMIN_PASSWORD
 };
 wdb.connect(options, function() {
 
