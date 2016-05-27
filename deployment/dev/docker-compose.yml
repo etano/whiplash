@@ -30,7 +30,6 @@ www:
         - ../../www/public:/src/public
         - ../../www/views:/src/views
         - ../../www/routes:/src/routes
-        - ../../www/libs:/src/libs
     environment:
         WHIPLASH_API_HOST: api
         WHIPLASH_API_PORT: 1337
