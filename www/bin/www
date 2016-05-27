@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 var whiplash = require('project-whiplash');
-whiplash.connect(function() {
+var options = {
+    host: process.env.WHIPLASH_API_HOST;
+    port: process.env.WHIPLASH_API_PORT;
+    admin_client: "admin-www";
+    admin_access_token: process.env.WHIPLASH_ADMIN_WWW_TOKEN;
+    admin_password: process.env.WHIPLASH_ADMIN_PASSWORD;
+};
+wdb.connect(options, function() {
 
 /**
  * Module dependencies.
