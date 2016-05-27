@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var whiplash = require(process.cwd()+'/libs/whiplash');
+var whiplash = require('project-whiplash');
 whiplash.connect(function() {
 
 /**

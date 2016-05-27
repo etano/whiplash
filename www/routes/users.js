@@ -1,7 +1,7 @@
 var express = require('express');
 var http = require('http');
 var router = express.Router();
-var wdb = require(process.cwd()+'/libs/whiplash');
+var wdb = require('project-whiplash');
 
 router.get('/:user', function(req, res, next) {
     var username = req.params.user;

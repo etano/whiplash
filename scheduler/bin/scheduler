@@ -13,7 +13,7 @@ var Docker = require("dockerode-bluebird");
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 // Whiplash
-var wdb = require(process.cwd()+'/libs/whiplash');
+var wdb = require('project-whiplash');
 wdb.connect(function() {
 
 // Global variables
