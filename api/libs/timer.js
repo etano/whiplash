@@ -1,3 +1,6 @@
+var libs = process.cwd() + '/libs/';
+var log = require(libs + 'log')(module);
+
 Object.defineProperty(global, '__stack', {
 get: function() {
         var orig = Error.prepareStackTrace;
@@ -54,7 +57,7 @@ class GlobalTimer {
 
     get_timer(function_name) {
         if (!this.timers.hasOwnProperty(function_name)) {
-            this.timers[function_name] = new Timer(this.enabled);
+            this.timers[function_name] = new Timer(function_name, this.enabled);
         }
         return this.timers[function_name];
     }
@@ -77,7 +80,8 @@ class GlobalTimer {
 }
 
 class Timer {
-    constructor(enabled) {
+    constructor(name, enabled) {
+        this.name = name;
         this.enabled = enabled;
         this.reset();
     }
@@ -94,6 +98,7 @@ class Timer {
     }
 
     start() {
+        log.debug(this.name+" start");
         if (this.enabled) {
             this.start_time = this.get_time();
             this.count++;
@@ -101,6 +106,7 @@ class Timer {
     }
 
     stop() {
+        log.debug(this.name+" stop");
         if (this.enabled) {
             this.stop_time = this.get_time();
             var duration = (this.stop_time - this.start_time) / 1000;

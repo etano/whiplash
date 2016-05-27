@@ -23,7 +23,7 @@ db.connect(function(err) {
             if(!err) {
                 log.info("New user - %s:%s:%s", user.username, password, user.email);
                 var user_id = result['ids'][0];
-                var clients = ['python', 'scheduler', 'www'];
+                var clients = ['python'];//, 'scheduler', 'www'];
                 var make_clients = function(i) {
                     if (i < clients.length) {
                         var client_id = username+'-'+clients[i];
