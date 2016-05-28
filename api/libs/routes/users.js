@@ -44,7 +44,7 @@ var Clients = require(libs + 'collections/clients');
  *     }
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
 });
 
 
@@ -78,7 +78,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    Users.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
 });
 
 /**
@@ -100,7 +100,7 @@ router.get('/one', passport.authenticate('bearer', { session: false }), function
  *
  */
 router.put('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
+    Users.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
 });
 
 /**
@@ -119,14 +119,13 @@ router.put('/one', passport.authenticate('bearer', { session: false }), function
  *
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var user_id = String(req.user._id);
     var filter = {};
     if(req.body.filter) filter = JSON.parse(req.body.filter);
-    Users.pop(filter, {}, user_id, res, function(res, err, obj) {
+    Users.pop(filter, {}, req.user, res, function(res, err, obj) {
         if (!err) {
-            AccessTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
-            RefreshTokens.delete({owner: obj._id}, user_id, res, function(res, err, obj) {});
-            Clients.delete({user_id: obj._id}, user_id, res, function(res, err, obj) {});
+            AccessTokens.delete({owner: obj._id}, req.user, res, function(res, err, obj) {});
+            RefreshTokens.delete({owner: obj._id}, req.user, res, function(res, err, obj) {});
+            Clients.delete({user_id: obj._id}, req.user, res, function(res, err, obj) {});
         }
         common.return(res, err, obj);
     });
@@ -142,7 +141,7 @@ function make_user(username, email, password, res) {
             hashed_password: pass.encrypt_password(salt, password),
             activated: false
         };
-        Users.commit([user], "admin", res, function(res, err, result) {
+        Users.commit([user], {username: "admin"}, res, function(res, err, result) {
             if(!err) {
                 log.info("New user: %s", user.username);
                 res.send({status: "OK", result: result});
@@ -216,7 +215,7 @@ router.post('/one', passport.authenticate('bearer', {session: false}), function(
  *
  */
 router.post('/admin', function(req, res) {
-    Users.query({"username":"admin"}, [], "admin", res, function(res, err, result) {
+    Users.query({username: "admin"}, [], {username: "admin"}, res, function(res, err, result) {
         if (!err && (result.length === 0)) {
             var password = common.get_payload(req, 'password');
             if (password) {
@@ -248,7 +247,7 @@ router.post('/admin', function(req, res) {
  *
  */
 router.get('/fresh', function(req, res) {
-    Users.query({"username":"admin"}, [], "admin", res, function(res, err, result) {
+    Users.query({username: "admin"}, [], {username: "admin"}, res, function(res, err, result) {
         if (!err && (result.length === 0)) {
             res.send({error: null, result: true});
         } else if (result.length > 0) {

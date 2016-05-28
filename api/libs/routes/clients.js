@@ -75,18 +75,17 @@ router.post('/one', passport.authenticate('bearer', { session: false }), functio
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
     if (req.user.username === "admin") {
         var client_id = common.get_payload(req,'client_id');
-        var user_id = String(req.user._id);
         var filter = {
             client_id: client_id
         };
-        Clients.delete(filter, user_id, res, function(res, err, count) {
+        Clients.delete(filter, req.user, res, function(res, err, count) {
             if(err) {
-                log.error('Error removing client',client_id,'for user',String(req.user._id));
+                log.error('Error removing client', client_id, 'for user', req.user._id);
                 return res.send(err);
             } else {
-                log.info('Removing client',client_id,'for user',String(req.user._id));
-                AccessTokens.delete(filter, user_id, res, function(res, err, count) {});
-                RefreshTokens.delete(filter, user_id, res, function(res, err, count) {});
+                log.info('Removing client', client_id, 'for user', req.user._id);
+                AccessTokens.delete(filter, req.user, res, function(res, err, count) {});
+                RefreshTokens.delete(filter, req.user, res, function(res, err, count) {});
                 return res.json({ status: 'OK' });
             }
         });

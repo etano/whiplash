@@ -38,7 +38,7 @@ var Properties = require(libs + 'collections/properties');
 
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Properties.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    Properties.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
 });
 
 /**
@@ -56,7 +56,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Properties.count(common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    Properties.count(common.get_payload(req,'filter'), req.user, res, common.return);
 });
 
 /**
@@ -77,7 +77,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  *     }
  */
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Properties.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
+    Properties.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
 });
 
 /**
@@ -98,7 +98,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.put('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Properties.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), String(req.user._id), res, common.return);
+    Properties.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
 });
 
 /**
@@ -116,7 +116,7 @@ router.put('/one', passport.authenticate('bearer', { session: false }), function
  *     }
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Properties.delete(common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    Properties.delete(common.get_payload(req,'filter'), req.user, res, common.return);
 });
 
 /**
@@ -144,7 +144,7 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
                       diff: 0
                   });
               };
-    Properties.stats(common.get_payload(req,'filter'), common.get_payload(req,'field'), map, String(req.user._id), res, common.return);
+    Properties.stats(common.get_payload(req,'filter'), common.get_payload(req,'field'), map, req.user, res, common.return);
 });
 
 module.exports = router;

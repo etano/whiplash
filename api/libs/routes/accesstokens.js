@@ -38,7 +38,7 @@ var AccessTokens = require(libs+'collections/access_tokens');
  *
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), String(req.user._id), res, common.return);
+    AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
 });
 
 module.exports = router;

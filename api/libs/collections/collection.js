@@ -48,29 +48,29 @@ function get_gridfs_objs(objs, fields) {
     return new Promise(function(resolve, reject) {
         co(function *() {
             var content_fields = get_gridfs_content_fields(fields);
-            if (content_fields.length > 0) {
-                for (var i=0; i<objs.length; i++) {
-                    if (objs[i].has_content) {
-                        var name = String(objs[i]._id);
-                        console.log(content_fields);
-                        var file_data = yield GridStore.read(db.get(), name);
-                        var data = JSON.parse(file_data.toString());
-                        for(var j=0; j<content_fields.length; j++) {
-                            var subfields = content_fields[j].split('.');
-                            var obj = data;
-                            for(var k=1; k<subfields.length; k++) {
-                                if (!obj[subfields[k]])
-                                    throw "Field "+content_fields[j]+" not found in "+name;
-                                obj = obj[subfields[k]];
-                            }
-                            objs[i][content_fields[j]] = obj;
+            if (content_fields.length === 0) return objs;
+            var n_content_objs = 0;
+            for (var i=0; i<objs.length; i++) {
+                if (objs[i].has_content) {
+                    n_content_objs += 1;
+                    var name = String(objs[i]._id);
+                    var file_data = yield GridStore.read(db.get(), name);
+                    var data = JSON.parse(file_data.toString());
+                    for(var j=0; j<content_fields.length; j++) {
+                        var subfields = content_fields[j].split('.');
+                        var obj = data;
+                        for(var k=1; k<subfields.length; k++) {
+                            if (!obj[subfields[k]])
+                                throw "Field "+content_fields[j]+" not found in "+name;
+                            obj = obj[subfields[k]];
                         }
+                        objs[i][content_fields[j]] = obj;
                     }
                 }
-                log.debug('added content to %d objects',objs.length);
-            } else {
-                log.debug('no added content');
             }
+            log.debug('added content to %d objects', n_content_objs);
+            return objs;
+        }).then(function(objs) {
             global.timer.get_timer('get_gridfs_objs').stop();
             resolve(objs);
         }).catch(function(err) {
@@ -87,16 +87,16 @@ function delete_gridfs_by_id(id) {
         var grid_store = new GridStore(db.get(), id, String(id), 'w');
         yield grid_store.open();
         yield grid_store.unlink();
+        global.timer.get_timer('delete_gridfs_by_id').stop();
     }).catch(function(err) {
         log.error(err);
         global.timer.get_timer('delete_gridfs_by_id').stop();
     });
 }
 
-function query(collection, filter, fields, user_id) {
+function query(collection, filter, fields) {
     return new Promise(function(resolve, reject) {
         co(function *() {
-            filter = yield collection.attach_permissions(filter, user_id);
             var objs = [];
             if (fields.length > 0) {
                 var proj = {};
@@ -110,11 +110,9 @@ function query(collection, filter, fields, user_id) {
             objs = yield get_gridfs_objs(objs, fields);
             return objs;
         }).then(function(objs) {
-            global.timer.get_timer('query_'+collection.name).stop();
             resolve(objs);
         }).catch(function(err) {
             log.error(err);
-            global.timer.get_timer('query_'+collection.name).stop();
             reject(err);
         });
     });
@@ -127,13 +125,12 @@ class Collection {
         this.indexes = model.indexes;
     }
 
-    validate(objs, user_id) {
+    validate(objs) {
         var self = this;
         global.timer.get_timer('validate_'+self.name).start();
         return new Promise(function(resolve, reject) {
             var bad_objs = [];
             for (var i=0; i<objs.length; i++) {
-                if (!objs[i].owner) objs[i].owner = user_id;
                 for (var key in self.schema) {
                     if (!objs[i].hasOwnProperty(key)) {
                         if (self.schema[key].required) {
@@ -156,7 +153,7 @@ class Collection {
         });
     }
 
-    form_ids(objs, user_id, cb) {
+    form_ids(objs, cb) {
         var self = this;
         global.timer.get_timer('form_ids_'+self.name).start();
         return new Promise(function(resolve, reject) {
@@ -199,25 +196,23 @@ class Collection {
      * @apiDefine user User access only
      * This method can only affect what is owned by the user who calls it or the "admin" user.
      */
-    attach_permissions(obj, user_id) {
+    attach_permissions(obj, user) {
         var self = this;
         global.timer.get_timer('attach_permissions_'+self.name).start();
         return new Promise(function(resolve, reject) {
             co(function *() {
-                if (user_id !== "admin") {
-                    var users = yield db.get().collection('users').find({"_id":user_id}).limit(1).project({"username":1}).toArray();
-                    if(users.length>0) {
-                        if((users[0]['username'] !== "admin")) { // admin can do anything
-                            if (Array.isArray(obj)) {
-                                for (var i=0; i<obj.length; i++) {
-                                    obj[i].owner = user_id;
-                                }
-                            } else {
-                                obj.owner = user_id;
-                            }
+                if (!user._id) return obj;
+                if (Array.isArray(obj)) {
+                    for (var i=0; i<obj.length; i++) {
+                        if (user.username !== "admin") {
+                            obj[i].owner = user._id;
                         }
                     }
+                } else if (user.username !== "admin") {
+                    obj.owner = user._id;
                 }
+                return obj;
+            }).then(function(obj) {
                 global.timer.get_timer('attach_permissions_'+self.name).stop();
                 resolve(obj);
             }).catch(function(err) {
@@ -239,11 +234,12 @@ class Collection {
      * @apiSuccess {Object[]} result List of objects that matched the query filter, each with the specified fields plus the "_id" field.
      *
      */
-    query(filter, fields, user_id, res, cb) {
-        global.timer.get_timer('query_'+self.name).start();
+    query(filter, fields, user, res, cb) {
         var self = this;
+        global.timer.get_timer('query_'+self.name).start();
         co(function *() {
-            var objs = yield query(self, filter, fields, user_id);
+            filter = yield self.attach_permissions(filter, user);
+            var objs = yield query(self, filter, fields);
             return objs;
         }).then(function(objs) {
             log.debug('found %d objects', objs.length);
@@ -266,19 +262,21 @@ class Collection {
      *
      * @apiSuccess {Object} result Single object that matched the query filter, with the specified fields plus the "_id" field.
      */
-    query_one(filter, fields, user_id, res, cb) {
+    query_one(filter, fields, user, res, cb) {
         var self = this;
+        global.timer.get_timer('query_one_'+self.name).start();
         co(function *() {
-            var objs = yield query(self, filter, fields, user_id);
+            filter = yield self.attach_permissions(filter, user);
+            var objs = yield query(self, filter, fields);
             if (objs.length === 0) return 0;
             log.debug('found object');
             return objs[0];
         }).then(function(obj) {
-            global.timer.get_timer('query_'+self.name).stop();
+            global.timer.get_timer('query_one_'+self.name).stop();
             cb(res, 0, obj);
         }).catch(function(err) {
             log.error(err);
-            global.timer.get_timer('query_'+self.name).stop();
+            global.timer.get_timer('query_one_'+self.name).stop();
             cb(res, err, 0);
         });
     }
@@ -299,11 +297,11 @@ class Collection {
      *     }
      *
      */
-    count(filter, user_id, res, cb) {
+    count(filter, user, res, cb) {
         var self = this;
         global.timer.get_timer('count_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var count = yield db.get().collection(self.name).count(filter);
             return count;
         }).then(function(count) {
@@ -343,23 +341,26 @@ class Collection {
      *     }
      *
      */
-    commit(objs, user_id, res, cb) {
+    commit(objs, user, res, cb) {
         var self = this;
         global.timer.get_timer('commit_'+self.name).start();
         co(function *() {
             if (objs.length === 0)
                 return {"n_existing": 0, "n_new": 0, "ids": []};
 
-            objs = yield self.attach_permissions(objs, user_id);
-            objs = yield self.validate(objs, user_id);
-            objs = yield self.form_ids(objs, user_id);
-
-            global.timer.get_timer('commit_form_commit_'+self.name).start();
+            objs = yield self.attach_permissions(objs, user);
+            for(var i=0; i<objs.length; i++) {
+                if (!objs[i].owner) objs[i].owner = user._id;
+            }
+            objs = yield self.validate(objs, user);
+            objs = yield self.form_ids(objs);
             if (self.name === "users") {
                 for(var i=0; i<objs.length; i++) {
                     objs[i]['owner'] = objs[i]._id;
                 }
             }
+
+            global.timer.get_timer('commit_form_commit_'+self.name).start();
             for(var i=0; i<objs.length; i++) {
                 objs[i].created = new Date().getTime();
             }
@@ -389,7 +390,6 @@ class Collection {
                     db.get().collection(self.name).updateOne({"_id": id}, {"$set": {"has_content": 1}}, {w:1}, function(err, result) {});
                 }
             }
-            global.timer.get_timer('commit_'+self.name).stop();
             return {"n_existing": result.nMatched, "n_new": result.nUpserted, 'ids': ids, 'commit_tag': commit_tag};
         }).then(function(result) {
             global.timer.get_timer('commit_'+self.name).stop();
@@ -426,10 +426,10 @@ class Collection {
      *     }
      *
      */
-    commit_one(obj, user_id, res, cb) {
+    commit_one(obj, user, res, cb) {
         var self = this;
         global.timer.get_timer('commit_one'+self.name).start();
-        self.commit([obj], user_id, res, cb);
+        self.commit([obj], user, res, cb);
         global.timer.get_timer('commit_one'+self.name).stop();
     }
 
@@ -448,13 +448,13 @@ class Collection {
      *     {
      *       "result": 1
      *     }
-     *
+     * TODO: validate updates
      */
-    update(filter, update, user_id, res, cb) {
+    update(filter, update, user, res, cb) {
         var self = this;
         global.timer.get_timer('update_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var result = yield db.get().collection(self.name).updateMany(filter, {'$set':update}, {w:1});
             return result.modifiedCount;
         }).then(function(count) {
@@ -487,11 +487,11 @@ class Collection {
      *     }
      *
      */
-    update_one(filter, update, user_id, res, cb) {
+    update_one(filter, update, user, res, cb) {
         var self = this;
         global.timer.get_timer('update_one_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var result = yield db.get().collection(self.name).findOneAndUpdate(filter, {$set:update}, {w:1});
             if (!result.value) return 0;
             return result.value;
@@ -522,7 +522,7 @@ class Collection {
      *     }
      *
      */
-    replace(objs, user_id, res, cb) {
+    replace(objs, user, res, cb) {
         var self = this;
         global.timer.get_timer('replace_'+self.name).start();
         co(function *() {
@@ -563,11 +563,11 @@ class Collection {
      *     }
      *
      */
-    pop(filter, sort, user_id, res, cb) {
+    pop(filter, sort, user, res, cb) {
         var self = this;
         global.timer.get_timer('pop_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var result = yield db.get().collection(self.name).findOneAndDelete(filter, {sort: sort});
             if (!result.value) return 0;
             return result.value;
@@ -598,13 +598,13 @@ class Collection {
      *     }
      *
      */
-    delete(filter, user_id, res, cb) {
+    delete(filter, user, res, cb) {
         var self = this;
         global.timer.get_timer('delete_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var fields = ['_id', 'has_content'];
-            var objs = yield query(self, filter, fields, user_id);
+            var objs = yield query(self, filter, fields);
             for (var i=0; i<objs.length; i++) {
                 if (objs[i].has_content) {
                     delete_gridfs_by_id(objs[i]._id);
@@ -658,11 +658,11 @@ class Collection {
      *     }
      *
      */
-    stats(filter, field, map, user_id, res, cb) {
+    stats(filter, field, map, user, res, cb) {
         var self = this;
         global.timer.get_timer('stats_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_permissions(filter, user_id);
+            filter = yield self.attach_permissions(filter, user);
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -728,13 +728,12 @@ class Collection {
      *     }
      *
      */
-    distinct(filter, fields, user_id, res, cb) {
+    distinct(filter, fields, user, res, cb) {
         var self = this;
         global.timer.get_timer('distinct_'+self.name).start();
         co(function *() {
-            filter = self.attach_permissions(filter, user_id);
-            var objs = yield db.get().collection(self.name).distinct(fields, filter);
-            return objs;
+            filter = self.attach_permissions(filter, user);
+            return yield db.get().collection(self.name).distinct(fields, filter);
         }).then(function(objs) {
             global.timer.get_timer('distinct_'+self.name).stop();
             cb(res, 0, objs);

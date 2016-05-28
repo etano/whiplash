@@ -12,18 +12,18 @@ var Clients = require(libs + 'collections/clients');
 
 passport.use(new BasicStrategy(
     function(username, password, done) {
-        Users.query_one({'username': username}, [], "admin", {}, function(res, err, user) {
+        Users.query_one({'username': username}, [], {username: "admin"}, {}, function(res, err, user) {
             if (err) { return done(err); }
             if (!user) { return done(null, false, { message: 'Wrong username or password' }); }
             if (!pass.check_password(user.salt, password, user.hashed_password)) { return done(null, false, { message: 'Wrong username or password' }); }
-            return done(null, client);
+            return done(null, user);
         });
     }
 ));
 
 passport.use(new ClientPasswordStrategy(
     function(client_id, client_secret, done) {
-        Clients.query_one({'client_id': client_id}, [], "admin", {}, function(res, err, client) {
+        Clients.query_one({'client_id': client_id}, [], {username: "admin"}, {}, function(res, err, client) {
             if (err) { return done(err); }
             if (!client) { return done(null, false, { message: 'Wrong client id or secret' }); }
             if (client.client_secret !== client_secret) { return done(null, false, { message: 'Wrong client id or secret' }); }
@@ -34,9 +34,9 @@ passport.use(new ClientPasswordStrategy(
 
 passport.use(new BearerStrategy(
     function(access_token, done) {
-        AccessTokens.query_one({'token': access_token}, [], "admin", {}, function(res, err, token) {
+        AccessTokens.query_one({'token': access_token}, [], {username: "admin"}, {}, function(res, err, token) {
             if (err) { return done(err); }
-            if (!token) {  return done(null, false); }
+            if (!token) { return done(null, false); }
             // Tokens don't expire when this is commented out
             //
             //if( Math.round((Date.now()-token.created)/1000) > config.get('security:tokenLife') ) {
@@ -45,7 +45,7 @@ passport.use(new BearerStrategy(
             //    });
             //    return done(null, false, { message: 'Token expired' });
             //}
-            Users.query_one({'_id': token.owner}, [], token.owner, {}, function(res, err, user) {
+            Users.query_one({'_id': token.owner}, [], {username: "admin"}, {}, function(res, err, user) {
                 if (err) { return done(err); }
                 if (!user) { return done(null, false, { message: 'Unknown user' }); }
                 var info = { scope: '*' };

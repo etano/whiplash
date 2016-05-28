@@ -19,11 +19,11 @@ db.connect(function(err) {
             activated: true
         };
         var Users = require(libs+'collections/users');
-        Users.commit([user], "", {}, function(res, err, result) {
+        Users.commit([user], {username: "admin"}, {}, function(res, err, result) {
             if(!err) {
                 log.info("New user - %s:%s:%s", user.username, password, user.email);
-                var user_id = result['ids'][0];
-                var clients = ['python'];//, 'scheduler', 'www'];
+                user._id = result['ids'][0];
+                var clients = ['python', 'scheduler', 'www'];
                 var make_clients = function(i) {
                     if (i < clients.length) {
                         var client_id = username+'-'+clients[i];
@@ -33,10 +33,10 @@ db.connect(function(err) {
                             client_secret: password // FIXME: client_secret same as password
                         };
                         var Clients = require(libs+'collections/clients');
-                        Clients.commit([client], user_id, {}, function(res, err, result) {
+                        Clients.commit([client], user, {}, function(res, err, result) {
                             if(!err) {
                                 log.info("New client - %s:%s", client.client_id, client.client_secret);
-                                token.generate_tokens(user_id, client.client_id, function(err, access_token, refresh_token, message) {
+                                token.generate_tokens(user, client.client_id, function(err, access_token, refresh_token, message) {
                                     if(err) {
                                         log.error(err);
                                     }

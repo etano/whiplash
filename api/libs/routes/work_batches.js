@@ -40,7 +40,7 @@ var Properties = require(libs + 'collections/properties');
  *     }
  */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.commit(common.get_payload(req,'objs'), String(req.user._id), res, common.return);
+    WorkBatches.commit(common.get_payload(req,'objs'), req.user, res, common.return);
 });
 
 /**
@@ -101,9 +101,8 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
             all_properties.push(results[i]['property']);
         }
     }
-    var user_id = String(req.user._id);
-    Models.commit(good_models, user_id, res, function(res, err, objs) {
-        Properties.replace(all_properties, user_id, res, common.return);
+    Models.commit(good_models, req.user, res, function(res, err, objs) {
+        Properties.replace(all_properties, req.user, res, common.return);
     });
 });
 
@@ -176,18 +175,17 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
  *
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var user_id = String(req.user._id);
     var filter = common.get_payload(req, 'filter');
-    WorkBatches.pop(filter, {timestamp: 1}, user_id, res, function (res, err, work_batch) {
+    WorkBatches.pop(filter, {timestamp: 1}, req.user, res, function (res, err, work_batch) {
         if (!err) {
             if (work_batch) {
-                Properties.update({'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, user_id, res, function(res, err, count) {
+                Properties.update({'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, req.user, res, function(res, err, count) {
                     if (!err) {
-                        Properties.query({'_id':{'$in':work_batch['property_ids']}}, [], user_id, res, function(res, err, property_objs) {
+                        Properties.query({'_id':{'$in':work_batch['property_ids']}}, [], req.user, res, function(res, err, property_objs) {
                             if (!err) {
-                                Models.query({'_id':{'$in':work_batch['model_ids']}}, [], user_id, res, function(res, err, model_objs) {
+                                Models.query({'_id':{'$in':work_batch['model_ids']}}, [], req.user, res, function(res, err, model_objs) {
                                     if (!err) {
-                                        Executables.query({'_id':{'$in':work_batch['executable_ids']}}, [], user_id, res, function(res, err, executable_objs) {
+                                        Executables.query({'_id':{'$in':work_batch['executable_ids']}}, [], req.user, res, function(res, err, executable_objs) {
                                             if (!err) {
                                                 common.return(res, 0, {'properties':property_objs, 'models':model_objs, 'executables':executable_objs});
                                             } else {
@@ -232,7 +230,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.count(common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    WorkBatches.count(common.get_payload(req,'filter'), req.user, res, common.return);
 });
 
 /**
@@ -252,7 +250,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  *     }
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.delete(common.get_payload(req,'filter'), String(req.user._id), res, common.return);
+    WorkBatches.delete(common.get_payload(req,'filter'), req.user, res, common.return);
 });
 
 module.exports = router;
