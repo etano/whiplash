@@ -302,8 +302,16 @@ class Collection {
         global.timer.get_timer('count_'+self.name).start();
         co(function *() {
             filter = yield self.attach_permissions(filter, user);
-            var count = yield db.get().collection(self.name).count(filter);
-            return count;
+            var cursor = db.get().collection(self.name).aggregate([{
+                $match: filter
+            },{
+                $group: {
+                    _id: null,
+                    count: {$sum: 1}
+                }
+            }]);
+            var result = yield cursor.toArray();
+            return result[0].count;
         }).then(function(count) {
             log.debug('found %d objects', count);
             global.timer.get_timer('count_'+self.name).stop();
@@ -311,6 +319,52 @@ class Collection {
         }).catch(function(err) {
             log.error(err);
             global.timer.get_timer('count_'+self.name).stop();
+            cb(res, err, 0);
+        });
+    }
+
+    /**
+     * @apiDefine Totals
+     * @apiName Totals
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {Object} filter Query filter.
+     * @apiParam {String} target_field Field to categorize by.
+     * @apiParam {String} sum_field Field to sum up.
+     *
+     * @apiSuccess {Array} result Array of field value/total pairs.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": [
+     *          {"field_value_0": 3},
+     *          {"field_value_1": 2}
+     *       ]
+     *     }
+     *
+     */
+    totals(filter, target_field, sum_field, user, res, cb) {
+        var self = this;
+        global.timer.get_timer('totals_'+self.name).start();
+        co(function *() {
+            filter = yield self.attach_permissions(filter, user);
+            var cursor = db.get().collection(self.name).aggregate([{
+                $match: filter
+            },{
+                $group: {
+                    _id: target_field,
+                    total: {$sum: sum_field}
+                }
+            }]);
+            var result = yield cursor.toArray();
+            return result;
+        }).then(function(result) {
+            global.timer.get_timer('totals_'+self.name).stop();
+            cb(res, 0, result);
+        }).catch(function(err) {
+            log.error(err);
+            global.timer.get_timer('totals_'+self.name).stop();
             cb(res, err, 0);
         });
     }
@@ -711,12 +765,12 @@ class Collection {
      * @apiVersion 1.0.0
      *
      * @apiParam {Object} filter Query filter.
-     * @apiParam {String[]} fields Field on which to determine distinctness.
+     * @apiParam {String} field Field on which to determine distinctness.
      *
      * @apiParamExample {json} Request-Example:
      *     {
      *       "filter": {},
-     *       "fields": ["n_spins"]
+     *       "field": "n_spins"
      *     }
      *
      * @apiSuccess {Object} result Object containing distinct values.
@@ -728,12 +782,12 @@ class Collection {
      *     }
      *
      */
-    distinct(filter, fields, user, res, cb) {
+    distinct(filter, field, user, res, cb) {
         var self = this;
         global.timer.get_timer('distinct_'+self.name).start();
         co(function *() {
             filter = self.attach_permissions(filter, user);
-            return yield db.get().collection(self.name).distinct(fields, filter);
+            return yield db.get().collection(self.name).distinct(field, filter);
         }).then(function(objs) {
             global.timer.get_timer('distinct_'+self.name).stop();
             cb(res, 0, objs);

@@ -94,4 +94,30 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
     }
 });
 
+/**
+ * @api {get} /clients Update
+ * @apiGroup Authentication
+ * @apiUse Update
+ * @apiPermission admin
+ * @apiVersion 1.0.0
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       "filter": {
+ *         "username": "myUsername"
+ *       },
+ *       "update": {
+ *         "$set": {"email": "new@email.com}},
+ *       }
+ *     }
+ *
+ */
+router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    if (req.user.username === "admin") {
+        Clients.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
+    } else {
+        return res.json({status: 666, error: "Unauthorized access to client updating"});
+    }
+});
+
 module.exports = router;

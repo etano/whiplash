@@ -147,4 +147,15 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
     Properties.stats(common.get_payload(req,'filter'), common.get_payload(req,'field'), map, req.user, res, common.return);
 });
 
+/**
+ * @api {get} /properties/totals Totals
+ * @apiGroup Properties
+ * @apiUse Totals
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ */
+router.get('/totals/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    Properties.totals(common.get_payload(req,'filter'), common.get_payload(req,'target_field'), common.get_payload(req,'sum_field'), req.user, res, common.return);
+});
+
 module.exports = router;
