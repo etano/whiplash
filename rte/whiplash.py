@@ -234,6 +234,7 @@ class db:
 
     def __init__(self, server, port, token="", username="", password="", save_token=True):
         self.conn = connection(server,port,token=token,username=username,password=password,save_token=save_token)
+        self.sets = self.collection("sets")
         self.models = self.collection("models")
         self.executables = self.collection("executables")
         self.properties = properties_collection(self,"properties")
