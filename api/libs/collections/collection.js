@@ -311,6 +311,8 @@ class Collection {
                 }
             }]);
             var result = yield cursor.toArray();
+            if (result.length === 0)
+                return 0;
             return result[0].count;
         }).then(function(count) {
             log.debug('found %d objects', count);
