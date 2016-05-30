@@ -102,8 +102,12 @@ function run_container(executable, model, property) {
         var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
 
         // Write input
-        model.params = property.params;
-        jsonfile.writeFileSync(in_file, model);
+        if (model.format === "cnf") { // SAT format
+            yield fs.writeFileAsync(in_file, model.content);
+        } else { // JSON format
+            model.params = property.params;
+            jsonfile.writeFileSync(in_file, model);
+        }
 
         // Create container
         var run_work_dir = '/input';
