@@ -26,6 +26,7 @@ wdb.connect(options, function() {
 // Global variables
 var working = false;
 var pulled_containers = [];
+var ascii_regex = /[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g;
 
 // Main loop
 setInterval(function () {
@@ -61,35 +62,40 @@ function resolve_property(property) {
     co(function *() {
         var executable = yield wdb.get().query_one("executables", wdb.get().admin_access_token, {_id: executable_id});
         var model = yield wdb.get().query_one("models", wdb.get().admin_access_token, {_id: model_id});
-        if (executable && model) pull_container(executable, model, property);
+        if (executable && model) {
+            yield pull_container(executable.path);
+            run_container(executable, model, property);
+        }
         else throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
     }).catch(function(err) {
-        set_errored(property._id, err);
+        set_errored(property, err);
     });
 }
 
 // Pull the container
-function pull_container(executable, model, property) {
-    if (pulled_containers.indexOf(executable.path) < 0) {
-        co(function *() {
-            console.log("pulling", executable.path);
-            var stream = yield docker.pullAsync(executable.path);
-            docker.modem.followProgress(stream, onFinished, onProgress);
-            function onFinished(err, output) {
-                if (err) set_errored(property._id, err);
-                else {
-                    pulled_containers.push(executable.path);
-                    run_container(executable, model, property);
+function pull_container(container) {
+    return new Promise(function(resolve, reject) {
+        if (pulled_containers.indexOf(container) < 0) {
+            co(function *() {
+                console.log("pulling", container);
+                var stream = yield docker.pullAsync(container);
+                docker.modem.followProgress(stream, onFinished, onProgress);
+                function onFinished(err, output) {
+                    if (err) reject(err);
+                    else {
+                        pulled_containers.push(container);
+                        resolve();
+                    }
                 }
-            }
-            function onProgress(event) {}
-        }).catch(function(err) {
-            set_errored(property._id, err);
-        });
-    } else {
-        console.log("container already pulled", executable.path);
-        run_container(executable, model, property);
-    }
+                function onProgress(event) {}
+            }).catch(function(err) {
+                reject(err);
+            });
+        } else {
+            console.log("container already pulled", container);
+            resolve();
+        }
+    });
 }
 
 // Run the container
@@ -103,8 +109,11 @@ function run_container(executable, model, property) {
 
         // Write input
         if (model.format === "cnf") { // SAT format
+            console.log("writing CNF...");
+            in_file += ".cnf";
             yield fs.writeFileAsync(in_file, model.content);
         } else { // JSON format
+            console.log("writing JSON...");
             model.params = property.params;
             jsonfile.writeFileSync(in_file, model);
         }
@@ -126,30 +135,59 @@ function run_container(executable, model, property) {
         stream.pipe(fs.createWriteStream(out_file));
 
         // Start container
+        console.log("starting container...");
         var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
         yield container.startAsync({
             'Binds': [host_work_dir+':'+run_work_dir]
         });
+        var hrstart = process.hrtime();
+
+        // Set timeout
+        var timeout = 0;
+        if (!model.timeout) {
+            if (!property.timeout) timeout = 600; // Default is 1 hr.
+            else timeout = property.timeout;
+        } else timeout = model.timeout;
+        container.stopAsync({t: timeout});
 
         // Wait for container to finish
-        // TODO: add timeout
-        var hrstart = process.hrtime();
         var data = yield container.waitAsync();
+        console.log("container finished...");
         var hrdiff = process.hrtime(hrstart);
         var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
 
         // Read output, check for errors, remove file
         var log = yield fs.readFileAsync(out_file, 'ascii');
+        log = log.replace(ascii_regex, '');
         fs.unlink(out_file);
-        if (data.StatusCode !== 0) {
-            throw log;
-        }
 
         // Remove container
         container.removeAsync();
 
         // Read result, remove file
-        var result = jsonfile.readFileSync(in_file);
+        var result_file = "";
+        if (model.format === "cnf") { // SAT format
+            var n = log.lastIndexOf("\nv ");
+            if (n < 0) {
+                var n = log.lastIndexOf("v ");
+                if (n < 0) throw "No output found";
+            }
+            var chopped_log = log.substr(n+2, log.length);
+            var variables = chopped_log;
+            if (chopped_log.indexOf("\n") >= 0)
+                variables = chopped_log.substr(0, chopped_log.indexOf("\n"));
+            result_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-result-XXXXXX'});
+            yield fs.writeFileAsync(result_file, variables);
+        } else { // JSON format
+            if (data.StatusCode === 137) {
+                throw "Timed out after "+timeout+" seconds";
+            } else if (data.StatusCode !== 0) {
+                console.log(data);
+                throw log
+            }
+            result_file = in_file;
+        }
+        var result = yield verify_result(model.format, in_file, result_file);
         fs.unlink(in_file);
 
         // Set necessary fields
@@ -158,27 +196,93 @@ function run_container(executable, model, property) {
 
         // Push result back to database
         var obj = yield wdb.get().commit_one('models', wdb.get().admin_access_token, result);
-        yield wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, {
+        var update = {
                 status: "resolved",
                 output_model_id: obj.ids[0],
                 log: log,
                 walltime: walltime
-            }
-        );
+        };
+        if (model.format === "cnf")
+            update.cost = result.cost;
+        yield wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, update);
         console.log('resolved property', property._id);
+
+        // Start looking again
         working = false;
     }).catch(function(err) {
-        set_errored(property._id, err);
+        set_errored(property, err);
+    });
+}
+
+// Verify result
+function verify_result(format, in_file, result_file) {
+    return new Promise(function(resolve, reject) {
+        co(function *() {
+            if (format === "cnf") { // SAT format
+                var cost_evaluator = "iliazin/cost_evaluator_sat:v1";
+                yield pull_container(cost_evaluator);
+
+                var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
+                var run_work_dir = '/input';
+                var container = yield docker.createContainerAsync({
+                    Image: 'iliazin/cost_evaluator_sat:v1',
+                    Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(result_file)],
+                    Volumes: {run_work_dir: {}}
+                });
+
+                // Create stream from container to out_file
+                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
+                var stream = yield container.attachAsync({
+                    stream: true,
+                    stdout: true,
+                    stderr: true
+                });
+                stream.pipe(fs.createWriteStream(out_file));
+
+                // Start container
+                console.log("starting evaluator...");
+                var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
+                yield container.startAsync({
+                    'Binds': [host_work_dir+':'+run_work_dir]
+                });
+
+                // Wait for container to finish
+                var data = yield container.waitAsync();
+                console.log("container finished...");
+
+                // Read output, check for errors, remove file
+                var log = yield fs.readFileAsync(out_file, 'ascii');
+                fs.unlink(out_file);
+                if (data.StatusCode !== 0) throw log
+
+                // Remove container
+                container.removeAsync();
+
+                var num = log.replace(ascii_regex, '');
+                var configuration = yield fs.readFileAsync(result_file, 'ascii');
+                configuration = configuration.replace(ascii_regex, '');
+                var result = {
+                    cost: Number(num),
+                    content: configuration
+                };
+                resolve(result);
+            } else { // JSON format
+                resolve(jsonfile.readFileSync(result_file));
+            }
+        }).catch(function(err) {
+            console.log(err);
+            reject(err);
+        });
     });
 }
 
 // Catch all error function
-function set_errored(property_id, err) {
+function set_errored(property, err) {
     working = false;
     console.log(err);
     wdb.get().update_one('properties', wdb.get().admin_access_token, {_id: property._id}, {
             status: "errored",
-            log: log
+            err: err
         }
     );
 }

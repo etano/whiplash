@@ -196,34 +196,60 @@ class Collection {
      * @apiDefine user User access only
      * This method can only affect what is owned by the user who calls it or the "admin" user.
      */
-    attach_filter_permissions(filter, user) {
+
+    attach_read_permissions(filter, user) {
         var self = this;
-        global.timer.get_timer('attach_filter_permissions_'+self.name).start();
+        global.timer.get_timer('attach_read_permissions_'+self.name).start();
         return new Promise(function(resolve, reject) {
-            if (!user._id) resolve(filter);
-            if (user.username !== "admin")
-                filter.owner = {$in: [user._id, "internal"]};
-            global.timer.get_timer('attach_filter_permissions_'+self.name).stop();
-            resolve(filter);
+            try {
+                if (!user._id) resolve(filter);
+                if (user.username !== "admin")
+                    filter.owner = {$in: [user._id, "internal"]};
+                global.timer.get_timer('attach_read_permissions_'+self.name).stop();
+                resolve(filter);
+            } catch(err) {
+                console.log(err)
+                global.timer.get_timer('attach_read_permissions_'+self.name).stop();
+                reject(err);
+            }
         });
     }
 
-    attach_obj_permissions(obj, user) {
+    attach_write_permissions(filter, user) {
         var self = this;
-        global.timer.get_timer('attach_obj_permissions_'+self.name).start();
+        global.timer.get_timer('attach_write_permissions_'+self.name).start();
         return new Promise(function(resolve, reject) {
-            if (!user._id) resolve(obj);
-            if (Array.isArray(obj)) {
-                for (var i=0; i<obj.length; i++) {
-                    if ((user.username !== "admin") && (obj[i].owner !== "internal")) {
-                        obj[i].owner = user._id;
+            try {
+                if (!user._id) resolve(filter);
+                if (user.username !== "admin")
+                    filter.owner = user._id;
+                global.timer.get_timer('attach_write_permissions_'+self.name).stop();
+                resolve(filter);
+            } catch(err) {
+                console.log(err)
+                global.timer.get_timer('attach_write_permissions_'+self.name).stop();
+                reject(err);
+            }
+        });
+    }
+
+    attach_ownership(objs, user) {
+        var self = this;
+        global.timer.get_timer('attach_ownership_'+self.name).start();
+        return new Promise(function(resolve, reject) {
+            try {
+                for (var i=0; i<objs.length; i++) {
+                    if (((user.username !== "admin") && (objs[i].owner !== "internal")) || (!objs[i].owner)) {
+                        objs[i].owner = user._id;
                     }
                 }
-            } else if ((user.username !== "admin") && (obj.owner !== "internal")) {
-                obj.owner = user._id;
+                global.timer.get_timer('attach_ownership_'+self.name).stop();
+                resolve(objs);
+            } catch (err) {
+                console.log(err)
+                global.timer.get_timer('attach_ownership_'+self.name).stop();
+                reject(err);
             }
-            global.timer.get_timer('attach_obj_permissions_'+self.name).stop();
-            resolve(obj);
         });
     }
 
@@ -242,7 +268,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('query_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_read_permissions(filter, user);
             var objs = yield query(self, filter, fields);
             return objs;
         }).then(function(objs) {
@@ -270,7 +296,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('query_one_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_read_permissions(filter, user);
             var objs = yield query(self, filter, fields);
             if (objs.length === 0) return 0;
             log.debug('found object');
@@ -305,7 +331,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('count_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_read_permissions(filter, user);
             var cursor = db.get().collection(self.name).aggregate([{
                 $match: filter
             },{
@@ -354,7 +380,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('totals_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_read_permissions(filter, user);
             var cursor = db.get().collection(self.name).aggregate([{
                 $match: filter
             },{
@@ -408,10 +434,7 @@ class Collection {
             if (objs.length === 0)
                 return {"n_existing": 0, "n_new": 0, "ids": []};
 
-            objs = yield self.attach_obj_permissions(objs, user);
-            for(var i=0; i<objs.length; i++) {
-                if (!objs[i].owner) objs[i].owner = user._id;
-            }
+            objs = yield self.attach_ownership(objs, user);
             objs = yield self.validate(objs);
             objs = yield self.form_ids(objs);
             if (self.name === "users") {
@@ -514,7 +537,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('update_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_write_permissions(filter, user);
             var result = yield db.get().collection(self.name).updateMany(filter, {'$set':update}, {w:1});
             return result.modifiedCount;
         }).then(function(count) {
@@ -551,7 +574,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('update_one_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_write_permissions(filter, user);
             var result = yield db.get().collection(self.name).findOneAndUpdate(filter, {$set:update}, {w:1});
             if (!result.value) return 0;
             return result.value;
@@ -627,7 +650,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('pop_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_write_permissions(filter, user);
             var result = yield db.get().collection(self.name).findOneAndDelete(filter, {sort: sort});
             if (!result.value) return 0;
             return result.value;
@@ -662,7 +685,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('delete_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_write_permissions(filter, user);
             var fields = ['_id', 'has_content'];
             var objs = yield query(self, filter, fields);
             for (var i=0; i<objs.length; i++) {
@@ -722,7 +745,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('stats_'+self.name).start();
         co(function *() {
-            filter = yield self.attach_filter_permissions(filter, user);
+            filter = yield self.attach_read_permissions(filter, user);
             var reduce = function (key, values) {
                 var a = values[0];
                 for (var i=1; i < values.length; i++){
@@ -792,7 +815,7 @@ class Collection {
         var self = this;
         global.timer.get_timer('distinct_'+self.name).start();
         co(function *() {
-            filter = self.attach_filter_permissions(filter, user);
+            filter = self.attach_read_permissions(filter, user);
             return yield db.get().collection(self.name).distinct(field, filter);
         }).then(function(objs) {
             global.timer.get_timer('distinct_'+self.name).stop();
