@@ -193,7 +193,7 @@ function get_status(filters, fields, user, res, cb) {
         // Get property objects
         var property_objs = [];
         var property_filter = {'commit_tag': property_stats['commit_tag']};
-        var property_fields = ['status'];
+        var property_fields = ['status','walltime'];
         Properties.query(property_filter, property_fields, user, res, function(res, err, property_objs) {
             if (!err) {
                 // Get stats
@@ -286,13 +286,17 @@ function get_status(filters, fields, user, res, cb) {
  *           "input_model": {"name": "example0"},
  *           "executable": {"name": "example0"},
  *           "params": {"sleep_time": 1.0},
- *           "output_model": {"number": 0}
+ *           "output_model": {"number": 0},
+ *           "status": "resolved",
+ *           "walltime": 1.21
  *         },
  *         {
  *           "input_model": {"name": "example0"},
  *           "executable": {"name": "example0"},
  *           "params": {"sleep_time": 1.0},
- *           "output_model": {"number": 1}
+ *           "output_model": {"number": 1},
+ *           "status": "resolved",
+ *           "walltime": 1.23
  *         },
  *       ]
  *     }
@@ -312,7 +316,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                 // Form property filter
                 var property_objs = [];
                 var property_filter = {'commit_tag': property_stats['commit_tag'], 'status': 'resolved'};
-                var property_fields = ['_id','status','input_model_id','executable_id','output_model_id'];
+                var property_fields = ['_id','status','walltime','input_model_id','executable_id','output_model_id'];
                 for (var j=0; j<fields['params'].length; j++) {
                     property_fields.push('params.'+fields['params'][j]);
                 }
@@ -352,8 +356,9 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                                         'params': property_objs[i]['params'],
                                         'status': property_objs[i]['status']
                                     };
-                                    if (property_objs[i]['status'] === 'resolved') {
+                                    if (obj['status'] === 'resolved') {
                                         obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
+                                        obj['walltime'] = property_objs[i].walltime;
                                     } else {
                                         obj['output_model'] = '';
                                     }
