@@ -165,6 +165,7 @@ function run_container(executable, model, property) {
         fs.unlink(out_file);
 
         // Remove container
+        console.log("remove container...");
         container.removeAsync();
 
         // Read result, remove file
