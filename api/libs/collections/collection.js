@@ -303,8 +303,10 @@ class Collection {
             return objs[0];
         }).then(function(obj) {
             global.timer.get_timer('query_one_'+self.name).stop();
+            console.log(obj);
             cb(res, 0, obj);
         }).catch(function(err) {
+            log.debug('found objectsdfasfasd');
             log.error(err);
             global.timer.get_timer('query_one_'+self.name).stop();
             cb(res, err, 0);

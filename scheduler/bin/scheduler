@@ -17,7 +17,8 @@ var wdb = require('project-whiplash');
 var options = {
     host: process.env.WHIPLASH_API_HOST,
     port: process.env.WHIPLASH_API_PORT,
-    admin_client: "admin-scheduler",
+    admin_client_id: process.env.WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID,
+    admin_client_secret: process.env.WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET,
     admin_access_token: process.env.WHIPLASH_ADMIN_SCHEDULER_TOKEN,
     admin_password: process.env.WHIPLASH_ADMIN_PASSWORD
 };

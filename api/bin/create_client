@@ -1,0 +1,42 @@
+var libs = process.cwd() + '/libs/';
+var log = require(libs + 'log')(module);
+var db = require(libs + 'db/mongo');
+var pass = require(libs + 'auth/pass');
+var token = require(libs + 'auth/oauth2');
+
+var client_id = process.argv[2];
+var client_secret = process.argv[3];
+var owner_username = process.argv[4];
+
+db.connect(function(err) {
+    if(!err) {
+        var Users = require(libs+'collections/users');
+        Users.query_one({username: owner_username}, [], {username: "admin"}, {}, function(res, err, user) {
+            if(!err) {
+                log.info("Found user - %s", user.username);
+                var client = {
+                    name: client_id,
+                    client_id: client_id,
+                    client_secret: client_secret // FIXME: client_secret same as password
+                };
+                var Clients = require(libs+'collections/clients');
+                Clients.commit_one(client, user, {}, function(res, err, result) {
+                    if(!err) {
+                        log.info("New client - %s:%s", client.client_id, client.client_secret);
+                        token.generate_tokens(user, client.client_id, function(err, access_token, refresh_token, message) {
+                            if(err) {
+                                log.error(err);
+                            }
+                            db.close();
+                        });
+                    } else {
+                        log.error(err);
+                    }
+                });
+            } else {
+                log.error(err);
+                db.close();
+            }
+        });
+    }
+});

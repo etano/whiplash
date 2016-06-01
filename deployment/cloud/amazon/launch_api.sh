@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ $# -eq 0 ]
+  then
+    echo "Please supply an index as the first argument"
+    exit 1
+fi
+INDEX=$1
+
 {
 docker-machine create --driver amazonec2 \
                       --amazonec2-security-group WhiplashApi \
@@ -7,9 +14,9 @@ docker-machine create --driver amazonec2 \
                       --amazonec2-secret-key ${AWS_SECRET_KEY} \
                       --amazonec2-vpc-id ${AWS_VPC_ID} \
                       --amazonec2-region eu-west-1 \
-                      whiplash-api-0
+                      whiplash-api-${INDEX}
 } && {
-eval $(docker-machine env whiplash-api-0)
+eval $(docker-machine env whiplash-api-${INDEX})
 } && {
 docker run -d \
            --name "whiplash-api" \
