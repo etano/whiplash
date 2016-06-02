@@ -34,10 +34,12 @@ www:
         WHIPLASH_API_HOST: api
         WHIPLASH_API_PORT: 1337
         WHIPLASH_ADMIN_PASSWORD: password
+        WHIPLASH_ADMIN_WWW_CLIENT_ID: admin-www
+        WHIPLASH_ADMIN_WWW_CLIENT_SECRET: password
     links:
         - api:api
     restart: always
-    command: sh -c "node --use_strict bin/www"
+    command: sh -c "sleep 20; node --use_strict bin/www"
 
 scheduler:
     extends:
@@ -54,6 +56,8 @@ scheduler:
         WHIPLASH_API_HOST: api
         WHIPLASH_API_PORT: 1337
         WHIPLASH_ADMIN_PASSWORD: password
+        WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID: admin-scheduler
+        WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET: password
     links:
         - api:api
     command: sh -c "sleep 20; node --use_strict bin/scheduler"
