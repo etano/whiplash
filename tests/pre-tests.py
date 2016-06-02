@@ -2,10 +2,12 @@
 import sys,os,json,random,copy
 import whiplash
 
-print("Login")
+print("Read inputs")
 host = sys.argv[1]
 port = int(sys.argv[2])
-db = whiplash.db(host,port,username="test",password="test")
+
+print("Login as admin")
+db = whiplash.db(host,port,username="admin",password="password")
 
 print("Reset database")
 db.collection("work_batches").delete({})
@@ -19,6 +21,9 @@ db.properties.delete({})
 assert db.properties.count({}) == 0
 db.sets.delete({})
 assert db.sets.count({}) == 0
+
+print("Login as test")
+db = whiplash.db(host,port,username="test",password="test")
 
 print("Commit models")
 n_models = 10
