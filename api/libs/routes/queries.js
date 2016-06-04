@@ -315,7 +315,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             setup_query(filters, fields, settings, req.user, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
                 // Form property filter
                 var property_objs = [];
-                var property_filter = {'commit_tag': property_stats['commit_tag'], 'status': 'resolved'};
+                var property_filter = {'commit_tag': property_stats['commit_tag']};
                 var property_fields = ['_id','status','walltime','input_model_id','executable_id','output_model_id'];
                 for (var j=0; j<fields['params'].length; j++) {
                     property_fields.push('params.'+fields['params'][j]);

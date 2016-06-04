@@ -99,6 +99,8 @@ function query(collection, filter, fields) {
         co(function *() {
             var objs = [];
             if (fields.length > 0) {
+                if (fields.indexOf("has_content") < 0)
+                    fields.push("has_content"); // TODO: perhaps remove this later
                 var proj = {};
                 for(var i=0; i<fields.length; i++) {
                     proj[fields[i]] = 1;
@@ -303,7 +305,6 @@ class Collection {
             return objs[0];
         }).then(function(obj) {
             global.timer.get_timer('query_one_'+self.name).stop();
-            console.log(obj);
             cb(res, 0, obj);
         }).catch(function(err) {
             log.debug('found objectsdfasfasd');
