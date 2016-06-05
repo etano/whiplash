@@ -1,6 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
+var co = require('co');
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
@@ -31,7 +32,7 @@ var Models = require(libs + 'collections/models');
  *     }
  */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.commit(common.get_payload(req,'objs'), req.user, res, common.return);
+    common.return_promise(res, Models.commit(common.get_payload(req,'objs'), req.user));
 });
 
 /**
@@ -50,7 +51,7 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  *     }
  */
 router.post('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.commit_one(common.get_payload(req,''), req.user, res, common.return);
+    common.return_promise(res, Models.commit_one(common.get_payload(req,''), req.user));
 });
 
 /**
@@ -89,7 +90,7 @@ router.post('/one', passport.authenticate('bearer', { session: false }), functio
  *     }
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
+    common.return_promise(res, Models.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user));
 });
 
 /**
@@ -121,7 +122,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
+    common.return_promise(res, Models.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user));
 });
 
 /**
@@ -139,7 +140,7 @@ router.get('/one', passport.authenticate('bearer', { session: false }), function
  *     }
  */
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.count(common.get_payload(req,'filter'), req.user, res, common.return);
+    common.return_promise(res, Models.count(common.get_payload(req,'filter'), req.user));
 });
 
 /**
@@ -162,7 +163,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  *     }
  */
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
+    common.return_promise(res, Models.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user));
 });
 
 /**
@@ -180,7 +181,7 @@ router.put('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.delete(common.get_payload(req,'filter'), req.user, res, common.return);
+    common.return_promise(res, Models.delete(common.get_payload(req,'filter'), req.user));
 });
 
 /**
@@ -208,7 +209,7 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
                       diff: 0
                   });
               };
-    Models.stats(common.get_payload(req,'filter'), common.get_payload(req,'field'), map, req.user, res, common.return);
+    common.return_promise(res, Models.stats(common.get_payload(req,'filter'), common.get_payload(req,'field'), map, req.user));
 });
 
 /**
@@ -219,7 +220,7 @@ router.get('/stats/', passport.authenticate('bearer', { session: false }), funct
  * @apiVersion 1.0.0
  */
 router.get('/distinct/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.distinct(common.get_payload(req,'filter'), common.get_payload(req,'field'), req.user, res, common.return);
+    common.return_promise(res, Models.distinct(common.get_payload(req,'filter'), common.get_payload(req,'field'), req.user));
 });
 
 /**
@@ -230,7 +231,7 @@ router.get('/distinct/', passport.authenticate('bearer', { session: false }), fu
  * @apiVersion 1.0.0
  */
 router.get('/totals/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Models.totals(common.get_payload(req,'filter'), common.get_payload(req,'target_field'), common.get_payload(req,'sum_field'), req.user, res, common.return);
+    common.return_promise(res, Models.totals(common.get_payload(req,'filter'), common.get_payload(req,'target_field'), common.get_payload(req,'sum_field'), req.user));
 });
 
 

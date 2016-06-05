@@ -1,3 +1,4 @@
+var co = require('co');
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
@@ -10,33 +11,27 @@ var owner_username = process.argv[4];
 
 db.connect(function(err) {
     if(!err) {
-        var Users = require(libs+'collections/users');
-        Users.query_one({username: owner_username}, [], {username: "admin"}, {}, function(res, err, user) {
-            if(!err) {
-                log.info("Found user - %s", user.username);
-                var client = {
-                    name: client_id,
-                    client_id: client_id,
-                    client_secret: client_secret // FIXME: client_secret same as password
-                };
-                var Clients = require(libs+'collections/clients');
-                Clients.commit_one(client, user, {}, function(res, err, result) {
-                    if(!err) {
-                        log.info("New client - %s:%s", client.client_id, client.client_secret);
-                        token.generate_tokens(user, client.client_id, function(err, access_token, refresh_token, message) {
-                            if(err) {
-                                log.error(err);
-                            }
-                            db.close();
-                        });
-                    } else {
-                        log.error(err);
-                    }
-                });
-            } else {
-                log.error(err);
-                db.close();
-            }
+        co(function *() {
+            var Users = require(libs+'collections/users');
+            var user = yield Users.query_one({username: owner_username}, [], {username: "admin"});
+            log.info("Found user - %s", user.username);
+
+            var client = {
+                name: client_id,
+                client_id: client_id,
+                client_secret: client_secret // FIXME: client_secret same as password
+            };
+            var Clients = require(libs+'collections/clients');
+            var result = yield Clients.commit_one(client, user);
+            log.info("New client - %s:%s", client.client_id, client.client_secret);
+
+            var tokens = yield token.generate_tokens(user, client.client_id);
+            log.info("New tokens - %s:%s", tokens.access_token, tokens.refresh_token);
+
+            db.close();
+        }).catch(function(err) {
+            log.error(err);
+            db.close();
         });
     }
 });

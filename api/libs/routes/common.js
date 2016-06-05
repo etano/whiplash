@@ -1,6 +1,7 @@
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var XXHash = require('xxhash').XXHash64;
+var co = require('co');
 require(libs + '/timer');
 
 function checksum(str) {
@@ -98,6 +99,24 @@ module.exports = {
             else
                 return res.send({status: res.statusCode, error: JSON.stringify(err)});
         }
+    },
+
+    return_promise: function(res, promise) {
+        var self = this;
+        global.timer.get_timer('return_promise').start();
+        co(function *() {
+            console.log("ho");
+            var obj = yield promise;
+            console.log("ho");
+            return obj;
+        }).then(function(obj) {
+            console.log("hi");
+            global.timer.get_timer('return_promise').stop();
+            self.return(res, 0, obj);
+        }).catch(function(err) {
+            log.error(err);
+            self.return(res, err, 0);
+        });
     },
 
 };

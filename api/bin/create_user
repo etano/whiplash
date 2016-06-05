@@ -1,3 +1,4 @@
+var co = require('co');
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var db = require(libs + 'db/mongo');
@@ -10,51 +11,40 @@ var email = process.argv[4];
 
 db.connect(function(err) {
     if(!err) {
-        var salt = pass.generate_salt();
-        var user = {
-            username: username,
-            email: email,
-            salt: salt,
-            hashed_password: pass.encrypt_password(salt, password),
-            activated: true
-        };
-        var Users = require(libs+'collections/users');
-        Users.commit_one(user, {username: "admin"}, {}, function(res, err, result) {
-            if(!err) {
-                log.info("New user - %s:%s:%s", user.username, password, user.email);
-                user._id = result['ids'][0];
-                var clients = ['python', 'scheduler', 'www'];
-                var make_clients = function(i) {
-                    if (i < clients.length) {
-                        var client_id = username+'-'+clients[i];
-                        var client = {
-                            name: client_id,
-                            client_id: client_id,
-                            client_secret: password // FIXME: client_secret same as password
-                        };
-                        var Clients = require(libs+'collections/clients');
-                        Clients.commit_one(client, user, {}, function(res, err, result) {
-                            if(!err) {
-                                log.info("New client - %s:%s", client.client_id, client.client_secret);
-                                token.generate_tokens(user, client.client_id, function(err, access_token, refresh_token, message) {
-                                    if(err) {
-                                        log.error(err);
-                                    }
-                                    make_clients(i+1);
-                                });
-                            } else {
-                                log.error(err);
-                            }
-                        });
-                    } else {
-                        db.close();
-                    }
-                }
-                make_clients(0);
-            } else {
-                log.error(err);
-                db.close();
+        co(function *() {
+            var salt = pass.generate_salt();
+            var user = {
+                username: username,
+                email: email,
+                salt: salt,
+                hashed_password: pass.encrypt_password(salt, password),
+                activated: true
+            };
+            var Users = require(libs+'collections/users');
+            var result = yield Users.commit_one(user, {username: "admin"});
+            log.info("New user - %s:%s:%s", user.username, password, user.email);
+            user._id = result['ids'][0];
+
+            var clients = ['python', 'scheduler', 'www'];
+            var Clients = require(libs+'collections/clients');
+            for (var i=0; i<clients.length; i++) {
+                var client_id = username+'-'+clients[i];
+                var client = {
+                    name: client_id,
+                    client_id: client_id,
+                    client_secret: password // FIXME: client_secret same as password
+                };
+                result = yield Clients.commit_one(client, user);
+                log.info("New client - %s:%s", client.client_id, client.client_secret);
+
+                var tokens = yield token.generate_tokens(user, client.client_id);
+                log.info("New tokens - %s:%s", tokens.access_token, tokens.refresh_token);
             }
+
+            db.close();
+        }).catch(function(err) {
+            log.error(err);
+            db.close();
         });
     }
 });

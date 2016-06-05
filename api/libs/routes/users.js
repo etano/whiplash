@@ -1,6 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
+var co = require('co');
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
@@ -44,7 +45,7 @@ var Clients = require(libs + 'collections/clients');
  *     }
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
+    common.return_promise(res, Users.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user));
 });
 
 
@@ -78,7 +79,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
+    common.return_promise(res, Users.query_one(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user));
 });
 
 /**
@@ -100,7 +101,7 @@ router.get('/one', passport.authenticate('bearer', { session: false }), function
  *
  */
 router.put('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    Users.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
+    common.return_promise(res, Users.update_one(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user));
 });
 
 /**
@@ -121,18 +122,23 @@ router.put('/one', passport.authenticate('bearer', { session: false }), function
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = {};
     if(req.body.filter) filter = JSON.parse(req.body.filter);
-    Users.pop(filter, {}, req.user, res, function(res, err, obj) {
-        if (!err) {
-            AccessTokens.delete({owner: obj._id}, req.user, res, function(res, err, obj) {});
-            RefreshTokens.delete({owner: obj._id}, req.user, res, function(res, err, obj) {});
-            Clients.delete({user_id: obj._id}, req.user, res, function(res, err, obj) {});
-        }
-        common.return(res, err, obj);
+    co(function *() {
+        var user = Users.pop(filter, {}, req.user);
+        AccessTokens.delete({owner: obj._id}, req.user);
+        RefreshTokens.delete({owner: obj._id}, req.user);
+        Clients.delete({user_id: obj._id}, req.user);
+        return user;
+    }).then(function(obj) {
+        common.return(res, 0, obj);
+    }).catch(function(err) {
+        common.return(res, err, 0);
     });
 });
 
 function make_user(username, email, password, res) {
-    if (username && email && password) {
+    co(function *() {
+        if (!(username && email && password))
+            throw "Invalid username and/or password";
         var salt = pass.generate_salt();
         var user = {
             username: username,
@@ -141,28 +147,23 @@ function make_user(username, email, password, res) {
             hashed_password: pass.encrypt_password(salt, password),
             activated: false
         };
-        Users.commit([user], {username: "admin"}, res, function(res, err, result) {
-            if(!err) {
-                log.info("New user: %s", user.username);
-                res.send({status: "OK", result: result});
-            } else {
-                log.error(err);
-                var message = "";
-                if (err.errmsg) {
-                    if (err.errmsg.indexOf('username')>0)
-                        message += "Username already in use. ";
-                    if (err.errmsg.indexOf('email')>0)
-                        message += "Email already in use. ";
-                } else {
-                    message = err;
-                }
-                res.send({status: 500, error: message});
-            }
-        });
-    } else {
-        log.error("Invalid username and/or password");
-        res.send("Invalid username and/or password");
-    }
+        return yield Users.commit_one(user, {username: "admin"});
+    }).then(function(result) {
+        log.info("New user");
+        res.send({status: "OK", result: result});
+    }).catch(function(err) {
+        log.error(err);
+        var message = "";
+        if (err.errmsg) {
+            if (err.errmsg.indexOf('username')>0)
+                message += "Username already in use. ";
+            if (err.errmsg.indexOf('email')>0)
+                message += "Email already in use. ";
+        } else {
+            message = err;
+        }
+        res.send({status: 500, error: message});
+    });
 }
 
 /**
@@ -191,7 +192,7 @@ router.post('/one', passport.authenticate('bearer', {session: false}), function(
         var password = common.get_payload(req, 'password');
         make_user(username, email, password, res);
     } else {
-        res.send("Unauthorized access to user creation");
+        res.send({status: 500, error: "Unauthorized access to user creation"});
     }
 });
 
@@ -215,19 +216,17 @@ router.post('/one', passport.authenticate('bearer', {session: false}), function(
  *
  */
 router.post('/admin', function(req, res) {
-    Users.query({username: "admin"}, [], {username: "admin"}, res, function(res, err, result) {
-        if (!err && (result.length === 0)) {
-            var password = common.get_payload(req, 'password');
-            if (password) {
-                make_user("admin", "admin@whiplash.ethz.ch", password, res);
-            } else {
-                res.send("Invalid password");
-            }
-        } else if (result.length > 0) {
-            res.send("Admin password already set");
-        } else {
-            res.send("Unauthorized access to user creation");
-        }
+    co(function *() {
+        var user = yield Users.query_one({username: "admin"}, [], {username: "admin"});
+        if (user)
+            throw "Admin password already set";
+        var password = common.get_payload(req, 'password');
+        if (!password)
+            throw "Invalid password";
+        make_user("admin", "admin@whiplash.ethz.ch", password, res);
+    }).catch(function(err) {
+        log.error(err);
+        common.return(res, err, 0);
     });
 });
 
@@ -247,14 +246,15 @@ router.post('/admin', function(req, res) {
  *
  */
 router.get('/fresh', function(req, res) {
-    Users.query({username: "admin"}, [], {username: "admin"}, res, function(res, err, result) {
-        if (!err && (result.length === 0)) {
-            res.send({error: null, result: true});
-        } else if (result.length > 0) {
-            res.send({error: null, result: false});
-        } else {
-            res.send({error: err, result: false});
-        }
+    co(function *() {
+        var user = yield Users.query_one({username: "admin"}, [], {username: "admin"});
+        if (user)
+            return false;
+        return true;
+    }).then(function(obj) {
+        common.return(res, 0, obj);
+    }).catch(function(err) {
+        common.return(res, err, 0);
     });
 });
 

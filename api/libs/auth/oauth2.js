@@ -1,6 +1,7 @@
 var oauth2orize = require('oauth2orize');
 var passport = require('passport');
 var crypto = require('crypto');
+var co = require('co');
 var libs = process.cwd() + '/libs/';
 var config = require(libs + 'config');
 var log = require(libs + 'log')(module);
@@ -13,50 +14,64 @@ var RefreshTokens = require(libs + 'collections/refresh_tokens');
 var aserver = oauth2orize.createServer();
 
 // Destroys any old tokens and generates a new access and refresh token
-var generate_tokens = function (user, client_id, done) {
-    var data = { client_id: client_id };
-    RefreshTokens.delete(data, user, {}, function(res, err, count) {
-        if (err) { return done(err); }
-        AccessTokens.delete(data, user, {}, function(res, err, count) {
-            if (err) { return done(err); }
+var generate_tokens = function (user, client_id) {
+    return new Promise(function(resolve, reject) {
+        co(function *() {
+            var data = { client_id: client_id };
+            var count = yield RefreshTokens.delete(data, user);
+            count = yield AccessTokens.delete(data, user);
             var access_token_value = crypto.randomBytes(32).toString('hex');
             var refresh_token_value = crypto.randomBytes(32).toString('hex');
             data.token = access_token_value;
-            AccessTokens.commit([data], user, {}, function(res, err, result) {
-                if (err) { return done(err); }
-                data.token = refresh_token_value;
-                RefreshTokens.commit([data], user, {}, function(res, err, result) {
-                    if (err) { return done(err); }
-                    done(null, access_token_value, refresh_token_value, {
-                        'expires_in': config.get('security:tokenLife')
-                    });
-                });
+            var result = yield AccessTokens.commit_one(data, user);
+            data.token = refresh_token_value;
+            result = yield RefreshTokens.commit_one(data, user);
+            resolve({
+                access_token: access_token_value,
+                refresh_token: refresh_token_value,
+                message: {
+                    expires_in: config.get('security:tokenLife')
+                }
             });
+        }).catch(function(err) {
+            log.error(err);
+            reject(err);
         });
     });
 };
 
 // Exchange username & password for access token.
 aserver.exchange(oauth2orize.exchange.password(function(client, username, password, scope, done) {
-    Users.query_one({'username': username}, [], {username: "admin"}, {}, function(res, err, user) {
-        if (err) { return done(err); }
-        if (!user || !pass.check_password(user.salt, password, user.hashed_password)) {
-            return done(null, false);
-        }
-        generate_tokens(user, client.client_id, done);
+    co(function *() {
+        var user = yield Users.query_one({'username': username}, [], {username: "admin"});
+        if (!user || !pass.check_password(user.salt, password, user.hashed_password))
+            throw "Bad user/pass";
+        var tokens = yield generate_tokens(user, client.client_id);
+        return tokens;
+    }).then(function(tokens) {
+        done(null, tokens.access_token, tokens.refresh_token, tokens.message);
+    }).catch(function(err) {
+        log.error(err);
+        return done(null, false);
     });
 }));
 
 // Exchange refreshToken for access token.
 aserver.exchange(oauth2orize.exchange.refreshToken(function(client, refresh_token, scope, done) {
-    RefreshTokens.query_one({token: refresh_token, client_id: client.client_id}, [], {username: "admin"}, {}, function(res, err, token) {
-        if (err) { return done(err); }
-        if (!token) { return done(null, false); }
-        Users.query_one({_id: token.owner}, [], {username: "admin"}, {}, function(res, err, user) {
-            if (err) { return done(err); }
-            if (!user) { return done(null, false); }
-            generate_tokens(user, client.client_id, done);
-        });
+    co(function *() {
+        var token = yield RefreshTokens.query_one({token: refresh_token, client_id: client.client_id}, [], {username: "admin"});
+        if (!token) throw "No token";
+
+        var user = yield Users.query_one({_id: token.owner}, [], {username: "admin"});
+        if (!user) throw "No user";
+
+        var tokens = yield generate_tokens(user, client.client_id);
+        return tokens;
+    }).then(function(tokens) {
+        done(null, tokens.access_token, tokens.refresh_token, tokens.message);
+    }).catch(function(err) {
+        log.error(err);
+        return done(null, false);
     });
 }));
 

@@ -1,6 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
+var co = require('co');
 var libs = process.cwd()+'/libs/';
 var log = require(libs+'log')(module);
 var common = require(libs+'routes/common');
@@ -38,7 +39,7 @@ var AccessTokens = require(libs+'collections/access_tokens');
  *
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user, res, common.return);
+    common.return_promise(res, AccessTokens.query(common.get_payload(req,'filter'), common.get_payload(req,'fields'), req.user));
 });
 
 module.exports = router;

@@ -109,7 +109,11 @@ fields = {
     'params': ["sleep_time"],
     'output_model': ["number"]
 }
-settings = {'timeout': 3, 'get_results': 1}
+settings = {
+    'timeout': 3,
+    'get_results': 1,
+    'submit_new': 1
+}
 query_0 = db.query(filters, fields, settings)
 assert db.query(filters, fields)['total'] == n_models
 

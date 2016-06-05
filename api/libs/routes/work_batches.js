@@ -1,6 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
+var co = require('co');
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
 var common = require(libs + 'routes/common');
@@ -40,7 +41,7 @@ var Properties = require(libs + 'collections/properties');
  *     }
  */
 router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.commit(common.get_payload(req,'objs'), req.user, res, common.return);
+    common.return_promise(res, WorkBatches.commit(common.get_payload(req,'objs'), req.user));
 });
 
 /**
@@ -101,9 +102,8 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
             all_properties.push(results[i]['property']);
         }
     }
-    Models.commit(good_models, req.user, res, function(res, err, objs) {
-        Properties.replace(all_properties, req.user, res, common.return);
-    });
+    Models.commit(good_models, req.user);
+    common.return_promise(res, Properties.replace(all_properties, req.user));
 });
 
 /**
@@ -176,40 +176,21 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     var filter = common.get_payload(req, 'filter');
-    WorkBatches.pop(filter, {timestamp: 1}, req.user, res, function (res, err, work_batch) {
-        if (!err) {
-            if (work_batch) {
-                Properties.update({'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, req.user, res, function(res, err, count) {
-                    if (!err) {
-                        Properties.query({'_id':{'$in':work_batch['property_ids']}}, [], req.user, res, function(res, err, property_objs) {
-                            if (!err) {
-                                Models.query({'_id':{'$in':work_batch['model_ids']}}, [], req.user, res, function(res, err, model_objs) {
-                                    if (!err) {
-                                        Executables.query({'_id':{'$in':work_batch['executable_ids']}}, [], req.user, res, function(res, err, executable_objs) {
-                                            if (!err) {
-                                                common.return(res, 0, {'properties':property_objs, 'models':model_objs, 'executables':executable_objs});
-                                            } else {
-                                                common.return(res, err, 0);
-                                            }
-                                        });
-                                    } else {
-                                        common.return(res, err, 0);
-                                    }
-                                });
-                            } else {
-                                common.return(res, err, 0);
-                            }
-                        });
-                    } else {
-                        common.return(res, err, 0);
-                    }
-                });
-            } else {
-                common.return(res, 0, {'properties':[], 'models':[], 'executables':[]});
-            }
+    co(function *() {
+        var work_batch = yield WorkBatches.pop(filter, {timestamp: 1}, req.user);
+        if (work_batch) {
+            var count = yield Properties.update({'_id':{'$in':work_batch['property_ids']}}, {'status':'running'}, req.user);
+            var property_objs = yield Properties.query({'_id':{'$in':work_batch['property_ids']}}, [], req.user);
+            var model_objs = yield Models.query({'_id':{'$in':work_batch['model_ids']}}, [], req.user);
+            var executable_objs = yield Executables.query({'_id':{'$in':work_batch['executable_ids']}}, [], req.user);
+            return {'properties': property_objs, 'models': model_objs, 'executables': executable_objs};
         } else {
-            common.return(res, err, 0);
+            return {'properties': [], 'models': [], 'executables': []};
         }
+    }).then(function(obj) {
+        common.return(res, 0, obj);
+    }).catch(function(err) {
+        common.return(res, err, 0);
     });
 });
 
@@ -230,7 +211,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
  *     }
  */
 router.get('/count/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.count(common.get_payload(req,'filter'), req.user, res, common.return);
+    common.return_promise(res, WorkBatches.count(common.get_payload(req,'filter'), req.user));
 });
 
 /**
@@ -250,7 +231,7 @@ router.get('/count/', passport.authenticate('bearer', { session: false }), funct
  *     }
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    WorkBatches.delete(common.get_payload(req,'filter'), req.user, res, common.return);
+    common.return_promise(res, WorkBatches.delete(common.get_payload(req,'filter'), req.user));
 });
 
 module.exports = router;

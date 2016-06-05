@@ -22,7 +22,7 @@ docker run -d \
            --name "whiplash-scheduler" \
            -v /var/run/docker.sock:/var/run/docker.sock \
            -v $PWD:/input \
-           -e "WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID=admin-scheduler-${INDEX}" \
+           -e "WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID=admin-scheduler" \
            -e "WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET=${WHIPLASH_ADMIN_PASSWORD}" \
            -e "WHIPLASH_ADMIN_PASSWORD=${WHIPLASH_ADMIN_PASSWORD}" \
            -e "WHIPLASH_HOST_WORK_DIR=$PWD" \

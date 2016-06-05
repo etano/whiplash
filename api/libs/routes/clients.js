@@ -1,6 +1,7 @@
 var express = require('express');
 var passport = require('passport');
 var router = express.Router();
+var co = require('co');
 
 var libs = process.cwd() + '/libs/';
 var log = require(libs + 'log')(module);
@@ -32,25 +33,23 @@ var RefreshTokens = require(libs + 'collections/refresh_tokens');
  *
  */
 router.post('/one', passport.authenticate('bearer', { session: false }), function(req, res) {
-    if (req.user.username === "admin") {
+    co(function *() {
+        if (req.user.username !== "admin")
+            throw "Unauthorized access to client creation";
         var client = {
             name: common.get_payload(req,'client_name'),
             client_id: common.get_payload(req,'client_id'),
             client_secret: common.get_payload(req,'client_secret')
         };
         var owner = common.get_payload(req,'owner');
-        Clients.commit([client], owner, res, function(res, err, result) {
-            if(!err) {
-                log.info("New user client %s", client.client_id);
-                return res.json({ status: 'OK', result: result });
-            } else {
-                log.error(err);
-                res.send("Bof");
-            }
-        });
-    } else {
-        return res.json({status: 666, error: "Unauthorized access to client creation"});
-    }
+        var result = yield Clients.commit_one(client, owner);
+        log.info("New user client %s", client.client_id);
+        return result;
+    }).then(function(result) {
+        common.return(res, 0, result);
+    }).catch(function(err) {
+        common.return(res, err, 0);
+    });
 });
 
 /**
@@ -73,25 +72,21 @@ router.post('/one', passport.authenticate('bearer', { session: false }), functio
  *
  */
 router.delete('/', passport.authenticate('bearer', { session: false }), function(req, res){
-    if (req.user.username === "admin") {
+    co(function *() {
+        if (req.user.username !== "admin")
+            throw "Unauthorized access to client deletion";
         var client_id = common.get_payload(req,'client_id');
-        var filter = {
-            client_id: client_id
-        };
-        Clients.delete(filter, req.user, res, function(res, err, count) {
-            if(err) {
-                log.error('Error removing client', client_id, 'for user', req.user._id);
-                return res.send(err);
-            } else {
-                log.info('Removing client', client_id, 'for user', req.user._id);
-                AccessTokens.delete(filter, req.user, res, function(res, err, count) {});
-                RefreshTokens.delete(filter, req.user, res, function(res, err, count) {});
-                return res.json({ status: 'OK' });
-            }
-        });
-    } else {
-        return res.json({status: 666, error: "Unauthorized access to client deletion"});
-    }
+        var filter = {client_id: client_id};
+        var count = yield Clients.delete(filter, req.user);
+        log.info('Removing client', client_id, 'for user', req.user._id);
+        AccessTokens.delete(filter, req.user);
+        RefreshTokens.delete(filter, req.user);
+        return count;
+    }).then(function(count) {
+        common.return(res, 0, count);
+    }).catch(function(err) {
+        common.return(res, err, 0);
+    });
 });
 
 /**
@@ -113,11 +108,15 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
  *
  */
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    if (req.user.username === "admin") {
-        Clients.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user, res, common.return);
-    } else {
-        return res.json({status: 666, error: "Unauthorized access to client updating"});
-    }
+    co(function *() {
+        if (req.user.username !== "admin");
+            throw "Unauthorized access to client updating";
+        return yield Clients.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user);
+    }).then(function(obj) {
+        common.return(res, 0, obj);
+    }).catch(function(err) {
+        common.return(res, err, 0);
+    });
 });
 
 module.exports = router;
