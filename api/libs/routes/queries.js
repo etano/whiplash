@@ -86,137 +86,249 @@ function expand_props(props) {
     return new_props;
 }
 
-function set_defaults(filters, fields, settings, cb) {
+function set_defaults(filters, fields, settings) {
     global.timer.get_timer('set_defaults').start();
     // Handle default
-    var default_filter_keys = ['input_model','executable','params','output_model'];
-    var i;
-    for (i=0; i<default_filter_keys.length; i++) {
-        if(!filters.hasOwnProperty(default_filter_keys[i])) {
-            filters[default_filter_keys[i]] = {};
-        }
-    }
-    var default_fields = ['input_model','executable','params','output_model'];
-    for (i=0; i<default_fields.length; i++) {
-        if(!fields.hasOwnProperty(default_fields[i])) {
-            fields[default_fields[i]] = [];
-        }
-    }
-    if (!settings['timeout']) {
-        settings['timeout'] = 3600;
-    }
-    if (!settings['submit_new']) {
-        settings['submit_new'] = false;
-    }
-    if (!settings['get_results']) {
-        settings['get_results'] = false;
-    }
-    if (!settings['get_logs']) {
-        settings['get_logs'] = false;
-    }
-    global.timer.get_timer('set_defaults').stop();
-    cb(filters, fields, settings);
-}
-
-function setup_query(filters, fields, settings, user, res, cb) {
-    global.timer.get_timer('setup_query').start();
-    co(function *() {
-        // Commit query
-        var query = {'filters': common.smart_stringify(filters), 'fields': fields, 'settings': settings};
-        var result = yield Queries.commit_one(query, user);
-        var query_id = result.ids[0];
-
-        // Get input model objects from filters
-        var input_model_objs = yield Models.query(filters['input_model'], ['_id'].concat(fields['input_model']), user);
-        var input_model_ids = [];
-        for (var i=0; i<input_model_objs.length; i++) {
-            input_model_ids.push(input_model_objs[i]['_id']);
-        }
-
-        // Get executable objects from filters
-        var executable_objs = yield Executables.query(filters['executable'], ['_id'].concat(fields['executable']), user);
-        var executable_ids = [];
-        for (var i=0; i<executable_objs.length; i++) {
-            executable_ids.push(executable_objs[i]['_id']);
-        }
-
-        if (settings.submit_new) {
-            // Form properties
-            log.debug('form properties');
-            global.timer.get_timer('form_properties').start();
-            var props = [];
-            for (var i=0; i<input_model_ids.length; i++) {
-                for (var j=0; j<executable_ids.length; j++) {
-                    var prop = {
-                        'executable_id': executable_ids[j],
-                        'input_model_id': input_model_ids[i],
-                        'params': {},
-                        'status': 'unresolved',
-                        'timestamp': Date.now,
-                        'owner': user._id
-                    };
-                    if (settings.timeout)
-                        prop.timeout = settings.timeout;
-                    for (var key in filters['params']) {
-                        prop['params'][key] = filters['params'][key];
-                    }
-                    props.push(prop);
+    return new Promise(function(resolve, reject) {
+        try {
+            var default_filter_keys = ['input_model', 'executable', 'params', 'output_model'];
+            var i;
+            for (i=0; i<default_filter_keys.length; i++) {
+                if(!filters.hasOwnProperty(default_filter_keys[i])) {
+                    filters[default_filter_keys[i]] = {};
                 }
             }
-            global.timer.get_timer('form_properties').stop();
-            props = expand_props(props);
-
-            // Commit properties
-            result = yield Properties.commit(props, user);
-            var property_stats = {"n_existing": result["n_existing"], "n_new": result["n_new"], "commit_tag": result["commit_tag"]};
-            global.timer.get_timer('setup_query').stop();
-            cb(query_id, input_model_objs, executable_objs, property_stats, res);
-        } else {
-            // Update properties
-            var property_filter = {
-                executable_id: {$in: executable_ids},
-                input_model_id: {$in: input_model_ids},
-                params: filters['params']
-            };
-            var commit_tag = new ObjectID();
-            var update = {commit_tag: commit_tag};
-            var updated_count = yield Properties.update(property_filter, update, user);
-            var property_stats = {"n_existing": updated_count, "n_new": 0, "commit_tag": commit_tag};
-            global.timer.get_timer('setup_query').stop();
-            cb(query_id, input_model_objs, executable_objs, property_stats, res);
+            var default_fields = ['input_model', 'executable', 'params', 'output_model'];
+            for (i=0; i<default_fields.length; i++) {
+                if(!fields.hasOwnProperty(default_fields[i])) {
+                    fields[default_fields[i]] = [];
+                }
+            }
+            if (!settings.timeout) {
+                settings.timeout = 3600;
+            }
+            if (!settings.get_logs) {
+                settings.get_logs = false;
+            }
+            global.timer.get_timer('set_defaults').stop();
+            resolve({
+                filters: filters,
+                fields: fields,
+                settings: settings
+            });
+        } catch(err) {
+            log.error(err);
+            reject(err);
         }
-    }).catch(function(err) {
-        log.error(err);
-        global.timer.get_timer('setup_query').stop();
-        common.return(res, err, 0);
     });
 }
 
-function get_status(filters, fields, settings, user, res, cb) {
-    global.timer.get_timer('get_status').start();
-    var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total':0};
-    setup_query(filters, fields, settings, user, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
+function setup_query(filters, fields, settings, user) {
+    global.timer.get_timer('setup_query').start();
+    return new Promise(function(resolve, reject) {
         co(function *() {
-            // Get property objects
-            var property_objs = [];
-            var property_filter = {'commit_tag': property_stats['commit_tag']};
-            var property_fields = ['status','walltime'];
-            var property_objs = yield Properties.query(property_filter, property_fields, user);
+            // Commit query
+            var query = {'filters': common.smart_stringify(filters), 'fields': fields, 'settings': settings};
+            var result = yield Queries.commit_one(query, user);
+            var query_id = result.ids[0];
 
-            // Get stats
-            log.debug('organizing statuses');
-            for (var i=0; i<property_objs.length; i++) {
-                stats_obj[property_objs[i]['status']]++;
+            // Get input model objects from filters
+            var input_model_objs = yield Models.query(filters['input_model'], ['_id'].concat(fields['input_model']), user);
+            var input_model_ids = [];
+            for (var i=0; i<input_model_objs.length; i++) {
+                input_model_ids.push(input_model_objs[i]['_id']);
             }
-            stats_obj['total'] = property_objs.length;
-            global.timer.get_timer('get_status').stop();
-            cb(res, 0, stats_obj);
+
+            // Get executable objects from filters
+            var executable_objs = yield Executables.query(filters['executable'], ['_id'].concat(fields['executable']), user);
+            var executable_ids = [];
+            for (var i=0; i<executable_objs.length; i++) {
+                executable_ids.push(executable_objs[i]['_id']);
+            }
+
+            var property_stats = {};
+            if (settings.submit_new) {
+                // Form properties
+                log.debug('form properties');
+                global.timer.get_timer('form_properties').start();
+                var props = [];
+                for (var i=0; i<input_model_ids.length; i++) {
+                    for (var j=0; j<executable_ids.length; j++) {
+                        var prop = {
+                            'executable_id': executable_ids[j],
+                            'input_model_id': input_model_ids[i],
+                            'params': {},
+                            'status': 'unresolved',
+                            'timestamp': Date.now,
+                            'owner': user._id
+                        };
+                        if (settings.timeout)
+                            prop.timeout = settings.timeout;
+                        for (var key in filters['params']) {
+                            prop['params'][key] = filters['params'][key];
+                        }
+                        props.push(prop);
+                    }
+                }
+                global.timer.get_timer('form_properties').stop();
+                props = expand_props(props);
+
+                // Commit properties
+                result = yield Properties.commit(props, user);
+                property_stats = {
+                    n_existing: result["n_existing"],
+                    n_new: result["n_new"],
+                    commit_tag: result["commit_tag"]
+                };
+
+            } else {
+                // Update properties
+                var property_filter = {
+                    executable_id: {$in: executable_ids},
+                    input_model_id: {$in: input_model_ids},
+                    params: filters['params']
+                };
+                var commit_tag = new ObjectID();
+                var update = {commit_tag: commit_tag};
+                var updated_count = yield Properties.update(property_filter, update, user);
+                property_stats = {
+                    n_existing: updated_count,
+                    n_new: 0,
+                    commit_tag: commit_tag
+                };
+            }
+
+            return {
+                query_id: query_id,
+                input_model_objs: input_model_objs,
+                executable_objs: executable_objs,
+                property_stats: property_stats
+            };
+        }).then(function(obj) {
+            global.timer.get_timer('setup_query').stop();
+            resolve(obj);
         }).catch(function(err) {
             log.error(err);
-            cb(res, err, stats_obj);
+            global.timer.get_timer('setup_query').stop();
+            reject(err);
         });
     });
 }
+
+/**
+ * @api {get} /queries/status Status
+ * @apiGroup Queries
+ * @apiName Status
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParam {Object} filters Query filters.
+ * @apiParam {Object} filters.input_model Query filter for input model.
+ * @apiParam {Object} filters.executable Query filter for executable.
+ * @apiParam {Object} filters.params Query filter for running parameters.
+ * @apiParam {Object} filters.output_model Query filter for output model.
+ * @apiParam {Object} fields Return fields.
+ * @apiParam {Object} fields.input_model Return fields for input model.
+ * @apiParam {Object} fields.executable Return fields for executable.
+ * @apiParam {Object} fields.params Return fields for running parameters.
+ * @apiParam {Object} fields.output_model Return fields for output model.
+ * @apiParam {Object} settings Various extra settings.
+ * @apiParam {Number} timeout Maximum time allowed per property resolution.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       filters = {
+ *           "input_model": {"name": "example0"},
+ *           "executable": {"name": "example0"},
+ *           "params": {
+ *               "sleep_time": 1.0,
+ *               "seed": {"$in": [0,1]}
+ *           },
+ *           "output_model": {}
+ *       },
+ *       fields = {
+ *           "input_model": ["name"],
+ *           "executable": ["name"],
+ *           "params": ["sleep_time"],
+ *           "output_model": ["number"]
+ *       }
+ *     }
+ *
+ * @apiSuccess {Object} result Status object.
+ * @apiSuccess {Number} result.resolved Number of resolved properties resulting from query.
+ * @apiSuccess {Number} result.unresolved Number of unresolved properties resulting from query.
+ * @apiSuccess {Number} result.pulled Number of queued properties resulting from query.
+ * @apiSuccess {Number} result.running Number of running properties resulting from query.
+ * @apiSuccess {Number} result.notfound Number of not found properties resulting from query.
+ * @apiSuccess {Number} result.errored Number of errored properties resulting from query.
+ * @apiSuccess {Number} result.timedout out Number of timed out properties resulting from query.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *         "resolved": 2,
+ *         "pulled": 0,
+ *         "running": 0,
+ *         "not found": 0,
+ *         "errored": 0,
+ *         "timed out": 0,
+ *         "unresolved": 0,
+ *         "total": 0
+ *       }
+ *     }
+ *
+ */
+router.get('/status', passport.authenticate('bearer', { session: false }), function(req, res) {
+    global.timer.get_timer('get_status').start();
+    var stats_obj = {
+        resolved: 0,
+        pulled: 0,
+        running: 0,
+        'not found': 0,
+        errored: 0,
+        'timed out': 0,
+        unresolved: 0,
+        total: 0
+    };
+    co(function *() {
+        // Get filters, fields, settings, and user id
+        var filters = common.get_payload(req,'filters');
+
+        // Set defaults
+        var settings = {submit_new: false};
+        var fields = {
+            input_model: ["_id"],
+            executable: ["_id"],
+            params: [],
+            output_model: []
+        };
+        var defaults = yield set_defaults(filters, fields, settings);
+        filters = defaults.filters;
+        fields = defaults.fields;
+        settings = defaults.settings;
+
+        // Get property objects
+        var query = yield setup_query(filters, fields, settings, req.user);
+        var property_objs = [];
+        var property_filter = {commit_tag: query.property_stats.commit_tag};
+        var property_fields = ['status', 'walltime'];
+        var property_objs = yield Properties.query(property_filter, property_fields, req.user);
+
+        // Get stats
+        log.debug('organizing statuses');
+        for (var i=0; i<property_objs.length; i++) {
+            stats_obj[property_objs[i]['status']]++;
+        }
+        stats_obj['total'] = property_objs.length;
+        global.timer.get_timer('get_status').stop();
+        common.return(res, 0, stats_obj);
+    }).catch(function(err) {
+        log.error(err);
+        global.timer.get_timer('get_status').stop();
+        common.return(res, err, stats_obj);
+    });
+});
 
 /**
  * @api {get} /queries Query
@@ -257,36 +369,13 @@ function get_status(filters, fields, settings, user, res, cb) {
  *       },
  *       settings = {
  *           "timeout": 300,
- *           "submit_new": false,
- *           "get_results": false,
  *           "get_logs": false
  *       }
  *     }
  *
- * @apiSuccess {Object} result If settings.get_results = false, then the result is simply information on the properties resulting from the query. If settings.get_results = true, then the result will contain a list of objects containing the requested return fields. If settings.submit_new = true, then new properties will be created when appropriate, otherwise they will not.
- * @apiSuccess {Number} result.resolved Number of resolved properties resulting from query.
- * @apiSuccess {Number} result.pulled Number of queued properties resulting from query.
- * @apiSuccess {Number} result.running Number of running properties resulting from query.
- * @apiSuccess {Number} result.notfound Number of not found properties resulting from query.
- * @apiSuccess {Number} result.errored Number of errored properties resulting from query.
- * @apiSuccess {Number} result.timedout out Number of timed out properties resulting from query.
+ * @apiSuccess {Object} result Result obj.
  *
- * @apiSuccessExample Success-Response (settings.get_results=false):
- *     HTTP/1.1 200 OK
- *     {
- *       "result": {
- *         "resolved": 2,
- *         "pulled": 0,
- *         "running": 0,
- *         "not found": 0,
- *         "errored": 0,
- *         "timed out": 0,
- *         "unresolved": 0,
- *         "total": 0
- *       }
- *     }
- *
- * @apiSuccessExample Success-Response (settings.get_results=true):
+ * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *     {
  *       "result": [
@@ -311,84 +400,196 @@ function get_status(filters, fields, settings, user, res, cb) {
  *
  */
 router.get('/', passport.authenticate('bearer', { session: false }), function(req, res) {
-    // Get filters, fields, settings, and user id
-    var filters = common.get_payload(req,'filters');
-    var fields = common.get_payload(req,'fields');
-    var settings = common.get_payload(req,'settings');
-    set_defaults(filters, fields, settings, function(filters, fields, settings) {
-        if (!settings.get_results) {
-            get_status(filters, fields, settings, req.user, res, common.return);
-        } else {
-            // Commit query, get input model objects, executable objects, and commit properties
-            setup_query(filters, fields, settings, req.user, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
-                co(function *() {
-                    // Get property objects
-                    var property_objs = [];
-                    var property_filter = {'commit_tag': property_stats['commit_tag']};
-                    var property_fields = ['_id','status','walltime','input_model_id','executable_id','output_model_id'];
-                    for (var j=0; j<fields['params'].length; j++) {
-                        property_fields.push('params.'+fields['params'][j]);
-                    }
-                    if (settings.get_logs)
-                        property_fields.push('log');
-                    var property_objs = yield Properties.query(property_filter, property_fields, req.user);
+    global.timer.get_timer('query').start();
+    co(function *() {
+        // Get filters, fields, settings, and user id
+        var filters = common.get_payload(req,'filters');
+        var fields = common.get_payload(req,'fields');
+        var settings = common.get_payload(req,'settings');
 
-                    // Get output model info
-                    var output_model_ids = [];
-                    for (var i=0; i<property_objs.length; i++) {
-                        if (property_objs[i].hasOwnProperty('output_model_id')) {
-                            output_model_ids.push(property_objs[i]['output_model_id']);
-                        }
-                    }
-                    filters['output_model']['_id'] = {'$in': output_model_ids};
-                    var output_model_objs = yield Models.query(filters['output_model'], ['_id'].concat(fields['output_model']), req.user);
+        // Set defaults
+        settings.submit_new = false;
+        var defaults = yield set_defaults(filters, fields, settings);
+        console.log(defaults);
+        filters = defaults.filters;
+        fields = defaults.fields;
+        settings = defaults.settings;
 
-                    // Sort everything
-                    log.debug('sorting');
-                    var input_model_indexes = {};
-                    for (var i=0; i<input_model_objs.length; i++) {
-                        input_model_indexes[String(input_model_objs[i]['_id'])] = i;
-                    }
-                    var output_model_indexes = {};
-                    for (var i=0; i<output_model_objs.length; i++) {
-                        output_model_indexes[String(output_model_objs[i]['_id'])] = i;
-                    }
-                    var executable_indexes = {};
-                    for (var i=0; i<executable_objs.length; i++) {
-                        executable_indexes[String(executable_objs[i]['_id'])] = i;
-                    }
-                    var objs = [];
-                    for (var i=0; i<property_objs.length; i++) {
-                        var obj = {
-                            'input_model': input_model_objs[input_model_indexes[property_objs[i]['input_model_id']]],
-                            'executable': executable_objs[executable_indexes[property_objs[i]['executable_id']]],
-                            'params': property_objs[i]['params'],
-                            'status': property_objs[i]['status']
-                        };
-                        if (obj['status'] === 'resolved') {
-                            obj['output_model'] = output_model_objs[output_model_indexes[property_objs[i]['output_model_id']]];
-                            obj['walltime'] = property_objs[i].walltime;
-                        } else {
-                            obj['output_model'] = '';
-                        }
-                        if (settings.get_logs)
-                            obj['log'] = property_objs[i].log;
-                        objs.push(obj);
-                    }
+        // Commit query, get input model objects, executable objects, and commit properties
+        console.log("hi");
+        var query = yield setup_query(filters, fields, settings, req.user);
+        console.log("hi");
 
-                    // Return
-                    log.debug('returning');
-                    return objs;
-                }).then(function(objs) {
-                    common.return(res, 0, objs);
-                }).catch(function(err) {
-                    log.error(err);
-                    common.return(res, err, 0);
-                });
-            });
+        // Get property objects
+        var property_objs = [];
+        var property_filter = {commit_tag: query.property_stats.commit_tag};
+        var property_fields = ['_id', 'status', 'walltime', 'input_model_id', 'executable_id', 'output_model_id'];
+        for (var j=0; j<fields.params.length; j++) {
+            property_fields.push('params.'+fields.params[j]);
         }
+        if (settings.get_logs)
+            property_fields.push('log');
+        var property_objs = yield Properties.query(property_filter, property_fields, req.user);
+
+        // Get output model info
+        var output_model_ids = [];
+        for (var i=0; i<property_objs.length; i++) {
+            if (property_objs[i].hasOwnProperty('output_model_id')) {
+                output_model_ids.push(property_objs[i].output_model_id);
+            }
+        }
+        filters.output_model._id = {$in: output_model_ids};
+        var output_model_objs = yield Models.query(filters.output_model, ['_id'].concat(fields.output_model), req.user);
+
+        // Sort everything
+        log.debug('sorting');
+        var input_model_indexes = {};
+        for (var i=0; i<query.input_model_objs.length; i++) {
+            input_model_indexes[String(query.input_model_objs[i]._id)] = i;
+        }
+        var output_model_indexes = {};
+        for (var i=0; i<output_model_objs.length; i++) {
+            output_model_indexes[String(output_model_objs[i]._id)] = i;
+        }
+        var executable_indexes = {};
+        for (var i=0; i<query.executable_objs.length; i++) {
+            executable_indexes[String(query.executable_objs[i]._id)] = i;
+        }
+        var objs = [];
+        for (var i=0; i<property_objs.length; i++) {
+            var obj = {
+                input_model: query.input_model_objs[input_model_indexes[property_objs[i].input_model_id]],
+                executable: query.executable_objs[executable_indexes[property_objs[i].executable_id]],
+                params: property_objs[i].params,
+                status: property_objs[i].status
+            };
+            if (obj.status === 'resolved') {
+                obj.output_model = output_model_objs[output_model_indexes[property_objs[i].output_model_id]];
+                obj.walltime = property_objs[i].walltime;
+            } else {
+                obj.output_model = '';
+            }
+            if (settings.get_logs)
+                obj.log = property_objs[i].log;
+            objs.push(obj);
+        }
+
+        // Return
+        log.debug('returning');
+        return objs;
+    }).then(function(objs) {
+        global.timer.get_timer('query').stop();
+        common.return(res, 0, objs);
+    }).catch(function(err) {
+        log.error(err);
+        global.timer.get_timer('query').stop();
+        common.return(res, err, 0);
     });
 });
+
+/**
+ * @api {post} /queries Submit
+ * @apiGroup Queries
+ * @apiName Submit
+ * @apiPermission user
+ * @apiVersion 1.0.0
+ *
+ * @apiParam {Object} filters Query filters.
+ * @apiParam {Object} filters.input_model Query filter for input model.
+ * @apiParam {Object} filters.executable Query filter for executable.
+ * @apiParam {Object} filters.params Query filter for running parameters.
+ * @apiParam {Object} filters.output_model Query filter for output model.
+ *
+ * @apiParamExample {json} Request-Example:
+ *     {
+ *       filters = {
+ *           "input_model": {"name": "example0"},
+ *           "executable": {"name": "example0"},
+ *           "params": {
+ *               "sleep_time": 1.0,
+ *               "seed": {"$in": [0,1]}
+ *           },
+ *           "output_model": {}
+ *       }
+ *     }
+ *
+ * @apiSuccess {Object} result Result object from submission.
+ * @apiSuccess {Number} result.resolved Number of resolved properties resulting from query.
+ * @apiSuccess {Number} result.unresolved Number of unresolved properties resulting from query.
+ * @apiSuccess {Number} result.pulled Number of queued properties resulting from query.
+ * @apiSuccess {Number} result.running Number of running properties resulting from query.
+ * @apiSuccess {Number} result.notfound Number of not found properties resulting from query.
+ * @apiSuccess {Number} result.errored Number of errored properties resulting from query.
+ * @apiSuccess {Number} result.timedout out Number of timed out properties resulting from query.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "result": {
+ *         "resolved": 2,
+ *         "pulled": 0,
+ *         "running": 0,
+ *         "not found": 0,
+ *         "errored": 0,
+ *         "timed out": 0,
+ *         "unresolved": 0,
+ *         "total": 0
+ *       }
+ *     }
+ *
+ */
+router.post('/', passport.authenticate('bearer', { session: false }), function(req, res) {
+    global.timer.get_timer('submit').start();
+    var stats_obj = {
+        resolved: 0,
+        pulled: 0,
+        running: 0,
+        'not found': 0,
+        errored: 0,
+        'timed out': 0,
+        unresolved: 0,
+        total: 0
+    };
+    co(function *() {
+        // Get filters, fields, settings, and user id
+        var filters = common.get_payload(req,'filters');
+
+        // Set defaults
+        var settings = {submit_new: true};
+        var fields = {
+            input_model: ["_id"],
+            executable: ["_id"],
+            params: [],
+            output_model: []
+        };
+        var defaults = yield set_defaults(filters, fields, settings);
+        filters = defaults.filters;
+        fields = defaults.fields;
+        settings = defaults.settings;
+
+        // Get property objects
+        var query = yield setup_query(filters, fields, settings, req.user);
+        var property_objs = [];
+        var property_filter = {commit_tag: query.property_stats.commit_tag};
+        var property_fields = ['status', 'walltime'];
+        var property_objs = yield Properties.query(property_filter, property_fields, req.user);
+
+        // Get stats
+        log.debug('organizing statuses');
+        for (var i=0; i<property_objs.length; i++) {
+            stats_obj[property_objs[i]['status']]++;
+        }
+        stats_obj['total'] = property_objs.length;
+        global.timer.get_timer('submit').stop();
+        common.return(res, 0, stats_obj);
+    }).catch(function(err) {
+        log.error(err);
+        global.timer.get_timer('submit').stop();
+        common.return(res, err, stats_obj);
+    });
+
+});
+
 
 /**
  * @api {delete} /queries Delete

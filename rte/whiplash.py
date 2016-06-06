@@ -269,17 +269,25 @@ class db:
         #print('query time',t1-t0)
         return res
 
-    def poll(self, filters, fields={}, settings={}, freq=1):
+    def status(self, filters):
         '''
-        Blocks until query is satisfied
+        Check status of a query in the database
         '''
-        self.query(filters, fields, settings)
-        while True:
-            status = self.query(filters, fields)
-            if status['total'] != 0 and status['unresolved'] == 0 and status['running'] == 0 and status['pulled'] == 0:
-                break
-            time.sleep(freq)
-        return self.query(filters, fields, settings)
+        t0 = time.time()
+        res = self.request("GET", "queries/status", {"filters":filters})
+        t1 = time.time()
+        #print('query time',t1-t0)
+        return res
+
+    def submit(self, filters):
+        '''
+        Submit a query to the database
+        '''
+        t0 = time.time()
+        res = self.request("POST", "queries", {"filters":filters})
+        t1 = time.time()
+        #print('query time',t1-t0)
+        return res
 
     def collection(self, name):
         return collection(self, name)

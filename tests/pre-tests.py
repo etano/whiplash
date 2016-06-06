@@ -93,7 +93,7 @@ assert executable_id == db.executables.commit(executable)['ids'][0]
 print("Query executable")
 assert executable_id == db.executables.query(executable,'_id')[0]['_id']
 
-print("Query for some results")
+print("Submit query for some results")
 filters = {
     'input_model': {"set": "test_set"},
     'executable': {"name": "test_app"},
@@ -109,14 +109,11 @@ fields = {
     'params': ["sleep_time"],
     'output_model': ["number"]
 }
-settings = {
-    'timeout': 3,
-    'get_results': 1,
-    'submit_new': 1
-}
-query_0 = db.query(filters, fields, settings)
-assert db.query(filters, fields)['total'] == n_models
+query_0 = db.submit(filters)
+print(query_0)
+assert db.status(filters)['total'] == n_models
 
-print("Query for some results again")
-query_1 = db.query(filters, fields, settings)
-assert db.query(filters, fields)['total'] == n_models
+print("Submit query for some results again")
+query_1 = db.submit(filters)
+print(query_1)
+assert db.status(filters)['total'] == n_models
