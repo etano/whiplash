@@ -12,7 +12,7 @@
     "ejs": "~2.3.3",
     "express": "~4.13.1",
     "morgan": "~1.6.1",
-    "project-whiplash": "^1.1.1",
+    "project-whiplash": "^1.1.2",
     "request": "^2.72.0",
     "serve-favicon": "~2.3.0"
   }

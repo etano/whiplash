@@ -10,7 +10,7 @@
     "co": "^4.6.0",
     "dockerode-bluebird": "^1.0.4",
     "jsonfile": "^2.3.1",
-    "project-whiplash": "^1.1.1",
+    "project-whiplash": "^1.1.2",
     "request": "^2.72.0",
     "tmp-promise": "^1.0.2"
   }
