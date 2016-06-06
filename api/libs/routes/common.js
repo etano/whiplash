@@ -105,12 +105,8 @@ module.exports = {
         var self = this;
         global.timer.get_timer('return_promise').start();
         co(function *() {
-            console.log("ho");
-            var obj = yield promise;
-            console.log("ho");
-            return obj;
+            return yield promise;
         }).then(function(obj) {
-            console.log("hi");
             global.timer.get_timer('return_promise').stop();
             self.return(res, 0, obj);
         }).catch(function(err) {

@@ -210,7 +210,7 @@ class Collection {
                 global.timer.get_timer('attach_read_permissions_'+self.name).stop();
                 resolve(filter);
             } catch(err) {
-                console.log(err)
+                log.error(err)
                 global.timer.get_timer('attach_read_permissions_'+self.name).stop();
                 reject(err);
             }
@@ -228,7 +228,7 @@ class Collection {
                 global.timer.get_timer('attach_write_permissions_'+self.name).stop();
                 resolve(filter);
             } catch(err) {
-                console.log(err)
+                log.error(err)
                 global.timer.get_timer('attach_write_permissions_'+self.name).stop();
                 reject(err);
             }
@@ -248,7 +248,7 @@ class Collection {
                 global.timer.get_timer('attach_ownership_'+self.name).stop();
                 resolve(objs);
             } catch (err) {
-                console.log(err)
+                log.error(err)
                 global.timer.get_timer('attach_ownership_'+self.name).stop();
                 reject(err);
             }

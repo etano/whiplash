@@ -111,6 +111,9 @@ function set_defaults(filters, fields, settings, cb) {
     if (!settings['get_results']) {
         settings['get_results'] = false;
     }
+    if (!settings['get_logs']) {
+        settings['get_logs'] = false;
+    }
     global.timer.get_timer('set_defaults').stop();
     cb(filters, fields, settings);
 }
@@ -136,7 +139,6 @@ function setup_query(filters, fields, settings, user, res, cb) {
         for (var i=0; i<executable_objs.length; i++) {
             executable_ids.push(executable_objs[i]['_id']);
         }
-        console.log(settings);
 
         if (settings.submit_new) {
             // Form properties
@@ -148,12 +150,13 @@ function setup_query(filters, fields, settings, user, res, cb) {
                     var prop = {
                         'executable_id': executable_ids[j],
                         'input_model_id': input_model_ids[i],
-                        'timeout': settings['timeout'],
                         'params': {},
                         'status': 'unresolved',
                         'timestamp': Date.now,
                         'owner': user._id
                     };
+                    if (settings.timeout)
+                        prop.timeout = settings.timeout;
                     for (var key in filters['params']) {
                         prop['params'][key] = filters['params'][key];
                     }
@@ -189,10 +192,9 @@ function setup_query(filters, fields, settings, user, res, cb) {
     });
 }
 
-function get_status(filters, fields, user, res, cb) {
+function get_status(filters, fields, settings, user, res, cb) {
     global.timer.get_timer('get_status').start();
     var stats_obj = {'resolved':0, 'pulled':0, 'running':0, 'not found': 0, 'errored':0, 'timed out':0, 'unresolved':0, 'total':0};
-    var settings = {};
     setup_query(filters, fields, settings, user, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
         co(function *() {
             // Get property objects
@@ -256,7 +258,8 @@ function get_status(filters, fields, user, res, cb) {
  *       settings = {
  *           "timeout": 300,
  *           "submit_new": false,
- *           "get_results": false
+ *           "get_results": false,
+ *           "get_logs": false
  *       }
  *     }
  *
@@ -314,7 +317,7 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
     var settings = common.get_payload(req,'settings');
     set_defaults(filters, fields, settings, function(filters, fields, settings) {
         if (!settings.get_results) {
-            get_status(filters, fields, req.user, res, common.return);
+            get_status(filters, fields, settings, req.user, res, common.return);
         } else {
             // Commit query, get input model objects, executable objects, and commit properties
             setup_query(filters, fields, settings, req.user, res, function(query_id, input_model_objs, executable_objs, property_stats, res) {
@@ -326,6 +329,8 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                     for (var j=0; j<fields['params'].length; j++) {
                         property_fields.push('params.'+fields['params'][j]);
                     }
+                    if (settings.get_logs)
+                        property_fields.push('log');
                     var property_objs = yield Properties.query(property_filter, property_fields, req.user);
 
                     // Get output model info
@@ -366,6 +371,8 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
                         } else {
                             obj['output_model'] = '';
                         }
+                        if (settings.get_logs)
+                            obj['log'] = property_objs[i].log;
                         objs.push(obj);
                     }
 
