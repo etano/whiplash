@@ -9,7 +9,7 @@ INDEX=$1
 
 {
 docker-machine create --driver amazonec2 \
-                      --amazonec2-security-group WhiplashApi \
+                      --amazonec2-security-group whiplash-api \
                       --amazonec2-access-key ${AWS_ACCESS_KEY} \
                       --amazonec2-secret-key ${AWS_SECRET_KEY} \
                       --amazonec2-vpc-id ${AWS_VPC_ID} \

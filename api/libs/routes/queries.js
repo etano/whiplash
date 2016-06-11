@@ -410,15 +410,12 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         // Set defaults
         settings.submit_new = false;
         var defaults = yield set_defaults(filters, fields, settings);
-        console.log(defaults);
         filters = defaults.filters;
         fields = defaults.fields;
         settings = defaults.settings;
 
         // Commit query, get input model objects, executable objects, and commit properties
-        console.log("hi");
         var query = yield setup_query(filters, fields, settings, req.user);
-        console.log("hi");
 
         // Get property objects
         var property_objs = [];
@@ -427,8 +424,10 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
         for (var j=0; j<fields.params.length; j++) {
             property_fields.push('params.'+fields.params[j]);
         }
-        if (settings.get_logs)
+        if (settings.get_logs) {
             property_fields.push('log');
+            property_fields.push('err');
+        }
         var property_objs = yield Properties.query(property_filter, property_fields, req.user);
 
         // Get output model info
@@ -469,8 +468,10 @@ router.get('/', passport.authenticate('bearer', { session: false }), function(re
             } else {
                 obj.output_model = '';
             }
-            if (settings.get_logs)
+            if (settings.get_logs) {
                 obj.log = property_objs[i].log;
+                obj.err = property_objs[i].err;
+            }
             objs.push(obj);
         }
 

@@ -149,12 +149,13 @@ function run_container(executable, model, property) {
         // Set timeout
         var timeout = 0;
         if (!model.timeout) {
-            if (!property.timeout) timeout = 600; // Default is 1 hr.
+            if (!property.timeout) timeout = 3600; // Default is 1 hr.
             else timeout = property.timeout;
         } else timeout = model.timeout;
         container.stopAsync({t: timeout});
 
         // Wait for container to finish
+        // TODO: Measure overhead
         var data = yield container.waitAsync();
         console.log("container finished...");
         var hrdiff = process.hrtime(hrstart);

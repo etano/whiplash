@@ -109,7 +109,7 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
  */
 router.put('/', passport.authenticate('bearer', { session: false }), function(req, res) {
     co(function *() {
-        if (req.user.username !== "admin");
+        if (req.user.username !== "admin")
             throw "Unauthorized access to client updating";
         return yield Clients.update(common.get_payload(req,'filter'), common.get_payload(req,'update'), req.user);
     }).then(function(obj) {
