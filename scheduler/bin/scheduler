@@ -30,7 +30,8 @@ var Properties = wdb.get().properties;
 // Global variables
 var working = false;
 var pulled_containers = [];
-var ascii_regex = /[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g;
+var ascii_regex = /[^a-zA-Z0-9\-\ ]/g;
+var numeral_regex = /[^0-9\-\ ]/g;
 
 // Main loop
 setInterval(function () {
@@ -115,11 +116,11 @@ function run_container(executable, model, property) {
         if (model.format === "cnf") { // SAT format
             console.log("writing CNF...");
             in_file += ".cnf";
-            yield fs.writeFileAsync(in_file, model.content);
+            yield fs.writeFileAsync(in_file, model.content, 'ascii');
         } else { // JSON format
             console.log("writing JSON...");
             model.params = property.params;
-            jsonfile.writeFileSync(in_file, model);
+            jsonfile.writeFileSync(in_file, model, 'ascii');
         }
 
         // Create container
@@ -171,19 +172,24 @@ function run_container(executable, model, property) {
         container.removeAsync();
 
         // Read result, remove file
-        var result_file = "";
+        var result = "";
         if (model.format === "cnf") { // SAT format
             var n = log.lastIndexOf("\nv ");
+            console.log(n);
             if (n < 0) {
-                var n = log.lastIndexOf("v ");
+                n = log.lastIndexOf("v ");
                 if (n < 0) throw "No output found";
             }
+            console.log(n);
             var chopped_log = log.substr(n+2, log.length);
             var variables = chopped_log;
             if (chopped_log.indexOf("\n") >= 0)
                 variables = chopped_log.substr(0, chopped_log.indexOf("\n"));
-            result_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-result-XXXXXX'});
-            yield fs.writeFileAsync(result_file, variables);
+            variables = variables.replace(numeral_regex, '');
+            var result_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-result-XXXXXX'});
+            yield fs.writeFileAsync(result_file, variables, 'ascii');
+            result = yield verify_result(model.format, in_file, result_file);
+            fs.unlink(result_file);
         } else { // JSON format
             if (data.StatusCode === 137) {
                 throw "Timed out after "+timeout+" seconds";
@@ -191,9 +197,9 @@ function run_container(executable, model, property) {
                 console.log(data);
                 throw log
             }
-            result_file = in_file;
+            var result_file = in_file;
+            result = yield verify_result(model.format, in_file, result_file);
         }
-        var result = yield verify_result(model.format, in_file, result_file);
         fs.unlink(in_file);
 
         // Set necessary fields
@@ -237,7 +243,7 @@ function verify_result(format, in_file, result_file) {
                 });
 
                 // Create stream from container to out_file
-                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
+                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-verify-XXXXXX'});
                 var stream = yield container.attachAsync({
                     stream: true,
                     stdout: true,
