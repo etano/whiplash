@@ -147,6 +147,11 @@ function setup_query(filters, fields, settings, user) {
             }
 
             var property_stats = {};
+            var property_filter = {
+                executable_id: {$in: executable_ids},
+                input_model_id: {$in: input_model_ids},
+                params: filters['params']
+            };
             if (settings.submit_new) {
                 // Form properties
                 log.debug('form properties');
@@ -183,11 +188,6 @@ function setup_query(filters, fields, settings, user) {
 
             } else {
                 // Update properties
-                var property_filter = {
-                    executable_id: {$in: executable_ids},
-                    input_model_id: {$in: input_model_ids},
-                    params: filters['params']
-                };
                 var commit_tag = new ObjectID();
                 var update = {commit_tag: commit_tag};
                 var updated_count = yield Properties.update(property_filter, update, user);
