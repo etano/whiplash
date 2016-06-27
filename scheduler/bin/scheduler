@@ -104,20 +104,22 @@ function pull_container(container) {
 }
 
 // Create the container
-function create_container(options, n_attempts = 0) {
+function create_container(options, n_attempts) {
     console.log("creating container...");
     return new Promise(function(resolve, reject) {
         co(function *() {
-           return yield docker.createContainerAsync(options);
+            return yield docker.createContainerAsync(options);
         }).then(function(container) {
-           resolve(container);
+            resolve(container);
         }).catch(function(err) {
-           n_attempts += 1;
-           console.log(err);
-           if (n_attempts < 10)
-               resolve(create_container(options));
-           else
-               reject(err);
+            if (n_attempts === undefined)
+                n_attempts = 0
+            n_attempts += 1;
+            console.log(err);
+            if (n_attempts < 10)
+                resolve(create_container(options, n_attempts));
+            else
+                reject(err);
         });
     });
 }
