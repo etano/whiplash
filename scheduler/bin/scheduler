@@ -137,12 +137,12 @@ function run_container(executable, model, property) {
         if (model.format === "cnf") { // SAT format
             console.log("writing CNF...");
             in_file += ".cnf";
-            yield fs.writeFileAsync(in_file, model.content, 'ascii');
+            yield fs.writeFileAsync(in_file, model.content, 'utf8');
         } else { // JSON format
             console.log("writing JSON...");
             model.params = property.params;
             console.log("write file");
-            jsonfile.writeFileSync(in_file, model, 'ascii');
+            jsonfile.writeFileSync(in_file, model, 'utf8');
         }
 
         // Create container
@@ -186,9 +186,9 @@ function run_container(executable, model, property) {
         var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
 
         // Read output, check for errors, remove file
-        var log = yield fs.readFileAsync(out_file, 'ascii');
+        var log = yield fs.readFileAsync(out_file, 'utf8');
         log = log.replace(ascii_regex, '');
-        fs.unlink(out_file);
+        //fs.unlink(out_file);
 
         // Remove container
         console.log("remove container...");
@@ -210,7 +210,7 @@ function run_container(executable, model, property) {
                 variables = chopped_log.substr(0, chopped_log.indexOf("\n"));
             variables = variables.replace(numeral_regex, '');
             var result_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-result-XXXXXX'});
-            yield fs.writeFileAsync(result_file, variables, 'ascii');
+            yield fs.writeFileAsync(result_file, variables, 'utf8');
             result = yield verify_result(model.format, in_file, result_file);
             fs.unlink(result_file);
         } else { // JSON format
@@ -286,15 +286,15 @@ function verify_result(format, in_file, result_file) {
                 console.log("container finished...");
 
                 // Read output, check for errors, remove file
-                var log = yield fs.readFileAsync(out_file, 'ascii');
-                fs.unlink(out_file);
+                var log = yield fs.readFileAsync(out_file, 'utf8');
+                //fs.unlink(out_file);
                 if (data.StatusCode !== 0) throw log
 
                 // Remove container
                 container.removeAsync();
 
                 var num = log.replace(ascii_regex, '');
-                var configuration = yield fs.readFileAsync(result_file, 'ascii');
+                var configuration = yield fs.readFileAsync(result_file, 'utf8');
                 configuration = configuration.replace(ascii_regex, '');
                 var result = {
                     cost: Number(num),
