@@ -188,7 +188,7 @@ function run_container(executable, model, property) {
         // Read output, check for errors, remove file
         var log = yield fs.readFileAsync(out_file, 'utf8');
         log = log.replace(ascii_regex, '');
-        //fs.unlink(out_file);
+        fs.unlink(out_file);
 
         // Remove container
         console.log("remove container...");
@@ -287,7 +287,7 @@ function verify_result(format, in_file, result_file) {
 
                 // Read output, check for errors, remove file
                 var log = yield fs.readFileAsync(out_file, 'utf8');
-                //fs.unlink(out_file);
+                fs.unlink(out_file);
                 if (data.StatusCode !== 0) throw log
 
                 // Remove container
