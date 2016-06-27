@@ -120,10 +120,12 @@ function run_container(executable, model, property) {
         } else { // JSON format
             console.log("writing JSON...");
             model.params = property.params;
+            console.log("write file");
             jsonfile.writeFileSync(in_file, model, 'ascii');
         }
 
         // Create container
+        console.log('creating container...');
         var run_work_dir = '/input';
         var container = yield docker.createContainerAsync({
             Image: executable.path,
@@ -132,6 +134,7 @@ function run_container(executable, model, property) {
         });
 
         // Create stream from container to out_file
+        console.log('attaching stream...');
         var stream = yield container.attachAsync({
             stream: true,
             stdout: true,
