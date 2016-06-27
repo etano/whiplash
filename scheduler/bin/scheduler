@@ -104,7 +104,7 @@ function pull_container(container) {
 }
 
 // Create the container
-function create_container(options, n_attempts=0) {
+function create_container(options, n_attempts = 0) {
     console.log("creating container...");
     return new Promise(function(resolve, reject) {
         co(function *() {
