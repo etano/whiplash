@@ -103,6 +103,21 @@ function pull_container(container) {
     });
 }
 
+// Create the container
+function create_container(options) {
+    console.log("creating container...");
+    return new Promise(function(resolve, reject) {
+        co(function *() {
+           return yield docker.createContainerAsync(options);
+        }).then(function(container) {
+           resolve(container);
+        }).catch(function(err) {
+           console.log(err);
+           resolve(create_container(options));
+        });
+    });
+}
+
 // Run the container
 function run_container(executable, model, property) {
     console.log("running", executable.path);
@@ -125,9 +140,8 @@ function run_container(executable, model, property) {
         }
 
         // Create container
-        console.log('creating container...');
         var run_work_dir = '/input';
-        var container = yield docker.createContainerAsync({
+        var container = yield create_container({
             Image: executable.path,
             Cmd: [run_work_dir+'/'+path.basename(in_file)],
             Volumes: {run_work_dir: {}}
@@ -239,7 +253,7 @@ function verify_result(format, in_file, result_file) {
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var run_work_dir = '/input';
-                var container = yield docker.createContainerAsync({
+                var container = yield create_container({
                     Image: 'iliazin/cost_evaluator_sat:v1',
                     Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(result_file)],
                     Volumes: {run_work_dir: {}}
