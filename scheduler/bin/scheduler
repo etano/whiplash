@@ -46,7 +46,7 @@ function find_unresolved_properties() {
     if (!working) {
         working = true;
         co(function *() {
-            var property = yield Properties.update_one({status: "unresolved"}, {status: "running"});
+            var property = yield Properties.update_one({status: "unresolved"}, {status: "pulling"});
             if (property) {
                 console.log('found unresolved property', property._id);
                 resolve_property(property);
@@ -69,6 +69,7 @@ function resolve_property(property) {
         var model = yield Models.query_one({_id: model_id}, []);
         if (executable && model) {
             yield pull_container(executable.path);
+            yield Properties.update_one({_id: property._id}, {status: "running"});
             run_container(executable, model, property);
         }
         else throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
@@ -201,7 +202,10 @@ function run_container(executable, model, property) {
             console.log(n);
             if (n < 0) {
                 n = log.lastIndexOf("v ");
-                if (n < 0) throw "No output found";
+                if (n < 0) throw {
+                    code: 501,
+                    message: "No output found"
+                };
             }
             console.log(n);
             var chopped_log = log.substr(n+2, log.length);
@@ -215,10 +219,16 @@ function run_container(executable, model, property) {
             fs.unlink(result_file);
         } else { // JSON format
             if (data.StatusCode === 137) {
-                throw "Timed out after "+timeout+" seconds";
+                throw {
+                    code: 502,
+                    message: "Timed out after "+timeout+" seconds"
+                };
             } else if (data.StatusCode !== 0) {
                 console.log(data);
-                throw log
+                throw {
+                    code: 503,
+                    message: log
+                };
             }
             var result_file = in_file;
             result = yield verify_result(model.format, in_file, result_file);
@@ -312,8 +322,22 @@ function verify_result(format, in_file, result_file) {
 }
 
 // Catch all error function
+//
+// Error codes:
+//
+// 500 - catch all
+// 501 - no output
+// 502 - timed out
+// 503 - runtime error
+//
 function set_errored(property, err) {
     working = false;
+    if (!err.code) {
+        err = {
+            code: 500,
+            message: err
+        };
+    }
     console.log(err);
     Properties.update_one({_id: property._id}, {
             status: "errored",
