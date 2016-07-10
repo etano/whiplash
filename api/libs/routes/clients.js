@@ -42,7 +42,7 @@ router.post('/one', passport.authenticate('bearer', { session: false }), functio
             client_secret: common.get_payload(req,'client_secret')
         };
         var owner = common.get_payload(req,'owner');
-        var result = yield Clients.commit_one(client, owner);
+        var result = yield Clients.commit_one(client, {_id: owner});
         log.info("New user client %s", client.client_id);
         return result;
     }).then(function(result) {
