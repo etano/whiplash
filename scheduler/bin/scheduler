@@ -30,7 +30,7 @@ var Properties = wdb.get().properties;
 // Global variables
 var working = false;
 var pulled_containers = [];
-var ascii_regex = /[^a-zA-Z0-9\-\ ]/g;
+var ascii_regex = /[^a-zA-Z0-9\-\ \s\r\n]/g;
 var numeral_regex = /[^0-9\-\ ]/g;
 
 // Main loop
@@ -125,6 +125,27 @@ function create_container(options, n_attempts) {
     });
 }
 
+// Get logs from running container
+function container_logs(container, out_file) {
+
+  // create a single stream for stdin and stdout
+  var logStream = new stream.PassThrough();
+  var out = fs.createWriteStream(out_file);
+  logStream.on('data', function(chunk){
+    console.log(chunk.toString());
+    out.write(chunk.toString());
+  });
+
+  container.logs({
+    follow: true,
+    stdout: true,
+    stderr: true
+  }, function(err, stream){
+    if(!err)
+      container.modem.demuxStream(stream, logStream, logStream);
+  });
+}
+
 // Run the container
 function run_container(executable, model, property) {
     console.log("running", executable.path);
@@ -138,6 +159,10 @@ function run_container(executable, model, property) {
         if (model.format === "cnf") { // SAT format
             console.log("writing CNF...");
             in_file += ".cnf";
+            yield fs.writeFileAsync(in_file, model.content, 'utf8');
+        } else if (model.format === "number_partitioning") { // SAT format
+            console.log("writing number partitioning...");
+            in_file += ".txt";
             yield fs.writeFileAsync(in_file, model.content, 'utf8');
         } else { // JSON format
             console.log("writing JSON...");
@@ -154,21 +179,13 @@ function run_container(executable, model, property) {
             Volumes: {run_work_dir: {}}
         });
 
-        // Create stream from container to out_file
-        console.log('attaching stream...');
-        var stream = yield container.attachAsync({
-            stream: true,
-            stdout: true,
-            stderr: true
-        });
-        stream.pipe(fs.createWriteStream(out_file));
-
         // Start container
         console.log("starting container...");
         var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
         yield container.startAsync({
             'Binds': [host_work_dir+':'+run_work_dir]
         });
+        container_logs(container, out_file);
         var hrstart = process.hrtime();
 
         // Set timeout
@@ -186,54 +203,17 @@ function run_container(executable, model, property) {
         var hrdiff = process.hrtime(hrstart);
         var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
 
-        // Read output, check for errors, remove file
-        var log = yield fs.readFileAsync(out_file, 'utf8');
-        log = log.replace(ascii_regex, '');
-        fs.unlink(out_file);
-
         // Remove container
         console.log("remove container...");
         container.removeAsync();
 
-        // Read result, remove file
-        var result = "";
-        if (model.format === "cnf") { // SAT format
-            var n = log.lastIndexOf("\nv ");
-            console.log(n);
-            if (n < 0) {
-                n = log.lastIndexOf("v ");
-                if (n < 0) throw {
-                    code: 501,
-                    message: "No output found"
-                };
-            }
-            console.log(n);
-            var chopped_log = log.substr(n+2, log.length);
-            var variables = chopped_log;
-            if (chopped_log.indexOf("\n") >= 0)
-                variables = chopped_log.substr(0, chopped_log.indexOf("\n"));
-            variables = variables.replace(numeral_regex, '');
-            var result_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-result-XXXXXX'});
-            yield fs.writeFileAsync(result_file, variables, 'utf8');
-            result = yield verify_result(model.format, in_file, result_file);
-            fs.unlink(result_file);
-        } else { // JSON format
-            if (data.StatusCode === 137) {
-                throw {
-                    code: 502,
-                    message: "Timed out after "+timeout+" seconds"
-                };
-            } else if (data.StatusCode !== 0) {
-                console.log(data);
-                throw {
-                    code: 503,
-                    message: log
-                };
-            }
-            var result_file = in_file;
-            result = yield verify_result(model.format, in_file, result_file);
-        }
+        // Verify result
+        var log = yield fs.readFileAsync(out_file, 'utf8');
+        var result = yield verify_result(model.format, in_file, out_file);
+
+        // Unlink files
         fs.unlink(in_file);
+        fs.unlink(out_file);
 
         // Set necessary fields
         result.property_id = property._id;
@@ -241,14 +221,11 @@ function run_container(executable, model, property) {
 
         // Push result back to database
         var obj = yield Models.commit_one(result);
-        var update = {
-                status: "resolved",
-                output_model_id: obj.ids[0],
-                log: log,
-                walltime: walltime
-        };
-        if (model.format === "cnf")
-            update.cost = result.cost;
+        var update = result;
+        update.status = "resolved";
+        update.output_model_id = obj.ids[0];
+        update.log = log;
+        update.walltime = walltime;
         yield Properties.update_one({_id: property._id}, update);
         console.log('resolved property', property._id);
 
@@ -263,26 +240,17 @@ function run_container(executable, model, property) {
 function verify_result(format, in_file, result_file) {
     return new Promise(function(resolve, reject) {
         co(function *() {
-            if (format === "cnf") { // SAT format
-                var cost_evaluator = "iliazin/cost_evaluator_sat:v1";
+            if (format === "number_partitioning") {
+                var cost_evaluator = "mindi/number_partitioning_evaluator:latest";
                 yield pull_container(cost_evaluator);
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var run_work_dir = '/input';
                 var container = yield create_container({
-                    Image: 'iliazin/cost_evaluator_sat:v1',
+                    Image: cost_evaluator,
                     Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(result_file)],
                     Volumes: {run_work_dir: {}}
                 });
-
-                // Create stream from container to out_file
-                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-verify-XXXXXX'});
-                var stream = yield container.attachAsync({
-                    stream: true,
-                    stdout: true,
-                    stderr: true
-                });
-                stream.pipe(fs.createWriteStream(out_file));
 
                 // Start container
                 console.log("starting evaluator...");
@@ -291,26 +259,27 @@ function verify_result(format, in_file, result_file) {
                     'Binds': [host_work_dir+':'+run_work_dir]
                 });
 
+                // Add log
+                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-verify-XXXXXX'});
+                container_logs(container, out_file);
+
                 // Wait for container to finish
                 var data = yield container.waitAsync();
                 console.log("container finished...");
 
                 // Read output, check for errors, remove file
-                var log = yield fs.readFileAsync(out_file, 'utf8');
+                var log = yield fs.readFileAsync(out_file, 'ascii');
                 fs.unlink(out_file);
                 if (data.StatusCode !== 0) throw log
 
                 // Remove container
                 container.removeAsync();
-
-                var num = log.replace(ascii_regex, '');
-                var configuration = yield fs.readFileAsync(result_file, 'utf8');
-                configuration = configuration.replace(ascii_regex, '');
+                var num = log.replace(numeral_regex, '');
                 var result = {
                     cost: Number(num),
-                    content: configuration
                 };
                 resolve(result);
+
             } else { // JSON format
                 resolve(jsonfile.readFileSync(result_file));
             }
