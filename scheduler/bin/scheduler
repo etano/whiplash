@@ -208,11 +208,7 @@ function run_container(executable, model, property) {
 
         // Verify result
         var log = yield fs.readFileAsync(out_file, 'utf8');
-        var result;
-        if (model.format === "json")
-            result = yield verify_result(executable, in_file, in_file);
-        else
-            result = yield verify_result(executable, in_file, out_file);
+        var result = yield verify_result(executable, in_file, out_file);
 
         // Unlink files
         fs.unlink(in_file);
@@ -245,7 +241,7 @@ function verify_result(executable, in_file, out_file) {
         co(function *() {
             var json_file;
             if (executable.out_format === "json") {
-                json_file = out_file;
+                json_file = in_file;
             } else {
                 if (!executable.evaluator)
                     throw "No evaluator defined for executable";
