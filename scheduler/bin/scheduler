@@ -156,15 +156,13 @@ function run_container(executable, model, property) {
         var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
 
         // Write input
-        if (model.format === "cnf" || model.format === "number_partitioning") {
-            console.log("writing text...");
+        console.log("writing input...");
+        if (model.format === "json") {
+            model.params = property.params;
+            jsonfile.writeFileSync(in_file, model, 'utf8');
+        } else {
             in_file += ".txt";
             yield fs.writeFileAsync(in_file, model.content, 'utf8');
-        } else { // JSON format
-            console.log("writing JSON...");
-            model.params = property.params;
-            console.log("write file");
-            jsonfile.writeFileSync(in_file, model, 'utf8');
         }
 
         // Create container
@@ -205,13 +203,13 @@ function run_container(executable, model, property) {
 
         // Verify result
         var log = yield fs.readFileAsync(out_file, 'utf8');
-        if (model.format !== "cnf" && model.format !== "number_partitioning")
+        if (model.format === "json")
             out_file = in_file;
         var result = yield verify_result(model.format, in_file, out_file);
 
         // Unlink files
         fs.unlink(in_file);
-        if (model.format === "cnf" && model.format === "number_partitioning")
+        if (model.format !== "json")
             fs.unlink(out_file);
 
         // Set necessary fields

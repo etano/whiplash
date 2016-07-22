@@ -37,13 +37,14 @@ for k in range(n_models):
             value = 2.0*random.random()-1.0
             hamiltonian.append([[i,j],value])
     tags = {
-        "n_spins":N,
-        "name":"test_set_"+str(k),
+        "n_spins": N,
+        "name": "test_set_"+str(k),
         "description": "This is a test model",
-        "set":"test_set",
-        "owner": "internal"
+        "set": "test_set",
+        "owner": "internal",
+        "format": "json"
     }
-    model = {"content":{"edges":hamiltonian}}
+    model = {"content": {"edges": hamiltonian}}
     model.update(tags)
     models.append(model)
 model_ids = db.models.commit(models)['ids']
