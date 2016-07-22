@@ -156,12 +156,8 @@ function run_container(executable, model, property) {
         var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
 
         // Write input
-        if (model.format === "cnf") { // SAT format
-            console.log("writing CNF...");
-            in_file += ".cnf";
-            yield fs.writeFileAsync(in_file, model.content, 'utf8');
-        } else if (model.format === "number_partitioning") { // SAT format
-            console.log("writing number partitioning...");
+        if (model.format === "cnf" || model.format === "number_partitioning") {
+            console.log("writing text...");
             in_file += ".txt";
             yield fs.writeFileAsync(in_file, model.content, 'utf8');
         } else { // JSON format
@@ -209,11 +205,14 @@ function run_container(executable, model, property) {
 
         // Verify result
         var log = yield fs.readFileAsync(out_file, 'utf8');
+        if (model.format !== "cnf" && model.format !== "number_partitioning")
+            out_file = in_file;
         var result = yield verify_result(model.format, in_file, out_file);
 
         // Unlink files
         fs.unlink(in_file);
-        fs.unlink(out_file);
+        if (model.format === "cnf" && model.format === "number_partitioning")
+            fs.unlink(out_file);
 
         // Set necessary fields
         result.property_id = property._id;
