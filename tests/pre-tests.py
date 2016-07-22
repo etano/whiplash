@@ -81,6 +81,8 @@ executable = {
     "build": "test",
     "path": "whiplash/sleeper:latest",
     "description": "a test executable",
+    "in_format": "json",
+    "out_format": "json",
     "params": {
         "required": ["sleep_time"],
         "optional": []

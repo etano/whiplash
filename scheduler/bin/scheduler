@@ -131,7 +131,7 @@ function container_logs(container, out_file) {
   // create a single stream for stdin and stdout
   var logStream = new stream.PassThrough();
   var out = fs.createWriteStream(out_file);
-  logStream.on('data', function(chunk){
+  logStream.on('data', function(chunk) {
     console.log(chunk.toString());
     out.write(chunk.toString());
   });
@@ -140,7 +140,7 @@ function container_logs(container, out_file) {
     follow: true,
     stdout: true,
     stderr: true
-  }, function(err, stream){
+  }, function(err, stream) {
     if(!err)
       container.modem.demuxStream(stream, logStream, logStream);
   });
@@ -157,6 +157,11 @@ function run_container(executable, model, property) {
 
         // Write input
         console.log("writing input...");
+        if (model.format !== executable.in_format) {
+            console.log(model);
+            console.log(executable);
+            throw "Input model has incompatible format for executable";
+        }
         if (model.format === "json") {
             model.params = property.params;
             jsonfile.writeFileSync(in_file, model, 'utf8');
@@ -203,14 +208,15 @@ function run_container(executable, model, property) {
 
         // Verify result
         var log = yield fs.readFileAsync(out_file, 'utf8');
+        var result;
         if (model.format === "json")
-            out_file = in_file;
-        var result = yield verify_result(model.format, in_file, out_file);
+            result = yield verify_result(executable, in_file, in_file);
+        else
+            result = yield verify_result(executable, in_file, out_file);
 
         // Unlink files
         fs.unlink(in_file);
-        if (model.format !== "json")
-            fs.unlink(out_file);
+        fs.unlink(out_file);
 
         // Set necessary fields
         result.property_id = property._id;
@@ -234,18 +240,24 @@ function run_container(executable, model, property) {
 }
 
 // Verify result
-function verify_result(format, in_file, result_file) {
+function verify_result(executable, in_file, out_file) {
     return new Promise(function(resolve, reject) {
         co(function *() {
-            if (format === "number_partitioning") {
-                var cost_evaluator = "mindi/number_partitioning_evaluator:latest";
-                yield pull_container(cost_evaluator);
+            var json_file;
+            if (executable.out_format === "json") {
+                json_file = out_file;
+            } else {
+                if (!executable.evaluator)
+                    throw "No evaluator defined for executable";
+
+                yield pull_container(executable.evaluator);
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var run_work_dir = '/input';
+                json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
                 var container = yield create_container({
-                    Image: cost_evaluator,
-                    Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(result_file)],
+                    Image: executable.evaluator,
+                    Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(out_file), run_work_dir+'/'+path.basename(json_file)],
                     Volumes: {run_work_dir: {}}
                 });
 
@@ -256,30 +268,14 @@ function verify_result(format, in_file, result_file) {
                     'Binds': [host_work_dir+':'+run_work_dir]
                 });
 
-                // Add log
-                var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-verify-XXXXXX'});
-                container_logs(container, out_file);
-
                 // Wait for container to finish
                 var data = yield container.waitAsync();
                 console.log("container finished...");
 
-                // Read output, check for errors, remove file
-                var log = yield fs.readFileAsync(out_file, 'ascii');
-                fs.unlink(out_file);
-                if (data.StatusCode !== 0) throw log
-
                 // Remove container
                 container.removeAsync();
-                var num = log.replace(numeral_regex, '');
-                var result = {
-                    cost: Number(num),
-                };
-                resolve(result);
-
-            } else { // JSON format
-                resolve(jsonfile.readFileSync(result_file));
             }
+            resolve(jsonfile.readFileSync(json_file));
         }).catch(function(err) {
             console.log(err);
             reject(err);

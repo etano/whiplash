@@ -9,6 +9,8 @@ module.exports = new Collection({
         description: {type: String, required: true},
         params: {type: Object, required: true, default: {}},
         timestamp: {type: Date, default: Date.now, required: true},
+        in_format: {type: String, required: true, default: "json"},
+        out_format: {type: String, required: true, default: "json"}
     },
     indexes: []
 });
