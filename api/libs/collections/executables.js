@@ -4,7 +4,7 @@ module.exports = new Collection({
     name: "executables",
     schema: {
         name: {type: String, unique: true, required: true},
-        owner: {type: String, unique: true, required: true},
+        owner: {type: String, required: true},
         path: {type: String, required: true},
         description: {type: String, required: true},
         params: {type: Object, required: true, default: {}},
