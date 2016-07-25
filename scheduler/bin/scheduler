@@ -240,6 +240,7 @@ function verify_result(executable, in_file, out_file) {
     return new Promise(function(resolve, reject) {
         co(function *() {
             var json_file;
+            var log = "";
             if (executable.out_format === "json") {
                 json_file = in_file;
             } else {
@@ -251,6 +252,10 @@ function verify_result(executable, in_file, out_file) {
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var run_work_dir = '/input';
                 json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
+                var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
+                console.log(in_file);
+                console.log(out_file);
+                console.log(json_file);
                 var container = yield create_container({
                     Image: executable.evaluator,
                     Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(out_file), run_work_dir+'/'+path.basename(json_file)],
@@ -263,6 +268,7 @@ function verify_result(executable, in_file, out_file) {
                 yield container.startAsync({
                     'Binds': [host_work_dir+':'+run_work_dir]
                 });
+                container_logs(container, log_file);
 
                 // Wait for container to finish
                 var data = yield container.waitAsync();
@@ -270,8 +276,15 @@ function verify_result(executable, in_file, out_file) {
 
                 // Remove container
                 container.removeAsync();
+
+                // Read log
+                var log = yield fs.readFileAsync(log_file, 'utf8');
             }
-            resolve(jsonfile.readFileSync(json_file));
+            try {
+                resolve(jsonfile.readFileSync(json_file));
+            } catch(err) {
+                throw log;
+            }
         }).catch(function(err) {
             console.log(err);
             reject(err);
