@@ -117,7 +117,7 @@ function create_container(options, n_attempts) {
                 n_attempts = 0
             n_attempts += 1;
             console.log(err);
-            if (n_attempts < 10)
+            if (n_attempts < 20)
                 resolve(create_container(options, n_attempts));
             else
                 reject(err);
@@ -175,7 +175,8 @@ function run_container(executable, model, property) {
         var container = yield create_container({
             Image: executable.path,
             Cmd: [run_work_dir+'/'+path.basename(in_file)],
-            Volumes: {run_work_dir: {}}
+            Volumes: {'/input': {}},
+            HostConfig: {NetworkMode: "closed_docker_network"}
         });
 
         // Start container
@@ -253,9 +254,6 @@ function verify_result(executable, in_file, out_file) {
                 var run_work_dir = '/input';
                 json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
                 var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
-                console.log(in_file);
-                console.log(out_file);
-                console.log(json_file);
                 var container = yield create_container({
                     Image: executable.evaluator,
                     Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(out_file), run_work_dir+'/'+path.basename(json_file)],
