@@ -81,7 +81,7 @@ function resolve_property(property) {
 // Pull the container
 function pull_container(container) {
     return new Promise(function(resolve, reject) {
-        if (pulled_containers.indexOf(container) < 0) {
+        //if (pulled_containers.indexOf(container) < 0) {
             co(function *() {
                 console.log("pulling", container);
                 var stream = yield docker.pullAsync(container);
@@ -97,10 +97,10 @@ function pull_container(container) {
             }).catch(function(err) {
                 reject(err);
             });
-        } else {
-            console.log("container already pulled", container);
-            resolve();
-        }
+        //} else {
+        //    console.log("container already pulled", container);
+        //    resolve();
+        //}
     });
 }
 
