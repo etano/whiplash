@@ -11,12 +11,6 @@ var fs = require('fs');
 Promise.promisifyAll(fs);
 var Docker = require("dockerode-bluebird");
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
-docker.createNetwork({
-  "Name": "closed_docker_network",
-  "Internal": true
-}, function(err, network) {
-  if (err) console.log(err);
-});
 
 // Whiplash
 var wdb = require('project-whiplash');
@@ -177,14 +171,17 @@ function run_container(executable, model, property) {
         }
 
         // Create container
-        var run_work_dir = '/input';
         var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
         var container = yield create_container({
             Image: executable.path,
-            Cmd: [run_work_dir+'/'+path.basename(in_file)],
+            Cmd: ['/input/'+path.basename(in_file)],
             Volumes: {'/input': {}},
-            // HostConfig: {NetworkMode: "closed_docker_network"}
-            'Binds': [host_work_dir+':'+run_work_dir]
+            Binds: [host_work_dir+':/input'],
+            NetworkSettings: {
+                Networks: {
+                    Internal: true
+                }
+            }
         });
 
         // Start container
@@ -258,14 +255,13 @@ function verify_result(executable, in_file, out_file) {
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
-                var run_work_dir = '/input';
                 json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
                 var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
                 var container = yield create_container({
                     Image: executable.evaluator,
-                    Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(out_file), run_work_dir+'/'+path.basename(json_file)],
+                    Cmd: ['/input/'+path.basename(in_file), '/input/'+path.basename(out_file), '/input/'+path.basename(json_file)],
                     Volumes: {'/input': {}},
-                    'Binds': [host_work_dir+':'+run_work_dir]
+                    Binds: [host_work_dir+':/input']
                 });
 
                 // Start container
