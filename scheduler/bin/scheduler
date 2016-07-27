@@ -197,7 +197,9 @@ function run_container(executable, model, property) {
             if (!property.timeout) timeout = 3600; // Default is 1 hr.
             else timeout = property.timeout;
         } else timeout = model.timeout;
-        container.stopAsync({t: timeout});
+        setTimeout(function() {
+            container.stopAsync({t: 1});
+        }, timeout*1000);
 
         // Wait for container to finish
         // TODO: Measure overhead
@@ -279,9 +281,11 @@ function verify_result(executable, in_file, out_file) {
 
                 // Read log
                 var log = yield fs.readFileAsync(log_file, 'utf8');
+                fs.unlink(log_file);
             }
             try {
                 resolve(jsonfile.readFileSync(json_file));
+                fs.unlink(json_file);
             } catch(err) {
                 throw log;
             }
