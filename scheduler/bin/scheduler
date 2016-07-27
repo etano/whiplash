@@ -285,7 +285,8 @@ function verify_result(executable, in_file, out_file) {
             }
             try {
                 resolve(jsonfile.readFileSync(json_file));
-                fs.unlink(json_file);
+                if (executable.out_format !== "json")
+                    fs.unlink(json_file);
             } catch(err) {
                 throw log;
             }
