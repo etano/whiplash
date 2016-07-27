@@ -16,7 +16,7 @@ build:
     - docker-compose -f deployment/dev/docker-compose.yml -p whiplash rm -f
     - docker-compose -f deployment/dev/docker-compose.yml -p whiplash build
     - docker-compose -f deployment/dev/docker-compose.yml -p whiplash up -d
-    - sleep 40
+    - sleep 60
     - docker logs whiplash_api_1
     - docker logs whiplash_scheduler_1
     - docker logs whiplash_www_1
