@@ -178,19 +178,19 @@ function run_container(executable, model, property) {
 
         // Create container
         var run_work_dir = '/input';
+        var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
         var container = yield create_container({
             Image: executable.path,
             Cmd: [run_work_dir+'/'+path.basename(in_file)],
             Volumes: {'/input': {}},
-            HostConfig: {NetworkMode: "closed_docker_network"}
+            // HostConfig: {NetworkMode: "closed_docker_network"}
+            'Binds': [host_work_dir+':'+run_work_dir]
         });
 
         // Start container
         console.log("starting container...");
-        var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
-        yield container.startAsync({
-            'Binds': [host_work_dir+':'+run_work_dir]
-        });
+
+        yield container.startAsync();
         container_logs(container, out_file);
         var hrstart = process.hrtime();
 
@@ -257,21 +257,21 @@ function verify_result(executable, in_file, out_file) {
                 yield pull_container(executable.evaluator);
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
+                var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
                 var run_work_dir = '/input';
                 json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
                 var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
                 var container = yield create_container({
                     Image: executable.evaluator,
                     Cmd: [run_work_dir+'/'+path.basename(in_file), run_work_dir+'/'+path.basename(out_file), run_work_dir+'/'+path.basename(json_file)],
-                    Volumes: {run_work_dir: {}}
+                    Volumes: {'/input': {}},
+                    'Binds': [host_work_dir+':'+run_work_dir]
                 });
 
                 // Start container
                 console.log("starting evaluator...");
-                var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
-                yield container.startAsync({
-                    'Binds': [host_work_dir+':'+run_work_dir]
-                });
+
+                yield container.startAsync();
                 container_logs(container, log_file);
 
                 // Wait for container to finish
