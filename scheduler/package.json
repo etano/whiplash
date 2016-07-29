@@ -8,7 +8,7 @@
   "dependencies": {
     "bluebird": "^3.4.0",
     "co": "^4.6.0",
-    "dockerode-bluebird": "^1.0.4",
+    "dockerode": "^2.2.7",
     "jsonfile": "^2.3.1",
     "project-whiplash": "^1.1.0",
     "request": "^2.72.0",

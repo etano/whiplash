@@ -9,7 +9,7 @@ var stream = require('stream');
 var Promise = require('bluebird');
 var fs = require('fs');
 Promise.promisifyAll(fs);
-var Docker = require("dockerode-bluebird");
+var Docker = require('../libs/dockerode-bluebird');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 // Whiplash
@@ -26,6 +26,13 @@ wdb.connect(options, function() {
 var Models = wdb.get().models;
 var Executables = wdb.get().executables;
 var Properties = wdb.get().properties;
+
+// Docker auth
+var auth = {
+  username: process.env.WHIPLASH_DOCKER_USERNAME,
+  password: process.env.WHIPLASH_DOCKER_PASSWORD,
+  email: process.env.WHIPLASH_DOCKER_EMAIL
+};
 
 // Global variables
 var working = false;
@@ -84,7 +91,7 @@ function pull_container(container) {
         //if (pulled_containers.indexOf(container) < 0) {
             co(function *() {
                 console.log("pulling", container);
-                var stream = yield docker.pullAsync(container);
+                var stream = yield docker.pullAsync(container, {'authconfig': auth});
                 docker.modem.followProgress(stream, onFinished, onProgress);
                 function onFinished(err, output) {
                     if (err) reject(err);
