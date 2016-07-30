@@ -211,16 +211,21 @@ function run_container(executable, model, property) {
         // Wait for container to finish
         // TODO: Measure overhead
         var data = yield container.waitAsync();
-        console.log("container finished...");
         var hrdiff = process.hrtime(hrstart);
         var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
+        console.log("container finished...");
+        console.log("walltime", walltime);
 
         // Remove container
         console.log("remove container...");
         container.removeAsync();
 
-        // Verify result
+        // Update property
         var log = yield fs.readFileAsync(out_file, 'utf8');
+        property.walltime = walltime;
+        property.log = log;
+
+        // Verify result
         var result = yield verify_result(executable, in_file, out_file);
 
         // Unlink files
@@ -322,11 +327,9 @@ function set_errored(property, err) {
         };
     }
     console.log(err);
-    Properties.update_one({_id: property._id}, {
-            status: "errored",
-            err: err
-        }
-    );
+    property.status = "errored";
+    property.err = err;
+    Properties.update_one({_id: property._id}, property);
 }
 
 });
