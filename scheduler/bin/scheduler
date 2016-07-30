@@ -224,6 +224,8 @@ function run_container(executable, model, property) {
         var log = yield fs.readFileAsync(out_file, 'utf8');
         property.walltime = walltime;
         property.log = log;
+        if ((property.log==="") && (property.walltime>timeout))
+            throw "No output and timeout exceeded";
 
         // Verify result
         var result = yield verify_result(executable, in_file, out_file);
