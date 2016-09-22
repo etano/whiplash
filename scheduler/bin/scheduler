@@ -251,6 +251,8 @@ function run_container(executable, model, property) {
         // Start looking again
         working = false;
     }).catch(function(err) {
+        fs.unlink(in_file, function(err){});
+        fs.unlink(out_file, function(err){});
         set_errored(property, err);
     });
 }
@@ -305,6 +307,8 @@ function verify_result(executable, in_file, out_file) {
                 throw log;
             }
         }).catch(function(err) {
+            fs.unlink(log_file, function(err){});
+            fs.unlink(json_file, function(err){});
             console.log(err);
             reject(err);
         });
