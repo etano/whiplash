@@ -20,23 +20,23 @@ api:
         - odb:odb
     command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin password admin@whiplash.ethz.ch; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
 
-scheduler:
-    extends:
-        file: ../../scheduler/docker-compose.yml
-        service: scheduler
-    volumes:
-        - ../../scheduler/bin:/src/bin
-        - ../../scheduler/libs:/src/libs
-        - /var/run/docker.sock:/var/run/docker.sock
-        - $PWD:/input
-    environment:
-        WHIPLASH_HOST_WORK_DIR: $PWD
-        WHIPLASH_LAUNCH_WORK_DIR: '/input'
-        WHIPLASH_API_HOST: api
-        WHIPLASH_API_PORT: 1337
-        WHIPLASH_ADMIN_PASSWORD: password
-        WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID: admin-scheduler
-        WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET: password
-    links:
-        - api:api
-    command: sh -c "sleep 20; node --use_strict bin/scheduler"
+#scheduler:
+#    extends:
+#        file: ../../scheduler/docker-compose.yml
+#        service: scheduler
+#    volumes:
+#        - ../../scheduler/bin:/src/bin
+#        - ../../scheduler/libs:/src/libs
+#        - /var/run/docker.sock:/var/run/docker.sock
+#        - $PWD:/input
+#    environment:
+#        WHIPLASH_HOST_WORK_DIR: $PWD
+#        WHIPLASH_LAUNCH_WORK_DIR: '/input'
+#        WHIPLASH_API_HOST: api
+#        WHIPLASH_API_PORT: 1337
+#        WHIPLASH_ADMIN_PASSWORD: password
+#        WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID: admin-scheduler
+#        WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET: password
+#    links:
+#        - api:api
+#    command: sh -c "sleep 20; node --use_strict bin/scheduler"
