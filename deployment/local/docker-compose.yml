@@ -20,27 +20,6 @@ api:
         - odb:odb
     command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin password admin@whiplash.ethz.ch; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
 
-www:
-    extends:
-        file: ../../www/docker-compose.yml
-        service: www
-    ports:
-        - "3000:3000"
-    volumes:
-        - ../../www/public:/src/public
-        - ../../www/views:/src/views
-        - ../../www/routes:/src/routes
-    environment:
-        WHIPLASH_API_HOST: api
-        WHIPLASH_API_PORT: 1337
-        WHIPLASH_ADMIN_PASSWORD: password
-        WHIPLASH_ADMIN_WWW_CLIENT_ID: admin-www
-        WHIPLASH_ADMIN_WWW_CLIENT_SECRET: password
-    links:
-        - api:api
-    restart: always
-    command: sh -c "sleep 20; node --use_strict bin/www"
-
 scheduler:
     extends:
         file: ../../scheduler/docker-compose.yml
