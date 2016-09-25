@@ -658,6 +658,38 @@ class Collection {
     }
 
     /**
+     * @apiDefine ReplaceOne
+     * @apiName ReplaceOne
+     * @apiVersion 1.0.0
+     *
+     * @apiParam {Object} obj Object to replace their previous versions.
+     *
+     * @apiSuccess {Object} result Number of replaced objects.
+     *
+     * @apiSuccessExample Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {
+     *       "result": 1
+     *     }
+     *
+     */
+    replace_one(obj, user) {
+        var self = this;
+        global.timer.get_timer('replace_'+self.name).start();
+        return new Promise(function(resolve, reject) {
+            co(function *() {
+                return yield self.replace([obj], user);
+            }).then(function(result) {
+                global.timer.get_timer('replace_one_'+self.name).stop();
+                resolve(result);
+            }).catch(function(err) {
+                global.timer.get_timer('replace_one_'+self.name).stop();
+                reject(err);
+            });
+        });
+    }
+
+    /**
      * @apiDefine Pop
      * @apiName Pop
      * @apiVersion 1.0.0

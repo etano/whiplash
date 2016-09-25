@@ -94,16 +94,25 @@ router.post('/resolved', passport.authenticate('bearer', { session: false }), fu
     var good_models = [];
     var all_properties = [];
     for (var i=0; i<results.length; i++) {
-        if (results[i]['property']['status'] === 'resolved') {
-            good_models.push(results[i]['model']);
-            results[i]['property']['output_model_id'] = common.hash(results[i]['model']);
-            all_properties.push(results[i]['property']);
-        } else {
-            all_properties.push(results[i]['property']);
+        var property = results[i]['property'];
+        if (property['status'] === 'resolved') {
+            var model = results[i]['model'];
+            co(function *() {
+                return yield Models.commit_one(model, req.user);
+            }).then(function(obj) {
+                console.log(obj);
+                console.log(results[i]);
+                console.log(property);
+                property['output_model_id'] = obj['ids'][0];
+                console.log(property);
+                Properties.replace_one(property, req.user);
+            }).catch(function(err) {
+                console.log(err);
+                log.error(err);
+            });
         }
     }
-    Models.commit(good_models, req.user);
-    common.return_promise(res, Properties.replace(all_properties, req.user));
+    common.return(res, 0, 1);
 });
 
 /**
