@@ -553,11 +553,12 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
         total: 0
     };
     co(function *() {
-        // Get filters, fields, settings, and user id
-        var filters = common.get_payload(req,'filters');
+        // Get filters and settings
+        var filters = common.get_payload(req, 'filters');
+        var settings = common.get_payload(req, 'settings');
 
         // Set defaults
-        var settings = {submit_new: true};
+        settings['submit_new'] = true;
         var fields = {
             input_model: ["_id"],
             executable: ["_id"],

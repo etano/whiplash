@@ -112,11 +112,14 @@ fields = {
     'params': ["sleep_time"],
     'output_model': ["number"]
 }
-query_0 = db.submit(filters)
+settings = {
+    'timeout': 2
+}
+query_0 = db.submit(filters, settings=settings)
 print(query_0)
 assert db.status(filters)['total'] == n_models
 
 print("Submit query for some results again")
-query_1 = db.submit(filters)
+query_1 = db.submit(filters, settings=settings)
 print(query_1)
 assert db.status(filters)['total'] == n_models

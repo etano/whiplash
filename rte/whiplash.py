@@ -279,12 +279,12 @@ class db:
         #print('query time',t1-t0)
         return res
 
-    def submit(self, filters):
+    def submit(self, filters, settings={}):
         '''
         Submit a query to the database
         '''
         t0 = time.time()
-        res = self.request("POST", "queries", {"filters":filters})
+        res = self.request("POST", "queries", {"filters":filters, "settings":settings})
         t1 = time.time()
         #print('query time',t1-t0)
         return res
