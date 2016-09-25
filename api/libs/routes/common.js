@@ -17,13 +17,15 @@ function checksum(str) {
 }
 
 function smart_stringify(obj) {
-    if(typeof(obj) !== 'object') {
-        return JSON.stringify(obj);
-    }
     global.timer.get_timer('smart_stringify').start();
+    if(typeof(obj) !== 'object') {
+        var json_str = JSON.stringify(obj);
+        global.timer.get_timer('smart_stringify').stop();
+        return json_str;
+    }
     var keys = Object.keys(obj).sort();
     var str = '{';
-    for(var i = 0; i < keys.length; i++) {
+    for(var i=0; i<keys.length; i++) {
         str += '"' + keys[i] + '":' + smart_stringify(obj[keys[i]]) + ',';
     }
     str += '}';

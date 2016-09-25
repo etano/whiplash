@@ -126,10 +126,10 @@ def stats(db, collection, sizes, numbers, filter={}):
 def mapreduce(db, collection, sizes, numbers, filter, mapper, reducer, finalizer):
     print("NOT YET IMPLEMENTED")
 
-def query(db, sizes, numbers, filters={}, fields=[], settings={'get_results': False}):
+def submit(db, sizes, numbers, filters={}):
     for size in sizes:
         for number in numbers:
-            print('Querying for %i results with size %i\n'%(number*number, size))
+            print('Submitting %i queries with size %i\n'%(number*number, size))
             new_filters = filters.copy()
             if not 'input_model' in new_filters:
                 new_filters['input_model'] = {}
@@ -144,10 +144,30 @@ def query(db, sizes, numbers, filters={}, fields=[], settings={'get_results': Fa
             new_filters['params']['size'] = size
             new_filters['params']['number'] = number
             new_filters['params']['run_time'] = 1.0
-            t, res = timer(db, db.query, new_filters, fields, settings)
+            t, res = timer(db, db.submit, new_filters)
+            logging.info('root submit %i %i %f', number, size, t)
+            assert res['total'] == number*number
+            print('Finished in %f seconds\n'%(t))
+
+def query(db, sizes, numbers, filters={}):
+    for size in sizes:
+        for number in numbers:
+            print('Querying %i items with size %i\n'%(number*number, size))
+            new_filters = filters.copy()
+            if not 'input_model' in new_filters:
+                new_filters['input_model'] = {}
+            new_filters['input_model']['size'] = size
+            new_filters['input_model']['number'] = number
+            if not 'executable' in new_filters:
+                new_filters['executable'] = {}
+            new_filters['executable']['size'] = size
+            new_filters['executable']['number'] = number
+            if not 'params' in new_filters:
+                new_filters['params'] = {}
+            new_filters['params']['size'] = size
+            new_filters['params']['number'] = number
+            new_filters['params']['run_time'] = 1.0
+            t, res = timer(db, db.query, new_filters)
             logging.info('root query %i %i %f', number, size, t)
-            if settings['get_results']:
-                assert len(res) == number*number
-            else:
-                assert res['n_new'] + res['n_existing'] == number*number
+            assert len(res) == number*number
             print('Finished in %f seconds\n'%(t))

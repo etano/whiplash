@@ -160,8 +160,8 @@ function setup_query(filters, fields, settings, user) {
                 for (var i=0; i<input_model_ids.length; i++) {
                     for (var j=0; j<executable_ids.length; j++) {
                         var prop = {
-                            'executable_id': executable_ids[j],
                             'input_model_id': input_model_ids[i],
+                            'executable_id': executable_ids[j],
                             'params': {},
                             'status': 'unresolved',
                             'timestamp': Date.now,

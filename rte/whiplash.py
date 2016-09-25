@@ -264,7 +264,7 @@ class db:
         Submits a query to the database
         '''
         t0 = time.time()
-        res = self.request("GET", "queries", {"filters":filters,"fields":fields,"settings":settings})
+        res = self.request("GET", "queries", {"filters":filters, "fields":fields, "settings":settings})
         t1 = time.time()
         #print('query time',t1-t0)
         return res

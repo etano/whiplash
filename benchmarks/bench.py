@@ -24,11 +24,11 @@ for collection, required_fields in collections:
     bench.count(db, collection, sizes, numbers)
     bench.query_collection(db, collection, sizes, numbers)
     bench.update(db, collection, sizes, numbers)
-    bench.stats(db, collection, sizes, numbers)
+    if collection == 'models':
+        bench.stats(db, collection, sizes, numbers)
+
+print("Benchmarking submission")
+bench.submit(db, sizes, numbers)
 
 print("Benchmarking query")
-bench.query(db, sizes, numbers, settings={'get_results': False})
-bench.query(db, sizes, numbers, settings={'get_results': False})
-db.properties.delete({})
-bench.query(db, sizes, numbers, settings={'get_results': True})
-bench.query(db, sizes, numbers, settings={'get_results': True})
+bench.query(db, sizes, numbers)
