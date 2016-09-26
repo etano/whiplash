@@ -1,0 +1,1 @@
+define({  "title": "Whiplash API",  "url": "https://whiplash.ethz.ch/api",  "name": "WhiplashAPI",  "version": "1.0.0",  "description": "Whiplash API",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2016-09-26T13:36:54.732Z",    "url": "http://apidocjs.com",    "version": "0.16.1"  }});
