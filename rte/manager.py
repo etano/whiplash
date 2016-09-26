@@ -33,11 +33,9 @@ def get_users(args, db):
                             db_user['cluster'] = "monch.cscs.ch" #TODO: dedicated collection of clusters
                             db_user['work_dir'] = '/mnt/lnec/'+user['username']+'/.whiplash_run'
                         elif args.dind:
-                            db_user['work_dir'] = '/input'
-                        elif args.docker:
-                            db_user['work_dir'] = os.environ['WORKDIR']
+                            db_user['work_dir'] = os.environ['WHIPLASH_LAUNCH_WORK_DIR']
                         else:
-                            db_user['work_dir'] = os.environ['WORKDIR']
+                            db_user['work_dir'] = os.environ['WHIPLASH_HOST_WORK_DIR']
                         if (db_user['username'] != 'admin'):
                             db_users.append(db_user)
                         break
@@ -56,8 +54,8 @@ def check_access(db_user):
         return 0
 
 def scheduler(args):
-    db = whiplash.db(args.host,args.port,username="admin",password=os.environ['ADMIN_PASSWORD'],save_token=True)
-    logging.info('user scheduler connected to db')
+    db = whiplash.db(args.host,args.port,username="admin",password=os.environ['WHIPLASH_ADMIN_PASSWORD'],save_token=True)
+    logging.info('admin connected to db')
 
     time_limit = 24*3600
     schedulers = {}
@@ -119,8 +117,8 @@ def scheduler(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host',dest='host',required=True,type=str)
-    parser.add_argument('--port',dest='port',required=True,type=int)
+    parser.add_argument('--host',dest='host',required=False,type=str,default=os.environ['WHIPLASH_API_HOST'])
+    parser.add_argument('--port',dest='port',required=False,type=int,default=os.environ['WHIPLASH_API_PORT'])
     parser.add_argument('--num_cpus',dest='num_cpus',required=False,type=int,default=1)
     parser.add_argument('--log_dir',dest='log_dir',required=False,type=str,default='.')
     parser.add_argument('--rte_dir',dest='rte_dir',required=False,type=str,default=os.path.dirname(os.path.realpath(sys.argv[0])))

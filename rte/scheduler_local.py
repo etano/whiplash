@@ -65,7 +65,7 @@ def resolve_object(args, pid, property, models, executables):
     try:
         path = executables[property['executable_index']]['path']
         if args.dind:
-            command = 'docker run --rm=true -i -v '+os.environ['WORKDIR']+':/input '+path+' /input/'+file_name
+            command = 'docker run --rm=true -i -v '+os.environ['WHIPLASH_HOST_WORK_DIR']+':'+args.work_dir+' '+path+' '+args.work_dir+'/'+file_name
         elif args.docker:
             command = 'docker run --rm=true -i -v '+args.work_dir+':/input '+path+' /input/'+file_name
         else:
