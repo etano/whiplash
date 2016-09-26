@@ -18,7 +18,7 @@ build:
     - docker-compose -f deployment/local/docker-compose.yml -p whiplash up -d
     - sleep 40
     - docker logs whiplash_api_1
-    - docker logs whiplash_scheduler_1
+    - docker logs whiplash_rte_1
   tags:
     - docker
 
@@ -28,7 +28,7 @@ test:
     - export PYTHONPATH=$PWD/rte:$PYTHONPATH
     - ./tests/pre-tests.py localhost 1337
     - sleep 60
-    - docker logs whiplash_scheduler_1
+    - docker logs whiplash_rte_1
     - ./tests/post-tests.py localhost 1337
   tags:
     - docker
