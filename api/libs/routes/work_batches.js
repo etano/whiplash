@@ -90,28 +90,22 @@ router.post('/', passport.authenticate('bearer', { session: false }), function(r
  *
  */
 router.post('/resolved', passport.authenticate('bearer', { session: false }), function(req, res) {
-    var results = common.get_payload(req, 'results');
-    var good_models = [];
-    var all_properties = [];
-    for (var i=0; i<results.length; i++) {
-        var property = results[i]['property'];
-        if (property['status'] === 'resolved') {
-            var model = results[i]['model'];
-            co(function *() {
-                return yield Models.commit_one(model, req.user);
-            }).then(function(obj) {
-                console.log(obj);
-                console.log(results[i]);
-                console.log(property);
+    co(function *() {
+        var results = common.get_payload(req, 'results');
+        var good_models = [];
+        var all_properties = [];
+        for (var i=0; i<results.length; i++) {
+            var property = results[i]['property'];
+            if (property['status'] === 'resolved') {
+                var model = results[i]['model'];
+                var obj = yield Models.commit_one(model, req.user);
                 property['output_model_id'] = obj['ids'][0];
-                console.log(property);
                 Properties.replace_one(property, req.user);
-            }).catch(function(err) {
-                console.log(err);
-                log.error(err);
-            });
+            } else {
+                Properties.replace_one(property, req.user);
+            }
         }
-    }
+    });
     common.return(res, 0, 1);
 });
 

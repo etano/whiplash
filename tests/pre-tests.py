@@ -113,7 +113,7 @@ fields = {
     'output_model': ["number"]
 }
 settings = {
-    'timeout': 2
+    'timeout': 3
 }
 query_0 = db.submit(filters, settings=settings)
 print(query_0)
