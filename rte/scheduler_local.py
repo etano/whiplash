@@ -25,7 +25,7 @@ def get_work_batch(args, db, pid, work_batches, end_time, is_work, pulled_contai
         model_indices[work_batch['models'][i]['_id']] = i
     executable_indices = {}
     for i in range(len(work_batch['executables'])):
-        if args.docker:
+        if args.docker or args.dind:
             container = work_batch['executables'][i]['path']
             if (container not in pulled_containers) and (container not in pulling_containers):
                 pulling_containers.append(container)
