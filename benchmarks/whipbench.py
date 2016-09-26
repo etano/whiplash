@@ -25,6 +25,9 @@ def timer(*args):
     return t1 - t0, res
 
 def pretty_print(reports):
+    for k,v in reports.items():
+        if v['total_time'] == None:
+            v['total_time'] = 0.
     for k,v in sorted(reports.items(), key=lambda r: r[1]['total_time'], reverse=True):
         try:
             if (v['total_time'] > 0):
