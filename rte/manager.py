@@ -19,10 +19,6 @@ def start_local_scheduler(args, flags):
     command = args.rte_dir+"/scheduler_local.py"+flags
     sp.call(command, shell=True)
 
-def start_cloud_scheduler(args, flags):
-    command = args.rte_dir+"/scheduler_cloud.py"+flags
-    sp.call(command, shell=True)
-
 def get_users(args, db):
     try:
         all_users = db.collection('users').query({})
@@ -74,8 +70,6 @@ def scheduler(args):
                     schedulers[username] = {'batcher': th.Thread()}
                     if args.cluster:
                         schedulers[username]['slurm'] = th.Thread()
-                    elif args.cloud:
-                        schedulers[username]['cloud'] = th.Thread()
                     else:
                         schedulers[username]['local'] = th.Thread()
 
@@ -103,11 +97,6 @@ def scheduler(args):
                             schedulers[username]['slurm'].start()
                         else:
                             logging.info('access denied for user %s', username)
-                elif args.cloud:
-                    if not schedulers[username]['cloud'].is_alive():
-                        logging.info('starting cloud scheduler for user %s', username)
-                        schedulers[username]['cloud'] = th.Thread(target=start_cloud_scheduler, args=(args,flags,))
-                        schedulers[username]['cloud'].start()
                 else:
                     if not schedulers[username]['local'].is_alive():
                         logging.info('starting local scheduler for user %s', username)
@@ -123,8 +112,6 @@ def scheduler(args):
         schedulers[username]['batcher'].join()
         if args.cluster:
             schedulers[username]['slurm'].join()
-        elif args.cloud:
-            schedulers[username]['cloud'].join()
         else:
             schedulers[username]['local'].join()
     logging.info('user scheduler exiting')
@@ -142,7 +129,6 @@ if __name__ == '__main__':
     parser.add_argument('--dind',dest='dind',required=False,default=False,action='store_true')
     parser.add_argument('--local',dest='local',required=False,default=False,action='store_true')
     parser.add_argument('--cluster',dest='cluster',required=False,default=False,action='store_true')
-    parser.add_argument('--cloud',dest='cloud',required=False,default=False,action='store_true')
     parser.add_argument('--verbose',dest='verbose',required=False,default=False,action='store_true')
     args = parser.parse_args()
 

@@ -18,7 +18,7 @@ A local deployment is meant to run on a user's personal computer or single node.
     chmod +x /usr/local/bin/docker-compose
     docker-compose -f deployment/local/docker-compose.yml up -d
 
-### Test installation
+### Test
 
     export PYTHONPATH=$PWD/rte:$PYTHONPATH
     ./tests/pre-tests.py localhost 1337
