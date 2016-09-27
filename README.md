@@ -67,11 +67,25 @@ This type of installation requires a scheduler that is adapted to the batch syst
 
 The typical workflow stages are performed using Python interface as following:
 
-- Create connection to the database:         db = whiplash.db("localhost", 1337, <username>, <password>)
-- Commit the model:                          db.models.commit({ model description }), see examples/local/commit_models.py
-- Commit the solver description:             db.executables.commit({ ... }), see examples/local/commit_executable.py
-- Submit the query to be resolved:           db.submit({ filters }, { settings }), see examples/local/submit.py
-- Query for the property to see the results: db.query({ search params }, { dict of lists of fields to return }), see examples/local/query.py
+- Create connection to the database
+
+    db = whiplash.db("localhost", 1337, <username>, <password>)
+
+- Commit the model (see examples/local/commit_models.py)
+
+    db.models.commit({ model description })
+
+- Commit the solver description (see examples/local/commit_executable.py)
+
+    db.executables.commit({ ... })
+
+- Submit the query to be resolved (see examples/local/submit.py)
+
+    db.submit({ filters }, { settings })
+
+- Query for the property to see the results (see examples/local/query.py)
+
+    db.query({ search params }, { dict of lists of fields to return })
 
 The same workflow can be performed manually if executable has to be run offline.
 See an example (at ./examples/manual/submit_result.py) using input and output json files as arguments to commit the result.
@@ -80,8 +94,19 @@ Check the api/docs section for the detailed list of available parameters for dif
 
 ## Troubleshooting
 
-In order to check what happens it might be useful to inspect the contents of the database.
-This can be done by connecting to the mongo database container, i.e.:
+- In order to check what happens it might be useful to inspect the contents of the database.
+  This can be done by connecting to the mongo database container, i.e.:
 
     docker exec -it local_odb_1 mongo localhost:27017/wdb
+
+- If something isn't working anymore one can try restarting the containers
+
+    docker-compose -f deployment/local/docker-compose.yml restart
+
+  or stopping, removing them and building them again
+
+    docker-compose -f deployment/local/docker-compose.yml stop
+    docker-compose -f deployment/local/docker-compose.yml remove
+    docker-compose -f deployment/local/docker-compose.yml build
+    docker-compose -f deployment/local/docker-compose.yml up -d
 
