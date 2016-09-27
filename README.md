@@ -65,25 +65,18 @@ This type of installation requires a scheduler that is adapted to the batch syst
 
 ## Usage
 
-### Normal workflow
-
 The typical workflow stages are performed using Python interface as following:
 
 - Create connection to the database:         db = whiplash.db("localhost", 1337, <username>, <password>)
 - Commit the model:                          db.models.commit({ model description }), see examples/local/commit_models.py
 - Commit the solver description:             db.executables.commit({ ... }), see examples/local/commit_executable.py
 - Submit the query to be resolved:           db.submit({ filters }, { settings }), see examples/local/submit.py
-- Query for the property to see the results: db.properties.query({ search params }, [ list of fields to return ])
+- Query for the property to see the results: db.query({ search params }, { dict of lists of fields to return }), see examples/local/query.py
 
-### Manual workflow
+The same workflow can be performed manually if executable has to be run offline.
+See an example (at ./examples/manual/submit_result.py) using input and output json files as arguments to commit the result.
 
-When operating manually without an access to whiplash, one can still later save the results:
-
-- Duplicate the input file so that it wouldn't be overwritten (i.e. input.json)
-- Run the solver
-- Transfer the original input and output json files onto the Whiplash-enabled machine
-- Submit the results: ./examples/local/submit_result.py input.json output.json
-
+Check the api/docs section for the detailed list of available parameters for different entities and commands.
 
 ## Troubleshooting
 
