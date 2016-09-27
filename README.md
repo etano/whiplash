@@ -102,7 +102,7 @@ Check the api/docs section for the detailed list of available parameters for dif
   or stopping, removing them and building them again
 
     docker-compose -f deployment/local/docker-compose.yml stop
-    docker-compose -f deployment/local/docker-compose.yml remove
+    docker-compose -f deployment/local/docker-compose.yml rm
     docker-compose -f deployment/local/docker-compose.yml build
     docker-compose -f deployment/local/docker-compose.yml up -d
 
