@@ -60,9 +60,11 @@ def scheduler(args):
     time_limit = 24*3600
     schedulers = {}
     while True:
+        print('hi')
         all_users = get_users(args, db)
+        print(all_users)
         if len(all_users) > 0:
-            for db_user in get_users(args, db):
+            for db_user in all_users:
                 username = db_user['username']
                 if username not in schedulers:
                     schedulers[username] = {'batcher': th.Thread()}
@@ -100,6 +102,8 @@ def scheduler(args):
                         logging.info('starting local scheduler for user %s', username)
                         schedulers[username]['local'] = th.Thread(target=start_local_scheduler, args=(args,flags,))
                         schedulers[username]['local'].start()
+                    else:
+                        logging.info('local scheduler still alive')
             if args.test:
                 break
         else:
