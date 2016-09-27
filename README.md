@@ -49,19 +49,15 @@ This type of installation utilises docker-based containers and requires docker-c
 
 This type of installation requires a scheduler that is adapted to the batch system used on a cluster (Slurm is shipped as a default).
 
-1. Unpack the contents of this tar-ball at the desired location
-2. Bootstrap the database and scheduler somewhere :)
+For the Monch cluster at ETH Zurich we followed the steps below:
 
-2. Set up local RTE
-    export WHIPLASH_HOME=$HOME/src/whiplash
-    mkdir -p $WHIPLASH_HOME/logs/rte
-    mkdir -p $WHIPLASH_HOME/logs/work
-    export WORKDIR=$WHIPLASH_HOME/logs/work
-    export ADMIN_PASSWORD=password
+1. Install NodeJS
+2. Install MongoDB
+3. Submit a week long job to use a central hub
 
-3. Run the local RTE
-    $WHIPLASH_HOME/rte/manager.py --host localhost --port 1337 --num_cpus 2 --log_dir $WHIPLASH_HOME/logs/rte/ --rte_dir $WHIPLASH_HOME/rte --docker
+    sbatch deployment/cluster/monch/submit-week.sh
 
+This last step will require specialization for other cluster environments.
 
 ## Usage
 
