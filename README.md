@@ -52,19 +52,31 @@ This type of installation requires a scheduler that is adapted to the batch syst
 1. Unpack the contents of this tar-ball at the desired location
 2. Bootstrap the database and scheduler somewhere :)
 
-
-## Usage
-
-# Set up local RTE
+2. Set up local RTE
     export WHIPLASH_HOME=$HOME/src/whiplash
     mkdir -p $WHIPLASH_HOME/logs/rte
     mkdir -p $WHIPLASH_HOME/logs/work
     export WORKDIR=$WHIPLASH_HOME/logs/work
     export ADMIN_PASSWORD=password
 
-# Run the local RTE
+3. Run the local RTE
     $WHIPLASH_HOME/rte/manager.py --host localhost --port 1337 --num_cpus 2 --log_dir $WHIPLASH_HOME/logs/rte/ --rte_dir $WHIPLASH_HOME/rte --docker
 
+
+## Usage
+
+The typical workflow stages are performed using Python interface as following:
+
+- Create connection to the database:         db = whiplash.db("localhost", 1337, <username>, <password>)
+- Commit the model:                          db.models.commit({ model description }), see examples/local/commit_models.py
+- Commit the solver description:             db.executables.commit({ ... }), see examples/local/commit_executable.py
+- Submit the query to be resolved:           db.submit({ filters }, { settings }), see examples/local/submit.py
+- Query for the property to see the results: db.query({ search params }, { dict of lists of fields to return }), see examples/local/query.py
+
+The same workflow can be performed manually if executable has to be run offline.
+See an example (at ./examples/manual/submit_result.py) using input and output json files as arguments to commit the result.
+
+Check the api/docs section for the detailed list of available parameters for different entities and commands.
 
 ## Troubleshooting
 
