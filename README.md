@@ -52,18 +52,37 @@ This type of installation requires a scheduler that is adapted to the batch syst
 1. Unpack the contents of this tar-ball at the desired location
 2. Bootstrap the database and scheduler somewhere :)
 
-
-## Usage
-
-# Set up local RTE
+2. Set up local RTE
     export WHIPLASH_HOME=$HOME/src/whiplash
     mkdir -p $WHIPLASH_HOME/logs/rte
     mkdir -p $WHIPLASH_HOME/logs/work
     export WORKDIR=$WHIPLASH_HOME/logs/work
     export ADMIN_PASSWORD=password
 
-# Run the local RTE
+3. Run the local RTE
     $WHIPLASH_HOME/rte/manager.py --host localhost --port 1337 --num_cpus 2 --log_dir $WHIPLASH_HOME/logs/rte/ --rte_dir $WHIPLASH_HOME/rte --docker
+
+
+## Usage
+
+### Normal workflow
+
+The typical workflow stages are performed using Python interface as following:
+
+- Create connection to the database:         db = whiplash.db("localhost", 1337, <username>, <password>)
+- Commit the model:                          db.models.commit({ model description }), see examples/local/commit_models.py
+- Commit the solver description:             db.executables.commit({ ... }), see examples/local/commit_executable.py
+- Submit the query to be resolved:           db.submit({ filters }, { settings }), see examples/local/submit.py
+- Query for the property to see the results: db.properties.query({ search params }, [ list of fields to return ])
+
+### Manual workflow
+
+When operating manually without an access to whiplash, one can still later save the results:
+
+- Duplicate the input file so that it wouldn't be overwritten (i.e. input.json)
+- Run the solver
+- Transfer the original input and output json files onto the Whiplash-enabled machine
+- Submit the results: ./examples/local/submit_result.py input.json output.json
 
 
 ## Troubleshooting
