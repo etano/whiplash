@@ -55,7 +55,7 @@ def commit_resolved(db, pid, results):
     logging.info('worker %i committed %i model/property combos in %f seconds', pid, len(results), t1-t0)
 
 def resolve_object(args, pid, property, models, executables):
-    file_name = 'object_'+str(pid)+'_'+str(property['_id'])+'.json'
+    file_name = str(pid)+'_'+str(property['_id'])+'.json'
     with open(args.work_dir+'/'+file_name, 'w') as io_file:
         obj = models[property['model_index']]
         obj['params'] = property['params']
