@@ -88,13 +88,13 @@ The typical workflow stages are performed using Python interface as following:
     db.query({ search params }, { dict of lists of fields to return })
 
 The same workflow can be performed manually if executable has to be run offline.
-See an example (at ./examples/manual/submit_result.py) using input and output json files as arguments to commit the result.
+See an example (at ./examples/manual/commit_result.py) using input and output json files as arguments to commit the result.
 
 Check the api/docs section for the detailed list of available parameters for different entities and commands.
 
 ## Troubleshooting
 
-- In order to check what happens it might be useful to inspect the contents of the database.
+- In order to check what happens, it might be useful to inspect the contents of the database.
   This can be done by connecting to the mongo database container, i.e.:
 
     docker exec -it local_odb_1 mongo localhost:27017/wdb
