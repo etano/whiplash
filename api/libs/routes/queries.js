@@ -150,8 +150,11 @@ function setup_query(filters, fields, settings, user) {
             var property_filter = {
                 executable_id: {$in: executable_ids},
                 input_model_id: {$in: input_model_ids},
-                params: filters['params']
             };
+            for (var key in filters['params']) {
+                property_filter['params.'+key] = filters['params'][key];
+            }
+
             if (settings.submit_new) {
                 // Form properties
                 log.debug('form properties');
