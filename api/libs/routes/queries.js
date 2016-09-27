@@ -170,6 +170,8 @@ function setup_query(filters, fields, settings, user) {
                             'timestamp': Date.now,
                             'owner': user._id
                         };
+                        if (settings.manual)
+                            prop.status = 'pulled';
                         if (settings.timeout)
                             prop.timeout = settings.timeout;
                         for (var key in filters['params']) {
