@@ -60,9 +60,7 @@ def scheduler(args):
     time_limit = 24*3600
     schedulers = {}
     while True:
-        print('hi')
         all_users = get_users(args, db)
-        print(all_users)
         if len(all_users) > 0:
             for db_user in all_users:
                 username = db_user['username']

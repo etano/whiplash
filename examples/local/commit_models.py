@@ -14,7 +14,7 @@ for k in range(n_models):
     edges = []
     for i in range(n_spins):
         for j in range(i+1,n_spins):
-            edges.append([[i,j], 2*random.random()-1])
+            edges.append([[i,j], 2.0*random.random()-1.0])
     tags = {
         "n_spins": n_spins,
         "name": "test_set_"+str(k),

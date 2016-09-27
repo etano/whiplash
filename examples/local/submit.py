@@ -8,7 +8,7 @@ db = whiplash.db("localhost", 1337, username="test", password="test")
 print("Submit a query for the spin glass solver and instances")
 filters = {
     'input_model': {"set": "test_set"},
-    'executable': {"name": "an_ss_rn_fi_vdeg"},
+    'executable': {"name": "an_ss_ge_fi_vdeg"},
     'params':{
         "n_sweeps": 100,
         "n_reps": 10,
