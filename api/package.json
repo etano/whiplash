@@ -27,7 +27,7 @@
     "passport-oauth2-client-password": "^0.1.x",
     "throng": "^1.0.1",
     "winston": "^0.8.x",
-    "xxhash": "latest"
+    "xxhash": "^0.2.4"
   },
   "jshintConfig": {
     "curly": false,
