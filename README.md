@@ -88,6 +88,14 @@ See an example (at ./examples/manual/commit_result.py) using input and output js
 
 Check the api/docs section for the detailed list of available parameters for different entities and commands.
 
+## Users
+
+By default two user/password combinations are created with the database, "test/test" and "admin/password". The admin user has access to all data in the database, while the test user can only access or modify the documents they create. If a particular document is flagged as {"owner":"internal"}, it may be read by everyone, but again only modified by the admin.
+
+To create a new user do:
+
+    docker exec -it local_api_1 node --use_strict bin/create_user USERNAME PASSWORD EMAIL
+
 ## Troubleshooting
 
 - In order to check what happens, it might be useful to inspect the contents of the database.
