@@ -96,6 +96,8 @@ To create a new user do:
 
     docker exec -it local_api_1 node --use_strict bin/create_user USERNAME PASSWORD EMAIL
 
+Removing a user should be done through the database itself.
+
 ## Troubleshooting
 
 - In order to check what happens, it might be useful to inspect the contents of the database.
