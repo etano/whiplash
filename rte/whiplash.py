@@ -156,7 +156,7 @@ class collection:
         '''
         return self.request("PUT", "", {'filter':filter,'update':update})
 
-    def delete(self,filter): # FIXME: No deleting ?
+    def delete(self,filter):
         '''
         deletes the objects in the collection which satisfy the filter
         '''

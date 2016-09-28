@@ -32,7 +32,7 @@ db.connect(function(err) {
                 var client = {
                     name: client_id,
                     client_id: client_id,
-                    client_secret: password // FIXME: client_secret same as password
+                    client_secret: password // TODO: client_secret same as password
                 };
                 result = yield Clients.commit_one(client, user);
                 log.info("New client - %s:%s", client.client_id, client.client_secret);
