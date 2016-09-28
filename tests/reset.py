@@ -2,7 +2,7 @@
 import whiplash
 
 print("Login as admin")
-db = whiplash.db("localhost", 1337, username="admin", password="password")
+db = whiplash.db("localhost", 1337, username="test", password="test")
 
 print("Reset database")
 db.collection("work_batches").delete({})

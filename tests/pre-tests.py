@@ -25,7 +25,6 @@ for k in range(n_models):
         "name": "test_set_"+str(k),
         "description": "This is a test model",
         "set": "test_set",
-        "owner": "internal",
         "format": "json"
     }
     model = {"content": {"edges": hamiltonian}}
@@ -44,7 +43,6 @@ set_id = db.sets.commit([{
     "name": "test_set",
     "description": "This is a test set",
     "ids": model_ids,
-    "owner": "internal"
 }])['ids'][0]
 
 print("Commit models into a set again")
@@ -97,7 +95,7 @@ fields = {
     'output_model': ["number"]
 }
 settings = {
-    'timeout': 3
+    'timeout': 10
 }
 query_0 = db.submit(filters, settings=settings)
 print(query_0)
