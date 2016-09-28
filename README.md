@@ -106,3 +106,6 @@ Check the api/docs section for the detailed list of available parameters for dif
     docker-compose -f deployment/local/docker-compose.yml build
     docker-compose -f deployment/local/docker-compose.yml up -d
 
+- If you need to remove something from Whiplash, see the reset script at
+
+    ./tests/reset.py
