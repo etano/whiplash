@@ -6,6 +6,8 @@ Project whiplash was created for the purpose of automatic running and data loggi
 The simulations can be run either as stand-alone applications, in which case the user is responsible for committing the resulting data into the database manually.
 Or as a part of a querying process where a user queries the system for properties that are inferred from the target model using the specific solver.
 
+Very simply, the project is an API wrapper around a database to maintain a fixed structure.
+
 The system is structured to work with the following entitites (supplied as JSON):
 
 - Model: a description of the input data (can be bulk-data), i.e. Hamiltonian description.
@@ -19,7 +21,7 @@ A typical workflow then looks like the following:
 3. Submit the property description
 4. Query the property to get the results
 
-The Whiplash runtime component is responsible for the actual process of running the solver, reading the input and writing back the output into database.
+We provide a python runtime component is responsible for the actual process of running the solver, reading the input and writing back the output into database. It should be mentioned, however, that other runtime environments are possible, provided they interact through the Whiplash API.
 
 ## Installation
 
