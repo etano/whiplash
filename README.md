@@ -90,6 +90,8 @@ See an example (at ./examples/manual/commit_result.py) using input and output js
 
 Check the api/docs section for the detailed list of available parameters for different entities and commands.
 
+See examples/ for usage examples.
+
 ## Users
 
 By default two user/password combinations are created with the database, "test/test" and "admin/password". The admin user has access to all data in the database, while the test user can only access or modify the documents they create. If a particular document is flagged as {"owner":"internal"}, it may be read by everyone, but again only modified by the admin.
