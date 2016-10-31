@@ -76,7 +76,7 @@ print("Commit executable again")
 assert executable_id == db.executables.commit(executable)['ids'][0]
 
 print("Query executable")
-assert executable_id == db.executables.query(executable,'_id')[0]['_id']
+assert executable_id == db.executables.query({"name": "test_app"},'_id')[0]['_id']
 
 print("Submit query for some results")
 filters = {
