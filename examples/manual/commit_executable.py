@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import whiplash
 
-print("Login as test user")
+# Login as test user
 db = whiplash.db("localhost", 1337, username="test", password="test")
 
-print("Commit simulated annealling solver")
+# Commit simulated annealling solver
 print(db.executables.commit({
     "name": "an_ss_ge_fi_vdeg",
     "algorithm": "SA",

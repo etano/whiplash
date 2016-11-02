@@ -84,8 +84,9 @@ router.get('/one', passport.authenticate('bearer', { session: false }), function
 
 /**
  * @api {get} /users UpdateOne
- * @apiGroup UpdateOne
+ * @apiGroup Users
  * @apiUse UpdateOne
+ * @apiName UpdateOne
  * @apiPermission user
  * @apiVersion 1.0.0
  *

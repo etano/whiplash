@@ -100,7 +100,7 @@ class connection:
         else:
             res = json.loads(res.decode('utf-8'))
             if self.save_token:
-                print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
+                #print("New tokens grant for", res["expires_in"], "seconds saved to ~/.whiplash_config .")
                 f = open(os.path.expanduser("~")+"/.whiplash_config","w")
                 f.write(res["access_token"])
                 f.close()
