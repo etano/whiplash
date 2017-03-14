@@ -1,0 +1,17 @@
+{
+  "name": "scheduler",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/scheduler"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "co": "^4.6.0",
+    "dockerode": "^2.4.0",
+    "jsonfile": "^2.3.1",
+    "project-whiplash": "^1.1.0",
+    "request": "^2.72.0",
+    "tmp-promise": "^1.0.2"
+  }
+}

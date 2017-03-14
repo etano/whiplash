@@ -2,6 +2,8 @@ odb:
     image: mongo:latest
     ports:
         - "27017:27017"
+    volumes:
+        - ../../data:/data
 
 api:
     extends:
@@ -21,15 +23,15 @@ api:
         - odb:odb
     command: sh -c "node --use_strict bin/init_db; node --use_strict bin/create_user admin password admin@whiplash.ethz.ch; node --use_strict bin/create_user test test test@test.com; node --use_strict bin/api"
 
-rte:
+scheduler:
     extends:
-        file: ../../rte/docker-compose.yml
-        service: rte
+        file: ../../scheduler/docker-compose.yml
+        service: scheduler
     volumes:
-        - ../../rte:/rte
-        - ../../logs/rte:/logs
+        - ../../scheduler/bin:/src/bin
+        - ../../scheduler/libs:/src/libs
         - /var/run/docker.sock:/var/run/docker.sock
-        - $PWD:/input
+        - ../../input:/input
     environment:
         WHIPLASH_HOST_WORK_DIR: $PWD
         WHIPLASH_LAUNCH_WORK_DIR: '/input'
@@ -40,4 +42,4 @@ rte:
         WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET: password
     links:
         - api:api
-    command: sh -c "sleep 20; /rte/manager.py --log_dir /logs --rte_dir /rte --dind"
+    command: sh -c "sleep 20; node --use_strict bin/scheduler"

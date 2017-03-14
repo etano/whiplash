@@ -1,0 +1,336 @@
+#!/usr/bin/env node
+
+// Libraries
+var co = require('co');
+var jsonfile = require('jsonfile');
+var tmp = require('tmp-promise');
+var path = require('path');
+var stream = require('stream');
+var Promise = require('bluebird');
+var fs = require('fs');
+Promise.promisifyAll(fs);
+var Docker = require('../libs/dockerode-bluebird');
+var docker = new Docker({socketPath: '/var/run/docker.sock'});
+
+// Whiplash
+var wdb = require('project-whiplash');
+var options = {
+    host: process.env.WHIPLASH_API_HOST,
+    port: process.env.WHIPLASH_API_PORT,
+    admin_client_id: process.env.WHIPLASH_ADMIN_SCHEDULER_CLIENT_ID,
+    admin_client_secret: process.env.WHIPLASH_ADMIN_SCHEDULER_CLIENT_SECRET,
+    admin_access_token: process.env.WHIPLASH_ADMIN_SCHEDULER_TOKEN,
+    admin_password: process.env.WHIPLASH_ADMIN_PASSWORD
+};
+wdb.connect(options, function() {
+var Models = wdb.get().models;
+var Executables = wdb.get().executables;
+var Properties = wdb.get().properties;
+
+// Docker auth
+var auth = {
+  username: process.env.WHIPLASH_DOCKER_USERNAME,
+  password: process.env.WHIPLASH_DOCKER_PASSWORD,
+  email: process.env.WHIPLASH_DOCKER_EMAIL
+};
+
+// Global variables
+var working = false;
+var pulled_containers = [];
+var ascii_regex = /[^a-zA-Z0-9\-\ \s\r\n]/g;
+var numeral_regex = /[^0-9\-\ ]/g;
+
+// Main loop
+setInterval(function () {
+    if (!working) {
+        find_unresolved_properties();
+    }
+}, 1000);
+
+// Query whiplash for unresolved properties
+function find_unresolved_properties() {
+    console.log('querying for unresolved properties...');
+    if (!working) {
+        working = true;
+        co(function *() {
+            var property = yield Properties.update_one({status: "unresolved"}, {status: "pulling"});
+            if (property) {
+                console.log('found unresolved property', property._id);
+                resolve_property(property);
+            } else {
+                throw 'found nothing!';
+            }
+        }).catch(function(err) {
+            working = false;
+            console.log(err);
+        });
+    }
+}
+
+// Resolve unresolved property
+function resolve_property(property) {
+    var executable_id = property.executable_id;
+    var model_id = property.input_model_id;
+    co(function *() {
+        var executable = yield Executables.query_one({_id: executable_id}, []);
+        var model = yield Models.query_one({_id: model_id}, []);
+        if (executable && model) {
+            yield pull_container(executable.path);
+            yield Properties.update_one({_id: property._id}, {status: "running"});
+            run_container(executable, model, property);
+        }
+        else throw 'Missing model '+model_id+' or executable '+executable_id+' for property '+property._id;
+    }).catch(function(err) {
+        set_errored(property, err);
+    });
+}
+
+// Pull the container
+function pull_container(container) {
+    return new Promise(function(resolve, reject) {
+        if (pulled_containers.indexOf(container) < 0) {
+            co(function *() {
+                console.log("pulling", container);
+                var stream = yield docker.pullAsync(container, {'authconfig': auth});
+                docker.modem.followProgress(stream, onFinished, onProgress);
+                function onFinished(err, output) {
+                    if (err) reject(err);
+                    else {
+                        pulled_containers.push(container);
+                        resolve();
+                    }
+                }
+                function onProgress(event) {}
+            }).catch(function(err) {
+                reject(err);
+            });
+        } else {
+            console.log("container already pulled", container);
+            resolve();
+        }
+    });
+}
+
+// Create the container
+function create_container(options, n_attempts) {
+    console.log("creating container...");
+    return new Promise(function(resolve, reject) {
+        co(function *() {
+            return yield docker.createContainerAsync(options);
+        }).then(function(container) {
+            resolve(container);
+        }).catch(function(err) {
+            if (n_attempts === undefined)
+                n_attempts = 0
+            n_attempts += 1;
+            console.log(err);
+            if (n_attempts < 20)
+                resolve(create_container(options, n_attempts));
+            else
+                reject(err);
+        });
+    });
+}
+
+// Get logs from running container
+function container_logs(container, out_file) {
+
+    // create a single stream for stdin and stdout
+    var logStream = new stream.PassThrough();
+    var out = fs.createWriteStream(out_file);
+    logStream.on('data', function(chunk) {
+        console.log(chunk.toString());
+        out.write(chunk.toString());
+    });
+
+    container.logs({
+        follow: true,
+        stdout: true,
+        stderr: true
+    }, function(err, stream) {
+        if(!err)
+            container.modem.demuxStream(stream, logStream, logStream);
+    });
+}
+
+// Run the container
+function run_container(executable, model, property) {
+    console.log("running", executable.path);
+    co(function *() {
+        // Make temporary files
+        var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
+        var in_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-in-XXXXXX'});
+        var out_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-out-XXXXXX'});
+
+        // Write input
+        console.log("writing input of format "+model.format+" to "+in_file+"...");
+        if (model.format !== executable.in_format) {
+            console.log(model);
+            console.log(executable);
+            throw "Input model has incompatible format for executable";
+        }
+        if (model.format === "json") {
+            model.params = property.params;
+            jsonfile.writeFileSync(in_file, model, 'utf8');
+        } else {
+            in_file += ".txt";
+            yield fs.writeFileAsync(in_file, model.content, 'utf8');
+        }
+
+        // Create container
+        var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
+        var container = yield create_container({
+            Image: executable.path,
+            Cmd: ['/input/'+path.basename(in_file)],
+            Volumes: {'/input': {}},
+            Binds: [host_work_dir+'/input:/input'],
+            AutoRemove: true,
+            NetworkSettings: {
+                Networks: {
+                    Internal: true
+                }
+            }
+        });
+
+        // Start container
+        console.log("starting container...");
+
+        yield container.startAsync();
+        container_logs(container, out_file);
+        var hrstart = process.hrtime();
+
+        // Set timeout
+        var timeout = 0;
+        if (!model.timeout) {
+            if (!property.timeout) timeout = 3600; // Default is 1 hr.
+            else timeout = property.timeout;
+        } else timeout = model.timeout;
+        setTimeout(function() {
+            container.stopAsync({t: 1});
+        }, timeout*1000);
+
+        // Wait for container to finish
+        // TODO: Measure overhead
+        var data = yield container.waitAsync();
+        var hrdiff = process.hrtime(hrstart);
+        var walltime = (hrdiff[0]*1e9 + hrdiff[1])/1.e9; // time in seconds
+        console.log("container finished...");
+        console.log("walltime", walltime);
+
+        // Update property
+        var log = yield fs.readFileAsync(out_file, 'utf8');
+        property.walltime = walltime;
+        property.log = log;
+        if ((property.log==="") && (property.walltime>timeout))
+            throw "No output and timeout exceeded";
+
+        // Verify result
+        var result = yield verify_result(executable, in_file, out_file);
+
+        // Unlink files
+        fs.unlink(in_file);
+        fs.unlink(out_file);
+
+        // Set necessary fields
+        result.property_id = property._id;
+        result.owner = property.owner;
+
+        // Push result back to database
+        var obj = yield Models.commit_one(result);
+        var update = result;
+        update.status = "resolved";
+        update.output_model_id = obj.ids[0];
+        update.log = log;
+        update.walltime = walltime;
+        yield Properties.update_one({_id: property._id}, update);
+        console.log('resolved property', property._id);
+
+        // Start looking again
+        working = false;
+    }).catch(function(err) {
+        if(in_file) { fs.unlink(in_file, function(err){}); }
+        if(out_file) { fs.unlink(out_file, function(err){}); }
+        set_errored(property, err);
+    });
+}
+
+// Verify result
+function verify_result(executable, in_file, out_file) {
+    return new Promise(function(resolve, reject) {
+        co(function *() {
+            var json_file;
+            var log = "";
+            if (executable.out_format === "json") {
+                json_file = in_file;
+            } else {
+                if (!executable.evaluator)
+                    throw "No evaluator defined for executable";
+
+                yield pull_container(executable.evaluator);
+
+                var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
+                var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
+                json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
+                var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
+                var container = yield create_container({
+                    Image: executable.evaluator,
+                    Cmd: ['/input/'+path.basename(in_file), '/input/'+path.basename(out_file), '/input/'+path.basename(json_file)],
+                    Volumes: {'/input': {}},
+                    Binds: [host_work_dir+':/input'],
+                    AutoRemove: true
+                });
+
+                // Start container
+                console.log("starting evaluator...");
+
+                yield container.startAsync();
+                container_logs(container, log_file);
+
+                // Wait for container to finish
+                var data = yield container.waitAsync();
+                console.log("container finished...");
+
+                // Read log
+                var log = yield fs.readFileAsync(log_file, 'utf8');
+                fs.unlink(log_file);
+            }
+            try {
+                resolve(jsonfile.readFileSync(json_file));
+                if (executable.out_format !== "json")
+                    fs.unlink(json_file);
+            } catch(err) {
+                throw log;
+            }
+        }).catch(function(err) {
+            fs.unlink(log_file, function(err){});
+            fs.unlink(json_file, function(err){});
+            console.log(err);
+            reject(err);
+        });
+    });
+}
+
+// Catch all error function
+//
+// Error codes:
+//
+// 500 - catch all
+// 501 - no output
+// 502 - timed out
+// 503 - runtime error
+//
+function set_errored(property, err) {
+    working = false;
+    if (!err.code) {
+        err = {
+            code: 500,
+            message: err
+        };
+    }
+    console.log(err);
+    property.status = "errored";
+    property.err = err;
+    Properties.update_one({_id: property._id}, property);
+}
+
+});
