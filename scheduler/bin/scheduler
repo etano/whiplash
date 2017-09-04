@@ -9,7 +9,7 @@ var stream = require('stream');
 var Promise = require('bluebird');
 var fs = require('fs');
 Promise.promisifyAll(fs);
-var Docker = require('../libs/dockerode-bluebird');
+var Docker = require('../libs/dockerode-bluebird'); // FIXME: Upgrade
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
 
 // Whiplash
@@ -42,14 +42,12 @@ var numeral_regex = /[^0-9\-\ ]/g;
 
 // Main loop
 setInterval(function () {
-    if (!working) {
-        find_unresolved_properties();
-    }
+    // TODO: Parallelize instead of only a single running docker container
+    if (!working) find_unresolved_properties();
 }, 1000);
 
 // Query whiplash for unresolved properties
 function find_unresolved_properties() {
-    console.log('querying for unresolved properties...');
     if (!working) {
         working = true;
         co(function *() {
@@ -57,8 +55,6 @@ function find_unresolved_properties() {
             if (property) {
                 console.log('found unresolved property', property._id);
                 resolve_property(property);
-            } else {
-                throw 'found nothing!';
             }
         }).catch(function(err) {
             working = false;
@@ -92,15 +88,15 @@ function pull_container(container) {
             co(function *() {
                 console.log("pulling", container);
                 var stream = yield docker.pullAsync(container, {'authconfig': auth});
-                docker.modem.followProgress(stream, onFinished, onProgress);
-                function onFinished(err, output) {
+                docker.modem.followProgress(stream, function(err, output) {
                     if (err) reject(err);
                     else {
                         pulled_containers.push(container);
                         resolve();
                     }
-                }
-                function onProgress(event) {}
+                }, function(event) {
+                  console.log(".");
+                });
             }).catch(function(err) {
                 reject(err);
             });
@@ -123,7 +119,7 @@ function create_container(options, n_attempts) {
             if (n_attempts === undefined)
                 n_attempts = 0
             n_attempts += 1;
-            console.log(err);
+            console.log("Error creating containing (attempt:", n_attempts, "):", err);
             if (n_attempts < 20)
                 resolve(create_container(options, n_attempts));
             else
@@ -206,6 +202,7 @@ function run_container(executable, model, property) {
             else timeout = property.timeout;
         } else timeout = model.timeout;
         setTimeout(function() {
+            // FIXME: Check if container exists first
             container.stopAsync({t: 1});
         }, timeout*1000);
 
@@ -257,24 +254,28 @@ function run_container(executable, model, property) {
 // Verify result
 function verify_result(executable, in_file, out_file) {
     return new Promise(function(resolve, reject) {
-        co(function *() {
-            var json_file;
-            var log = "";
-            if (executable.out_format === "json") {
-                json_file = in_file;
-            } else {
-                if (!executable.evaluator)
-                    throw "No evaluator defined for executable";
+        var log = "";
+        if (executable.out_format === "json") {
+            try {
+                resolve(jsonfile.readFileSync(in_file));
+            } catch(err) {
+                console.log(err);
+                reject(err);
+            }
+        } else {
+            if (!executable.evaluator)
+                throw "No evaluator defined for executable";
 
+            co(function *() {
                 yield pull_container(executable.evaluator);
 
                 var launch_work_dir = process.env.WHIPLASH_LAUNCH_WORK_DIR;
                 var host_work_dir = process.env.WHIPLASH_HOST_WORK_DIR;
-                json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-XXXXXX'});
-                var log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
+                var evaluator_json_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-json-XXXXXX'});
+                var evaluator_log_file = yield tmp.tmpName({template: launch_work_dir+'/tmp-evaluator-log-XXXXXX'});
                 var container = yield create_container({
                     Image: executable.evaluator,
-                    Cmd: ['/input/'+path.basename(in_file), '/input/'+path.basename(out_file), '/input/'+path.basename(json_file)],
+                    Cmd: ['/input/'+path.basename(in_file), '/input/'+path.basename(out_file), '/input/'+path.basename(evaluator_json_file)],
                     Volumes: {'/input': {}},
                     Binds: [host_work_dir+':/input'],
                     AutoRemove: true
@@ -284,29 +285,34 @@ function verify_result(executable, in_file, out_file) {
                 console.log("starting evaluator...");
 
                 yield container.startAsync();
-                container_logs(container, log_file);
+                container_logs(container, evaluator_out_file);
 
                 // Wait for container to finish
+                // TODO: Add a timeout
                 var data = yield container.waitAsync();
                 console.log("container finished...");
 
                 // Read log
-                var log = yield fs.readFileAsync(log_file, 'utf8');
-                fs.unlink(log_file);
-            }
-            try {
-                resolve(jsonfile.readFileSync(json_file));
-                if (executable.out_format !== "json")
-                    fs.unlink(json_file);
-            } catch(err) {
-                throw log;
-            }
-        }).catch(function(err) {
-            fs.unlink(log_file, function(err){});
-            fs.unlink(json_file, function(err){});
-            console.log(err);
-            reject(err);
-        });
+                var log = yield fs.readFileAsync(evaluator_out_file, 'utf8');
+
+                // Return result
+                var parsed_json_obj;
+                try { parsed_json_obj = jsonfile.readFileSync(evaluator_json_file); }
+                catch(err) { throw log; }
+
+                // Remove files
+                fs.unlink(evaluator_json_file, function(err){});
+                fs.unlink(evaluator_log_file, function(err){});
+
+                // Return parsed json object
+                resolve(parsed_json_obj);
+            }).catch(function(err) {
+                fs.unlink(evaluator_json_file, function(err){});
+                fs.unlink(evaluator_log_file, function(err){});
+                console.log(err);
+                reject(err);
+            });
+        }
     });
 }
 
