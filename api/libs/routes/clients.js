@@ -78,9 +78,9 @@ router.delete('/', passport.authenticate('bearer', { session: false }), function
         var client_id = common.get_payload(req,'client_id');
         var filter = {client_id: client_id};
         var count = yield Clients.delete(filter, req.user);
-        log.info('Removing client', client_id, 'for user', req.user._id);
         AccessTokens.delete(filter, req.user);
         RefreshTokens.delete(filter, req.user);
+        log.info('Removed client', client_id, 'for user', req.user._id);
         return count;
     }).then(function(count) {
         common.return(res, 0, count);

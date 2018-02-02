@@ -310,7 +310,6 @@ class Collection {
                 global.timer.get_timer('query_one_'+self.name).stop();
                 resolve(obj);
             }).catch(function(err) {
-                log.debug('found objectsdfasfasd');
                 log.error(err);
                 global.timer.get_timer('query_one_'+self.name).stop();
                 reject(err);

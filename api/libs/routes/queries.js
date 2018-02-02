@@ -146,7 +146,7 @@ function setup_query(filters, fields, settings, user) {
                 executable_ids.push(executable_objs[i]['_id']);
             }
 
-            var property_stats = {};
+            // Form property filter
             var property_filter = {
                 executable_id: {$in: executable_ids},
                 input_model_id: {$in: input_model_ids},
@@ -155,6 +155,7 @@ function setup_query(filters, fields, settings, user) {
                 property_filter['params.'+key] = filters['params'][key];
             }
 
+            var property_stats = {};
             if (settings.submit_new) {
                 // Form properties
                 log.debug('form properties');
